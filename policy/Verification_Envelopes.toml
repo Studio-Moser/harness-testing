@@ -1,0 +1,26 @@
+schema_version = "1"
+
+[envelopes.polish]
+track_premature_comprehensive = true
+track_duplicate_success = true
+final_comprehensive_required = false
+
+[envelopes.small]
+track_premature_comprehensive = true
+track_duplicate_success = true
+final_comprehensive_required = false
+
+[envelopes.grouped]
+track_premature_comprehensive = true
+track_duplicate_success = true
+final_comprehensive_required = true
+
+[envelopes.feature]
+track_premature_comprehensive = true
+track_duplicate_success = true
+final_comprehensive_required = true
+
+[envelopes.no-op]
+track_premature_comprehensive = true
+track_duplicate_success = true
+final_comprehensive_required = false

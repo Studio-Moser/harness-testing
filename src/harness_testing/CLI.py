@@ -72,6 +72,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     execute_parser.add_argument("--manifest", type=Path, required=True)
     execute_parser.add_argument("--approve", required=True)
 
+    task_parser = subparsers.add_parser("task", help="validate benchmark tasks")
+    task_subparsers = task_parser.add_subparsers(dest="task_command")
+    qa_parser = task_subparsers.add_parser("qa", help="run one model-free task QA case")
+    qa_parser.add_argument("--task", required=True)
+    qa_parser.add_argument(
+        "--case",
+        choices=("oracle", "nop", "near-miss", "adversarial"),
+        required=True,
+    )
+
     arguments = parser.parse_args(argv)
     if arguments.command == "validate":
         from harness_testing.Validate import validate_repository
@@ -130,4 +140,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         from harness_testing.Runs import execute_run
 
         execute_run(_repository_root(), arguments.manifest, arguments.approve)
+    elif arguments.command == "task" and arguments.task_command == "qa":
+        from harness_testing.QA import run_task_qa
+
+        scores = run_task_qa(_repository_root(), arguments.task, arguments.case)
+        print(
+            " ".join(
+                f"{name}={scores[name]:g}"
+                for name in ("reward", "workflow", "efficiency")
+            )
+        )
     return 0

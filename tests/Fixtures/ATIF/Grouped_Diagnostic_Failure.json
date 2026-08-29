@@ -1,0 +1,88 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "grouped-diagnostic-failure",
+  "agent": {
+    "name": "claude-code",
+    "version": "2.1.236",
+    "model_name": "claude-sonnet-4-6"
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "source": "user",
+      "message": "Repair the failing grouped update."
+    },
+    {
+      "step_id": 2,
+      "source": "agent",
+      "message": "Reproducing the reported failure.",
+      "tool_calls": [
+        {
+          "tool_call_id": "diagnostic-failure",
+          "function_name": "Bash",
+          "arguments": {"command": "npm test"}
+        }
+      ],
+      "observation": {
+        "results": [{"source_call_id": "diagnostic-failure", "content": "exit_code: 1"}]
+      },
+      "llm_call_count": 1
+    },
+    {
+      "step_id": 3,
+      "source": "agent",
+      "message": "Fixing the failure.",
+      "tool_calls": [
+        {
+          "tool_call_id": "diagnostic-edit",
+          "function_name": "Edit",
+          "arguments": {
+            "file_path": "/app/src/App.tsx",
+            "old_string": "broken",
+            "new_string": "fixed"
+          }
+        },
+        {
+          "tool_call_id": "diagnostic-shell-mutation",
+          "function_name": "Bash",
+          "arguments": {
+            "command": "touch generated-marker"
+          }
+        }
+      ],
+      "observation": {
+        "results": [
+          {"source_call_id": "diagnostic-edit", "content": "updated"},
+          {
+            "source_call_id": "diagnostic-shell-mutation",
+            "content": "exit_code: 0"
+          }
+        ]
+      },
+      "llm_call_count": 1
+    },
+    {
+      "step_id": 4,
+      "source": "agent",
+      "message": "Confirming the fix at the final checkpoint.",
+      "tool_calls": [
+        {
+          "tool_call_id": "diagnostic-pass",
+          "function_name": "Bash",
+          "arguments": {"command": "npm test"}
+        }
+      ],
+      "observation": {
+        "results": [{"source_call_id": "diagnostic-pass", "content": "exit_code: 0"}]
+      },
+      "llm_call_count": 1
+    }
+  ],
+  "final_metrics": {
+    "total_prompt_tokens": null,
+    "total_completion_tokens": null,
+    "total_cached_tokens": null,
+    "total_cost_usd": null,
+    "total_steps": 4
+  }
+}

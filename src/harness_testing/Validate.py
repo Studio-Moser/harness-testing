@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -11,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from harbor.models.task.config import NetworkMode, VerifierEnvironmentMode
+from harbor.models.task.config import NetworkMode, TaskConfig, VerifierEnvironmentMode
 
 from harness_testing.Config import load_job, load_task, load_trajectory, load_versions
 
@@ -34,6 +35,103 @@ class ValidationFailure:
 
 def _failure(path: Path, message: str) -> ValidationFailure:
     return ValidationFailure(path=path, message=message)
+
+
+def _fixture_digest(environment_directory: Path) -> str:
+    digest = hashlib.sha256()
+    for path in sorted(item for item in environment_directory.rglob("*") if item.is_file()):
+        relative = path.relative_to(environment_directory).as_posix()
+        digest.update(relative.encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return f"sha256:{digest.hexdigest()}"
+
+
+def _validate_benchmark_task_assets(
+    task_path: Path, task: TaskConfig
+) -> list[ValidationFailure]:
+    if "verification_envelope" not in task.metadata:
+        return []
+    task_root = task_path.parent
+    required_files = (
+        "instruction.md",
+        "environment/Dockerfile",
+        "environment/package.json",
+        "environment/package-lock.json",
+        "solution/solve.sh",
+        "tests/Dockerfile",
+        "tests/test.sh",
+        "tests/criteria.py",
+        "tests/Protected_Files.json",
+    )
+    failures = [
+        _failure(task_root / relative, "required benchmark task asset is missing")
+        for relative in required_files
+        if not (task_root / relative).is_file()
+    ]
+    for dimension in ("reward", "workflow", "efficiency"):
+        directory = task_root / "tests" / dimension
+        if not directory.is_dir() or not any(directory.glob("*.py")):
+            failures.append(
+                _failure(directory, f"RewardKit {dimension} criterion is required")
+            )
+    if failures:
+        return failures
+
+    test_script = (task_root / "tests" / "test.sh").read_text()
+    if re.search(r"\b(?:uvx|pip\s+install|npm\s+install)\b", test_script):
+        failures.append(
+            _failure(
+                task_root / "tests" / "test.sh",
+                "verifier runtime must not install or download dependencies",
+            )
+        )
+
+    environment_directory = task_root / "environment"
+    for path in environment_directory.rglob("*"):
+        if path.is_symlink():
+            failures.append(_failure(path, "frozen fixture must not contain symlinks"))
+    expected_fixture_digest = str(task.metadata.get("fixture_digest", ""))
+    actual_fixture_digest = _fixture_digest(environment_directory)
+    if expected_fixture_digest != actual_fixture_digest:
+        failures.append(
+            _failure(
+                task_path,
+                "fixture digest mismatch: "
+                f"recorded {expected_fixture_digest!r}, actual {actual_fixture_digest}",
+            )
+        )
+
+    manifest_path = task_root / "tests" / "Protected_Files.json"
+    try:
+        manifest = json.loads(manifest_path.read_text())
+        protected_files = manifest["files"]
+        if not isinstance(protected_files, dict) or not protected_files:
+            raise ValueError("files must be a non-empty object")
+        for relative, expected in protected_files.items():
+            protected_path = environment_directory / relative
+            if (
+                Path(relative).is_absolute()
+                or ".." in Path(relative).parts
+                or not protected_path.is_file()
+                or protected_path.is_symlink()
+            ):
+                failures.append(
+                    _failure(manifest_path, f"invalid protected fixture path: {relative}")
+                )
+                continue
+            actual = f"sha256:{hashlib.sha256(protected_path.read_bytes()).hexdigest()}"
+            if expected != actual:
+                failures.append(
+                    _failure(
+                        manifest_path,
+                        f"protected digest mismatch for {relative}: {expected!r} != {actual}",
+                    )
+                )
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+        failures.append(_failure(manifest_path, f"invalid protected manifest: {error}"))
+    return failures
 
 
 def validate_versions_file(path: Path) -> tuple[ValidationFailure, ...]:
@@ -158,6 +256,8 @@ def validate_task_paths(
             failures.append(
                 _failure(path, f"required artifact is missing: {missing[0]} -> {missing[1]}")
             )
+
+        failures.extend(_validate_benchmark_task_assets(path, task))
 
     return tuple(failures)
 

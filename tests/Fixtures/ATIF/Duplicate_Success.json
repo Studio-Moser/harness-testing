@@ -1,0 +1,55 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "duplicate-success",
+  "agent": {
+    "name": "codex",
+    "version": "0.150.1",
+    "model_name": "gpt-5.6-terra"
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "source": "user",
+      "message": "Run the focused metric check."
+    },
+    {
+      "step_id": 2,
+      "source": "agent",
+      "message": "Running the focused check.",
+      "tool_calls": [
+        {
+          "tool_call_id": "duplicate-first",
+          "function_name": "shell",
+          "arguments": {"cmd": "uv run pytest tests/unit/test_Metrics.py -q"}
+        }
+      ],
+      "observation": {
+        "results": [{"source_call_id": "duplicate-first", "content": "exit_code: 0"}]
+      },
+      "llm_call_count": 1
+    },
+    {
+      "step_id": 3,
+      "source": "agent",
+      "message": "Repeating the same successful check.",
+      "tool_calls": [
+        {
+          "tool_call_id": "duplicate-second",
+          "function_name": "shell",
+          "arguments": {"cmd": "pytest tests/unit/test_Metrics.py"}
+        }
+      ],
+      "observation": {
+        "results": [{"source_call_id": "duplicate-second", "content": "exit_code: 0"}]
+      },
+      "llm_call_count": 1
+    }
+  ],
+  "final_metrics": {
+    "total_prompt_tokens": null,
+    "total_completion_tokens": null,
+    "total_cached_tokens": null,
+    "total_cost_usd": null,
+    "total_steps": 3
+  }
+}

@@ -1,0 +1,104 @@
+schema_version = "1"
+
+[tools]
+shell = ["Bash", "shell"]
+mutation = ["Edit", "Write", "apply_patch"]
+command_arguments = ["command", "cmd"]
+path_arguments = ["file_path", "path"]
+
+[normalization]
+ignored_flags = ["-q", "--quiet", "--silent", "--no-color", "--color"]
+removable_prefixes = ["uv run"]
+
+[[classes]]
+name = "direct_check"
+rank = 50
+patterns = [
+  '^(?:npm|pnpm|yarn) run check(?::[a-z0-9_-]+)?(?:\s|$)',
+  '^(?:node|python(?:3)?)\s+\S*(?:check|verify)\S*',
+]
+
+[[classes]]
+name = "targeted_test"
+rank = 60
+patterns = [
+  '(?:^|\s)(?:npx\s+)?(?:vitest|jest)\s+(?:run\s+)?\S+\.(?:test|spec)\.[jt]sx?',
+  '(?:^|\s)pytest\s+(?:\S+\s+)*?(?:\S*test_\S+\.py|\S+::\S+)',
+  '^(?:npm test|npm run test|pnpm test|yarn test)\s+--\s+\S+',
+  '^cargo test\s+(?!--workspace|-p\s)\S+',
+]
+
+[[classes]]
+name = "package_test"
+rank = 70
+patterns = [
+  '^(?:npm|pnpm|yarn)\s+(?:--workspace|-w)\s+\S+\s+(?:run\s+)?test(?:\s|$)',
+  '^cargo test\s+(?:-p|--package)\s+\S+',
+]
+
+[[classes]]
+name = "comprehensive_test"
+rank = 80
+patterns = [
+  '^(?:npm test|npm run test|pnpm test|yarn test)(?:\s+--\s+--run)?$',
+  '^(?:npm|pnpm|yarn) run gate$',
+  '^(?:npm|pnpm|yarn) run (?:test|check):all$',
+  '^pytest$',
+  '^cargo test(?:\s+--workspace)?$',
+]
+
+[[classes]]
+name = "lint"
+rank = 30
+patterns = [
+  '^(?:npm|pnpm|yarn) run lint(?:\s|$)',
+  '^(?:npx\s+)?eslint(?:\s|$)',
+  '^ruff check(?:\s|$)',
+  '^cargo clippy(?:\s|$)',
+]
+
+[[classes]]
+name = "typecheck"
+rank = 30
+patterns = [
+  '^(?:npx\s+)?tsc(?:\s|$)',
+  '^(?:npm|pnpm|yarn) run (?:typecheck|check:types)(?:\s|$)',
+  '^cargo check(?:\s|$)',
+]
+
+[[classes]]
+name = "build"
+rank = 40
+patterns = [
+  '^(?:npm|pnpm|yarn) run build(?:\s|$)',
+  '^(?:npx\s+)?vite build(?:\s|$)',
+  '^cargo build(?:\s|$)',
+]
+
+[[classes]]
+name = "browser"
+rank = 40
+patterns = [
+  '^(?:npx\s+)?playwright test(?:\s|$)',
+  '^(?:npx\s+)?cypress run(?:\s|$)',
+]
+
+[[classes]]
+name = "format"
+rank = 20
+patterns = [
+  '^(?:npx\s+)?prettier(?:\s|$)',
+  '^cargo fmt(?:\s|$)',
+  '^rustfmt(?:\s|$)',
+  '^ruff format(?:\s|$)',
+]
+
+[mutation]
+relevant_path_patterns = [
+  '(^|/)(?:src|app|lib|tests|crates|packages)/',
+  '\.(?:css|html|jsx?|json|py|rs|toml|tsx?|ya?ml)$',
+]
+shell_mutation_patterns = [
+  '(^|\s)(?:sed\s+-i|perl\s+-pi|touch|mkdir|mv|cp|rm)\s',
+  '(?:>|>>|\btee\b)\s*\S+',
+]
