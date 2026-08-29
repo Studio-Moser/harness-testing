@@ -62,6 +62,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--confirm-download", action="store_true"
     )
 
+    regrade_parser = subparsers.add_parser(
+        "regrade", help="re-run Harbor verification without an agent phase"
+    )
+    regrade_parser.add_argument("--job", type=Path, required=True)
+    regrade_parser.add_argument("--tasks", type=Path, required=True)
+
+    result_parser = subparsers.add_parser(
+        "result", help="construct fail-closed public result files"
+    )
+    result_subparsers = result_parser.add_subparsers(dest="result_command")
+    sanitize_parser = result_subparsers.add_parser(
+        "sanitize", help="validate and write one allowlisted result"
+    )
+    sanitize_parser.add_argument("--job", type=Path, required=True)
+    sanitize_parser.add_argument("--output", type=Path, required=True)
+
     run_parser = subparsers.add_parser("run", help="plan or execute guarded Harbor runs")
     run_subparsers = run_parser.add_subparsers(dest="run_command")
     plan_parser = run_subparsers.add_parser("plan", help="compile a dry-run manifest")
@@ -159,6 +175,34 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(f"Materialized dataset: {materialized.digest}")
         print(materialized.path)
+    elif arguments.command == "regrade":
+        from harness_testing.Results import regrade_job
+
+        try:
+            record = regrade_job(
+                _repository_root(),
+                arguments.job,
+                arguments.tasks,
+            )
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        print(f"Source job: {record.source_job_id} {record.source_job_digest}")
+        print(f"Regrade job: {record.regrade_job_path}")
+    elif arguments.command == "result" and arguments.result_command == "sanitize":
+        from harness_testing.Results import sanitize_public_result
+
+        try:
+            result = sanitize_public_result(
+                _repository_root(),
+                arguments.job,
+                arguments.output,
+            )
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        print(f"Sanitized result: {result['result_id']}")
+        print(arguments.output)
     elif arguments.command == "run" and arguments.run_command == "plan":
         from harness_testing.Runs import format_plan, plan_run
 

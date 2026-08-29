@@ -1,10 +1,14 @@
+import copy
+import json
 from pathlib import Path
 
 from test_Config import VALID_TASK
 
 from harness_testing.CLI import main
+from harness_testing.Results import compatibility_key, public_result_id
 from harness_testing.Validate import (
     find_sensitive_keys,
+    validate_public_results,
     validate_repository,
     validate_task_paths,
     validate_versions_file,
@@ -107,3 +111,47 @@ def test_version_validation_rejects_an_unpinned_deepswe_image(tmp_path):
     failures = validate_versions_file(versions_path)
 
     assert any("invalid DeepSWE capability pin" in failure.message for failure in failures)
+
+
+def test_public_result_validation_accepts_only_finalized_schema_valid_results(tmp_path):
+    (tmp_path / "policy").mkdir()
+    (tmp_path / "policy" / "Public_Result.schema.json").write_bytes(
+        (REPOSITORY_ROOT / "policy" / "Public_Result.schema.json").read_bytes()
+    )
+    results = tmp_path / "results"
+    results.mkdir()
+    valid = json.loads(
+        (
+            REPOSITORY_ROOT
+            / "tests"
+            / "Fixtures"
+            / "Public_Results"
+            / "Valid.json"
+        ).read_text()
+    )
+    (results / "Valid.json").write_text(json.dumps(valid))
+
+    assert validate_public_results(tmp_path) == ()
+
+    partial = copy.deepcopy(valid)
+    partial["run"]["finalized"] = False
+    partial["review"]["partial"] = True
+    partial["compatibility"]["key"] = compatibility_key(partial)
+    partial["result_id"] = public_result_id(partial)
+    (results / "Partial.json").write_text(json.dumps(partial))
+
+    failures = validate_public_results(tmp_path)
+    assert any("public results must be finalized" in failure.message for failure in failures)
+
+
+def test_public_result_validation_rejects_an_invalid_schema(tmp_path):
+    policy = tmp_path / "policy"
+    policy.mkdir()
+    (policy / "Public_Result.schema.json").write_text(
+        '{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"invalid"}'
+    )
+
+    failures = validate_public_results(tmp_path)
+
+    assert len(failures) == 1
+    assert "invalid public result schema" in failures[0].message

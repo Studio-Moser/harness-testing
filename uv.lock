@@ -1197,6 +1197,7 @@ source = { editable = "." }
 dependencies = [
     { name = "harbor" },
     { name = "harbor-rewardkit" },
+    { name = "jsonschema" },
     { name = "pyyaml" },
 ]
 
@@ -1210,6 +1211,7 @@ dev = [
 requires-dist = [
     { name = "harbor", specifier = "==0.22.0" },
     { name = "harbor-rewardkit", specifier = "==0.1.7" },
+    { name = "jsonschema", specifier = "==4.26.0" },
     { name = "pyyaml", specifier = "==6.0.3" },
 ]
 

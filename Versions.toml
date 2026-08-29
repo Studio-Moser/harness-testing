@@ -79,6 +79,11 @@ ecosystem = "pypi"
 version = "0.1.7"
 
 [[packages]]
+name = "jsonschema"
+ecosystem = "pypi"
+version = "4.26.0"
+
+[[packages]]
 name = "PyYAML"
 ecosystem = "pypi"
 version = "6.0.3"

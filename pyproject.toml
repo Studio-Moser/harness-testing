@@ -12,6 +12,7 @@ license = "MIT"
 dependencies = [
   "harbor==0.22.0",
   "harbor-rewardkit==0.1.7",
+  "jsonschema==4.26.0",
   "PyYAML==6.0.3",
 ]
 

@@ -1,0 +1,18 @@
+{
+  "id": "f62d5921-369b-40a8-abc7-3b4f80071e38",
+  "task_name": "studio-moser/react-grouped-ui-updates",
+  "trial_uri": "file:///Users/example/private/jobs/raw/trial",
+  "config": {
+    "environment": {
+      "mounts": [{"source": "/Users/example/private/arm", "target": "/harness-arm"}],
+      "env": {"OPENAI_API_KEY": "sk-example-secret-value"}
+    },
+    "extra": {"private": true}
+  },
+  "agent_result": {
+    "metadata": {"reasoning": "private chain of thought"}
+  },
+  "trajectory": {
+    "steps": [{"command_output": "private shell output"}]
+  }
+}

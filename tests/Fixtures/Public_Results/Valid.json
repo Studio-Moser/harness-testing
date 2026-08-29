@@ -1,0 +1,111 @@
+{
+  "schema_version": "1",
+  "result_id": "sha256:a96265ff0b9dd6752675ec6d796d4928a6fed0bbfe635ee2ec3ae6f985b6eb93",
+  "run": {
+    "id": "1cbb21e3-9cf8-498a-aebb-8bef11205f2a",
+    "trial_id": "f62d5921-369b-40a8-abc7-3b4f80071e38",
+    "manifest_digest": "sha256:d73dda59bad84372f94499627e52325aa49bb01d8141d8eccfbba0cc2375f05a",
+    "harness_testing_commit": "24b4a240ea1b924c265a3d5ce1c4edd7011c8fac",
+    "started_at": "2026-08-29T04:43:22.285378Z",
+    "finished_at": "2026-08-29T04:44:22.669536Z",
+    "finalized_at": "2026-08-29T06:00:00Z",
+    "finalized": true,
+    "release_decision": "hold"
+  },
+  "review": {
+    "task_reviewed": true,
+    "infrastructure_reviewed": true,
+    "partial": false,
+    "quarantined": false,
+    "note": "Sentinel result retained to demonstrate the grouped-workflow violation."
+  },
+  "provider": {
+    "name": "openai",
+    "agent": "codex",
+    "agent_version": "0.150.1",
+    "agent_contract": "codex@0",
+    "model": "gpt-5.6-terra",
+    "effort": "high"
+  },
+  "arm": {
+    "id": "A0",
+    "role": "baseline",
+    "bundle_digest": "sha256:3820bc753586424358b872899f68fb20c71f5cf69dcfe71f29f83dd6ff5dcc26",
+    "source_commits": {
+      "studio_harness": null,
+      "superpowers": null
+    }
+  },
+  "task": {
+    "id": "react-grouped-ui-updates",
+    "package": "studio-moser/react-grouped-ui-updates",
+    "pack": "workflow",
+    "digest": "sha256:ecddd61922c4617a5caf1cd64e02c3a4f41b217d2b8fa169b31263e4716b9c78"
+  },
+  "dataset": {
+    "id": "workflow-v1",
+    "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "provenance": {
+    "environment_image_digest": "sha256:2a7931448b89adca3349ec557dcea0113fe45201e2f4f941ca9ce78afff8d271",
+    "scorer_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "classifier_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "methodology_schema": "1",
+    "methodology_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+  },
+  "compatibility": {
+    "key": "sha256:7d47bb5b133fbc8daef8e98c71eea14bdecfbbeb0f948eb128759654c7a390f5",
+    "reviewed_mapping": null
+  },
+  "dimensions": {
+    "correctness": 1.0,
+    "workflow": 0.0,
+    "efficiency_policy": 1.0
+  },
+  "efficiency": {
+    "agent_seconds": 37.694058,
+    "verifier_seconds": 11.288489,
+    "prompt_tokens": 137626,
+    "completion_tokens": 764,
+    "reasoning_tokens": null,
+    "cached_tokens": 127744,
+    "cost_usd": 0.0544808,
+    "turns": 4,
+    "tool_calls": 9,
+    "commands": 7,
+    "direct_checks": 0,
+    "targeted_tests": 0,
+    "package_tests": 0,
+    "comprehensive_tests": 2,
+    "test_seconds": null,
+    "premature_comprehensive_tests": 1,
+    "duplicate_successful_commands": 0,
+    "plans": 0,
+    "reviews": 0,
+    "subagents": 0,
+    "worktrees": 0,
+    "context_events": 0,
+    "files_changed": 2,
+    "generated_files": null,
+    "diff_lines": null,
+    "retries": null,
+    "timeouts": null,
+    "infrastructure_errors": null
+  },
+  "infrastructure": {
+    "status": "passed",
+    "detail": null
+  },
+  "source_links": [
+    {
+      "label": "Harness Testing source",
+      "url": "https://github.com/Studio-Moser/harness-testing/commit/24b4a240ea1b924c265a3d5ce1c4edd7011c8fac",
+      "digest": "24b4a240ea1b924c265a3d5ce1c4edd7011c8fac"
+    },
+    {
+      "label": "Methodology source",
+      "url": "https://github.com/Studio-Moser/skills-n-stuff/commit/ff8852e737a43a7e23f2cad423905f9361fde8ae",
+      "digest": "ff8852e737a43a7e23f2cad423905f9361fde8ae"
+    }
+  ]
+}

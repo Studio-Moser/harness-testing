@@ -13,6 +13,8 @@ from typing import Any
 
 import yaml
 from harbor.models.task.config import NetworkMode, TaskConfig, VerifierEnvironmentMode
+from jsonschema import Draft202012Validator
+from jsonschema.exceptions import SchemaError
 
 from harness_testing.Config import load_job, load_task, load_trajectory, load_versions
 
@@ -572,6 +574,37 @@ def _validate_atif_fixtures(root: Path) -> list[ValidationFailure]:
     return failures
 
 
+def validate_public_results(root: Path) -> tuple[ValidationFailure, ...]:
+    """Validate the publication schema and every JSON result under results/."""
+
+    failures: list[ValidationFailure] = []
+    schema_path = root / "policy" / "Public_Result.schema.json"
+    try:
+        schema = json.loads(schema_path.read_text())
+        Draft202012Validator.check_schema(schema)
+    except (OSError, json.JSONDecodeError, SchemaError) as error:
+        return (_failure(schema_path, f"invalid public result schema: {error}"),)
+
+    from harness_testing.Results import validate_public_result
+
+    results_root = root / "results"
+    if not results_root.is_dir():
+        return ()
+    for path in sorted(results_root.rglob("*.json")):
+        try:
+            document = json.loads(path.read_text())
+        except (OSError, json.JSONDecodeError) as error:
+            failures.append(_failure(path, f"invalid public result JSON: {error}"))
+            continue
+        errors = validate_public_result(root, document)
+        for error in errors:
+            failures.append(_failure(path, error))
+        run = document.get("run") if isinstance(document, dict) else None
+        if not isinstance(run, dict) or run.get("finalized") is not True:
+            failures.append(_failure(path, "public results must be finalized"))
+    return tuple(failures)
+
+
 def _repository_files(root: Path) -> tuple[Path, ...]:
     result = subprocess.run(
         ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
@@ -633,6 +666,7 @@ def validate_repository(root: Path) -> tuple[ValidationFailure, ...]:
     )
     failures.extend(_validate_generated_jobs(root))
     failures.extend(_validate_atif_fixtures(root))
+    failures.extend(validate_public_results(root))
     failures.extend(_validate_checked_in_commands(root))
     failures.extend(_validate_public_boundary(root))
     return tuple(failures)
