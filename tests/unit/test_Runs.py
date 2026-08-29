@@ -81,6 +81,7 @@ def run_root(tmp_path: Path) -> Path:
     for relative in (
         "images/Node_Agent.Dockerfile",
         "images/Verifier.Dockerfile",
+        "src/harness_testing/Codex_Agent.py",
         "src/harness_testing/__init__.py",
         "src/harness_testing/Trajectory_Events.py",
     ):
@@ -194,6 +195,27 @@ def test_execution_rejects_task_drift_after_manifest_approval(run_root: Path):
         _verify_generated_inputs(run_root, manifest)
 
 
+def test_execution_rejects_codex_adapter_drift_after_manifest_approval(
+    run_root: Path,
+):
+    cell = _cell("codex", "A0", "baseline", "c")
+    _add_bundle(run_root, cell)
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="subscription",
+        cells=(cell,),
+        task_ids=("task-one",),
+        max_sessions=1,
+        max_budget_usd=Decimal("0"),
+    )
+    adapter = run_root / "src" / "harness_testing" / "Codex_Agent.py"
+    adapter.write_text("changed after approval\n")
+
+    with pytest.raises(ValueError, match="agent adapter digest mismatch"):
+        _verify_generated_inputs(run_root, manifest)
+
+
 def test_manifest_and_execution_bind_selected_image_inputs(run_root: Path):
     approved = _compile_pair(run_root)
     approved_images = approved.provenance["image_input_digests"]
@@ -280,6 +302,8 @@ def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Pat
         config_path = manifest.path.parent / relative_path
         job = yaml.safe_load(config_path.read_text())
         agent = job["agents"][0]
+        assert agent["import_path"] == "harness_testing.Codex_Agent:HarnessCodex"
+        assert "name" not in agent
         assert agent.get("env", {}) == {}
         assert agent["extra_allowed_hosts"] == ["chatgpt.com", "auth.openai.com"]
         assert "OPENAI_API_KEY" not in json.dumps(job)
@@ -291,6 +315,8 @@ def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Pat
         if "candidate" in path
     )
     candidate_agent = load_job(candidate_config).agents[0]
+    assert candidate_agent.import_path == "harness_testing.Codex_Agent:HarnessCodex"
+    assert candidate_agent.name is None
     assert candidate_agent.skills == [str(candidate_skills)]
     assert [resolved.name for resolved in resolve_skills(candidate_agent.skills)] == [
         "dev-task"

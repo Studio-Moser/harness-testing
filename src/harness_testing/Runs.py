@@ -44,6 +44,12 @@ _SUBSCRIPTION_SELECTORS = {
     "claude": ("CLAUDE_FORCE_OAUTH", "1"),
     "codex": ("CODEX_FORCE_AUTH_JSON", "1"),
 }
+_AGENT_ADAPTERS = {
+    "codex": (
+        "harness_testing.Codex_Agent:HarnessCodex",
+        Path("src/harness_testing/Codex_Agent.py"),
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -413,7 +419,7 @@ def _job_document(
     bundle = _bundle_path(root, cell)
     packages = _package_versions(versions)
     if cell.provider == "claude":
-        agent_name = "claude-code"
+        agent_identity = {"name": "claude-code"}
         model_name = f"anthropic/{cell.model}"
         version = packages["@anthropic-ai/claude-code"]
         environment = {}
@@ -423,7 +429,7 @@ def _job_document(
             )
         skills: list[str] = []
     else:
-        agent_name = "codex"
+        agent_identity = {"import_path": _AGENT_ADAPTERS["codex"][0]}
         model_name = f"openai/{cell.model}"
         version = packages["@openai/codex"]
         environment = {}
@@ -456,7 +462,7 @@ def _job_document(
         },
         "agents": [
             {
-                "name": agent_name,
+                **agent_identity,
                 "model_name": model_name,
                 "override_timeout_sec": timeout,
                 "max_timeout_sec": timeout,
@@ -614,6 +620,11 @@ def compile_run(
     image_input_digests = {
         image: image_input_digest(root, image) for image in _required_images(task_ids)
     }
+    agent_adapter_digests = {
+        provider: _sha256((root / path).read_bytes())
+        for provider, (_, path) in _AGENT_ADAPTERS.items()
+        if provider in {cell.provider for cell in cells}
+    }
     provenance: dict[str, object] = {
         "versions_digest": _sha256((root / "Versions.toml").read_bytes()),
         "profiles_digest": _sha256((root / "runs" / "Profiles.toml").read_bytes()),
@@ -623,6 +634,7 @@ def compile_run(
         },
         "task_digests": task_digests,
         "image_input_digests": image_input_digests,
+        "agent_adapter_digests": agent_adapter_digests,
         "budget_enforcement": (
             "subscription-only-no-api-fallback"
             if billing_mode == "subscription"
@@ -852,6 +864,14 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     }
     if expected_image_digests != actual_image_digests:
         raise ValueError("image input digest mismatch after manifest approval")
+    expected_adapter_digests = manifest.provenance.get("agent_adapter_digests")
+    actual_adapter_digests = {
+        provider: _sha256((root / path).read_bytes())
+        for provider, (_, path) in _AGENT_ADAPTERS.items()
+        if provider in {cell.provider for cell in manifest.cells}
+    }
+    if expected_adapter_digests != actual_adapter_digests:
+        raise ValueError("agent adapter digest mismatch after manifest approval")
     expected_digests = manifest.provenance.get("harbor_config_digests")
     if not isinstance(expected_digests, dict):
         raise ValueError("manifest has no Harbor config digests")
