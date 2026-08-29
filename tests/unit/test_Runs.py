@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from harbor.skills import resolve_skills
 
 import harness_testing.Runs as Runs
 from harness_testing.Config import load_job
@@ -242,7 +243,11 @@ def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Pat
     baseline = _cell("codex", "A0", "baseline", "c")
     candidate = _cell("codex", "A2", "candidate", "d", "3" * 40)
     _add_bundle(run_root, baseline)
-    _add_bundle(run_root, candidate)
+    candidate_bundle = _add_bundle(run_root, candidate)
+    candidate_skills = candidate_bundle / "skills"
+    skill = candidate_skills / "dev-task"
+    skill.mkdir(parents=True)
+    (skill / "SKILL.md").write_text("# Dev task\n")
 
     manifest = compile_run(
         run_root,
@@ -276,6 +281,16 @@ def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Pat
         assert agent["extra_allowed_hosts"] == ["chatgpt.com", "auth.openai.com"]
         assert "OPENAI_API_KEY" not in json.dumps(job)
         assert load_job(config_path).agents[0].env == {"CODEX_FORCE_AUTH_JSON": "1"}
+    candidate_config = next(
+        manifest.path.parent / path
+        for path in manifest.harbor_config_paths
+        if "candidate" in path
+    )
+    candidate_agent = load_job(candidate_config).agents[0]
+    assert candidate_agent.skills == [str(candidate_skills)]
+    assert [resolved.name for resolved in resolve_skills(candidate_agent.skills)] == [
+        "dev-task"
+    ]
 
 
 def test_subscription_and_api_budget_rules_are_distinct(run_root: Path):

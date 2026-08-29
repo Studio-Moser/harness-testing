@@ -418,7 +418,7 @@ def _job_document(
             if billing_mode == "subscription"
             else {}
         )
-        skills = ["/harness-arm/skills"] if (bundle / "skills").is_dir() else []
+        skills = [str(bundle / "skills")] if (bundle / "skills").is_dir() else []
     hosts = (
         _SUBSCRIPTION_HOSTS[cell.provider]
         if billing_mode == "subscription"
