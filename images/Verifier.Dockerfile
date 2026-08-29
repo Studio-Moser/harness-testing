@@ -4,6 +4,7 @@ RUN python -m pip install --no-cache-dir harbor-rewardkit==0.1.7 \
     && rewardkit --help >/dev/null
 
 COPY src/harness_testing/__init__.py src/harness_testing/Trajectory_Events.py \
+    src/harness_testing/Workflow_Criteria.py \
     /usr/local/lib/python3.12/site-packages/harness_testing/
 
 WORKDIR /tests

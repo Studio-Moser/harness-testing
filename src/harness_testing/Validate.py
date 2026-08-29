@@ -54,19 +54,28 @@ def _validate_benchmark_task_assets(
     if "verification_envelope" not in task.metadata:
         return []
     task_root = task_path.parent
-    required_files = (
+    environment_directory = task_root / "environment"
+    is_rust = (environment_directory / "Cargo.toml").is_file()
+    required_files = [
         "instruction.md",
         "environment/Dockerfile",
-        "environment/package.json",
-        "environment/package-lock.json",
         "solution/solve.sh",
         "tests/Dockerfile",
         "tests/test.sh",
         "tests/criteria.py",
         "tests/Protected_Files.json",
-        "tests/Verifier/package.json",
-        "tests/Verifier/package-lock.json",
-    )
+    ]
+    if is_rust:
+        required_files.extend(("environment/Cargo.toml", "environment/Cargo.lock"))
+    else:
+        required_files.extend(
+            (
+                "environment/package.json",
+                "environment/package-lock.json",
+                "tests/Verifier/package.json",
+                "tests/Verifier/package-lock.json",
+            )
+        )
     failures = [
         _failure(task_root / relative, "required benchmark task asset is missing")
         for relative in required_files
@@ -90,44 +99,46 @@ def _validate_benchmark_task_assets(
             )
         )
 
-    try:
-        environment_package = json.loads(
-            (task_root / "environment" / "package.json").read_text()
-        )
-        verifier_package = json.loads(
-            (task_root / "tests" / "Verifier" / "package.json").read_text()
-        )
-        available_dependencies = {
-            **environment_package["dependencies"],
-            **environment_package["devDependencies"],
-        }
-        verifier_names = {
-            "@vitejs/plugin-react",
-            "happy-dom",
-            "react",
-            "react-dom",
-            "vite",
-            "vitest",
-        }
-        expected_dependencies = {
-            name: available_dependencies[name] for name in sorted(verifier_names)
-        }
-        if verifier_package.get("dependencies") != expected_dependencies:
+    if not is_rust:
+        try:
+            environment_package = json.loads(
+                (task_root / "environment" / "package.json").read_text()
+            )
+            verifier_package = json.loads(
+                (task_root / "tests" / "Verifier" / "package.json").read_text()
+            )
+            available_dependencies = {
+                **environment_package.get("dependencies", {}),
+                **environment_package.get("devDependencies", {}),
+            }
+            verifier_names = {
+                "@vitejs/plugin-react",
+                "happy-dom",
+                "react",
+                "react-dom",
+                "vite",
+                "vitest",
+            }
+            expected_dependencies = {
+                name: available_dependencies[name]
+                for name in sorted(verifier_names)
+                if name in available_dependencies
+            }
+            if verifier_package.get("dependencies") != expected_dependencies:
+                failures.append(
+                    _failure(
+                        task_root / "tests" / "Verifier" / "package.json",
+                        "verifier dependencies must be the exact frozen behavior-test subset",
+                    )
+                )
+        except (KeyError, OSError, TypeError, json.JSONDecodeError) as error:
             failures.append(
                 _failure(
                     task_root / "tests" / "Verifier" / "package.json",
-                    "verifier dependencies must be the exact frozen behavior-test subset",
+                    f"invalid verifier dependency manifest: {error}",
                 )
             )
-    except (KeyError, OSError, TypeError, json.JSONDecodeError) as error:
-        failures.append(
-            _failure(
-                task_root / "tests" / "Verifier" / "package.json",
-                f"invalid verifier dependency manifest: {error}",
-            )
-        )
 
-    environment_directory = task_root / "environment"
     for path in environment_directory.rglob("*"):
         if path.is_symlink():
             failures.append(_failure(path, "frozen fixture must not contain symlinks"))

@@ -15,19 +15,10 @@ from rewardkit import discover
 from harness_testing.Materialize import build_images, image_is_current
 
 QA_CASES = ("oracle", "nop", "near-miss", "adversarial", "source-tamper")
-_PREMATURE_SENTINEL_TASK = "react-grouped-ui-updates"
-_EXPECTED_SCORES = {
-    "oracle": {"reward": 1.0, "workflow": 1.0, "efficiency": 1.0},
-    "nop": {"reward": 0.0, "workflow": 0.0, "efficiency": 1.0},
-    "near-miss": {"reward": 0.0, "workflow": 0.0, "efficiency": 1.0},
-    "adversarial": {"reward": 0.0, "workflow": 1.0, "efficiency": 1.0},
-    "source-tamper": {"reward": 0.0, "workflow": 1.0, "efficiency": 1.0},
-}
-_CASE_SCRIPTS = {
-    "nop": "Nop.sh",
-    "near-miss": "Near_Miss.sh",
-    "adversarial": "Adversarial.sh",
-    "source-tamper": "Source_Tamper.sh",
+_EFFICIENCY_AUDITS = {
+    "react-grouped-ui-updates": "Grouped_Premature.json",
+    "react-accent-polish": "Polish_Unnecessary_Gate.json",
+    "static-grouped-page-updates": "Static_Grouped_Premature.json",
 }
 
 
@@ -38,14 +29,45 @@ def _task_root(root: Path, task_id: str) -> Path:
     return task_root
 
 
-def _case_script(root: Path, task_id: str, case: str) -> Path:
-    if case == "oracle":
-        script = _task_root(root, task_id) / "solution" / "solve.sh"
-    else:
-        filename = _CASE_SCRIPTS.get(case)
-        if filename is None:
-            raise ValueError(f"unknown QA case: {case}")
+def _case_spec(root: Path, task_id: str, case: str) -> dict[str, object]:
+    path = _task_root(root, task_id) / "tests" / "QA.json"
+    try:
+        document = json.loads(path.read_text())
+        spec = document["cases"][case]
+    except (OSError, KeyError, TypeError, json.JSONDecodeError) as error:
+        raise ValueError(f"invalid QA case {case} for {task_id}: {error}") from error
+    if not isinstance(spec, dict):
+        raise ValueError(f"invalid QA case {case} for {task_id}: expected an object")
+    commands = spec.get("commands")
+    mutation_paths = spec.get("mutation_paths")
+    expected = spec.get("expected")
+    if (
+        not isinstance(commands, list)
+        or not all(isinstance(command, str) for command in commands)
+        or not isinstance(mutation_paths, list)
+        or not all(isinstance(path, str) for path in mutation_paths)
+        or not isinstance(expected, dict)
+        or set(expected) != {"reward", "workflow", "efficiency"}
+        or not all(isinstance(score, (int, float)) for score in expected.values())
+    ):
+        raise ValueError(f"invalid QA evidence for {task_id}:{case}")
+    return spec
+
+
+def _case_script(root: Path, task_id: str, case: str, spec: dict[str, object]) -> Path:
+    configured = spec.get("script")
+    if not isinstance(configured, str):
+        raise ValueError(f"invalid QA script for {task_id}:{case}")
+    if configured.startswith("@shared/"):
+        filename = configured.removeprefix("@shared/")
+        if Path(filename).name != filename:
+            raise ValueError(f"unsafe shared QA script for {task_id}:{case}")
         script = root / "tests" / "Support" / "QA_Cases" / filename
+    else:
+        task_root = _task_root(root, task_id).resolve()
+        script = (task_root / configured).resolve()
+        if not script.is_relative_to(task_root):
+            raise ValueError(f"unsafe task QA script for {task_id}:{case}")
     if not script.is_file():
         raise ValueError(f"QA script is missing: {script}")
     return script.resolve()
@@ -54,7 +76,8 @@ def _case_script(root: Path, task_id: str, case: str) -> Path:
 def build_qa_job(root: Path, task_id: str, case: str, jobs_dir: Path) -> JobConfig:
     root = root.resolve()
     _task_root(root, task_id)
-    script = _case_script(root, task_id, case)
+    spec = _case_spec(root, task_id, case)
+    script = _case_script(root, task_id, case, spec)
     return JobConfig.model_validate(
         {
             "job_name": f"qa-{task_id}-{case}",
@@ -73,7 +96,12 @@ def build_qa_job(root: Path, task_id: str, case: str, jobs_dir: Path) -> JobConf
                     "import_path": "tests.Support.QA_Agents:ScriptAgent",
                     "model_name": None,
                     "extra_allowed_hosts": [],
-                    "kwargs": {"case": case, "script_path": str(script)},
+                    "kwargs": {
+                        "case": case,
+                        "script_path": str(script),
+                        "commands": spec["commands"],
+                        "mutation_paths": spec["mutation_paths"],
+                    },
                 }
             ],
             "datasets": [
@@ -86,9 +114,11 @@ def build_qa_job(root: Path, task_id: str, case: str, jobs_dir: Path) -> JobConf
     )
 
 
-def _ensure_base_images(root: Path) -> None:
+def _ensure_base_images(root: Path, task_id: str) -> None:
+    task_root = _task_root(root, task_id)
+    runtime = "rust" if (task_root / "environment" / "Cargo.toml").is_file() else "node"
     selected: list[str] = []
-    for image in ("node", "verifier"):
+    for image in (runtime, "verifier"):
         if not image_is_current(root, image):
             selected.append(image)
     if selected:
@@ -113,17 +143,26 @@ def _score_document(jobs_dir: Path) -> tuple[dict[str, float], Path]:
     return scores, reward_paths[0]
 
 
-def _assert_scores(case: str, scores: dict[str, float]) -> None:
-    expected = _EXPECTED_SCORES[case]
+def _assert_scores(
+    task_id: str,
+    case: str,
+    scores: dict[str, float],
+    expected: dict[str, object],
+) -> None:
     if scores != expected:
-        raise RuntimeError(f"QA case {case} returned {scores}; expected {expected}")
+        raise RuntimeError(
+            f"QA case {task_id}:{case} returned {scores}; expected {expected}"
+        )
 
 
-def _assert_premature_trajectory(
-    root: Path, jobs_dir: Path, oracle_scores: dict[str, float]
+def _assert_efficiency_audit(
+    root: Path,
+    task_id: str,
+    jobs_dir: Path,
+    oracle_scores: dict[str, float],
 ) -> None:
     if oracle_scores["reward"] != 1.0:
-        raise RuntimeError("premature-trajectory audit requires a correct oracle workspace")
+        raise RuntimeError("efficiency audit requires a correct oracle workspace")
     workspaces = sorted(
         path
         for path in jobs_dir.rglob("workspace")
@@ -136,14 +175,14 @@ def _assert_premature_trajectory(
     variable = "HARNESS_TEST_TRAJECTORY"
     previous = os.environ.get(variable)
     os.environ[variable] = str(
-        root / "tests" / "Fixtures" / "ATIF" / "Grouped_Premature.json"
+        root / "tests" / "Fixtures" / "ATIF" / _EFFICIENCY_AUDITS[task_id]
     )
     try:
         rewards = discover(
             root
             / "tasks"
             / "workflow"
-            / _PREMATURE_SENTINEL_TASK
+            / task_id
             / "tests",
             workspace=workspaces[0],
         )
@@ -156,7 +195,7 @@ def _assert_premature_trajectory(
             os.environ[variable] = previous
     if efficiency.score != 0.0:
         raise RuntimeError(
-            "premature trajectory must preserve proven correctness and fail efficiency; "
+            "policy trajectory must preserve proven correctness and fail efficiency; "
             f"received efficiency={efficiency.score}"
         )
 
@@ -165,7 +204,8 @@ def run_task_qa(root: Path, task_id: str, case: str) -> dict[str, float]:
     root = root.resolve()
     if case not in QA_CASES:
         raise ValueError(f"unknown QA case: {case}")
-    _ensure_base_images(root)
+    spec = _case_spec(root, task_id, case)
+    _ensure_base_images(root, task_id)
     with tempfile.TemporaryDirectory(prefix="harness-task-qa-") as temporary:
         temporary_root = Path(temporary)
         jobs_dir = temporary_root / "jobs"
@@ -186,7 +226,7 @@ def run_task_qa(root: Path, task_id: str, case: str) -> dict[str, float]:
             check=True,
         )
         scores, _ = _score_document(jobs_dir)
-        _assert_scores(case, scores)
-        if case == "oracle" and task_id == _PREMATURE_SENTINEL_TASK:
-            _assert_premature_trajectory(root, jobs_dir, scores)
+        _assert_scores(task_id, case, scores, spec["expected"])
+        if case == "oracle" and task_id in _EFFICIENCY_AUDITS:
+            _assert_efficiency_audit(root, task_id, jobs_dir, scores)
         return scores

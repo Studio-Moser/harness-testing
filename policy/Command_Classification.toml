@@ -7,7 +7,15 @@ command_arguments = ["command", "cmd"]
 path_arguments = ["file_path", "path"]
 
 [normalization]
-ignored_flags = ["-q", "--quiet", "--silent", "--no-color", "--color"]
+ignored_flags = [
+  "-q",
+  "--quiet",
+  "--silent",
+  "--no-color",
+  "--color",
+  "--locked",
+  "--offline",
+]
 removable_prefixes = ["uv run"]
 
 [[classes]]

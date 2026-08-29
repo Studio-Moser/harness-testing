@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "files": {
+    "Cargo.lock": "sha256:713ecf5bd48dbe73ca5dd92590634870d08feadc14e99678f23bf2b2afe32902",
+    "Cargo.toml": "sha256:90efafe01e8cbfb775ee08b434f80b060de5e2659d9d0ea76fb1e7cbde08bac3",
+    "crates/event_model/Cargo.toml": "sha256:e6e34c504f5221852035984fe5488eaa514743fcd281cbe37389b17b4aa23c1f",
+    "crates/event_model/tests/Event.rs": "sha256:232264968e108344801469649abfdbf0fd359d014afb65772dc64f7b5b9f5dcc",
+    "crates/summary/Cargo.toml": "sha256:52408acf9e722703b7de025974a0e70056d20dea9b97382a26bbca57f04f1cd4",
+    "crates/summary/tests/Warning_Count.rs": "sha256:2aacfe7defbc4a9632dc981d4c287409f9b9f08266664eb46a9b23abb3c4e1ea",
+    "crates/summary_cli/Cargo.toml": "sha256:ef6020a6c00caf6dfbcf856dab56ab8f265b1399f2f16cfda74ad2b1a8856699",
+    "crates/summary_cli/src/main.rs": "sha256:d95c0e02bcb9c94eac28ec96446a1aa7fa9f00be4d303c88765c745bc67731b5",
+    "crates/summary_cli/tests/Json_Output.rs": "sha256:7efe67759c745fce88d39ba0ffa3efd458dc4a335cc6b324abce39ce3b3316b2"
+  },
+  "mutable_files": {}
+}

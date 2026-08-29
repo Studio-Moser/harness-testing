@@ -36,10 +36,11 @@ def test_base_image_context_excludes_local_and_benchmark_payloads():
     }
 
 
-def test_verifier_image_carries_the_shared_trajectory_decoder():
+def test_verifier_image_carries_shared_workflow_support():
     dockerfile = (REPOSITORY_ROOT / "images" / "Verifier.Dockerfile").read_text()
 
     assert "src/harness_testing/Trajectory_Events.py" in dockerfile
+    assert "src/harness_testing/Workflow_Criteria.py" in dockerfile
 
 
 def test_image_build_commands_select_only_requested_images():
@@ -69,6 +70,7 @@ def test_verifier_image_digest_binds_the_shared_decoder(tmp_path: Path):
         "images/Verifier.Dockerfile",
         "src/harness_testing/__init__.py",
         "src/harness_testing/Trajectory_Events.py",
+        "src/harness_testing/Workflow_Criteria.py",
     ):
         source = REPOSITORY_ROOT / relative
         destination = tmp_path / relative
@@ -79,6 +81,13 @@ def test_verifier_image_digest_binds_the_shared_decoder(tmp_path: Path):
     )
 
     assert image_input_digest(tmp_path, "verifier") != first
+
+    criteria_first = image_input_digest(tmp_path, "verifier")
+    (tmp_path / "src" / "harness_testing" / "Workflow_Criteria.py").write_text(
+        "changed\n"
+    )
+
+    assert image_input_digest(tmp_path, "verifier") != criteria_first
 
 
 def test_rust_image_recreates_global_cli_symlinks_after_copying_node_modules():

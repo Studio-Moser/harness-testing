@@ -1,0 +1,14 @@
+{
+  "name": "static-accessible-disclosure",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "gate": "npm test"
+  },
+  "devDependencies": {
+    "happy-dom": "20.11.13",
+    "vitest": "4.1.11"
+  }
+}

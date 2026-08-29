@@ -1,0 +1,10 @@
+[package]
+name = "summary"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+event_model = { path = "../event_model" }
+
+[lib]
+path = "src/lib.rs"

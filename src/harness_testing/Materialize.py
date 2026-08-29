@@ -33,6 +33,7 @@ _IMAGE_INPUTS = {
         "images/Verifier.Dockerfile",
         "src/harness_testing/__init__.py",
         "src/harness_testing/Trajectory_Events.py",
+        "src/harness_testing/Workflow_Criteria.py",
     ),
 }
 _IMAGE_INPUT_LABEL = "studio.moser.harness-testing.input-digest"

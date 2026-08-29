@@ -1,0 +1,9 @@
+{
+  "name": "static-grouped-page-updates-verifier",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "happy-dom": "20.11.13",
+    "vitest": "4.1.11"
+  }
+}

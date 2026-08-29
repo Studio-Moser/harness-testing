@@ -1,0 +1,7 @@
+[workspace]
+members = [
+  "crates/event_model",
+  "crates/summary",
+  "crates/summary_cli",
+]
+resolver = "3"

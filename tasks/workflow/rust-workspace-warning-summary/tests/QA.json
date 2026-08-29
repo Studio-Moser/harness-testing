@@ -1,0 +1,35 @@
+{
+  "cases": {
+    "adversarial": {
+      "commands": ["cargo test -p event_model", "cargo test -p summary", "cargo test -p summary_cli", "cargo test --workspace"],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 1.0},
+      "mutation_paths": ["crates/event_model/src/lib.rs", "crates/summary/src/lib.rs", "crates/summary_cli/src/lib.rs", "crates/summary_cli/tests/Json_Output.rs"],
+      "script": "tests/QA/Adversarial.sh"
+    },
+    "near-miss": {
+      "commands": ["cargo test -p event_model"],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 0.0},
+      "mutation_paths": ["crates/summary_cli/src/lib.rs"],
+      "script": "tests/QA/Near_Miss.sh"
+    },
+    "nop": {
+      "commands": [],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 0.0},
+      "mutation_paths": [],
+      "script": "@shared/Nop.sh"
+    },
+    "oracle": {
+      "commands": ["cargo test -p event_model", "cargo test -p summary", "cargo test -p summary_cli", "cargo test --workspace"],
+      "expected": {"efficiency": 1.0, "reward": 1.0, "workflow": 1.0},
+      "mutation_paths": ["crates/event_model/src/lib.rs", "crates/summary/src/lib.rs", "crates/summary_cli/src/lib.rs"],
+      "script": "solution/solve.sh"
+    },
+    "source-tamper": {
+      "commands": ["cargo test -p event_model", "cargo test -p summary", "cargo test -p summary_cli", "cargo test --workspace"],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 1.0},
+      "mutation_paths": ["crates/event_model/src/lib.rs", "crates/summary/src/lib.rs", "crates/summary_cli/src/lib.rs", "Cargo.toml"],
+      "script": "tests/QA/Source_Tamper.sh"
+    }
+  },
+  "schema_version": "1"
+}

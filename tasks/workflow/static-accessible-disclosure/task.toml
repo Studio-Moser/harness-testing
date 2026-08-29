@@ -1,0 +1,56 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+]
+
+[task]
+name = "studio-moser/static-accessible-disclosure"
+version = "1.0.0"
+description = "Measures a focused accessibility repair with targeted and package-level proof."
+authors = [{ name = "Studio Moser" }]
+keywords = ["html", "javascript", "accessibility", "testing-churn"]
+
+[metadata]
+difficulty = "easy"
+category = "workflow"
+tags = ["html", "javascript", "accessibility", "testing-churn"]
+change_class = "small"
+verification_envelope = "small"
+fixture_digest = "sha256:ead18b80419ccfab802be534629eb09a1fae706d6a62763897d49a381c7de03f"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

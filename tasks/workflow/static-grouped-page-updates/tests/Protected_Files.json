@@ -1,0 +1,43 @@
+{
+  "schema_version": "1",
+  "files": {
+    ".dockerignore": "sha256:16d30e4462189fb14dd611bdb708c510630c576a1f35b9383e89a4352da36c97",
+    "Dockerfile": "sha256:5904b109bac4a9dd8ecf5b6301e4ecd71ea058757de92417ff26c63261f05994",
+    "package-lock.json": "sha256:a9c30a462f4637aecef465777bdd49390fd29537f5ead31a86b2677fb7a32f56",
+    "package.json": "sha256:1d9b66740f5dc4b81841244dc2961d770b0c41576c771e0bb203ab4ee472f555",
+    "scripts/Check_Page.mjs": "sha256:4dae674939d78ad7b8508da0e0048dab8999f909aa34b51c8161ff27ffdd72c2",
+    "test/Page.test.js": "sha256:2582217105c680ea678a28a9d5f3e5435b86661e6d151b9c85d91eab49fcc2b9"
+  },
+  "mutable_files": {
+    "index.html": {
+      "baseline_sha256": "sha256:1e708f752dadc7e0f27eee21483651c664b4a591edd9384c1a88e8e355949c1e",
+      "replacements": [
+        {
+          "before": "Ship faster together",
+          "after": "Build calmer workflows",
+          "count": 1
+        },
+        {
+          "before": "<div class=\"page-shell\">",
+          "after": "<main id=\"main-content\" class=\"page-shell\">",
+          "count": 1
+        },
+        {
+          "before": "</div>",
+          "after": "</main>",
+          "count": 1
+        }
+      ]
+    },
+    "styles.css": {
+      "baseline_sha256": "sha256:a163d19c6978a26253a613f623775d1eaa6038d94b336a58692b0b2c784684f3",
+      "replacements": [
+        {
+          "before": "--section-gap: 2rem",
+          "after": "--section-gap: 4rem",
+          "count": 1
+        }
+      ]
+    }
+  }
+}

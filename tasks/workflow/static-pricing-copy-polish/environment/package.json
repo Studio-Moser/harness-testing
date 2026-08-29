@@ -1,0 +1,15 @@
+{
+  "name": "static-pricing-copy-polish",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "check:pricing-card": "node scripts/Check_Pricing_Card.mjs",
+    "test": "vitest run",
+    "gate": "npm test"
+  },
+  "devDependencies": {
+    "happy-dom": "20.11.13",
+    "vitest": "4.1.11"
+  }
+}

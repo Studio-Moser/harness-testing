@@ -1,0 +1,31 @@
+{
+  "name": "react-saved-view-feature",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test:saved-view": "vitest run src/domain/Saved_View.test.ts",
+    "test:view-filter": "vitest run src/domain/View_Filter.test.ts",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint eslint.config.js scripts",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "gate": "npm run lint && npm run typecheck && npm test"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@vitejs/plugin-react": "6.1.0",
+    "eslint": "10.9.1",
+    "happy-dom": "20.11.13",
+    "typescript": "7.0.2",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
+  }
+}

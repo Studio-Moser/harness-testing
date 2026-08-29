@@ -1,0 +1,35 @@
+{
+  "cases": {
+    "adversarial": {
+      "commands": ["npm run test:saved-view", "npm run test:view-filter", "npm run gate"],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 1.0},
+      "mutation_paths": ["src/domain/Saved_View.ts", "src/domain/Saved_View.test.ts"],
+      "script": "tests/QA/Adversarial.sh"
+    },
+    "near-miss": {
+      "commands": ["npm run test:view-filter"],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 0.0},
+      "mutation_paths": ["src/domain/Saved_View.ts"],
+      "script": "tests/QA/Near_Miss.sh"
+    },
+    "nop": {
+      "commands": [],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 0.0},
+      "mutation_paths": [],
+      "script": "@shared/Nop.sh"
+    },
+    "oracle": {
+      "commands": ["npm run test:saved-view", "npm run test:view-filter", "npm run gate"],
+      "expected": {"efficiency": 1.0, "reward": 1.0, "workflow": 1.0},
+      "mutation_paths": ["src/domain/Saved_View.ts"],
+      "script": "solution/solve.sh"
+    },
+    "source-tamper": {
+      "commands": ["npm run test:saved-view", "npm run test:view-filter", "npm run gate"],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 1.0},
+      "mutation_paths": ["src/domain/Saved_View.ts", "src/App.tsx"],
+      "script": "tests/QA/Source_Tamper.sh"
+    }
+  },
+  "schema_version": "1"
+}

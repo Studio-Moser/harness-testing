@@ -1,0 +1,56 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+]
+
+[task]
+name = "studio-moser/static-grouped-page-updates"
+version = "1.0.0"
+description = "Measures whether a coding agent batches three static-page updates before one final gate."
+authors = [{ name = "Studio Moser" }]
+keywords = ["html", "css", "grouped", "testing-churn"]
+
+[metadata]
+difficulty = "easy"
+category = "workflow"
+tags = ["html", "css", "grouped", "testing-churn"]
+change_class = "grouped"
+verification_envelope = "grouped"
+fixture_digest = "sha256:31c7905ade50524e6da7cba1aef34a0dd31dae72b6877d7cad55e3514a8f63e9"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

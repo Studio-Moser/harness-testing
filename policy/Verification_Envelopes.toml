@@ -8,7 +8,7 @@ final_comprehensive_required = false
 [envelopes.small]
 track_premature_comprehensive = true
 track_duplicate_success = true
-final_comprehensive_required = false
+final_comprehensive_required = true
 
 [envelopes.grouped]
 track_premature_comprehensive = true

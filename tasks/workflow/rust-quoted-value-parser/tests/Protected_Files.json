@@ -1,0 +1,9 @@
+{
+  "schema_version": "1",
+  "files": {
+    "Cargo.lock": "sha256:beb97376a641faa49d30a12f41ec87ba2a056b21b65920ba1cb1d84aab076718",
+    "Cargo.toml": "sha256:a384b37d7129c675be9e505f62b4a8a103a3a397ed26bbb5b62a5e8e964332fd",
+    "tests/Quoted_Value.rs": "sha256:a5730a2e0fecd2106dc8b69db13af62e19506b062e11ecf03b9e1756c2273d9f"
+  },
+  "mutable_files": {}
+}

@@ -30,6 +30,12 @@ def grouped_policy():
         ("npm run build", "build"),
         ("npx playwright test", "browser"),
         ("cargo fmt --check", "format"),
+        (
+            "cargo test --offline --locked quoted_value_preserves_embedded_equals",
+            "targeted_test",
+        ),
+        ("cargo test --locked -p config_line --offline", "package_test"),
+        ("cargo test --offline --workspace --locked", "comprehensive_test"),
         ("mystery-tool --all", "unknown"),
     ],
 )

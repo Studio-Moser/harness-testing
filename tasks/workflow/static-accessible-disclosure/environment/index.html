@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Center</title>
+  </head>
+  <body>
+    <section aria-labelledby="faq-heading">
+      <h1 id="faq-heading">Frequently asked questions</h1>
+      <button id="faq-trigger" type="button" aria-expanded="false" aria-controls="faq-panel">
+        Can I invite my team?
+      </button>
+      <div id="faq-panel" hidden>Yes. Every plan supports collaborators.</div>
+    </section>
+    <script type="module">
+      import { initializeDisclosure } from './src/Disclosure.js'
+      initializeDisclosure()
+    </script>
+  </body>
+</html>

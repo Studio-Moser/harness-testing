@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, override
 
@@ -11,60 +12,41 @@ from harbor.models.agent.context import AgentContext
 from harbor.models.trajectories import Trajectory
 from harbor.utils.trajectory_utils import format_trajectory_json
 
-_PATCHES = {
-    "oracle": """*** Begin Patch
-*** Update File: /app/src/App.tsx
-*** Update File: /app/src/index.css
-*** End Patch""",
-    "near-miss": """*** Begin Patch
-*** Update File: /app/src/index.css
-*** End Patch""",
-    "adversarial": """*** Begin Patch
-*** Update File: /app/src/App.tsx
-*** Update File: /app/src/index.css
-*** Update File: /app/src/App.test.tsx
-*** End Patch""",
-    "source-tamper": """*** Begin Patch
-*** Update File: /app/src/App.tsx
-*** Update File: /app/src/index.css
-*** End Patch""",
-}
 
-_COMMANDS = {
-    "oracle": (
-        "npm run check:accent",
-        "npm run check:copy",
-        "npm run check:spacing",
-        "npm run gate",
-    ),
-    "nop": (),
-    "near-miss": ("npm run check:accent",),
-    "adversarial": ("npm run gate",),
-    "source-tamper": ("npm run gate",),
-}
-
-
-def build_case_trajectory(case: str, script_exit_code: int) -> Trajectory:
-    if case not in _COMMANDS:
+def build_case_trajectory(
+    case: str,
+    script_exit_code: int,
+    *,
+    commands: Sequence[str],
+    mutation_paths: Sequence[str],
+) -> Trajectory:
+    if not case:
         raise ValueError(f"unknown QA case: {case}")
     calls: list[dict[str, Any]] = []
     results: list[dict[str, Any]] = []
     call_index = 0
-    if case in _PATCHES:
+    if mutation_paths:
         call_index += 1
+        patch = "\n".join(
+            (
+                "*** Begin Patch",
+                *(f"*** Update File: /app/{path}" for path in mutation_paths),
+                "*** End Patch",
+            )
+        )
         calls.append(
             {
                 "tool_call_id": f"qa-{call_index}",
                 "function_name": "apply_patch",
-                "arguments": {"patch": _PATCHES[case]},
+                "arguments": {"patch": patch},
             }
         )
         results.append(
             {"source_call_id": f"qa-{call_index}", "content": "Done!"}
         )
-    for command in _COMMANDS[case]:
+    for command in commands:
         call_index += 1
-        exit_code = script_exit_code if command == _COMMANDS[case][-1] else 0
+        exit_code = script_exit_code if command == commands[-1] else 0
         calls.append(
             {
                 "tool_call_id": f"qa-{call_index}",
@@ -126,12 +108,26 @@ def build_case_trajectory(case: str, script_exit_code: int) -> Trajectory:
 class ScriptAgent(BaseAgent):
     SUPPORTS_ATIF = True
 
-    def __init__(self, *args: Any, case: str, script_path: str, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        case: str,
+        script_path: str,
+        commands: list[str],
+        mutation_paths: list[str],
+        **kwargs: Any,
+    ) -> None:
         super().__init__(*args, **kwargs)
-        if case not in _COMMANDS:
+        if not case:
             raise ValueError(f"unknown QA case: {case}")
+        if not all(isinstance(command, str) for command in commands):
+            raise ValueError("QA commands must be strings")
+        if not all(isinstance(path, str) for path in mutation_paths):
+            raise ValueError("QA mutation paths must be strings")
         self._case = case
         self._script_path = Path(script_path)
+        self._commands = tuple(commands)
+        self._mutation_paths = tuple(mutation_paths)
 
     @staticmethod
     @override
@@ -162,7 +158,12 @@ class ScriptAgent(BaseAgent):
         (self.logs_dir / "script-output.txt").write_text(
             f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}\n"
         )
-        trajectory = build_case_trajectory(self._case, result.return_code)
+        trajectory = build_case_trajectory(
+            self._case,
+            result.return_code,
+            commands=self._commands,
+            mutation_paths=self._mutation_paths,
+        )
         (self.logs_dir / "trajectory.json").write_text(
             format_trajectory_json(trajectory.model_dump(mode="json"))
         )

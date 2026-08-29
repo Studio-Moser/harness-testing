@@ -2,8 +2,10 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
 from harbor.models.trajectories import Trajectory
 
+from harness_testing import QA
 from harness_testing.Config import load_task
 from harness_testing.QA import QA_CASES, build_qa_job
 
@@ -118,14 +120,67 @@ def test_qa_job_is_single_session_model_free_and_uses_only_the_test_adapter(tmp_
     assert job.agents[0].model_name is None
     assert job.agents[0].import_path == "tests.Support.QA_Agents:ScriptAgent"
     assert job.agents[0].extra_allowed_hosts == []
+    assert job.agents[0].kwargs["commands"] == [
+        "npm run check:accent",
+        "npm run check:copy",
+        "npm run check:spacing",
+        "npm run gate",
+    ]
+    assert job.agents[0].kwargs["mutation_paths"] == [
+        "src/App.tsx",
+        "src/index.css",
+    ]
     assert job.datasets[0].task_names == [TASK_ID]
+
+
+def test_qa_job_loads_task_specific_polish_evidence(tmp_path):
+    job = build_qa_job(
+        REPOSITORY_ROOT,
+        "react-accent-polish",
+        "oracle",
+        tmp_path / "jobs",
+    )
+
+    assert job.agents[0].kwargs["commands"] == ["npm run check:cta"]
+    assert job.agents[0].kwargs["mutation_paths"] == ["src/index.css"]
+
+
+@pytest.mark.parametrize(
+    ("task_id", "expected"),
+    [
+        ("static-pricing-copy-polish", ("node", "verifier")),
+        ("rust-quoted-value-parser", ("rust", "verifier")),
+    ],
+)
+def test_qa_refreshes_only_the_task_runtime_and_verifier_images(
+    task_id: str,
+    expected: tuple[str, ...],
+    monkeypatch: pytest.MonkeyPatch,
+):
+    checked: list[str] = []
+
+    def image_is_current(root: Path, image: str) -> bool:
+        assert root == REPOSITORY_ROOT
+        checked.append(image)
+        return True
+
+    monkeypatch.setattr(QA, "image_is_current", image_is_current)
+
+    QA._ensure_base_images(REPOSITORY_ROOT, task_id)
+
+    assert tuple(checked) == expected
 
 
 def test_qa_case_trajectories_are_valid_atif_and_only_oracle_has_one_final_gate():
     from tests.Support.QA_Agents import build_case_trajectory
 
-    oracle = build_case_trajectory("oracle", 0)
-    nop = build_case_trajectory("nop", 0)
+    oracle = build_case_trajectory(
+        "oracle",
+        0,
+        commands=("npm run check:accent", "npm run gate"),
+        mutation_paths=("src/index.css",),
+    )
+    nop = build_case_trajectory("nop", 0, commands=(), mutation_paths=())
 
     Trajectory.model_validate(oracle.model_dump(mode="json"))
     Trajectory.model_validate(nop.model_dump(mode="json"))
