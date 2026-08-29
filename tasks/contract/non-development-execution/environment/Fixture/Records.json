@@ -1,0 +1,5 @@
+[
+  {"id": "R-1", "status": "ready"},
+  {"id": "R-2", "status": "blocked"},
+  {"id": "R-3", "status": "ready"}
+]

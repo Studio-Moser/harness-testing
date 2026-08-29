@@ -1,0 +1,57 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+  { source = "/var/log/harness/Events.jsonl", service = "harness-stub" },
+]
+
+[task]
+name = "studio-moser/pm-cross-vendor-implementation"
+version = "1.0.0"
+description = "Measures bounded PM-to-Harness delegation and parent proof reproduction."
+authors = [{ name = "Studio Moser" }]
+keywords = ["harness", "contract", "routing", "project-management"]
+
+[metadata]
+difficulty = "medium"
+category = "contract"
+tags = ["harness", "contract", "routing", "project-management"]
+change_class = "feature"
+verification_envelope = "contract"
+fixture_digest = "sha256:49d2c1db794d22954d2d0a85322f548568341229a6912215b6f9b3ea97dc3143"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

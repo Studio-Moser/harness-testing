@@ -23,10 +23,14 @@ _EFFICIENCY_AUDITS = {
 
 
 def _task_root(root: Path, task_id: str) -> Path:
-    task_root = root / "tasks" / "workflow" / task_id
-    if not (task_root / "task.toml").is_file():
-        raise ValueError(f"unknown workflow task: {task_id}")
-    return task_root
+    matches = [
+        root / "tasks" / pack / task_id
+        for pack in ("contract", "workflow")
+        if (root / "tasks" / pack / task_id / "task.toml").is_file()
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"unknown or ambiguous benchmark task: {task_id}")
+    return matches[0]
 
 
 def _case_spec(root: Path, task_id: str, case: str) -> dict[str, object]:
@@ -41,12 +45,14 @@ def _case_spec(root: Path, task_id: str, case: str) -> dict[str, object]:
     commands = spec.get("commands")
     mutation_paths = spec.get("mutation_paths")
     expected = spec.get("expected")
+    run_oracle_first = spec.get("run_oracle_first", False)
     if (
         not isinstance(commands, list)
         or not all(isinstance(command, str) for command in commands)
         or not isinstance(mutation_paths, list)
         or not all(isinstance(path, str) for path in mutation_paths)
         or not isinstance(expected, dict)
+        or not isinstance(run_oracle_first, bool)
         or set(expected) != {"reward", "workflow", "efficiency"}
         or not all(isinstance(score, (int, float)) for score in expected.values())
     ):
@@ -78,6 +84,13 @@ def build_qa_job(root: Path, task_id: str, case: str, jobs_dir: Path) -> JobConf
     _task_root(root, task_id)
     spec = _case_spec(root, task_id, case)
     script = _case_script(root, task_id, case, spec)
+    oracle_script = (
+        (_task_root(root, task_id) / "solution" / "solve.sh").resolve()
+        if spec.get("run_oracle_first") is True
+        else None
+    )
+    if oracle_script is not None and not oracle_script.is_file():
+        raise ValueError(f"QA oracle script is missing: {oracle_script}")
     return JobConfig.model_validate(
         {
             "job_name": f"qa-{task_id}-{case}",
@@ -99,6 +112,9 @@ def build_qa_job(root: Path, task_id: str, case: str, jobs_dir: Path) -> JobConf
                     "kwargs": {
                         "case": case,
                         "script_path": str(script),
+                        "oracle_script_path": (
+                            str(oracle_script) if oracle_script is not None else None
+                        ),
                         "commands": spec["commands"],
                         "mutation_paths": spec["mutation_paths"],
                     },
@@ -106,7 +122,7 @@ def build_qa_job(root: Path, task_id: str, case: str, jobs_dir: Path) -> JobConf
             ],
             "datasets": [
                 {
-                    "path": str((root / "tasks" / "workflow").resolve()),
+                    "path": str(_task_root(root, task_id).parent.resolve()),
                     "task_names": [task_id],
                 }
             ],
@@ -129,9 +145,12 @@ def _score_document(jobs_dir: Path) -> tuple[dict[str, float], Path]:
     reward_paths = sorted(jobs_dir.rglob("reward.json"))
     if len(reward_paths) != 1:
         exception_paths = sorted(jobs_dir.rglob("exception.txt"))
-        details = (
-            f"\n{exception_paths[-1].read_text()}" if exception_paths else ""
-        )
+        script_outputs = sorted(jobs_dir.rglob("script-output.txt"))
+        diagnostics = [
+            *(path.read_text() for path in exception_paths[-1:]),
+            *(path.read_text() for path in script_outputs[-1:]),
+        ]
+        details = "".join(f"\n{diagnostic}" for diagnostic in diagnostics)
         raise RuntimeError(
             f"expected one Harbor reward.json, found {len(reward_paths)} in {jobs_dir}"
             f"{details}"
@@ -148,10 +167,19 @@ def _assert_scores(
     case: str,
     scores: dict[str, float],
     expected: dict[str, object],
+    reward_path: Path,
+    jobs_dir: Path,
 ) -> None:
     if scores != expected:
+        diagnostic_names = {"Events.jsonl", "Harness_Result.json", "manifest.json"}
+        diagnostics = [
+            f"\n--- {path.relative_to(jobs_dir)} ---\n{path.read_text(errors='replace')}"
+            for path in sorted(jobs_dir.rglob("*"))
+            if path.is_file() and path.name in diagnostic_names
+        ]
         raise RuntimeError(
-            f"QA case {task_id}:{case} returned {scores}; expected {expected}"
+            f"QA case {task_id}:{case} returned {scores}; expected {expected}\n"
+            f"{reward_path.read_text()}{''.join(diagnostics)}"
         )
 
 
@@ -181,8 +209,7 @@ def _assert_efficiency_audit(
         rewards = discover(
             root
             / "tasks"
-            / "workflow"
-            / task_id
+            / _task_root(root, task_id).relative_to(root)
             / "tests",
             workspace=workspaces[0],
         )
@@ -225,8 +252,15 @@ def run_task_qa(root: Path, task_id: str, case: str) -> dict[str, float]:
             env=environment,
             check=True,
         )
-        scores, _ = _score_document(jobs_dir)
-        _assert_scores(task_id, case, scores, spec["expected"])
+        scores, reward_path = _score_document(jobs_dir)
+        _assert_scores(
+            task_id,
+            case,
+            scores,
+            spec["expected"],
+            reward_path,
+            jobs_dir,
+        )
         if case == "oracle" and task_id in _EFFICIENCY_AUDITS:
             _assert_efficiency_audit(root, task_id, jobs_dir, scores)
         return scores

@@ -1,0 +1,6 @@
+{
+  "authority": {"allowed_paths": ["Input.md", "Normalized.md", "Harness_Result.json"], "working_directory": "/app"},
+  "constraints": ["Continue without optional memory", "Do not use stale state"],
+  "memory": {"capture": "accepted normalization", "enabled": true, "recall": "prior normalization rules"},
+  "route": "default"
+}

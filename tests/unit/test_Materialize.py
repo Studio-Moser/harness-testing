@@ -69,6 +69,8 @@ def test_verifier_image_digest_binds_the_shared_decoder(tmp_path: Path):
     for relative in (
         "images/Verifier.Dockerfile",
         "src/harness_testing/__init__.py",
+        "src/harness_testing/Contract_Criteria.py",
+        "src/harness_testing/Contract_Stub_Server.py",
         "src/harness_testing/Trajectory_Events.py",
         "src/harness_testing/Workflow_Criteria.py",
     ):

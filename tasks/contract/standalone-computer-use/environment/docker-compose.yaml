@@ -1,0 +1,15 @@
+services:
+  main:
+    depends_on:
+      computer-use:
+        condition: service_healthy
+
+  computer-use:
+    build:
+      context: ./computer-use-server
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.create_connection(('localhost',8000),timeout=2); s.close()"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 10s

@@ -113,6 +113,7 @@ class ScriptAgent(BaseAgent):
         *args: Any,
         case: str,
         script_path: str,
+        oracle_script_path: str | None = None,
         commands: list[str],
         mutation_paths: list[str],
         **kwargs: Any,
@@ -126,6 +127,9 @@ class ScriptAgent(BaseAgent):
             raise ValueError("QA mutation paths must be strings")
         self._case = case
         self._script_path = Path(script_path)
+        self._oracle_script_path = (
+            Path(oracle_script_path) if oracle_script_path is not None else None
+        )
         self._commands = tuple(commands)
         self._mutation_paths = tuple(mutation_paths)
 
@@ -153,6 +157,10 @@ class ScriptAgent(BaseAgent):
         target = "/tmp/harness-qa-case.sh"
         await environment.upload_file(self._script_path, target)
         await environment.exec(f"chmod +x {target}", user="root")
+        if self._oracle_script_path is not None:
+            oracle_target = "/tmp/harness-qa-oracle.sh"
+            await environment.upload_file(self._oracle_script_path, oracle_target)
+            await environment.exec(f"chmod +x {oracle_target}", user="root")
         result = await environment.exec(f"bash {target}", timeout_sec=600)
         self.logs_dir.mkdir(parents=True, exist_ok=True)
         (self.logs_dir / "script-output.txt").write_text(

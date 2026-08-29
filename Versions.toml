@@ -68,8 +68,8 @@ ecosystem = "npm"
 version = "0.6.17"
 
 [[packages]]
-name = "@modelcontextprotocol/sdk"
-ecosystem = "npm"
+name = "mcp"
+ecosystem = "pypi"
 version = "2.1.1"
 
 [[packages]]

@@ -56,6 +56,7 @@ def _validate_benchmark_task_assets(
     task_root = task_path.parent
     environment_directory = task_root / "environment"
     is_rust = (environment_directory / "Cargo.toml").is_file()
+    is_contract = task.metadata.get("category") == "contract"
     required_files = [
         "instruction.md",
         "environment/Dockerfile",
@@ -65,7 +66,31 @@ def _validate_benchmark_task_assets(
         "tests/criteria.py",
         "tests/Protected_Files.json",
     ]
-    if is_rust:
+    if is_contract:
+        required_files.extend(
+            (
+                "environment/docker-compose.yaml",
+                "tests/Expected.json",
+                "tests/QA.json",
+            )
+        )
+        if task.task and task.task.name == "studio-moser/standalone-computer-use":
+            required_files.extend(
+                (
+                    "environment/Fixture/Computer_Use_Request.json",
+                    "environment/computer-use-server/Dockerfile",
+                    "environment/computer-use-server/Server.py",
+                )
+            )
+        else:
+            required_files.extend(
+                (
+                    "environment/Harness_Stub.mjs",
+                    "environment/stub-server/Dockerfile",
+                    "environment/stub-server/Scenario.json",
+                )
+            )
+    elif is_rust:
         required_files.extend(("environment/Cargo.toml", "environment/Cargo.lock"))
     else:
         required_files.extend(
@@ -99,7 +124,7 @@ def _validate_benchmark_task_assets(
             )
         )
 
-    if not is_rust:
+    if not is_rust and not is_contract:
         try:
             environment_package = json.loads(
                 (task_root / "environment" / "package.json").read_text()
@@ -139,6 +164,92 @@ def _validate_benchmark_task_assets(
                 )
             )
 
+    if is_contract:
+        expected_path = task_root / "tests" / "Expected.json"
+        qa_path = task_root / "tests" / "QA.json"
+        expected: dict[str, Any] = {}
+        try:
+            expected = json.loads(expected_path.read_text())
+            result = expected["result"]
+            if set(expected) != {"artifacts", "calls", "result"}:
+                raise ValueError("Expected.json requires artifacts, calls, and result")
+            if not isinstance(result, dict) or set(result) != {
+                "status",
+                "route",
+                "artifacts",
+                "evidence",
+                "telemetry",
+                "shelby",
+                "blockers",
+            }:
+                raise ValueError("result does not contain the complete HarnessResult")
+            qa = json.loads(qa_path.read_text())
+            if set(qa["cases"]) != {
+                "oracle",
+                "nop",
+                "near-miss",
+                "adversarial",
+                "source-tamper",
+            }:
+                raise ValueError("QA.json must define the five deterministic cases")
+        except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+            failures.append(
+                _failure(expected_path, f"invalid contract expectation: {error}")
+            )
+
+        event_artifacts = [
+            artifact
+            for artifact in task.artifacts
+            if not isinstance(artifact, str)
+            and artifact.service not in (None, "main")
+            and artifact.source.endswith("Events.jsonl")
+        ]
+        if len(event_artifacts) != 1:
+            failures.append(
+                _failure(
+                    task_path,
+                    "contract task requires one protected sidecar Events.jsonl artifact",
+                )
+            )
+
+        if task.task and task.task.name == "studio-moser/standalone-computer-use":
+            dockerfile_path = (
+                environment_directory / "computer-use-server" / "Dockerfile"
+            )
+            dockerfile = dockerfile_path.read_text()
+            if not all(
+                fragment in dockerfile
+                for fragment in (
+                    "mcp==2.1.1",
+                    "playwright==1.62.0",
+                    "mcr.microsoft.com/playwright/python:v1.62.0-noble@sha256:",
+                )
+            ):
+                failures.append(
+                    _failure(
+                        dockerfile_path,
+                        "computer-use sidecar must use the pinned MCP and Playwright stack",
+                    )
+                )
+            if len(task.environment.mcp_servers) != 1:
+                failures.append(
+                    _failure(task_path, "computer-use task requires one MCP server")
+                )
+        else:
+            scenario_path = environment_directory / "stub-server" / "Scenario.json"
+            try:
+                scenario = json.loads(scenario_path.read_text())
+                scenario_calls = [
+                    {"action": call["action"], "payload": call["payload"]}
+                    for call in scenario["calls"]
+                ]
+                if scenario_calls != expected.get("calls"):
+                    raise ValueError("protected scenario calls differ from Expected.json")
+            except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+                failures.append(
+                    _failure(scenario_path, f"invalid contract scenario: {error}")
+                )
+
     for path in environment_directory.rglob("*"):
         if path.is_symlink():
             failures.append(_failure(path, "frozen fixture must not contain symlinks"))
@@ -157,10 +268,13 @@ def _validate_benchmark_task_assets(
     try:
         manifest = json.loads(manifest_path.read_text())
         protected_files = manifest["files"]
+        protected_root = (
+            environment_directory / "Fixture" if is_contract else environment_directory
+        )
         if not isinstance(protected_files, dict) or not protected_files:
             raise ValueError("files must be a non-empty object")
         for relative, expected in protected_files.items():
-            protected_path = environment_directory / relative
+            protected_path = protected_root / relative
             if (
                 Path(relative).is_absolute()
                 or ".." in Path(relative).parts
@@ -183,7 +297,7 @@ def _validate_benchmark_task_assets(
         if not isinstance(mutable_files, dict):
             raise ValueError("mutable_files must be an object")
         for relative, rule in mutable_files.items():
-            mutable_path = environment_directory / relative
+            mutable_path = protected_root / relative
             if (
                 relative in protected_files
                 or Path(relative).is_absolute()

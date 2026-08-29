@@ -1,0 +1,57 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+  { source = "/var/log/harness/Events.jsonl", service = "harness-stub" },
+]
+
+[task]
+name = "studio-moser/missing-required-executor"
+version = "1.0.0"
+description = "Measures authority-preserving blocking when a required executor is absent."
+authors = [{ name = "Studio Moser" }]
+keywords = ["harness", "contract", "capability", "blocker"]
+
+[metadata]
+difficulty = "medium"
+category = "contract"
+tags = ["harness", "contract", "capability", "blocker"]
+change_class = "feature"
+verification_envelope = "contract"
+fixture_digest = "sha256:4f8e703dc95534f88f9e334daaef38860985cfa62937432a6a76bf5e2220afbc"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

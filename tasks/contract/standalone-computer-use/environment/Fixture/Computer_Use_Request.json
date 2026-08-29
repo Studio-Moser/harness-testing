@@ -1,0 +1,15 @@
+{
+  "authority": {
+    "allowed_paths": ["Computer_Use_Request.json", "Harness_Result.json"],
+    "approvals": [],
+    "tools": ["computer-use"],
+    "working_directory": "/app"
+  },
+  "confirmation": "Navy theme active",
+  "operation": "computer-use",
+  "permissions": ["isolated local UI only"],
+  "target_state": "Navy theme active",
+  "tool_path": "configured computer-use MCP server",
+  "tools": ["open_test_ui", "choose_theme", "capture_screenshot", "inspect_capture"],
+  "verification": "Capture.png is 800x600 and its inspected background is Navy"
+}

@@ -85,3 +85,9 @@ def test_repository_static_validation_is_deterministic(capsys):
 
     assert main(["validate", "--static-only"]) == 0
     assert capsys.readouterr().out == "Static validation passed.\n"
+
+
+def test_version_ledger_pins_the_python_mcp_sdk_used_by_computer_use():
+    text = (REPOSITORY_ROOT / "Versions.toml").read_text()
+
+    assert 'name = "mcp"\necosystem = "pypi"\nversion = "2.1.1"' in text

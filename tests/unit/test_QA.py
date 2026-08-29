@@ -143,6 +143,48 @@ def test_qa_job_loads_task_specific_polish_evidence(tmp_path):
 
     assert job.agents[0].kwargs["commands"] == ["npm run check:cta"]
     assert job.agents[0].kwargs["mutation_paths"] == ["src/index.css"]
+    assert job.agents[0].kwargs["oracle_script_path"] is None
+
+
+def test_contract_tamper_case_uploads_the_oracle_before_tampering(tmp_path):
+    job = build_qa_job(
+        REPOSITORY_ROOT,
+        "pm-cross-vendor-implementation",
+        "source-tamper",
+        tmp_path / "jobs",
+    )
+
+    assert job.agents[0].kwargs["oracle_script_path"].endswith("solution/solve.sh")
+
+
+def test_qa_discovers_contract_tasks_and_uses_the_contract_dataset(tmp_path):
+    task_root = tmp_path / "tasks" / "contract" / "contract-sample"
+    task_root.mkdir(parents=True)
+    (task_root / "task.toml").write_text("schema_version = \"1.4\"\n")
+    tests_root = task_root / "tests"
+    tests_root.mkdir()
+    (tests_root / "QA.json").write_text(
+        json.dumps(
+            {
+                "cases": {
+                    "oracle": {
+                        "commands": [],
+                        "mutation_paths": ["Harness_Result.json"],
+                        "expected": {"reward": 1, "workflow": 1, "efficiency": 1},
+                        "script": "solution/solve.sh",
+                    }
+                }
+            }
+        )
+    )
+    solution = task_root / "solution"
+    solution.mkdir()
+    (solution / "solve.sh").write_text("#!/bin/sh\n")
+
+    job = build_qa_job(tmp_path, "contract-sample", "oracle", tmp_path / "jobs")
+
+    assert job.datasets[0].path == (tmp_path / "tasks" / "contract").resolve()
+    assert job.datasets[0].task_names == ["contract-sample"]
 
 
 @pytest.mark.parametrize(

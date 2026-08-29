@@ -1,0 +1,1 @@
+{"calls":[{"action":"lookup-rubric","payload":{"path":"/home/agent/.config/studio-moser/model-rubric.yml"},"response":{"available":false,"check":"documented rubric path: absent","reason":"missing_model_rubric","setup":"run harness setup"}}]}
