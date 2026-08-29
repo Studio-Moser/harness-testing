@@ -1,5 +1,8 @@
 import hashlib
 import json
+import subprocess
+import sys
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -22,6 +25,72 @@ def test_pack_task_ids_are_sorted_and_frozen_to_declared_tasks():
     assert contract == tuple(sorted(contract))
     assert TASK_ID in workflow
     assert "pm-cross-vendor-implementation" in contract
+
+
+def test_efficiency_audit_resolves_tests_from_the_existing_task_root(
+    tmp_path, monkeypatch
+):
+    workspace = tmp_path / "trial" / "artifacts" / "workspace"
+    workspace.mkdir(parents=True)
+
+    class PassingEfficiency:
+        name = "efficiency"
+        score = 0.0
+
+        def run(self):
+            return None
+
+    def fake_discover(tests_root, *, workspace):
+        assert tests_root == TASK_ROOT / "tests"
+        assert workspace == tmp_path / "trial" / "artifacts" / "workspace"
+        return [PassingEfficiency()]
+
+    monkeypatch.setattr(QA, "discover", fake_discover)
+
+    QA._assert_efficiency_audit(
+        REPOSITORY_ROOT,
+        TASK_ID,
+        tmp_path,
+        {"reward": 1.0, "workflow": 1.0, "efficiency": 1.0},
+    )
+
+
+def test_qa_import_preloads_rewardkit_builtins_before_task_discovery():
+    script = textwrap.dedent(
+        f"""
+        import warnings
+        from pathlib import Path
+
+        from harness_testing import QA
+
+        root = Path({str(REPOSITORY_ROOT)!r})
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            QA.discover(
+                root / "tasks/workflow/react-accent-polish/tests",
+                workspace=root,
+            )
+            QA.discover(
+                root / "tasks/workflow/static-grouped-page-updates/tests",
+                workspace=root,
+            )
+        duplicate_warnings = [
+            str(item.message)
+            for item in caught
+            if "already defined in rewardkit" in str(item.message)
+        ]
+        assert duplicate_warnings == [], duplicate_warnings
+        """
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=REPOSITORY_ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 def test_frozen_react_task_matches_the_grouped_contract():

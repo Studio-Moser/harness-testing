@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+import rewardkit.criteria  # noqa: F401  # initialize built-ins before task discovery
 import yaml
 from harbor.models.job.config import JobConfig
 from rewardkit import discover
@@ -220,10 +221,7 @@ def _assert_efficiency_audit(
     )
     try:
         rewards = discover(
-            root
-            / "tasks"
-            / _task_root(root, task_id).relative_to(root)
-            / "tests",
+            _task_root(root, task_id) / "tests",
             workspace=workspaces[0],
         )
         efficiency = next(reward for reward in rewards if reward.name == "efficiency")
