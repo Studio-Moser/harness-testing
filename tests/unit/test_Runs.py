@@ -10,6 +10,7 @@ from harbor.skills import resolve_skills
 
 import harness_testing.Runs as Runs
 from harness_testing.Config import load_job
+from harness_testing.Materialize import DEEPSWE_TASK_IDS, MaterializedDeepSWE
 from harness_testing.Runs import (
     RunCell,
     _verify_generated_inputs,
@@ -38,6 +39,15 @@ packs = ["workflow"]
 max_sessions = 64
 estimated_input_tokens_per_session = 1000000
 estimated_output_tokens_per_session = 100000
+
+[profiles.research]
+attempts = 1
+agent_timeout_seconds = 3600
+concurrency = 1
+packs = ["research"]
+max_sessions = 24
+estimated_input_tokens_per_session = 2000000
+estimated_output_tokens_per_session = 200000
 """
 
 
@@ -83,7 +93,10 @@ def run_root(tmp_path: Path) -> Path:
         "images/Verifier.Dockerfile",
         "src/harness_testing/Codex_Agent.py",
         "src/harness_testing/__init__.py",
+        "src/harness_testing/Contract_Criteria.py",
+        "src/harness_testing/Contract_Stub_Server.py",
         "src/harness_testing/Trajectory_Events.py",
+        "src/harness_testing/Workflow_Criteria.py",
     ):
         source = REPOSITORY_ROOT / relative
         destination = tmp_path / relative
@@ -503,3 +516,57 @@ def test_every_generated_job_round_trips_through_harbor(run_root: Path):
     assert len(jobs) == 4
     assert all(job.n_concurrent_trials == 1 for job in jobs)
     assert all(job.agents[0].override_timeout_sec == 900 for job in jobs)
+
+
+def test_research_profile_uses_only_the_materialized_deepswe_dataset(
+    run_root: Path, monkeypatch: pytest.MonkeyPatch
+):
+    task_id = DEEPSWE_TASK_IDS[0]
+    dataset_digest = _digest("f")
+    dataset = (
+        run_root
+        / ".cache"
+        / "deepswe"
+        / "datasets"
+        / dataset_digest.removeprefix("sha256:")
+    )
+    task = dataset / "tasks" / task_id
+    task.mkdir(parents=True)
+    (task / "instruction.md").write_text("DeepSWE research task\n")
+    materialized = MaterializedDeepSWE(path=dataset, digest=dataset_digest)
+    monkeypatch.setattr(Runs, "load_deepswe_dataset", lambda root: materialized)
+    cell = _cell("codex", "A0", "baseline", "e")
+    _add_bundle(run_root, cell)
+
+    manifest = compile_run(
+        run_root,
+        profile="research",
+        billing_mode="subscription",
+        cells=(cell,),
+        task_ids=(task_id,),
+        max_sessions=1,
+        max_budget_usd=Decimal("0"),
+    )
+
+    config = yaml.safe_load(
+        (manifest.path.parent / manifest.harbor_config_paths[0]).read_text()
+    )
+    assert len(config["datasets"]) == 1
+    assert config["datasets"][0]["path"] == str(
+        dataset.relative_to(run_root) / "tasks"
+    )
+    assert config["datasets"][0]["task_names"] == [task_id]
+    assert manifest.provenance["task_digests"] == {
+        f"research/{task_id}": Runs._tree_digest(task)
+    }
+    assert manifest.provenance["deepswe_dataset_digest"] == dataset_digest
+    assert manifest.provenance["image_input_digests"] == {}
+    _verify_generated_inputs(run_root, manifest)
+
+    monkeypatch.setattr(
+        Runs,
+        "load_deepswe_dataset",
+        lambda root: MaterializedDeepSWE(path=dataset, digest=_digest("a")),
+    )
+    with pytest.raises(ValueError, match="DeepSWE dataset digest mismatch"):
+        _verify_generated_inputs(run_root, manifest)

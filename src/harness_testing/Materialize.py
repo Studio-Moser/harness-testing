@@ -13,6 +13,7 @@ import stat
 import subprocess
 import tarfile
 import tempfile
+import tomllib
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
@@ -48,6 +49,19 @@ _ARM_LAYERS = {
 }
 _EXACT_COMMIT = re.compile(r"^[0-9a-f]{40}$")
 _SAFE_PLUGIN_NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+_SAFE_IMAGE_USER = re.compile(r"^[A-Za-z0-9_.:-]+$")
+_SAFE_PLATFORM = re.compile(r"^[a-z0-9]+/[a-z0-9_]+$")
+_SHA256_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
+_DEEPSWE_IMAGE_LABEL = "studio.moser.harness-testing.deepswe-input-digest"
+
+DEEPSWE_TASK_IDS = (
+    "happy-dom-abort-pending-body-reads",
+    "quill-shared-toolbar-focus",
+    "yjs-map-conflict-detection",
+    "katex-multicolumn-array-spans",
+    "wasmi-trap-coredumps",
+    "pest-character-class-coalescing",
+)
 
 
 @dataclass(frozen=True)
@@ -62,6 +76,48 @@ class MaterializedArm:
     arm: str
     path: Path
     digest: str
+
+
+@dataclass(frozen=True)
+class DeepSWEMaterializationPlan:
+    source_url: str
+    commit: str
+    task_ids: tuple[str, ...]
+    original_images: tuple[str, ...]
+    original_image_digests: tuple[str, ...]
+    platform: str
+    cache_path: Path
+
+
+@dataclass(frozen=True)
+class DeepSWEImageProvenance:
+    original_image: str
+    original_image_reference: str
+    original_manifest_digest: str
+    original_image_digest: str
+    derived_image: str
+    derived_image_digest: str
+    verifier_image: str
+    verifier_image_digest: str
+    platform: str
+    starting_repository_commit: str
+    starting_repository_digest: str
+    starting_repository_files: dict[str, str]
+    agent_tools_image_digest: str | None = None
+
+
+@dataclass(frozen=True)
+class MaterializedDeepSWE:
+    path: Path
+    digest: str
+
+    @property
+    def tasks_path(self) -> Path:
+        return self.path / "tasks"
+
+    @property
+    def provenance_path(self) -> Path:
+        return self.path / "Provenance.json"
 
 
 @dataclass(frozen=True)
@@ -238,6 +294,38 @@ def image_build_commands(
     return tuple(commands)
 
 
+def _platform_image_reference(root: Path, image: str, platform: str) -> str:
+    if image not in _IMAGE_DOCKERFILES:
+        raise ValueError(f"unknown image: {image}")
+    if not _SAFE_PLATFORM.fullmatch(platform):
+        raise ValueError(f"unsafe container platform: {platform}")
+    platform_tag = platform.replace("/", "-").replace("_", "-")
+    return (
+        f"studio-moser/harness-testing-{image}:"
+        f"{_schema_version(root)}-{platform_tag}"
+    )
+
+
+def _platform_agent_tools_build_arguments(
+    root: Path, platform: str
+) -> tuple[str, ...]:
+    return (
+        "docker",
+        "buildx",
+        "build",
+        "--load",
+        "--platform",
+        platform,
+        "--label",
+        f"{_IMAGE_INPUT_LABEL}={image_input_digest(root, 'node')}",
+        "--file",
+        str(root / "images" / _IMAGE_DOCKERFILES["node"]),
+        "--tag",
+        _platform_image_reference(root, "node", platform),
+        str(root),
+    )
+
+
 def build_images(root: Path, selected_images: Iterable[str]) -> None:
     errors = dockerfile_policy_errors(root)
     if errors:
@@ -302,6 +390,10 @@ def _tree_digest(root: Path) -> str:
         digest.update(payload)
         digest.update(b"\0")
     return f"sha256:{digest.hexdigest()}"
+
+
+def _byte_tree_digest(root: Path) -> str:
+    return _sha256_bytes(_canonical_json(_file_digests(root)))
 
 
 def _canonical_json(value: object) -> bytes:
@@ -929,3 +1021,962 @@ def materialize_arm(
             _copy_tree(bundle, destination)
             _make_read_only(destination)
     return MaterializedArm(provider=provider, arm=arm, path=destination, digest=digest)
+
+
+def _deepswe_configuration(
+    root: Path,
+) -> tuple[
+    dict[str, object],
+    dict[str, object],
+    tuple[dict[str, str], ...],
+    str,
+]:
+    versions = load_versions(root / "Versions.toml")
+    sources = [
+        source
+        for source in versions.get("sources", [])
+        if source.get("name") == "DeepSWE"
+    ]
+    configuration = versions.get("deepswe")
+    if len(sources) != 1 or not isinstance(configuration, dict):
+        raise ValueError("Versions.toml requires one DeepSWE source and configuration")
+    source = sources[0]
+    tasks = configuration.get("tasks")
+    if not isinstance(tasks, list) or not all(isinstance(task, dict) for task in tasks):
+        raise ValueError("Versions.toml requires the pinned DeepSWE task cohort")
+    normalized = tuple(
+        {
+            "id": str(task.get("id", "")),
+            "image": str(task.get("image", "")),
+            "digest": str(task.get("digest", "")),
+        }
+        for task in tasks
+    )
+    if tuple(task["id"] for task in normalized) != DEEPSWE_TASK_IDS or any(
+        not task["image"] or not _SHA256_DIGEST.fullmatch(task["digest"])
+        for task in normalized
+    ):
+        raise ValueError("Versions.toml DeepSWE cohort does not match the six-task pin")
+    if source.get("redistribute") is not False:
+        raise ValueError("DeepSWE redistribution must remain disabled")
+    if configuration.get("license_at_pin") != "absent":
+        raise ValueError("DeepSWE license-at-pin boundary is unresolved")
+    if configuration.get("cache_path") != ".cache/deepswe":
+        raise ValueError("DeepSWE cache must remain under .cache/deepswe")
+    if configuration.get("schema_version") != "1.1":
+        raise ValueError("DeepSWE task schema pin must remain 1.1")
+    platform = str(configuration.get("platform", ""))
+    if platform != "linux/amd64":
+        raise ValueError("DeepSWE task platform pin must remain linux/amd64")
+    _require_exact_commit(str(source.get("commit", "")))
+    return versions, source, normalized, platform
+
+
+def deepswe_materialization_plan(root: Path) -> DeepSWEMaterializationPlan:
+    """Return the exact manual DeepSWE network/build scope without writing files."""
+
+    root = root.resolve()
+    _, source, tasks, platform = _deepswe_configuration(root)
+    return DeepSWEMaterializationPlan(
+        source_url=str(source["url"]),
+        commit=str(source["commit"]),
+        task_ids=tuple(task["id"] for task in tasks),
+        original_images=tuple(task["image"] for task in tasks),
+        original_image_digests=tuple(task["digest"] for task in tasks),
+        platform=platform,
+        cache_path=root / ".cache" / "deepswe",
+    )
+
+
+def format_deepswe_plan(plan: DeepSWEMaterializationPlan) -> str:
+    lines = [
+        "DeepSWE manual capability materialization",
+        f"Source: {plan.source_url}",
+        f"Commit: {plan.commit}",
+        f"Platform: {plan.platform}",
+        "Network: fetch only the six pinned task directories, then pull their six "
+        "published v1.1 images by manifest digest.",
+        "Build: build or reuse one platform-matched agent-tools image, then extend "
+        "each original image with the pinned Claude and Codex CLI payloads.",
+        f"Ignored cache only: {plan.cache_path}",
+        "Tasks:",
+    ]
+    lines.extend(
+        f"  {task_id}: {image}@{digest}"
+        for task_id, image, digest in zip(
+            plan.task_ids,
+            plan.original_images,
+            plan.original_image_digests,
+            strict=True,
+        )
+    )
+    lines.extend(
+        (
+            "Fetched tasks and generated wrappers remain local and are not publishable.",
+            "No model session or benchmark trial will start.",
+        )
+    )
+    return "\n".join(lines)
+
+
+def _require_ignored_deepswe_cache(root: Path, cache: Path) -> None:
+    try:
+        relative = cache.resolve().relative_to(root.resolve())
+    except ValueError as error:
+        raise ValueError("DeepSWE cache must stay inside the repository .cache") from error
+    if relative.as_posix() != ".cache/deepswe":
+        raise ValueError("DeepSWE cache must stay at .cache/deepswe")
+    try:
+        _run_git(
+            ("check-ignore", "--quiet", "--no-index", "--", relative.as_posix()),
+            cwd=root,
+        )
+    except subprocess.CalledProcessError as error:
+        raise ValueError("DeepSWE cache must be ignored before materialization") from error
+    tracked = _run_git(("ls-files", "--", relative.as_posix()), cwd=root)
+    if tracked.stdout.strip():
+        raise ValueError("DeepSWE cache contains tracked, publishable content")
+
+
+def _git_object_exists(repository: Path, object_name: str) -> bool:
+    result = subprocess.run(
+        ("git", "cat-file", "-e", object_name),
+        cwd=repository,
+        env=_git_environment(),
+        check=False,
+        capture_output=True,
+    )
+    return result.returncode == 0
+
+
+def _deepswe_manifest_digest(document: dict[str, object], field: str) -> str:
+    unsigned = dict(document)
+    unsigned.pop(field, None)
+    return _sha256_bytes(_canonical_json(unsigned))
+
+
+def _validate_deepswe_source_cache(
+    tree: Path,
+    manifest_path: Path,
+    commit: str,
+    task_ids: tuple[str, ...],
+) -> dict[str, object]:
+    manifest = _read_json(manifest_path, "DeepSWE source manifest")
+    recorded_digest = str(manifest.get("manifest_digest", ""))
+    if (
+        manifest.get("commit") != commit
+        or manifest.get("task_ids") != list(task_ids)
+        or recorded_digest != _deepswe_manifest_digest(manifest, "manifest_digest")
+        or manifest.get("file_digests") != _file_digests(tree)
+        or manifest.get("byte_tree_digest") != _byte_tree_digest(tree)
+        or manifest.get("tree_digest") != _tree_digest(tree)
+    ):
+        raise ValueError("DeepSWE source cache does not match its byte manifest")
+    return manifest
+
+
+def _archive_deepswe_tasks(
+    root: Path,
+    source: str | Path,
+    commit: str,
+    task_ids: tuple[str, ...],
+) -> tuple[Path, dict[str, object]]:
+    repository = _local_repository(source)
+    if repository is not None:
+        _validate_local_repository(repository, commit)
+        git_directory = repository
+    else:
+        git_directory = root / ".cache" / "deepswe" / "source-repository.git"
+        if not git_directory.is_dir():
+            git_directory.parent.mkdir(parents=True, exist_ok=True)
+            _run_git(("init", "--bare", str(git_directory)))
+            _run_git(("remote", "add", "origin", str(source)), cwd=git_directory)
+        else:
+            remote = (
+                _run_git(("remote", "get-url", "origin"), cwd=git_directory)
+                .stdout.decode()
+                .strip()
+            )
+            if remote != str(source):
+                raise ValueError("DeepSWE source cache remote does not match the pin")
+        if not _git_object_exists(git_directory, f"{commit}^{{commit}}"):
+            try:
+                _run_git(
+                    (
+                        "-c",
+                        "protocol.version=2",
+                        "fetch",
+                        "--depth",
+                        "1",
+                        "--filter=blob:none",
+                        "origin",
+                        commit,
+                    ),
+                    cwd=git_directory,
+                )
+            except subprocess.CalledProcessError as error:
+                raise ValueError(
+                    f"DeepSWE source does not contain pinned commit {commit}"
+                ) from error
+
+    if not _git_object_exists(git_directory, f"{commit}^{{commit}}"):
+        raise ValueError(f"DeepSWE source does not contain pinned commit {commit}")
+    if _git_object_exists(git_directory, f"{commit}:LICENSE"):
+        raise ValueError("DeepSWE pinned license boundary changed; review before fetching")
+    for task_id in task_ids:
+        if not _git_object_exists(
+            git_directory, f"{commit}:tasks/{task_id}/task.toml"
+        ):
+            raise ValueError(f"DeepSWE pinned task is missing: {task_id}")
+
+    cache = root / ".cache" / "deepswe"
+    destination = cache / "source-trees" / commit
+    manifest_path = cache / "source-manifests" / f"{commit}.json"
+    if destination.is_dir():
+        return destination, _validate_deepswe_source_cache(
+            destination, manifest_path, commit, task_ids
+        )
+    if destination.exists() or manifest_path.exists():
+        raise ValueError("DeepSWE source cache is incomplete")
+
+    paths = tuple(f"tasks/{task_id}" for task_id in task_ids)
+    try:
+        archive = _run_git(
+            ("archive", "--format=tar", commit, "--", *paths), cwd=git_directory
+        ).stdout
+    except subprocess.CalledProcessError as error:
+        raise ValueError("could not archive the pinned DeepSWE cohort") from error
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=destination.parent) as temporary_directory:
+        extracted = Path(temporary_directory) / "tree"
+        extracted.mkdir()
+        with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as archive_file:
+            archive_file.extractall(extracted, filter="data")
+        actual_tasks = {
+            path.name for path in (extracted / "tasks").iterdir() if path.is_dir()
+        }
+        if actual_tasks != set(task_ids):
+            raise ValueError("DeepSWE archive escaped the six-task allowlist")
+        extracted.rename(destination)
+    _make_read_only(destination)
+    manifest: dict[str, object] = {
+        "schema_version": "1",
+        "commit": commit,
+        "task_ids": list(task_ids),
+        "file_digests": _file_digests(destination),
+        "byte_tree_digest": _byte_tree_digest(destination),
+        "tree_digest": _tree_digest(destination),
+    }
+    manifest["manifest_digest"] = _deepswe_manifest_digest(
+        manifest, "manifest_digest"
+    )
+    _write_json(manifest_path, manifest)
+    manifest_path.chmod(0o444)
+    return destination, manifest
+
+
+def _inspect_image_document(image: str) -> dict[str, object]:
+    completed = subprocess.run(
+        ("docker", "image", "inspect", image),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    document = json.loads(completed.stdout)
+    if not isinstance(document, list) or len(document) != 1 or not isinstance(
+        document[0], dict
+    ):
+        raise ValueError(f"Docker returned invalid image metadata for {image}")
+    return document[0]
+
+
+def _inspect_image_id(image: str) -> str | None:
+    completed = subprocess.run(
+        ("docker", "image", "inspect", "--format", "{{.Id}}", image),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode:
+        return None
+    value = completed.stdout.strip()
+    return value if re.fullmatch(r"sha256:[0-9a-f]{64}", value) else None
+
+
+def _image_platform(document: dict[str, object], image: str) -> str:
+    operating_system = document.get("Os")
+    architecture = document.get("Architecture")
+    platform = f"{operating_system}/{architecture}"
+    if not _SAFE_PLATFORM.fullmatch(platform):
+        raise ValueError(f"Docker returned an invalid platform for {image}")
+    return platform
+
+
+def _platform_agent_tools_image(root: Path, platform: str) -> str:
+    reference = _platform_image_reference(root, "node", platform)
+    expected_input = image_input_digest(root, "node")
+    image_id = _inspect_image_id(reference)
+    if image_id is not None:
+        document = _inspect_image_document(reference)
+        configuration = document.get("Config")
+        labels = configuration.get("Labels") if isinstance(configuration, dict) else None
+        if (
+            isinstance(labels, dict)
+            and labels.get(_IMAGE_INPUT_LABEL) == expected_input
+            and _image_platform(document, reference) == platform
+        ):
+            return reference
+
+    subprocess.run(
+        _platform_agent_tools_build_arguments(root, platform),
+        cwd=root,
+        check=True,
+    )
+    document = _inspect_image_document(reference)
+    configuration = document.get("Config")
+    labels = configuration.get("Labels") if isinstance(configuration, dict) else None
+    if (
+        not isinstance(labels, dict)
+        or labels.get(_IMAGE_INPUT_LABEL) != expected_input
+        or _image_platform(document, reference) != platform
+    ):
+        raise ValueError("platform-matched node agent-tools image is stale or invalid")
+    return reference
+
+
+def _tar_byte_manifest(archive: bytes) -> tuple[dict[str, str], str]:
+    files: dict[str, str] = {}
+    records: list[dict[str, object]] = []
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as archive_file:
+        for member in sorted(archive_file.getmembers(), key=lambda item: item.name):
+            if member.isfile():
+                extracted = archive_file.extractfile(member)
+                if extracted is None:
+                    raise ValueError(f"could not read archived file {member.name}")
+                payload = extracted.read()
+            elif member.issym():
+                payload = f"symlink:{member.linkname}".encode()
+            else:
+                continue
+            digest = _sha256_bytes(payload)
+            files[member.name] = digest
+            records.append({"path": member.name, "mode": member.mode, "sha256": digest})
+    return files, _sha256_bytes(_canonical_json(records))
+
+
+def _image_repository_snapshot(
+    image: str, expected_commit: str, platform: str
+) -> tuple[dict[str, str], str]:
+    script = (
+        'set -euo pipefail; test -z "$(git -C /app status --porcelain)"; '
+        'printf "commit=%s\\n" "$(git -C /app rev-parse HEAD)"; '
+        "git -C /app archive --format=tar HEAD"
+    )
+    completed = subprocess.run(
+        (
+            "docker",
+            "run",
+            "--rm",
+            "--platform",
+            platform,
+            "--network",
+            "none",
+            "--entrypoint",
+            "/bin/bash",
+            image,
+            "-lc",
+            script,
+        ),
+        check=True,
+        capture_output=True,
+    )
+    header, separator, archive = completed.stdout.partition(b"\n")
+    if separator != b"\n" or header != f"commit={expected_commit}".encode():
+        raise ValueError(f"image {image} does not contain the expected starting commit")
+    return _tar_byte_manifest(archive)
+
+
+def deepswe_derived_dockerfile(
+    root: Path,
+    original_image: str,
+    agent_tools_image: str,
+    *,
+    original_user: str = "",
+) -> str:
+    """Render the minimal image layer that adds pinned CLIs outside /app."""
+
+    packages = _package_versions(load_versions(root / "Versions.toml"))
+    for name in ("@anthropic-ai/claude-code", "@openai/codex"):
+        if name not in packages:
+            raise ValueError(f"Versions.toml has no package pin for {name}")
+    if original_user and not _SAFE_IMAGE_USER.fullmatch(original_user):
+        raise ValueError(f"unsafe original DeepSWE image user: {original_user}")
+    for reference in (original_image, agent_tools_image):
+        if any(character in reference for character in "\r\n"):
+            raise ValueError("unsafe DeepSWE image reference")
+    lines = [
+        f"FROM {agent_tools_image} AS agent-tools",
+        f"FROM {original_image}",
+        "USER 0",
+        "COPY --from=agent-tools "
+        "/usr/local/lib/node_modules/@anthropic-ai/claude-code "
+        "/usr/local/lib/node_modules/@anthropic-ai/claude-code",
+        "COPY --from=agent-tools /usr/local/lib/node_modules/@openai/codex "
+        "/usr/local/lib/node_modules/@openai/codex",
+        "RUN ln -sf ../lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe "
+        "/usr/local/bin/claude \\",
+        "    && ln -sf ../lib/node_modules/@openai/codex/bin/codex.js "
+        "/usr/local/bin/codex \\",
+        "    && claude --version \\",
+        "    && codex --version \\",
+        '    && test -z "$(git -C /app status --porcelain)"',
+    ]
+    if original_user:
+        lines.append(f"USER {original_user}")
+    return "\n".join(lines) + "\n"
+
+
+def deepswe_pinned_verifier_dockerfile(
+    original: str, original_image_reference: str
+) -> str:
+    """Pin the generated verifier build while leaving upstream test bytes untouched."""
+
+    if any(character in original_image_reference for character in "\r\n"):
+        raise ValueError("unsafe DeepSWE verifier image reference")
+    pattern = r"^FROM[ \t]+\S+[ \t]*$"
+    if len(re.findall(pattern, original, flags=re.MULTILINE)) != 1:
+        raise ValueError("DeepSWE verifier Dockerfile requires one base image")
+    pinned = re.sub(
+        pattern,
+        f"FROM {original_image_reference}",
+        original,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    return pinned
+
+
+def _materialize_deepswe_image(
+    root: Path,
+    task_id: str,
+    original_image: str,
+    original_manifest_digest: str,
+    platform: str,
+    base_commit: str,
+    dockerfile_path: Path,
+    verifier_context: Path,
+    verifier_dockerfile_path: Path,
+) -> DeepSWEImageProvenance:
+    image_errors = dockerfile_policy_errors(root)
+    if image_errors:
+        raise ValueError("image policy validation failed: " + "; ".join(image_errors))
+    original_reference = f"{original_image}@{original_manifest_digest}"
+    subprocess.run(
+        ("docker", "pull", "--platform", platform, original_reference),
+        check=True,
+    )
+    original_document = _inspect_image_document(original_reference)
+    original_digest = str(original_document.get("Id", ""))
+    repo_digests = original_document.get("RepoDigests")
+    immutable_references = (
+        [str(reference) for reference in repo_digests]
+        if isinstance(repo_digests, list)
+        else []
+    )
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", original_digest):
+        raise ValueError(f"original DeepSWE image has no content digest: {original_image}")
+    if (
+        _image_platform(original_document, original_reference) != platform
+        or not any(
+            reference.endswith(f"@{original_manifest_digest}")
+            for reference in immutable_references
+        )
+    ):
+        raise ValueError(
+            f"original DeepSWE image does not match its platform pin: {original_image}"
+        )
+    configuration = original_document.get("Config")
+    configured_user = configuration.get("User") if isinstance(configuration, dict) else ""
+    original_user = configured_user if isinstance(configured_user, str) else ""
+    starting_files, starting_digest = _image_repository_snapshot(
+        original_reference, base_commit, platform
+    )
+
+    agent_tools_image = _platform_agent_tools_image(root, platform)
+    agent_tools_digest = _inspect_image_id(agent_tools_image)
+    if agent_tools_digest is None:
+        raise ValueError("pinned node agent-tools image is missing")
+    dockerfile = deepswe_derived_dockerfile(
+        root,
+        original_reference,
+        agent_tools_image,
+        original_user=original_user,
+    )
+    dockerfile_path.parent.mkdir(parents=True, exist_ok=True)
+    dockerfile_path.write_text(dockerfile)
+    input_digest = _sha256_bytes(
+        _canonical_json(
+            {
+                "task_id": task_id,
+                "platform": platform,
+                "original_manifest_digest": original_manifest_digest,
+                "original_image_digest": original_digest,
+                "agent_tools_image_digest": agent_tools_digest,
+                "dockerfile_digest": _sha256_bytes(dockerfile.encode()),
+            }
+        )
+    )
+    derived_image = (
+        f"studio-moser/harness-testing-deepswe-{task_id}:"
+        f"{input_digest.removeprefix('sha256:')[:16]}"
+    )
+    subprocess.run(
+        (
+            "docker",
+            "buildx",
+            "build",
+            "--load",
+            "--platform",
+            platform,
+            "--label",
+            f"{_DEEPSWE_IMAGE_LABEL}={input_digest}",
+            "--file",
+            str(dockerfile_path),
+            "--tag",
+            derived_image,
+            str(dockerfile_path.parent),
+        ),
+        cwd=root,
+        check=True,
+    )
+    derived_document = _inspect_image_document(derived_image)
+    derived_digest = str(derived_document.get("Id", ""))
+    if (
+        not _SHA256_DIGEST.fullmatch(derived_digest)
+        or _image_platform(derived_document, derived_image) != platform
+    ):
+        raise ValueError(f"derived DeepSWE image was not created: {task_id}")
+    derived_files, derived_repository_digest = _image_repository_snapshot(
+        derived_image, base_commit, platform
+    )
+    if (
+        derived_files != starting_files
+        or derived_repository_digest != starting_digest
+    ):
+        raise ValueError(f"derived DeepSWE image changed /app: {task_id}")
+
+    verifier_dockerfile = deepswe_pinned_verifier_dockerfile(
+        (verifier_context / "Dockerfile").read_text(),
+        original_reference,
+    )
+    verifier_dockerfile_path.parent.mkdir(parents=True, exist_ok=True)
+    verifier_dockerfile_path.write_text(verifier_dockerfile)
+    verifier_input_digest = _sha256_bytes(
+        _canonical_json(
+            {
+                "task_id": task_id,
+                "platform": platform,
+                "original_manifest_digest": original_manifest_digest,
+                "verifier_tree_digest": _tree_digest(verifier_context),
+                "dockerfile_digest": _sha256_bytes(verifier_dockerfile.encode()),
+            }
+        )
+    )
+    verifier_image = (
+        f"studio-moser/harness-testing-deepswe-{task_id}-verifier:"
+        f"{verifier_input_digest.removeprefix('sha256:')[:16]}"
+    )
+    subprocess.run(
+        (
+            "docker",
+            "buildx",
+            "build",
+            "--load",
+            "--platform",
+            platform,
+            "--label",
+            f"{_DEEPSWE_IMAGE_LABEL}={verifier_input_digest}",
+            "--file",
+            str(verifier_dockerfile_path),
+            "--tag",
+            verifier_image,
+            str(verifier_context),
+        ),
+        cwd=root,
+        check=True,
+    )
+    verifier_document = _inspect_image_document(verifier_image)
+    verifier_digest = str(verifier_document.get("Id", ""))
+    if (
+        not _SHA256_DIGEST.fullmatch(verifier_digest)
+        or _image_platform(verifier_document, verifier_image) != platform
+    ):
+        raise ValueError(f"derived DeepSWE verifier image was not created: {task_id}")
+    return DeepSWEImageProvenance(
+        original_image=original_image,
+        original_image_reference=original_reference,
+        original_manifest_digest=original_manifest_digest,
+        original_image_digest=original_digest,
+        derived_image=derived_image,
+        derived_image_digest=derived_digest,
+        verifier_image=verifier_image,
+        verifier_image_digest=verifier_digest,
+        platform=platform,
+        starting_repository_commit=base_commit,
+        starting_repository_digest=starting_digest,
+        starting_repository_files=starting_files,
+        agent_tools_image_digest=agent_tools_digest,
+    )
+
+
+def _task_manifest(task_root: Path, paths: Iterable[Path]) -> dict[str, str]:
+    return {
+        path.relative_to(task_root).as_posix(): _sha256_bytes(_path_payload(path))
+        for path in sorted(paths)
+        if path.is_file() or path.is_symlink()
+    }
+
+
+def _deepswe_byte_manifests(
+    task_root: Path, image: DeepSWEImageProvenance
+) -> dict[str, object]:
+    metadata_paths = [task_root / "task.toml", task_root / "pre_artifacts.sh"]
+    metadata_paths.extend((task_root / "environment").rglob("*"))
+    return {
+        "instruction": _task_manifest(task_root, (task_root / "instruction.md",)),
+        "metadata": _task_manifest(task_root, metadata_paths),
+        "solution": _task_manifest(task_root, (task_root / "solution").rglob("*")),
+        "starting_repository": {
+            "commit": image.starting_repository_commit,
+            "digest": image.starting_repository_digest,
+            "files": image.starting_repository_files,
+        },
+        "verifier": _task_manifest(task_root, (task_root / "tests").rglob("*")),
+    }
+
+
+def _task_configuration(task_root: Path) -> dict[str, object]:
+    try:
+        with (task_root / "task.toml").open("rb") as task_file:
+            document = tomllib.load(task_file)
+    except (OSError, tomllib.TOMLDecodeError) as error:
+        raise ValueError(f"invalid pinned DeepSWE task metadata: {task_root.name}") from error
+    return document
+
+
+def _replace_task_images(
+    task_path: Path, derived_image: str, verifier_image: str
+) -> None:
+    text = task_path.read_text()
+    replacement = f'docker_image = "{derived_image}"'
+    updated, count = re.subn(
+        r'^docker_image\s*=\s*"[^"]+"\s*$',
+        replacement,
+        text,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    if count != 1:
+        raise ValueError(f"DeepSWE task has no single docker_image field: {task_path}")
+    updated, verifier_count = re.subn(
+        r"^(\[verifier\.environment\][ \t]*\r?\n)",
+        rf'\1docker_image = "{verifier_image}"\n',
+        updated,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    if verifier_count != 1:
+        raise ValueError(
+            f"DeepSWE task has no separate verifier environment: {task_path}"
+        )
+    configuration = tomllib.loads(updated)
+    if (
+        configuration.get("environment", {}).get("docker_image") != derived_image
+        or configuration.get("verifier", {})
+        .get("environment", {})
+        .get("docker_image")
+        != verifier_image
+    ):
+        raise ValueError(f"DeepSWE task image wrapper is invalid: {task_path}")
+    task_path.chmod(stat.S_IMODE(task_path.stat().st_mode) | stat.S_IWUSR)
+    task_path.write_text(updated)
+
+
+def _validate_materialized_deepswe(
+    root: Path,
+    path: Path,
+    digest: str,
+    source_manifest: dict[str, object],
+) -> MaterializedDeepSWE:
+    provenance = _read_json(path / "Provenance.json", "DeepSWE provenance")
+    versions, source, tasks, platform = _deepswe_configuration(root)
+    packages = _package_versions(versions)
+    expected_packages = {
+        name: packages[name]
+        for name in ("@anthropic-ai/claude-code", "@openai/codex")
+    }
+    expected_source_digest = str(source_manifest["manifest_digest"])
+    expected_source = {
+        "name": "DeepSWE",
+        "url": str(source["url"]),
+        "version": str(source["version"]),
+        "commit": str(source["commit"]),
+    }
+    if (
+        path.name != digest.removeprefix("sha256:")
+        or provenance.get("dataset_digest") != digest
+        or digest != _deepswe_manifest_digest(provenance, "dataset_digest")
+        or provenance.get("schema_version") != "1"
+        or provenance.get("materializer_schema") != _schema_version(root)
+        or provenance.get("source") != expected_source
+        or provenance.get("source_manifest_digest") != expected_source_digest
+        or provenance.get("task_ids") != [task["id"] for task in tasks]
+        or provenance.get("platform") != platform
+        or provenance.get("redistribution") != "forbidden"
+        or provenance.get("license_at_pin") != "absent"
+        or provenance.get("cli_packages") != expected_packages
+        or provenance.get("generated_file_digests") != _file_digests(path)
+    ):
+        raise ValueError("materialized DeepSWE dataset does not match current provenance")
+    task_records = provenance.get("tasks")
+    if not isinstance(task_records, list) or len(task_records) != len(tasks):
+        raise ValueError("materialized DeepSWE task provenance is incomplete")
+    if [record.get("task_id") for record in task_records if isinstance(record, dict)] != [
+        task["id"] for task in tasks
+    ]:
+        raise ValueError("materialized DeepSWE task provenance is invalid")
+    source_tree = (
+        root
+        / ".cache"
+        / "deepswe"
+        / "source-trees"
+        / str(source["commit"])
+        / "tasks"
+    )
+    for record, task_pin in zip(task_records, tasks, strict=True):
+        if not isinstance(record, dict):
+            raise ValueError("materialized DeepSWE task provenance is invalid")
+        task_id = str(record.get("task_id", ""))
+        wrapper = path / "tasks" / task_id
+        original_task = source_tree / task_id
+        original_reference = f"{task_pin['image']}@{task_pin['digest']}"
+        derived_directory = path / "Derived" / task_id
+        if (
+            task_id not in DEEPSWE_TASK_IDS
+            or record.get("original_task_digest")
+            != _byte_tree_digest(original_task)
+            or record.get("wrapper_digest") != _tree_digest(wrapper)
+            or record.get("original_image") != task_pin["image"]
+            or record.get("original_manifest_digest") != task_pin["digest"]
+            or record.get("original_image_reference") != original_reference
+            or record.get("platform") != platform
+            or record.get("derived_dockerfile_digest")
+            != _sha256_bytes((derived_directory / "Dockerfile").read_bytes())
+            or record.get("verifier_dockerfile_digest")
+            != _sha256_bytes(
+                (derived_directory / "Verifier.Dockerfile").read_bytes()
+            )
+            or _inspect_image_id(original_reference)
+            != record.get("original_image_digest")
+            or _inspect_image_id(str(record.get("derived_image", "")))
+            != record.get("derived_image_digest")
+            or _inspect_image_id(str(record.get("verifier_image", "")))
+            != record.get("verifier_image_digest")
+        ):
+            raise ValueError(f"materialized DeepSWE task is stale or invalid: {task_id}")
+    return MaterializedDeepSWE(path=path, digest=digest)
+
+
+def load_deepswe_dataset(root: Path) -> MaterializedDeepSWE:
+    """Load the current ignored DeepSWE dataset and fail closed on drift."""
+
+    root = root.resolve()
+    plan = deepswe_materialization_plan(root)
+    _require_ignored_deepswe_cache(root, plan.cache_path)
+    current = _read_json(plan.cache_path / "Current.json", "DeepSWE current pointer")
+    digest = str(current.get("dataset_digest", ""))
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+        raise ValueError("DeepSWE dataset is not materialized")
+    source_manifest_path = (
+        plan.cache_path / "source-manifests" / f"{plan.commit}.json"
+    )
+    source_tree = plan.cache_path / "source-trees" / plan.commit
+    source_manifest = _validate_deepswe_source_cache(
+        source_tree, source_manifest_path, plan.commit, plan.task_ids
+    )
+    path = plan.cache_path / "datasets" / digest.removeprefix("sha256:")
+    if not path.is_dir():
+        raise ValueError("DeepSWE current dataset cache is missing")
+    return _validate_materialized_deepswe(
+        root, path, digest, source_manifest
+    )
+
+
+def _current_deepswe_is_compatible(
+    root: Path,
+    plan: DeepSWEMaterializationPlan,
+    source_manifest: dict[str, object],
+) -> bool:
+    current_path = plan.cache_path / "Current.json"
+    if not current_path.is_file():
+        return False
+    current = _read_json(current_path, "DeepSWE current pointer")
+    digest = str(current.get("dataset_digest", ""))
+    path = plan.cache_path / "datasets" / digest.removeprefix("sha256:")
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest) or not path.is_dir():
+        return False
+    provenance = _read_json(path / "Provenance.json", "DeepSWE provenance")
+    versions = load_versions(root / "Versions.toml")
+    packages = _package_versions(versions)
+    return (
+        provenance.get("materializer_schema") == _schema_version(root)
+        and provenance.get("source_manifest_digest")
+        == source_manifest.get("manifest_digest")
+        and provenance.get("task_ids") == list(plan.task_ids)
+        and provenance.get("platform") == plan.platform
+        and provenance.get("cli_packages")
+        == {
+            name: packages[name]
+            for name in ("@anthropic-ai/claude-code", "@openai/codex")
+        }
+    )
+
+
+def materialize_deepswe(
+    root: Path,
+    *,
+    confirm_download: bool,
+    source_override: tuple[str | Path, str] | None = None,
+) -> MaterializedDeepSWE:
+    """Fetch and derive the manual six-task capability lane without a model run."""
+
+    root = root.resolve()
+    plan = deepswe_materialization_plan(root)
+    if not confirm_download:
+        raise ValueError("DeepSWE materialization requires explicit --confirm-download")
+    _require_ignored_deepswe_cache(root, plan.cache_path)
+    if source_override is None:
+        source: str | Path = plan.source_url
+        commit = plan.commit
+    else:
+        source, commit = source_override
+        if commit != plan.commit:
+            raise ValueError("source override commit does not match the DeepSWE pin")
+    plan.cache_path.mkdir(parents=True, exist_ok=True)
+    source_tree, source_manifest = _archive_deepswe_tasks(
+        root, source, commit, plan.task_ids
+    )
+    if _current_deepswe_is_compatible(root, plan, source_manifest):
+        return load_deepswe_dataset(root)
+
+    versions, source_pin, task_pins, platform = _deepswe_configuration(root)
+    packages = _package_versions(versions)
+    with tempfile.TemporaryDirectory(dir=plan.cache_path) as temporary_directory:
+        dataset = Path(temporary_directory) / "dataset"
+        tasks_directory = dataset / "tasks"
+        derived_directory = dataset / "Derived"
+        tasks_directory.mkdir(parents=True)
+        records: list[dict[str, object]] = []
+        for task_pin in task_pins:
+            task_id = task_pin["id"]
+            original_task = source_tree / "tasks" / task_id
+            wrapper = tasks_directory / task_id
+            _copy_tree(original_task, wrapper)
+            configuration = _task_configuration(original_task)
+            task = configuration.get("task")
+            metadata = configuration.get("metadata")
+            environment = configuration.get("environment")
+            if (
+                configuration.get("schema_version") != "1.1"
+                or not isinstance(task, dict)
+                or task.get("name") != f"datacurve/{task_id}"
+                or not isinstance(metadata, dict)
+                or metadata.get("task_id") != task_id
+                or not isinstance(environment, dict)
+                or environment.get("docker_image") != task_pin["image"]
+            ):
+                raise ValueError(f"DeepSWE task metadata changed upstream: {task_id}")
+            base_commit = str(metadata.get("base_commit_hash", ""))
+            _require_exact_commit(base_commit)
+            dockerfile_path = derived_directory / task_id / "Dockerfile"
+            verifier_dockerfile_path = (
+                derived_directory / task_id / "Verifier.Dockerfile"
+            )
+            image = _materialize_deepswe_image(
+                root,
+                task_id,
+                task_pin["image"],
+                task_pin["digest"],
+                platform,
+                base_commit,
+                dockerfile_path,
+                original_task / "tests",
+                verifier_dockerfile_path,
+            )
+            _replace_task_images(
+                wrapper / "task.toml",
+                image.derived_image,
+                image.verifier_image,
+            )
+            _make_read_only(wrapper)
+            record: dict[str, object] = {
+                "task_id": task_id,
+                "original_task_digest": _byte_tree_digest(original_task),
+                "wrapper_digest": _tree_digest(wrapper),
+                "original_image": image.original_image,
+                "original_image_reference": image.original_image_reference,
+                "original_manifest_digest": image.original_manifest_digest,
+                "original_image_digest": image.original_image_digest,
+                "derived_image": image.derived_image,
+                "derived_image_digest": image.derived_image_digest,
+                "verifier_image": image.verifier_image,
+                "verifier_image_digest": image.verifier_image_digest,
+                "platform": image.platform,
+                "derived_dockerfile_digest": _sha256_bytes(
+                    dockerfile_path.read_bytes()
+                ),
+                "verifier_dockerfile_digest": _sha256_bytes(
+                    verifier_dockerfile_path.read_bytes()
+                ),
+                "agent_tools_image_digest": image.agent_tools_image_digest,
+                "byte_manifests": _deepswe_byte_manifests(original_task, image),
+            }
+            records.append(record)
+        provenance: dict[str, object] = {
+            "schema_version": "1",
+            "materializer_schema": _schema_version(root),
+            "source": {
+                "name": "DeepSWE",
+                "url": str(source_pin["url"]),
+                "version": str(source_pin["version"]),
+                "commit": commit,
+            },
+            "source_manifest_digest": source_manifest["manifest_digest"],
+            "task_ids": list(plan.task_ids),
+            "platform": platform,
+            "redistribution": "forbidden",
+            "license_at_pin": "absent",
+            "cli_packages": {
+                name: packages[name]
+                for name in ("@anthropic-ai/claude-code", "@openai/codex")
+            },
+            "tasks": records,
+            "generated_file_digests": _file_digests(dataset),
+        }
+        digest = _deepswe_manifest_digest(provenance, "dataset_digest")
+        provenance["dataset_digest"] = digest
+        _write_json(dataset / "Provenance.json", provenance)
+        destination = plan.cache_path / "datasets" / digest.removeprefix("sha256:")
+        if destination.exists():
+            _validate_materialized_deepswe(
+                root, destination, digest, source_manifest
+            )
+        else:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            _copy_tree(dataset, destination)
+            _make_read_only(destination)
+    _write_json(plan.cache_path / "Current.json", {"dataset_digest": digest})
+    return _validate_materialized_deepswe(
+        root, destination, digest, source_manifest
+    )

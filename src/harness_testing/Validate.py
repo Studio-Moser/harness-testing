@@ -397,6 +397,14 @@ def validate_versions_file(path: Path) -> tuple[ValidationFailure, ...]:
         if not _FULL_COMMIT.fullmatch(str(action.get("commit", ""))):
             failures.append(_failure(path, f"action {name} requires a full commit"))
 
+    if "deepswe" in versions:
+        from harness_testing.Materialize import deepswe_materialization_plan
+
+        try:
+            deepswe_materialization_plan(path.parent)
+        except (KeyError, TypeError, ValueError) as error:
+            failures.append(_failure(path, f"invalid DeepSWE capability pin: {error}"))
+
     return tuple(failures)
 
 
@@ -595,6 +603,7 @@ def _validate_checked_in_commands(root: Path) -> list[ValidationFailure]:
 def _validate_public_boundary(root: Path) -> list[ValidationFailure]:
     failures: list[ValidationFailure] = []
     forbidden_prefixes = (
+        ".cache/deepswe/",
         "jobs/",
         "raw-results/",
         "provider-homes/",

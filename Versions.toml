@@ -32,6 +32,42 @@ version = "1.1"
 commit = "8cae5984d5dd0ee37445beff0e928dc10c331116"
 redistribute = false
 
+[deepswe]
+schema_version = "1.1"
+cache_path = ".cache/deepswe"
+license_at_pin = "absent"
+platform = "linux/amd64"
+
+[[deepswe.tasks]]
+id = "happy-dom-abort-pending-body-reads"
+image = "public.ecr.aws/d3j8x8q7/swe-bench-202605:kh7c2re7cvbseq7xz6samd1xr182y1dc-v1.1"
+digest = "sha256:930ec9d5c14868da048c6cdd96a06dc394ec09b0b7b12a2cad2e63476a59c3e6"
+
+[[deepswe.tasks]]
+id = "quill-shared-toolbar-focus"
+image = "public.ecr.aws/d3j8x8q7/swe-bench-202605:kh73sgee6751fmh72hwwctyscx832frj-v1.1"
+digest = "sha256:19bc4ef0f9b9be1da3f7b54e160ff9d57cfc9d43d231c1a1eae2c9da8fe30cf9"
+
+[[deepswe.tasks]]
+id = "yjs-map-conflict-detection"
+image = "public.ecr.aws/d3j8x8q7/swe-bench-202605:kh7fwz4nedevfex8ssk2p8xbt9836scp-v1.1"
+digest = "sha256:91b1986f864befaef716579fa641d57051257ea5484515f9befd30a4f5d800ef"
+
+[[deepswe.tasks]]
+id = "katex-multicolumn-array-spans"
+image = "public.ecr.aws/d3j8x8q7/swe-bench-202605:kh7fkjmy67qny9z98mt6bj52m182ygdy-v1.1"
+digest = "sha256:459b6d4c5f8d45218b25d0837a88d91052d0fb066c21b8bc2939290c4876b3ae"
+
+[[deepswe.tasks]]
+id = "wasmi-trap-coredumps"
+image = "public.ecr.aws/d3j8x8q7/swe-bench-202605:kh70h37djmvc9ac48jeh25gwz582xgqv-v1.1"
+digest = "sha256:1bec57bc662b5c33289f88cb28cae2c4df07cb33cd96aff7840c77e2b0a96c10"
+
+[[deepswe.tasks]]
+id = "pest-character-class-coalescing"
+image = "public.ecr.aws/d3j8x8q7/swe-bench-202605:kh7bmp04pqht2pcvp8qce1afm582ph2j-v1.1"
+digest = "sha256:3147fd9b5a532ba679ac2c933ddf16e7ade6f32ddcf3b2d93576f243be3bd6af"
+
 [[packages]]
 name = "harbor"
 ecosystem = "pypi"

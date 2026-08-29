@@ -51,6 +51,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     materialize_parser.add_argument("--harness-source")
     materialize_parser.add_argument("--harness-commit")
 
+    deepswe_parser = subparsers.add_parser(
+        "deepswe", help="manage the manual DeepSWE capability lane"
+    )
+    deepswe_subparsers = deepswe_parser.add_subparsers(dest="deepswe_command")
+    deepswe_materialize_parser = deepswe_subparsers.add_parser(
+        "materialize", help="fetch and derive the pinned six-task cohort"
+    )
+    deepswe_materialize_parser.add_argument(
+        "--confirm-download", action="store_true"
+    )
+
     run_parser = subparsers.add_parser("run", help="plan or execute guarded Harbor runs")
     run_subparsers = run_parser.add_subparsers(dest="run_command")
     plan_parser = run_subparsers.add_parser("plan", help="compile a dry-run manifest")
@@ -123,6 +134,30 @@ def main(argv: Sequence[str] | None = None) -> int:
             harness_commit=arguments.harness_commit,
         )
         print(f"{materialized.provider}:{materialized.arm} {materialized.digest}")
+        print(materialized.path)
+    elif (
+        arguments.command == "deepswe"
+        and arguments.deepswe_command == "materialize"
+    ):
+        from harness_testing.Materialize import (
+            deepswe_materialization_plan,
+            format_deepswe_plan,
+            materialize_deepswe,
+        )
+
+        plan = deepswe_materialization_plan(_repository_root())
+        print(format_deepswe_plan(plan))
+        if not arguments.confirm_download:
+            print(
+                "No files downloaded or images built; pass --confirm-download to "
+                "execute this exact plan.",
+                file=sys.stderr,
+            )
+            return 2
+        materialized = materialize_deepswe(
+            _repository_root(), confirm_download=True
+        )
+        print(f"Materialized dataset: {materialized.digest}")
         print(materialized.path)
     elif arguments.command == "run" and arguments.run_command == "plan":
         from harness_testing.Runs import format_plan, plan_run

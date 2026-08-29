@@ -91,3 +91,19 @@ def test_version_ledger_pins_the_python_mcp_sdk_used_by_computer_use():
     text = (REPOSITORY_ROOT / "Versions.toml").read_text()
 
     assert 'name = "mcp"\necosystem = "pypi"\nversion = "2.1.1"' in text
+
+
+def test_version_validation_rejects_an_unpinned_deepswe_image(tmp_path):
+    versions_path = tmp_path / "Versions.toml"
+    versions_path.write_text(
+        (REPOSITORY_ROOT / "Versions.toml")
+        .read_text()
+        .replace(
+            "sha256:930ec9d5c14868da048c6cdd96a06dc394ec09b0b7b12a2cad2e63476a59c3e6",
+            "mutable",
+        )
+    )
+
+    failures = validate_versions_file(versions_path)
+
+    assert any("invalid DeepSWE capability pin" in failure.message for failure in failures)

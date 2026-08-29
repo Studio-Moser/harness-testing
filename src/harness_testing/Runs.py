@@ -19,8 +19,11 @@ from harbor.models.job.config import JobConfig
 
 from harness_testing.Config import load_job, load_versions
 from harness_testing.Materialize import (
+    DEEPSWE_TASK_IDS,
+    MaterializedDeepSWE,
     dockerfile_policy_errors,
     image_input_digest,
+    load_deepswe_dataset,
     materialize_arm,
     require_current_image,
 )
@@ -333,7 +336,11 @@ def _ordered_cells(cells: tuple[RunCell, ...]) -> tuple[RunCell, ...]:
     )
 
 
-def _required_images(task_ids: tuple[str, ...]) -> tuple[str, ...]:
+def _required_images(
+    profile: _Profile, task_ids: tuple[str, ...]
+) -> tuple[str, ...]:
+    if profile.name == "research":
+        return ()
     required = {"verifier"}
     if any(task_id.startswith("rust-") for task_id in task_ids):
         required.add("rust")
@@ -360,6 +367,33 @@ def _task_pack(root: Path, profile: _Profile, task_id: str) -> str:
     if not matches and len(profile.packs) == 1:
         return profile.packs[0]
     raise ValueError(f"task {task_id} does not resolve to exactly one profile pack")
+
+
+def _research_dataset(root: Path, profile: _Profile) -> MaterializedDeepSWE | None:
+    if profile.name != "research":
+        return None
+    if profile.packs != ("research",):
+        raise ValueError("research profile must contain only the DeepSWE research pack")
+    return load_deepswe_dataset(root)
+
+
+def _task_location(
+    root: Path,
+    profile: _Profile,
+    task_id: str,
+    research: MaterializedDeepSWE | None,
+) -> tuple[str, Path, Path]:
+    if research is not None:
+        if task_id not in DEEPSWE_TASK_IDS:
+            raise ValueError(f"task {task_id} is not in the pinned DeepSWE cohort")
+        dataset = research.tasks_path
+        task = dataset / task_id
+        if not task.is_dir():
+            raise ValueError(f"materialized DeepSWE task is missing: {task_id}")
+        return "research", dataset, task
+    pack = _task_pack(root, profile, task_id)
+    dataset = root / "tasks" / pack
+    return pack, dataset, dataset / task_id
 
 
 def _provider_config(bundle: Path, provider: str) -> dict[str, object]:
@@ -409,7 +443,7 @@ def _job_document(
     root: Path,
     cell: RunCell,
     task_id: str,
-    profile: _Profile,
+    dataset_path: Path,
     attempts: int,
     concurrency: int,
     timeout: int,
@@ -474,7 +508,7 @@ def _job_document(
         ],
         "datasets": [
             {
-                "path": f"tasks/{_task_pack(root, profile, task_id)}",
+                "path": dataset_path.resolve().relative_to(root.resolve()).as_posix(),
                 "task_names": [task_id],
             }
         ],
@@ -590,16 +624,20 @@ def compile_run(
             f"max_budget_usd ${_decimal_text(max_budget_usd)}"
         )
 
+    research_dataset = _research_dataset(root, selected_profile)
     job_texts: dict[str, str] = {}
     index = 0
     for task_id in task_ids:
+        _, dataset_path, _ = _task_location(
+            root, selected_profile, task_id, research_dataset
+        )
         for cell in cells:
             index += 1
             _, text = _job_document(
                 root,
                 cell,
                 task_id,
-                selected_profile,
+                dataset_path,
                 attempts,
                 concurrency,
                 timeout,
@@ -612,13 +650,15 @@ def compile_run(
             job_texts[relative_path] = text
 
     schema_version = str(versions["repository"]["schema_version"])
-    task_digests = {
-        f"{pack}/{task_id}": _tree_digest(root / "tasks" / pack / task_id)
-        for task_id in task_ids
-        for pack in (_task_pack(root, selected_profile, task_id),)
-    }
+    task_digests = {}
+    for task_id in task_ids:
+        pack, _, task_path = _task_location(
+            root, selected_profile, task_id, research_dataset
+        )
+        task_digests[f"{pack}/{task_id}"] = _tree_digest(task_path)
     image_input_digests = {
-        image: image_input_digest(root, image) for image in _required_images(task_ids)
+        image: image_input_digest(root, image)
+        for image in _required_images(selected_profile, task_ids)
     }
     agent_adapter_digests = {
         provider: _sha256((root / path).read_bytes())
@@ -644,6 +684,8 @@ def compile_run(
             _subscription_selectors(cells) if billing_mode == "subscription" else {}
         ),
     }
+    if research_dataset is not None:
+        provenance["deepswe_dataset_digest"] = research_dataset.digest
     manifest = RunManifest(
         schema_version=schema_version,
         profile=profile,
@@ -848,19 +890,27 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     if not isinstance(expected_task_digests, dict):
         raise ValueError("manifest has no task digests")
     profile = _load_profile(root, manifest.profile)
-    actual_task_digests = {
-        f"{pack}/{task_id}": _tree_digest(root / "tasks" / pack / task_id)
-        for task_id in manifest.task_ids
-        for pack in (_task_pack(root, profile, task_id),)
-    }
+    research_dataset = _research_dataset(root, profile)
+    actual_task_digests = {}
+    for task_id in manifest.task_ids:
+        pack, _, task_path = _task_location(
+            root, profile, task_id, research_dataset
+        )
+        actual_task_digests[f"{pack}/{task_id}"] = _tree_digest(task_path)
     if expected_task_digests != actual_task_digests:
         raise ValueError("task digest mismatch after manifest approval")
+    expected_deepswe_digest = manifest.provenance.get("deepswe_dataset_digest")
+    actual_deepswe_digest = (
+        research_dataset.digest if research_dataset is not None else None
+    )
+    if expected_deepswe_digest != actual_deepswe_digest:
+        raise ValueError("DeepSWE dataset digest mismatch after manifest approval")
     expected_image_digests = manifest.provenance.get("image_input_digests")
     if not isinstance(expected_image_digests, dict):
         raise ValueError("manifest has no image input digests")
     actual_image_digests = {
         image: image_input_digest(root, image)
-        for image in _required_images(manifest.task_ids)
+        for image in _required_images(profile, manifest.task_ids)
     }
     if expected_image_digests != actual_image_digests:
         raise ValueError("image input digest mismatch after manifest approval")
@@ -952,7 +1002,8 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
         _verify_subscription_auth(manifest.cells, os.environ, Path.home())
         for selector in _subscription_selectors(manifest.cells).values():
             execution_environment[selector["name"]] = selector["value"]
-    for image in _required_images(manifest.task_ids):
+    profile = _load_profile(root, manifest.profile)
+    for image in _required_images(profile, manifest.task_ids):
         require_current_image(root, image)
     for relative_path in manifest.harbor_config_paths:
         subprocess.run(
