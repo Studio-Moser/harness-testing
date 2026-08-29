@@ -1,0 +1,82 @@
+# Methodology
+
+## Measurement question
+
+Harness Testing asks one bounded question: with the provider, model, effort, task, environment, and attempt policy held fixed, does a harness arm improve correct coding behavior without adding avoidable workflow, testing, time, or token churn?
+
+The benchmark is comparative, not a universal model leaderboard. Results remain meaningful only within a compatibility series.
+
+## Frozen inputs
+
+Every tracked workflow or contract task contains a frozen starting project, instruction, oracle, protected-file manifest, deterministic verifier, and five QA cases. Dependencies, toolchains, container images, upstream repositories, provider agents, models, and actions are pinned in `Versions.toml`.
+
+Tasks use no live product repositories or private project data. The environment and separate verifier have no network. The agent receives only the provider hosts required by the selected billing route. `/app` and `/logs/agent/trajectory.json` are retained as local Harbor artifacts for verification and regrading.
+
+The research profile uses a separately materialized six-task DeepSWE cohort. The pinned upstream tree has no license file, so the fetched tasks and derived images remain in ignored local storage and are never redistributed. See [Capability Pack](Capability_Pack.md).
+
+## Arms and provider surfaces
+
+| Arm | Ordered layers |
+| --- | --- |
+| A0 | None |
+| A1 | Superpowers |
+| A2 | Studio Harness |
+| A3 | Superpowers, then Studio Harness |
+
+Each arm is materialized into an immutable, read-only bundle with source commits, delivery surfaces, and a byte digest. Claude’s Superpowers delivery is hook-capable when the pinned plugin exposes hooks. Codex Superpowers is skills-only. Reports preserve that distinction rather than implying equivalent runtime hooks.
+
+## Run profiles
+
+| Profile | Packs | Attempts | Timeout | Maximum sessions | Intended use |
+| --- | --- | ---: | ---: | ---: | --- |
+| smoke | workflow | 1 | 900 s | 8 | One sentinel or narrow integration check |
+| checkpoint | contract, workflow | 1 | 1,200 s | 64 | A bounded development checkpoint |
+| release | contract, workflow | 1 | 1,800 s | 128 | Fresh paired release evidence |
+| calibration | contract, workflow | 3 | 1,800 s | 512 | A0–A3 variance and interaction calibration |
+| research | local DeepSWE cache | 1 | 3,600 s | 24 | Manual capability evidence only |
+
+Every manifest names explicit cells and tasks. No matrix is implicit. Baseline and candidate cells force concurrency one and are ordered deterministically by provider, role, and arm so paired evidence is not mixed by parallel quota or load effects. Release evidence uses a fresh baseline in the same evaluation window as its candidate.
+
+The dry run records the session count, order, timeouts, task/image/arm/adapter digests, estimated API-equivalent usage, billing route, and approval digest. It starts no model. Execution revalidates every digest and accepts only the exact approval string.
+
+## Score dimensions
+
+### Correctness
+
+Deterministic behavior tests and protected state decide correctness. A plausible response or edited output cannot pass without the required behavior and, for contract tasks, protected sidecar evidence of the expected calls.
+
+### Workflow
+
+Workflow criteria evaluate task-specific sequence requirements, such as grouping several requested edits before a final gate. The score does not reward verbosity, plans, or tool use by themselves.
+
+### Efficiency policy
+
+ATIF commands are normalized and classified as direct checks, targeted tests, package tests, comprehensive tests, lint, typecheck, build, browser, or format. The verification envelope decides whether a final comprehensive gate is required and flags comprehensive suites run before the final mutation. Duplicate successful commands and unnecessary lifecycle events remain visible.
+
+Efficiency never overrides correctness. Reports show the three dimensions separately and expose nullable counters for agent/verifier time, input/output/cache tokens, cost, turns, tool calls, commands, check/test classes, test time, premature suites, duplicate commands, plans, reviews, subagents, worktrees, context events, changed/generated files, diff lines, retries, timeouts, and infrastructure errors. Missing telemetry is **unavailable**, never zero.
+
+## Infrastructure classification
+
+A reviewed result assigns one explicit state: `passed`, `agent-task-failure`, `verifier-failure`, `task-definition-failure`, `provider-failure`, `authentication-failure`, `rate-limited`, `timeout`, `sandbox-failure`, or `unknown`.
+
+Provider, authentication, rate-limit, timeout, sandbox, verifier-infrastructure, and task-definition failures are not counted as coding-task failures. Partial runs stay local. Reviewers retain the raw local job when a classification is uncertain.
+
+## QA and human review
+
+Task authors prove five deterministic cases: oracle, no-op, near miss, adversarial, and source tamper. During implementation, a changed task runs only schema/static checks plus oracle and no-op. The complete pack runs once at a checkpoint, not after each file edit.
+
+For model-backed release evidence, a human samples passes, failures, unusually efficient trials, and outliers in Harbor’s local viewer. Review checks the instruction, workspace diff, verifier evidence, command classification, and infrastructure state. Raw prompts, reasoning, tool output, trajectories, credentials, and host paths remain local.
+
+An unfair, ambiguous, contaminated, or broken task is quarantined before finalization. Quarantined and partial results cannot be published.
+
+## Regrading and compatibility
+
+A verifier or scorer repair does not authorize another model session. If the source job retained `/app` and `/logs/agent/trajectory.json`, run Harbor’s verifier-only regrade through `harness-test regrade`. The wrapper records the immutable source-job digest and new job identity; it never overwrites the source.
+
+The trend compatibility key binds the task digest, dataset composition, scorer, classifier, environment image, provider-agent major contract, and methodology schema. A change splits the trend by default. Different keys may be joined only by a dated, explicitly reviewed mapping with a rationale.
+
+## Publication boundary
+
+Public results are constructed from an allowlist and validated against `policy/Public_Result.schema.json`; raw Harbor objects are never recursively copied and filtered. `finalized=true` requires task review, infrastructure review, complete coverage, and no quarantine. The content-derived result identity makes later mutation visible.
+
+Only schema-valid JSON under `results/` reaches the static dashboard. The loader fails closed on unknown fields and reads no `jobs/` path. The dashboard offers no analytics SDK, API server, database, prompt view, or trajectory view.

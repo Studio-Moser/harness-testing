@@ -36,6 +36,37 @@ def test_task_qa_dispatches_one_named_deterministic_case(monkeypatch, capsys):
     assert capsys.readouterr().out == "reward=1 workflow=1 efficiency=1\n"
 
 
+def test_task_qa_batches_one_pack_and_all_cases(monkeypatch, capsys):
+    from harness_testing.CLI import main
+
+    calls = []
+
+    def fake_run(root, task_id, case):
+        calls.append((root, task_id, case))
+        return {"reward": 1.0, "workflow": 0.0, "efficiency": 1.0}
+
+    monkeypatch.setattr("harness_testing.QA.run_task_qa", fake_run)
+    monkeypatch.setattr(
+        "harness_testing.QA.task_ids_for_pack",
+        lambda root, pack: ("first-task", "second-task"),
+    )
+    monkeypatch.setattr("harness_testing.QA.QA_CASES", ("oracle", "nop"))
+
+    assert main(["task", "qa", "--pack", "workflow", "--all-cases"]) == 0
+    assert [(task, case) for _, task, case in calls] == [
+        ("first-task", "oracle"),
+        ("first-task", "nop"),
+        ("second-task", "oracle"),
+        ("second-task", "nop"),
+    ]
+    assert capsys.readouterr().out.splitlines() == [
+        "first-task:oracle reward=1 workflow=0 efficiency=1",
+        "first-task:nop reward=1 workflow=0 efficiency=1",
+        "second-task:oracle reward=1 workflow=0 efficiency=1",
+        "second-task:nop reward=1 workflow=0 efficiency=1",
+    ]
+
+
 def test_run_plan_requires_and_forwards_billing_mode(monkeypatch, capsys):
     from harness_testing.CLI import main
 

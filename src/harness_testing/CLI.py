@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import shlex
+import subprocess
 import sys
 import tomllib
 from collections.abc import Sequence
@@ -30,8 +31,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     subparsers = parser.add_subparsers(dest="command")
     validate_parser = subparsers.add_parser("validate", help="validate deterministic inputs")
-    validate_parser.add_argument("--changed-from")
-    validate_parser.add_argument("--static-only", action="store_true")
+    validate_mode = validate_parser.add_mutually_exclusive_group()
+    validate_mode.add_argument("--changed-from")
+    validate_mode.add_argument("--static-only", action="store_true")
 
     images_parser = subparsers.add_parser("images", help="manage pinned images")
     image_subparsers = images_parser.add_subparsers(dest="images_command")
@@ -104,17 +106,20 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     task_parser = subparsers.add_parser("task", help="validate benchmark tasks")
     task_subparsers = task_parser.add_subparsers(dest="task_command")
-    qa_parser = task_subparsers.add_parser("qa", help="run one model-free task QA case")
-    qa_parser.add_argument("--task", required=True)
-    qa_parser.add_argument(
+    qa_parser = task_subparsers.add_parser("qa", help="run model-free task QA cases")
+    qa_selection = qa_parser.add_mutually_exclusive_group(required=True)
+    qa_selection.add_argument("--task")
+    qa_selection.add_argument("--pack", choices=("workflow", "contract"))
+    qa_cases = qa_parser.add_mutually_exclusive_group(required=True)
+    qa_cases.add_argument(
         "--case",
         choices=("oracle", "nop", "near-miss", "adversarial", "source-tamper"),
-        required=True,
     )
+    qa_cases.add_argument("--all-cases", action="store_true")
 
     arguments = parser.parse_args(argv)
     if arguments.command == "validate":
-        from harness_testing.Validate import validate_repository
+        from harness_testing.Validate import run_affected_validation, validate_repository
 
         failures = validate_repository(_repository_root())
         if failures:
@@ -122,6 +127,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(failure, file=sys.stderr)
             return 1
         print("Static validation passed.")
+        if arguments.changed_from:
+            try:
+                run_affected_validation(_repository_root(), arguments.changed_from)
+            except (ValueError, subprocess.CalledProcessError) as error:
+                print(error, file=sys.stderr)
+                return getattr(error, "returncode", 1) or 1
     elif arguments.command == "images" and arguments.images_command == "build":
         from harness_testing.Materialize import build_images, image_build_commands
 
@@ -224,13 +235,22 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         execute_run(_repository_root(), arguments.manifest, arguments.approve)
     elif arguments.command == "task" and arguments.task_command == "qa":
-        from harness_testing.QA import run_task_qa
+        from harness_testing.QA import QA_CASES, run_task_qa, task_ids_for_pack
 
-        scores = run_task_qa(_repository_root(), arguments.task, arguments.case)
-        print(
-            " ".join(
-                f"{name}={scores[name]:g}"
-                for name in ("reward", "workflow", "efficiency")
-            )
+        task_ids = (
+            (arguments.task,)
+            if arguments.task is not None
+            else task_ids_for_pack(_repository_root(), arguments.pack)
         )
+        cases = QA_CASES if arguments.all_cases else (arguments.case,)
+        show_identity = arguments.pack is not None or arguments.all_cases
+        for task_id in task_ids:
+            for case in cases:
+                scores = run_task_qa(_repository_root(), task_id, case)
+                summary = " ".join(
+                    f"{name}={scores[name]:g}"
+                    for name in ("reward", "workflow", "efficiency")
+                )
+                prefix = f"{task_id}:{case} " if show_identity else ""
+                print(f"{prefix}{summary}")
     return 0

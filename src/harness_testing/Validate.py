@@ -5,11 +5,13 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shlex
 import subprocess
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 import yaml
 from harbor.models.task.config import NetworkMode, TaskConfig, VerifierEnvironmentMode
@@ -23,6 +25,47 @@ _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 _SENSITIVE_KEY = re.compile(
     r"(?:^|_)(?:api_key|access_token|auth_token|authorization|password|secret|credential)(?:$|_)",
     re.IGNORECASE,
+)
+_MARKDOWN_LINK = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+_PROVIDER_CREDENTIAL = re.compile(
+    r"\b(?:ANTHROPIC_API_KEY|ANTHROPIC_BASE_URL|CLAUDE_CODE_OAUTH_TOKEN|"
+    r"CODEX_AUTH_JSON_PATH|OPENAI_API_KEY|OPENAI_API_BASE|OPENAI_BASE_URL)\b"
+)
+_CORE_SCHEMA_PATHS = {
+    "src/harness_testing/Config.py",
+    "tests/Support/QA_Agents.py",
+}
+_POLICY_PATHS = {
+    "policy/Command_Classification.toml",
+    "policy/Verification_Envelopes.toml",
+    "src/harness_testing/Metrics.py",
+}
+_FULL_DETERMINISTIC_COMMANDS = (
+    ("uv", "run", "ruff", "check", "src", "tests"),
+    ("uv", "run", "pytest", "tests/unit", "-q"),
+    ("npm", "ci", "--prefix", "dashboard", "--ignore-scripts"),
+    ("npm", "--prefix", "dashboard", "test"),
+    ("npm", "--prefix", "dashboard", "run", "build"),
+    (
+        "uv",
+        "run",
+        "harness-test",
+        "task",
+        "qa",
+        "--pack",
+        "workflow",
+        "--all-cases",
+    ),
+    (
+        "uv",
+        "run",
+        "harness-test",
+        "task",
+        "qa",
+        "--pack",
+        "contract",
+        "--all-cases",
+    ),
 )
 
 
@@ -605,6 +648,276 @@ def validate_public_results(root: Path) -> tuple[ValidationFailure, ...]:
     return tuple(failures)
 
 
+def validate_markdown_links(root: Path) -> tuple[ValidationFailure, ...]:
+    """Check repository-local Markdown links without flaky network requests."""
+
+    failures: list[ValidationFailure] = []
+    for path in sorted(path for path in _repository_files(root) if path.suffix == ".md"):
+        for match in _MARKDOWN_LINK.finditer(path.read_text(errors="replace")):
+            raw_target = match.group(1).strip()
+            if raw_target.startswith("<") and raw_target.endswith(">"):
+                raw_target = raw_target[1:-1]
+            else:
+                raw_target = raw_target.split(maxsplit=1)[0]
+            if not raw_target or raw_target.startswith("#") or re.match(
+                r"^[a-zA-Z][a-zA-Z0-9+.-]*:", raw_target
+            ):
+                continue
+            target = unquote(raw_target.split("#", 1)[0].split("?", 1)[0])
+            candidate = (
+                root / target.removeprefix("/")
+                if target.startswith("/")
+                else path.parent / target
+            )
+            if not candidate.exists():
+                failures.append(_failure(path, f"broken local Markdown link: {raw_target}"))
+    return tuple(failures)
+
+
+def _workflow_uses(value: Any) -> Iterable[str]:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key == "uses" and isinstance(child, str):
+                yield child
+            yield from _workflow_uses(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _workflow_uses(child)
+
+
+def validate_workflow_files(
+    root: Path, action_pins: dict[str, str] | None
+) -> tuple[ValidationFailure, ...]:
+    """Require model-free workflows and exact action pins from Versions.toml."""
+
+    failures: list[ValidationFailure] = []
+    workflows = root / ".github" / "workflows"
+    if not workflows.is_dir():
+        return ()
+    for path in sorted((*workflows.glob("*.yml"), *workflows.glob("*.yaml"))):
+        text = path.read_text(errors="replace")
+        if _PROVIDER_CREDENTIAL.search(text):
+            failures.append(_failure(path, "CI must not receive provider credentials"))
+        try:
+            document = yaml.safe_load(text)
+        except yaml.YAMLError as error:
+            failures.append(_failure(path, f"invalid workflow YAML: {error}"))
+            continue
+        if not isinstance(document, dict):
+            failures.append(_failure(path, "workflow must contain a YAML object"))
+            continue
+        for use in _workflow_uses(document):
+            if use.startswith(("./", "docker://")):
+                continue
+            if "@" not in use:
+                failures.append(_failure(path, f"action is not pinned: {use}"))
+                continue
+            name, commit = use.rsplit("@", 1)
+            if not _FULL_COMMIT.fullmatch(commit):
+                failures.append(
+                    _failure(path, f"action {name} requires a full commit: {commit}")
+                )
+                continue
+            if action_pins is None:
+                continue
+            expected = action_pins.get(name)
+            if expected is None:
+                failures.append(_failure(path, f"action is missing from Versions.toml: {name}"))
+            elif commit != expected:
+                failures.append(
+                    _failure(
+                        path,
+                        f"action {name} differs from Versions.toml: {commit} != {expected}",
+                    )
+                )
+    return tuple(failures)
+
+
+def changed_repository_paths(root: Path, changed_from: str) -> tuple[Path, ...]:
+    """Return safe repository-relative paths changed since one immutable Git ref."""
+
+    if not changed_from.strip():
+        raise ValueError("changed-from Git ref must not be empty")
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "diff",
+                "--name-only",
+                "--diff-filter=ACMR",
+                f"{changed_from}...HEAD",
+                "--",
+            ],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as error:
+        raise ValueError(f"unable to compare changed files from {changed_from}") from error
+    paths: set[Path] = set()
+    for name in result.stdout.splitlines():
+        path = Path(name)
+        if path.is_absolute() or ".." in path.parts:
+            raise ValueError(f"unsafe changed repository path: {name}")
+        paths.add(path)
+    return tuple(sorted(paths))
+
+
+def affected_validation_commands(
+    root: Path, changed_paths: Iterable[Path]
+) -> tuple[tuple[str, ...], ...]:
+    """Map a change set to one grouped set of deterministic checks."""
+
+    names: set[str] = set()
+    for changed_path in changed_paths:
+        if changed_path.is_absolute() or ".." in changed_path.parts:
+            raise ValueError(f"unsafe changed repository path: {changed_path}")
+        names.add(changed_path.as_posix())
+    if names & _CORE_SCHEMA_PATHS or any(
+        name.startswith("tests/Support/QA_Cases/") for name in names
+    ):
+        return _FULL_DETERMINISTIC_COMMANDS
+
+    python_paths = sorted(
+        name
+        for name in names
+        if name.endswith(".py") and (name.startswith("src/") or name.startswith("tests/"))
+    )
+    unit_tests: set[str] = set()
+    qa_tasks: set[str] = set()
+    images: set[str] = set()
+    dashboard = False
+    full_unit = bool(names & {"pyproject.toml", "uv.lock"})
+
+    for name in names:
+        path = Path(name)
+        parts = path.parts
+        if name.startswith("src/harness_testing/") and name.endswith(".py"):
+            candidate = root / "tests" / "unit" / f"test_{path.stem}.py"
+            if candidate.is_file():
+                unit_tests.add(candidate.relative_to(root).as_posix())
+            else:
+                full_unit = True
+        elif len(parts) >= 3 and parts[:2] == ("tests", "unit"):
+            unit_tests.add(name)
+        elif name.startswith("tests/Fixtures/ATIF/"):
+            unit_tests.update(
+                {
+                    "tests/unit/test_Config.py",
+                    "tests/unit/test_Metrics.py",
+                    "tests/unit/test_Trajectory_Events.py",
+                }
+            )
+        elif name.startswith("tests/Fixtures/Public_Results/"):
+            unit_tests.update(
+                {"tests/unit/test_Results.py", "tests/unit/test_Validate.py"}
+            )
+            dashboard = True
+        elif name.startswith("tests/Support/"):
+            full_unit = True
+
+        if len(parts) >= 3 and parts[0] == "tasks" and parts[1] in {
+            "contract",
+            "workflow",
+        }:
+            task_id = parts[2]
+            if (root / "tasks" / parts[1] / task_id / "task.toml").is_file():
+                qa_tasks.add(task_id)
+
+        if name == "images/Node_Agent.Dockerfile":
+            images.add("node")
+        elif name == "images/Rust_Agent.Dockerfile":
+            images.add("rust")
+        elif name == "images/Verifier.Dockerfile":
+            images.add("verifier")
+        if name.startswith("images/"):
+            unit_tests.add("tests/unit/test_Materialize.py")
+
+        if name in _POLICY_PATHS or name.startswith("policy/"):
+            unit_tests.update(
+                {
+                    "tests/unit/test_Metrics.py",
+                    "tests/unit/test_Results.py",
+                    "tests/unit/test_Validate.py",
+                }
+            )
+        if name == "policy/Public_Result.schema.json" or name.startswith("results/"):
+            dashboard = True
+        if name.startswith("dashboard/"):
+            dashboard = True
+        if name.startswith("arms/"):
+            unit_tests.update(
+                {"tests/unit/test_Materialize.py", "tests/unit/test_Runs.py"}
+            )
+        if name == "Versions.toml":
+            unit_tests.update(
+                {
+                    "tests/unit/test_Materialize.py",
+                    "tests/unit/test_Runs.py",
+                    "tests/unit/test_Validate.py",
+                }
+            )
+        if name.startswith(".github/workflows/"):
+            unit_tests.add("tests/unit/test_Validate.py")
+
+    commands: list[tuple[str, ...]] = []
+    if python_paths:
+        commands.append(("uv", "run", "ruff", "check", *python_paths))
+    if full_unit:
+        commands.append(("uv", "run", "pytest", "tests/unit", "-q"))
+    elif unit_tests:
+        commands.append(("uv", "run", "pytest", "-q", *sorted(unit_tests)))
+    if images:
+        flags = tuple(
+            f"--{image}"
+            for image in ("node", "rust", "verifier")
+            if image in images
+        )
+        commands.append(("uv", "run", "harness-test", "images", "build", *flags))
+    for task_id in sorted(qa_tasks):
+        for case in ("oracle", "nop"):
+            commands.append(
+                (
+                    "uv",
+                    "run",
+                    "harness-test",
+                    "task",
+                    "qa",
+                    "--task",
+                    task_id,
+                    "--case",
+                    case,
+                )
+            )
+    if dashboard:
+        commands.extend(
+            (
+                ("npm", "ci", "--prefix", "dashboard", "--ignore-scripts"),
+                ("npm", "--prefix", "dashboard", "test"),
+                ("npm", "--prefix", "dashboard", "run", "build"),
+            )
+        )
+    return tuple(dict.fromkeys(commands))
+
+
+def run_affected_validation(
+    root: Path,
+    changed_from: str,
+    *,
+    runner: Callable[..., subprocess.CompletedProcess[Any]] = subprocess.run,
+) -> tuple[tuple[str, ...], ...]:
+    paths = changed_repository_paths(root, changed_from)
+    commands = affected_validation_commands(root, paths)
+    if not commands:
+        print("No affected dynamic checks; static validation is sufficient.")
+        return ()
+    for command in commands:
+        print(f"Affected check: {shlex.join(command)}", flush=True)
+        runner(command, cwd=root, check=True)
+    return commands
+
+
 def _repository_files(root: Path) -> tuple[Path, ...]:
     result = subprocess.run(
         ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
@@ -655,6 +968,7 @@ def _validate_public_boundary(root: Path) -> list[ValidationFailure]:
 def validate_repository(root: Path) -> tuple[ValidationFailure, ...]:
     versions_path = root / "Versions.toml"
     failures = list(validate_versions_file(versions_path))
+    versions: dict[str, Any] | None = None
     if failures:
         expected_schema = "1.4"
     else:
@@ -667,6 +981,16 @@ def validate_repository(root: Path) -> tuple[ValidationFailure, ...]:
     failures.extend(_validate_generated_jobs(root))
     failures.extend(_validate_atif_fixtures(root))
     failures.extend(validate_public_results(root))
+    failures.extend(validate_markdown_links(root))
+    action_pins = (
+        None
+        if versions is None
+        else {
+            str(action["name"]): str(action["commit"])
+            for action in versions.get("actions", [])
+        }
+    )
+    failures.extend(validate_workflow_files(root, action_pins))
     failures.extend(_validate_checked_in_commands(root))
     failures.extend(_validate_public_boundary(root))
     return tuple(failures)

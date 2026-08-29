@@ -4,14 +4,18 @@ from pathlib import Path
 
 from test_Config import VALID_TASK
 
+import harness_testing.Validate as Validate
 from harness_testing.CLI import main
 from harness_testing.Results import compatibility_key, public_result_id
 from harness_testing.Validate import (
+    affected_validation_commands,
     find_sensitive_keys,
+    validate_markdown_links,
     validate_public_results,
     validate_repository,
     validate_task_paths,
     validate_versions_file,
+    validate_workflow_files,
 )
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
@@ -155,3 +159,121 @@ def test_public_result_validation_rejects_an_invalid_schema(tmp_path):
 
     assert len(failures) == 1
     assert "invalid public result schema" in failures[0].message
+
+
+def test_affected_validation_keeps_docs_static_and_groups_policy_tests():
+    assert affected_validation_commands(REPOSITORY_ROOT, [Path("docs/Runbook.md")]) == ()
+
+    commands = affected_validation_commands(
+        REPOSITORY_ROOT,
+        [
+            Path("src/harness_testing/Metrics.py"),
+            Path("policy/Command_Classification.toml"),
+        ],
+    )
+
+    pytest_commands = [command for command in commands if "pytest" in command]
+    assert len(pytest_commands) == 1
+    assert set(pytest_commands[0][4:]) == {
+        "tests/unit/test_Metrics.py",
+        "tests/unit/test_Results.py",
+        "tests/unit/test_Validate.py",
+    }
+
+
+def test_affected_validation_runs_only_oracle_and_nop_for_one_changed_task():
+    commands = affected_validation_commands(
+        REPOSITORY_ROOT,
+        [Path("tasks/workflow/react-accent-polish/instruction.md")],
+    )
+
+    assert commands == (
+        (
+            "uv",
+            "run",
+            "harness-test",
+            "task",
+            "qa",
+            "--task",
+            "react-accent-polish",
+            "--case",
+            "oracle",
+        ),
+        (
+            "uv",
+            "run",
+            "harness-test",
+            "task",
+            "qa",
+            "--task",
+            "react-accent-polish",
+            "--case",
+            "nop",
+        ),
+    )
+
+
+def test_affected_validation_routes_dashboard_images_and_core_schema_changes():
+    dashboard = affected_validation_commands(
+        REPOSITORY_ROOT, [Path("dashboard/src/index.md")]
+    )
+    assert dashboard == (
+        ("npm", "ci", "--prefix", "dashboard", "--ignore-scripts"),
+        ("npm", "--prefix", "dashboard", "test"),
+        ("npm", "--prefix", "dashboard", "run", "build"),
+    )
+
+    image = affected_validation_commands(
+        REPOSITORY_ROOT, [Path("images/Node_Agent.Dockerfile")]
+    )
+    assert ("uv", "run", "harness-test", "images", "build", "--node") in image
+
+    core = affected_validation_commands(
+        REPOSITORY_ROOT, [Path("src/harness_testing/Config.py")]
+    )
+    assert ("uv", "run", "pytest", "tests/unit", "-q") in core
+    assert any(command[-2:] == ("workflow", "--all-cases") for command in core)
+    assert any(command[-2:] == ("contract", "--all-cases") for command in core)
+
+
+def test_markdown_validation_checks_local_links_without_network(
+    tmp_path, monkeypatch
+):
+    good = tmp_path / "Good.md"
+    target = tmp_path / "Target.md"
+    broken = tmp_path / "Broken.md"
+    target.write_text("# Target\n")
+    good.write_text("[target](Target.md) [web](https://example.com)\n")
+    broken.write_text("[missing](Missing.md)\n")
+    monkeypatch.setattr(Validate, "_repository_files", lambda root: (good, target))
+    assert validate_markdown_links(tmp_path) == ()
+
+    monkeypatch.setattr(Validate, "_repository_files", lambda root: (broken,))
+    failures = validate_markdown_links(tmp_path)
+    assert len(failures) == 1
+    assert "broken local Markdown link" in failures[0].message
+
+
+def test_workflow_validation_requires_ledger_pins_and_no_provider_credentials(tmp_path):
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "Bad.yml").write_text(
+        """
+name: Bad
+on: push
+jobs:
+  bad:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+"""
+    )
+
+    failures = validate_workflow_files(
+        tmp_path, {"actions/checkout": "d23441a48e516b6c34aea4fa41551a30e30af803"}
+    )
+
+    assert any("provider credentials" in failure.message for failure in failures)
+    assert any("requires a full commit" in failure.message for failure in failures)

@@ -7,11 +7,21 @@ from harbor.models.trajectories import Trajectory
 
 from harness_testing import QA
 from harness_testing.Config import load_task
-from harness_testing.QA import QA_CASES, build_qa_job
+from harness_testing.QA import QA_CASES, build_qa_job, task_ids_for_pack
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
 TASK_ID = "react-grouped-ui-updates"
 TASK_ROOT = REPOSITORY_ROOT / "tasks" / "workflow" / TASK_ID
+
+
+def test_pack_task_ids_are_sorted_and_frozen_to_declared_tasks():
+    workflow = task_ids_for_pack(REPOSITORY_ROOT, "workflow")
+    contract = task_ids_for_pack(REPOSITORY_ROOT, "contract")
+
+    assert workflow == tuple(sorted(workflow))
+    assert contract == tuple(sorted(contract))
+    assert TASK_ID in workflow
+    assert "pm-cross-vendor-implementation" in contract
 
 
 def test_frozen_react_task_matches_the_grouped_contract():
