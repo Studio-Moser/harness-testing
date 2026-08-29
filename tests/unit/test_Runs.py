@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+import harness_testing.Runs as Runs
 from harness_testing.Config import load_job
 from harness_testing.Runs import (
     RunCell,
@@ -147,6 +148,7 @@ def _compile_pair(root: Path, **overrides):
         "task_ids": ("task-one", "task-two"),
         "max_sessions": 4,
         "max_budget_usd": Decimal("100"),
+        "billing_mode": "api",
     }
     arguments.update(overrides)
     return compile_run(**arguments)
@@ -224,6 +226,7 @@ def test_cell_provenance_must_match_provider_arm_and_candidate_commit(run_root: 
             task_ids=("task-one",),
             max_sessions=1,
             max_budget_usd=Decimal("100"),
+            billing_mode="api",
         )
 
 
@@ -233,6 +236,101 @@ def test_session_and_budget_admission_limits_are_enforced(run_root: Path):
 
     with pytest.raises(ValueError, match="estimated budget"):
         _compile_pair(run_root, max_budget_usd=Decimal("1"))
+
+
+def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Path):
+    baseline = _cell("codex", "A0", "baseline", "c")
+    candidate = _cell("codex", "A2", "candidate", "d", "3" * 40)
+    _add_bundle(run_root, baseline)
+    _add_bundle(run_root, candidate)
+
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="subscription",
+        cells=(candidate, baseline),
+        task_ids=("task-one",),
+        max_sessions=2,
+        max_budget_usd=Decimal("0"),
+    )
+
+    assert manifest.billing_mode == "subscription"
+    assert manifest.estimated_budget_usd == Decimal("0")
+    assert manifest.max_budget_usd == Decimal("0")
+    assert manifest.api_equivalent_cost_usd == Decimal("6.4")
+    assert manifest.provenance["budget_enforcement"] == (
+        "subscription-only-no-api-fallback"
+    )
+    loaded = Runs.load_manifest(manifest.path)
+    assert loaded.billing_mode == "subscription"
+    assert loaded.api_equivalent_cost_usd == Decimal("6.4")
+    report = Runs.format_plan(manifest)
+    assert "Billing mode: subscription (no API-key fallback)" in report
+    assert "Expected incremental cost: $0 / $0" in report
+    assert "API-equivalent usage estimate: $6.4" in report
+    for relative_path in manifest.harbor_config_paths:
+        config_path = manifest.path.parent / relative_path
+        job = yaml.safe_load(config_path.read_text())
+        agent = job["agents"][0]
+        assert agent["env"] == {"CODEX_FORCE_AUTH_JSON": "1"}
+        assert agent["extra_allowed_hosts"] == ["chatgpt.com", "auth.openai.com"]
+        assert "OPENAI_API_KEY" not in json.dumps(job)
+        assert load_job(config_path).agents[0].env == {"CODEX_FORCE_AUTH_JSON": "1"}
+
+
+def test_subscription_and_api_budget_rules_are_distinct(run_root: Path):
+    with pytest.raises(ValueError, match="subscription.*zero"):
+        _compile_pair(
+            run_root,
+            billing_mode="subscription",
+            max_budget_usd=Decimal("1"),
+        )
+
+    with pytest.raises(ValueError, match="API.*positive"):
+        _compile_pair(run_root, billing_mode="api", max_budget_usd=Decimal("0"))
+
+
+def test_codex_subscription_preflight_requires_chatgpt_auth_without_api_fallback(
+    tmp_path: Path,
+):
+    codex_home = tmp_path / ".codex"
+    codex_home.mkdir()
+    auth_path = codex_home / "auth.json"
+    auth_path.write_text(
+        json.dumps(
+            {
+                "auth_mode": "chatgpt",
+                "tokens": {
+                    "access_token": "access-secret",
+                    "refresh_token": "refresh-secret",
+                },
+            }
+        )
+    )
+    cells = (_cell("codex", "A0", "baseline", "e"),)
+
+    Runs._verify_subscription_auth(cells, {}, tmp_path)
+
+    with pytest.raises(ValueError, match="OPENAI_API_KEY must be unset"):
+        Runs._verify_subscription_auth(
+            cells,
+            {"OPENAI_API_KEY": "must-not-be-printed"},
+            tmp_path,
+        )
+    with pytest.raises(ValueError, match="OPENAI_BASE_URL must be unset"):
+        Runs._verify_subscription_auth(
+            cells,
+            {"OPENAI_BASE_URL": "https://example.invalid/v1"},
+            tmp_path,
+        )
+
+    auth_path.write_text(json.dumps({"auth_mode": "apikey", "tokens": {}}))
+    with pytest.raises(ValueError, match="ChatGPT subscription auth"):
+        Runs._verify_subscription_auth(cells, {}, tmp_path)
+
+    auth_path.unlink()
+    with pytest.raises(ValueError, match="Codex subscription credential is missing"):
+        Runs._verify_subscription_auth(cells, {}, tmp_path)
 
 
 def test_timeout_and_paired_concurrency_are_explicit(run_root: Path):
@@ -263,6 +361,7 @@ def test_non_calibration_profile_cannot_request_the_full_arm_matrix(run_root: Pa
             task_ids=("task-one",),
             max_sessions=4,
             max_budget_usd=Decimal("100"),
+            billing_mode="api",
         )
 
 

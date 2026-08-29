@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from decimal import Decimal
 from pathlib import Path
@@ -30,6 +31,15 @@ _COMMIT = re.compile(r"^[0-9a-f]{40}$")
 _TASK_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 _PROVIDER_ORDER = {"claude": 0, "codex": 1}
 _ROLE_ORDER = {"baseline": 0, "candidate": 1, "calibration": 2}
+_BILLING_MODES = {"api", "subscription"}
+_API_HOSTS = {
+    "claude": ("api.anthropic.com",),
+    "codex": ("api.openai.com",),
+}
+_SUBSCRIPTION_HOSTS = {
+    "claude": ("api.anthropic.com",),
+    "codex": ("chatgpt.com", "auth.openai.com"),
+}
 
 
 @dataclass(frozen=True)
@@ -60,6 +70,7 @@ class RunCell:
 class RunManifest:
     schema_version: str
     profile: str
+    billing_mode: str
     cells: tuple[RunCell, ...]
     task_ids: tuple[str, ...]
     attempts: int
@@ -69,6 +80,7 @@ class RunManifest:
     max_sessions: int
     max_budget_usd: Decimal
     estimated_budget_usd: Decimal
+    api_equivalent_cost_usd: Decimal
     harbor_config_paths: tuple[str, ...]
     provenance: dict[str, object]
     digest: str
@@ -78,6 +90,7 @@ class RunManifest:
         return {
             "schema_version": self.schema_version,
             "profile": self.profile,
+            "billing_mode": self.billing_mode,
             "cells": [cell.to_dict() for cell in self.cells],
             "task_ids": list(self.task_ids),
             "attempts": self.attempts,
@@ -87,6 +100,9 @@ class RunManifest:
             "max_sessions": self.max_sessions,
             "max_budget_usd": _decimal_text(self.max_budget_usd),
             "estimated_budget_usd": _decimal_text(self.estimated_budget_usd),
+            "api_equivalent_cost_usd": _decimal_text(
+                self.api_equivalent_cost_usd
+            ),
             "harbor_config_paths": list(self.harbor_config_paths),
             "provenance": self.provenance,
             "digest": self.digest,
@@ -117,6 +133,7 @@ class RunManifest:
         return cls(
             schema_version=str(document["schema_version"]),
             profile=str(document["profile"]),
+            billing_mode=str(document["billing_mode"]),
             cells=cells,
             task_ids=tuple(str(task) for task in document["task_ids"]),
             attempts=int(document["attempts"]),
@@ -126,6 +143,9 @@ class RunManifest:
             max_sessions=int(document["max_sessions"]),
             max_budget_usd=Decimal(str(document["max_budget_usd"])),
             estimated_budget_usd=Decimal(str(document["estimated_budget_usd"])),
+            api_equivalent_cost_usd=Decimal(
+                str(document["api_equivalent_cost_usd"])
+            ),
             harbor_config_paths=tuple(str(item) for item in document["harbor_config_paths"]),
             provenance=provenance,
             digest=str(document["digest"]),
@@ -375,27 +395,35 @@ def _job_document(
     concurrency: int,
     timeout: int,
     versions: dict[str, Any],
+    billing_mode: str,
 ) -> tuple[dict[str, object], str]:
     bundle = _bundle_path(root, cell)
     packages = _package_versions(versions)
     if cell.provider == "claude":
         agent_name = "claude-code"
         model_name = f"anthropic/{cell.model}"
-        host = "api.anthropic.com"
         version = packages["@anthropic-ai/claude-code"]
-        environment = (
-            {"CLAUDE_CODE_PLUGIN_SEED_DIR": "/harness-arm/claude/plugin-seed"}
-            if (bundle / "claude" / "plugin-seed").is_dir()
-            else {}
-        )
+        environment = {"CLAUDE_FORCE_OAUTH": "1"} if billing_mode == "subscription" else {}
+        if (bundle / "claude" / "plugin-seed").is_dir():
+            environment["CLAUDE_CODE_PLUGIN_SEED_DIR"] = (
+                "/harness-arm/claude/plugin-seed"
+            )
         skills: list[str] = []
     else:
         agent_name = "codex"
         model_name = f"openai/{cell.model}"
-        host = "api.openai.com"
         version = packages["@openai/codex"]
-        environment = {}
+        environment = (
+            {"CODEX_FORCE_AUTH_JSON": "1"}
+            if billing_mode == "subscription"
+            else {}
+        )
         skills = ["/harness-arm/skills"] if (bundle / "skills").is_dir() else []
+    hosts = (
+        _SUBSCRIPTION_HOSTS[cell.provider]
+        if billing_mode == "subscription"
+        else _API_HOSTS[cell.provider]
+    )
     kwargs: dict[str, object] = {"version": version, "reasoning_effort": cell.effort}
     provider_config = _provider_config(bundle, cell.provider)
     if provider_config:
@@ -423,7 +451,7 @@ def _job_document(
                 "model_name": model_name,
                 "override_timeout_sec": timeout,
                 "max_timeout_sec": timeout,
-                "extra_allowed_hosts": [host],
+                "extra_allowed_hosts": list(hosts),
                 "skills": skills,
                 "kwargs": kwargs,
                 "env": environment,
@@ -437,7 +465,11 @@ def _job_document(
         ],
     }
     job = JobConfig.model_validate(raw)
-    document = job.model_dump(mode="json", exclude_none=True)
+    document = job.model_dump(
+        mode="json",
+        exclude_none=True,
+        context={"redact_sensitive_env": False},
+    )
     sensitive_keys = find_sensitive_keys(document)
     if sensitive_keys:
         raise ValueError(f"generated Harbor job contains sensitive keys: {sensitive_keys}")
@@ -474,6 +506,7 @@ def compile_run(
     root: Path,
     *,
     profile: str,
+    billing_mode: str,
     cells: tuple[RunCell, ...],
     task_ids: tuple[str, ...],
     max_sessions: int,
@@ -505,8 +538,12 @@ def compile_run(
         raise ValueError("concurrency must be positive")
     if max_sessions < 1:
         raise ValueError("max_sessions must be positive")
-    if max_budget_usd <= 0:
-        raise ValueError("max_budget_usd must be positive")
+    if billing_mode not in _BILLING_MODES:
+        raise ValueError(f"unsupported billing mode: {billing_mode}")
+    if billing_mode == "subscription" and max_budget_usd != 0:
+        raise ValueError("subscription billing requires a zero max_budget_usd")
+    if billing_mode == "api" and max_budget_usd <= 0:
+        raise ValueError("API billing requires a positive max_budget_usd")
     if len(set(task_ids)) != len(task_ids) or any(
         not _TASK_ID.fullmatch(task_id) for task_id in task_ids
     ):
@@ -530,10 +567,13 @@ def compile_run(
             f"run needs {session_count} sessions but profile limit is "
             f"{selected_profile.max_sessions}"
         )
-    estimated_budget = _estimated_budget(
+    api_equivalent_cost = _estimated_budget(
         cells, len(task_ids), attempts, selected_profile, versions
     )
-    if estimated_budget > max_budget_usd:
+    estimated_budget = (
+        Decimal("0") if billing_mode == "subscription" else api_equivalent_cost
+    )
+    if billing_mode == "api" and estimated_budget > max_budget_usd:
         raise ValueError(
             f"estimated budget ${_decimal_text(estimated_budget)} exceeds "
             f"max_budget_usd ${_decimal_text(max_budget_usd)}"
@@ -553,6 +593,7 @@ def compile_run(
                 concurrency,
                 timeout,
                 versions,
+                billing_mode,
             )
             relative_path = (
                 f"jobs/{index:03d}-{cell.provider}-{cell.role}-{cell.arm}-{task_id}.yaml"
@@ -577,11 +618,16 @@ def compile_run(
         },
         "task_digests": task_digests,
         "image_input_digests": image_input_digests,
-        "budget_enforcement": "admission-estimate-only",
+        "budget_enforcement": (
+            "subscription-only-no-api-fallback"
+            if billing_mode == "subscription"
+            else "admission-estimate-only"
+        ),
     }
     manifest = RunManifest(
         schema_version=schema_version,
         profile=profile,
+        billing_mode=billing_mode,
         cells=cells,
         task_ids=task_ids,
         attempts=attempts,
@@ -591,6 +637,7 @@ def compile_run(
         max_sessions=max_sessions,
         max_budget_usd=max_budget_usd,
         estimated_budget_usd=estimated_budget,
+        api_equivalent_cost_usd=api_equivalent_cost,
         harbor_config_paths=tuple(job_texts),
         provenance=provenance,
         digest="",
@@ -664,6 +711,7 @@ def plan_run(
     root: Path,
     *,
     profile: str,
+    billing_mode: str,
     cell_specifications: tuple[str, ...],
     task_ids: tuple[str, ...],
     max_sessions: int,
@@ -678,6 +726,7 @@ def plan_run(
     return compile_run(
         root,
         profile=profile,
+        billing_mode=billing_mode,
         cells=cells,
         task_ids=task_ids,
         max_sessions=max_sessions,
@@ -692,15 +741,29 @@ def format_plan(manifest: RunManifest) -> str:
     lines = [
         f"Run manifest: {manifest.digest}",
         f"Profile: {manifest.profile}",
+        "Billing mode: "
+        + (
+            "subscription (no API-key fallback)"
+            if manifest.billing_mode == "subscription"
+            else "api"
+        ),
         f"Tasks: {', '.join(manifest.task_ids)}",
         f"Attempts: {manifest.attempts}",
         f"Sessions: {manifest.session_count} / {manifest.max_sessions}",
         f"Concurrency: {manifest.concurrency}",
         f"Agent timeout: {manifest.agent_timeout_seconds}s",
-        "Estimated budget: "
+        "Expected incremental cost: "
         f"${_decimal_text(manifest.estimated_budget_usd)} / "
         f"${_decimal_text(manifest.max_budget_usd)}",
-        "Budget enforcement: admission estimate only; no consistent provider hard stop",
+        "API-equivalent usage estimate: "
+        f"${_decimal_text(manifest.api_equivalent_cost_usd)}",
+        (
+            "Budget enforcement: subscription credential only; subscription quota "
+            "is not a dollar hard stop"
+            if manifest.billing_mode == "subscription"
+            else "Budget enforcement: admission estimate only; no consistent provider "
+            "hard stop"
+        ),
         "Cells:",
     ]
     for cell in manifest.cells:
@@ -735,8 +798,22 @@ def load_manifest(path: Path) -> RunManifest:
 def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     if manifest.session_count > manifest.max_sessions:
         raise ValueError("manifest session count exceeds its approval cap")
-    if manifest.estimated_budget_usd > manifest.max_budget_usd:
+    if manifest.billing_mode not in _BILLING_MODES:
+        raise ValueError("manifest billing mode is unsupported")
+    if manifest.billing_mode == "subscription" and (
+        manifest.max_budget_usd != 0 or manifest.estimated_budget_usd != 0
+    ):
+        raise ValueError("subscription manifest must authorize zero incremental spend")
+    if manifest.billing_mode == "api" and manifest.max_budget_usd <= 0:
+        raise ValueError("API manifest must have a positive approval cap")
+    if manifest.billing_mode == "api" and (
+        manifest.estimated_budget_usd > manifest.max_budget_usd
+    ):
         raise ValueError("manifest estimated budget exceeds its approval cap")
+    if manifest.billing_mode == "api" and (
+        manifest.estimated_budget_usd != manifest.api_equivalent_cost_usd
+    ):
+        raise ValueError("API manifest cost estimate is inconsistent")
     versions = load_versions(root / "Versions.toml")
     for cell in manifest.cells:
         _validate_cell(root, cell, versions)
@@ -773,6 +850,50 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
         load_job(path)
 
 
+def _verify_subscription_auth(
+    cells: tuple[RunCell, ...],
+    environment: Mapping[str, str],
+    home: Path,
+) -> None:
+    providers = {cell.provider for cell in cells}
+    if "codex" in providers:
+        for name in ("OPENAI_API_KEY", "OPENAI_BASE_URL", "OPENAI_API_BASE"):
+            if environment.get(name, "").strip():
+                raise ValueError(
+                    f"{name} must be unset for Codex subscription billing"
+                )
+        configured_path = environment.get("CODEX_AUTH_JSON_PATH", "").strip()
+        auth_path = Path(configured_path) if configured_path else home / ".codex" / "auth.json"
+        if not auth_path.is_file():
+            raise ValueError("Codex subscription credential is missing")
+        try:
+            auth = json.loads(auth_path.read_text())
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError("Codex subscription credential is invalid") from error
+        tokens = auth.get("tokens") if isinstance(auth, dict) else None
+        if (
+            not isinstance(auth, dict)
+            or auth.get("auth_mode") != "chatgpt"
+            or not isinstance(tokens, dict)
+            or not isinstance(tokens.get("access_token"), str)
+            or not tokens["access_token"].strip()
+            or not isinstance(tokens.get("refresh_token"), str)
+            or not tokens["refresh_token"].strip()
+        ):
+            raise ValueError(
+                "Codex credential does not contain ChatGPT subscription auth"
+            )
+
+    if "claude" in providers:
+        for name in ("ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL"):
+            if environment.get(name, "").strip():
+                raise ValueError(
+                    f"{name} must be unset for Claude subscription billing"
+                )
+        if not environment.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip():
+            raise ValueError("Claude subscription credential is missing")
+
+
 def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     """Execute only a previously compiled manifest with an exact digest approval."""
 
@@ -789,6 +910,8 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     if image_errors:
         raise ValueError("image policy validation failed: " + "; ".join(image_errors))
     _verify_generated_inputs(root, manifest)
+    if manifest.billing_mode == "subscription":
+        _verify_subscription_auth(manifest.cells, os.environ, Path.home())
     for image in _required_images(manifest.task_ids):
         require_current_image(root, image)
     for relative_path in manifest.harbor_config_paths:

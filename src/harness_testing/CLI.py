@@ -59,6 +59,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         choices=("smoke", "checkpoint", "release", "calibration", "research"),
         required=True,
     )
+    plan_parser.add_argument(
+        "--billing-mode", choices=("subscription", "api"), required=True
+    )
     plan_parser.add_argument("--cell", action="append", default=[])
     plan_parser.add_argument("--task", action="append", default=[])
     plan_parser.add_argument("--max-sessions", type=int, required=True)
@@ -127,6 +130,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         manifest = plan_run(
             _repository_root(),
             profile=arguments.profile,
+            billing_mode=arguments.billing_mode,
             cell_specifications=tuple(arguments.cell),
             task_ids=tuple(arguments.task),
             max_sessions=arguments.max_sessions,
