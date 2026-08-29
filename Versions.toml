@@ -109,6 +109,16 @@ ecosystem = "npm"
 version = "0.6.17"
 
 [[packages]]
+name = "ajv"
+ecosystem = "npm"
+version = "8.20.0"
+
+[[packages]]
+name = "ajv-formats"
+ecosystem = "npm"
+version = "3.0.1"
+
+[[packages]]
 name = "mcp"
 ecosystem = "pypi"
 version = "2.1.1"

@@ -323,6 +323,7 @@
       "if": {
         "properties": {
           "run": {
+            "type": "object",
             "properties": {"finalized": {"const": true}},
             "required": ["finalized"]
           }
@@ -331,6 +332,7 @@
       "then": {
         "properties": {
           "review": {
+            "type": "object",
             "properties": {
               "task_reviewed": {"const": true},
               "infrastructure_reviewed": {"const": true},
