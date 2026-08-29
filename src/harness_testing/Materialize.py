@@ -26,6 +26,16 @@ _IMAGE_DOCKERFILES = {
     "rust": "Rust_Agent.Dockerfile",
     "verifier": "Verifier.Dockerfile",
 }
+_IMAGE_INPUTS = {
+    "node": ("images/Node_Agent.Dockerfile",),
+    "rust": ("images/Rust_Agent.Dockerfile",),
+    "verifier": (
+        "images/Verifier.Dockerfile",
+        "src/harness_testing/__init__.py",
+        "src/harness_testing/Trajectory_Events.py",
+    ),
+}
+_IMAGE_INPUT_LABEL = "studio.moser.harness-testing.input-digest"
 
 _ARM_LAYERS = {
     "A0": (),
@@ -145,6 +155,54 @@ def dockerfile_policy_errors(root: Path) -> tuple[str, ...]:
     return tuple(errors)
 
 
+def image_input_digest(root: Path, image: str) -> str:
+    inputs = _IMAGE_INPUTS.get(image)
+    if inputs is None:
+        raise ValueError(f"unknown image: {image}")
+    digest = hashlib.sha256()
+    for relative in inputs:
+        path = root / relative
+        if not path.is_file():
+            raise ValueError(f"image input is missing: {path}")
+        digest.update(relative.encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return f"sha256:{digest.hexdigest()}"
+
+
+def image_reference(root: Path, image: str) -> str:
+    if image not in _IMAGE_DOCKERFILES:
+        raise ValueError(f"unknown image: {image}")
+    return f"studio-moser/harness-testing-{image}:{_schema_version(root)}"
+
+
+def image_is_current(root: Path, image: str) -> bool:
+    result = subprocess.run(
+        (
+            "docker",
+            "image",
+            "inspect",
+            "--format",
+            f'{{{{ index .Config.Labels "{_IMAGE_INPUT_LABEL}" }}}}',
+            image_reference(root, image),
+        ),
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0 and result.stdout.strip() == image_input_digest(root, image)
+
+
+def require_current_image(root: Path, image: str) -> None:
+    if not image_is_current(root, image):
+        raise ValueError(
+            f"local {image} image is missing or stale; run "
+            f"harness-test images build --{image}"
+        )
+
+
 def image_build_commands(
     root: Path, selected_images: Iterable[str]
 ) -> tuple[ImageBuildCommand, ...]:
@@ -155,6 +213,7 @@ def image_build_commands(
         if image not in _IMAGE_DOCKERFILES:
             raise ValueError(f"unknown image: {image}")
         dockerfile = root / "images" / _IMAGE_DOCKERFILES[image]
+        input_digest = image_input_digest(root, image)
         commands.append(
             ImageBuildCommand(
                 image=image,
@@ -163,6 +222,8 @@ def image_build_commands(
                     "buildx",
                     "build",
                     "--load",
+                    "--label",
+                    f"{_IMAGE_INPUT_LABEL}={input_digest}",
                     "--file",
                     str(dockerfile),
                     "--tag",
@@ -180,6 +241,7 @@ def build_images(root: Path, selected_images: Iterable[str]) -> None:
         raise ValueError("; ".join(errors))
     for command in image_build_commands(root, selected_images):
         subprocess.run(command.arguments, cwd=root, check=True)
+        require_current_image(root, command.image)
 
 
 def _git_environment() -> dict[str, str]:

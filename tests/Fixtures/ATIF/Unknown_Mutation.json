@@ -1,0 +1,53 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "unknown-mutation",
+  "agent": {
+    "name": "claude-code",
+    "version": "2.1.236",
+    "model_name": "claude-sonnet-4-6"
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "source": "user",
+      "message": "Exercise an unclassifiable shell mutation."
+    },
+    {
+      "step_id": 2,
+      "source": "agent",
+      "message": "Checking, mutating an unknown path, and checking again.",
+      "tool_calls": [
+        {
+          "tool_call_id": "unknown-check-1",
+          "function_name": "Bash",
+          "arguments": {"command": "npm run check:accent"}
+        },
+        {
+          "tool_call_id": "unknown-mutation",
+          "function_name": "Bash",
+          "arguments": {"command": "touch generated-marker"}
+        },
+        {
+          "tool_call_id": "unknown-check-2",
+          "function_name": "Bash",
+          "arguments": {"command": "npm run check:accent"}
+        }
+      ],
+      "observation": {
+        "results": [
+          {"source_call_id": "unknown-check-1", "content": "exit_code: 0"},
+          {"source_call_id": "unknown-mutation", "content": "exit_code: 0"},
+          {"source_call_id": "unknown-check-2", "content": "exit_code: 0"}
+        ]
+      },
+      "llm_call_count": 1
+    }
+  ],
+  "final_metrics": {
+    "total_prompt_tokens": null,
+    "total_completion_tokens": null,
+    "total_cached_tokens": null,
+    "total_cost_usd": null,
+    "total_steps": 2
+  }
+}

@@ -129,6 +129,58 @@ def _validate_benchmark_task_assets(
                         f"protected digest mismatch for {relative}: {expected!r} != {actual}",
                     )
                 )
+        mutable_files = manifest.get("mutable_files", {})
+        if not isinstance(mutable_files, dict):
+            raise ValueError("mutable_files must be an object")
+        for relative, rule in mutable_files.items():
+            mutable_path = environment_directory / relative
+            if (
+                relative in protected_files
+                or Path(relative).is_absolute()
+                or ".." in Path(relative).parts
+                or not mutable_path.is_file()
+                or mutable_path.is_symlink()
+                or not isinstance(rule, dict)
+            ):
+                failures.append(
+                    _failure(manifest_path, f"invalid mutable fixture path: {relative}")
+                )
+                continue
+            expected = rule.get("baseline_sha256")
+            actual = f"sha256:{hashlib.sha256(mutable_path.read_bytes()).hexdigest()}"
+            if expected != actual:
+                failures.append(
+                    _failure(
+                        manifest_path,
+                        f"mutable baseline digest mismatch for {relative}: "
+                        f"{expected!r} != {actual}",
+                    )
+                )
+            replacements = rule.get("replacements")
+            if not isinstance(replacements, list) or not replacements:
+                failures.append(
+                    _failure(manifest_path, f"mutable replacements are missing: {relative}")
+                )
+                continue
+            source = mutable_path.read_text(errors="replace")
+            for replacement in replacements:
+                before = replacement.get("before") if isinstance(replacement, dict) else None
+                after = replacement.get("after") if isinstance(replacement, dict) else None
+                count = replacement.get("count") if isinstance(replacement, dict) else None
+                if (
+                    not isinstance(before, str)
+                    or not isinstance(after, str)
+                    or not isinstance(count, int)
+                    or count < 1
+                    or source.count(before) != count
+                    or source.count(after) != 0
+                ):
+                    failures.append(
+                        _failure(
+                            manifest_path,
+                            f"invalid mutable replacement for {relative}",
+                        )
+                    )
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
         failures.append(_failure(manifest_path, f"invalid protected manifest: {error}"))
     return failures
@@ -255,6 +307,23 @@ def validate_task_paths(
         for missing in sorted(required_artifacts - artifacts):
             failures.append(
                 _failure(path, f"required artifact is missing: {missing[0]} -> {missing[1]}")
+            )
+        workspace_artifacts = [
+            artifact
+            for artifact in task.artifacts
+            if not isinstance(artifact, str)
+            and artifact.source == "/app"
+            and artifact.destination == "workspace"
+        ]
+        required_excludes = {".git", "node_modules", "target"}
+        if len(workspace_artifacts) == 1 and not required_excludes.issubset(
+            workspace_artifacts[0].exclude
+        ):
+            failures.append(
+                _failure(
+                    path,
+                    "workspace artifact must exclude .git, node_modules, and target",
+                )
             )
 
         failures.extend(_validate_benchmark_task_assets(path, task))

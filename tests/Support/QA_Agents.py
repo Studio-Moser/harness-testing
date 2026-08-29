@@ -24,6 +24,10 @@ _PATCHES = {
 *** Update File: /app/src/index.css
 *** Update File: /app/src/App.test.tsx
 *** End Patch""",
+    "source-tamper": """*** Begin Patch
+*** Update File: /app/src/App.tsx
+*** Update File: /app/src/index.css
+*** End Patch""",
 }
 
 _COMMANDS = {
@@ -36,6 +40,7 @@ _COMMANDS = {
     "nop": (),
     "near-miss": ("npm run check:accent",),
     "adversarial": ("npm run gate",),
+    "source-tamper": ("npm run gate",),
 }
 
 
@@ -70,7 +75,16 @@ def build_case_trajectory(case: str, script_exit_code: int) -> Trajectory:
         results.append(
             {
                 "source_call_id": f"qa-{call_index}",
-                "content": f"exit_code: {exit_code}",
+                "content": (
+                    "[stdout]\ncompleted"
+                    if exit_code == 0
+                    else f"[exit_code] {exit_code}"
+                ),
+                "extra": {
+                    "tool_result_metadata": {
+                        "tool_use_result": {"exitCode": exit_code}
+                    }
+                },
             }
         )
     agent_step: dict[str, Any] = {

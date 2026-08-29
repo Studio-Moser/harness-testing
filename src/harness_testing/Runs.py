@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import subprocess
 import tomllib
@@ -16,7 +17,11 @@ import yaml
 from harbor.models.job.config import JobConfig
 
 from harness_testing.Config import load_job, load_versions
-from harness_testing.Materialize import dockerfile_policy_errors, materialize_arm
+from harness_testing.Materialize import (
+    dockerfile_policy_errors,
+    materialize_arm,
+    require_current_image,
+)
 from harness_testing.Validate import find_sensitive_keys, validate_repository
 
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -158,6 +163,28 @@ def _sha256(contents: bytes) -> str:
 
 def _canonical_json(value: object) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+
+
+def _tree_digest(root: Path) -> str:
+    if not root.is_dir():
+        raise ValueError(f"task directory is missing: {root}")
+    digest = hashlib.sha256()
+    for path in sorted(root.rglob("*")):
+        if not (path.is_file() or path.is_symlink()):
+            continue
+        relative = path.relative_to(root).as_posix()
+        payload = (
+            f"symlink:{os.readlink(path)}".encode()
+            if path.is_symlink()
+            else path.read_bytes()
+        )
+        digest.update(relative.encode())
+        digest.update(b"\0")
+        digest.update(f"{path.lstat().st_mode & 0o777:o}".encode())
+        digest.update(b"\0")
+        digest.update(payload)
+        digest.update(b"\0")
+    return f"sha256:{digest.hexdigest()}"
 
 
 def _manifest_digest(document: dict[str, object]) -> str:
@@ -523,6 +550,11 @@ def compile_run(
             job_texts[relative_path] = text
 
     schema_version = str(versions["repository"]["schema_version"])
+    task_digests = {
+        f"{pack}/{task_id}": _tree_digest(root / "tasks" / pack / task_id)
+        for task_id in task_ids
+        for pack in (_task_pack(root, selected_profile, task_id),)
+    }
     provenance: dict[str, object] = {
         "versions_digest": _sha256((root / "Versions.toml").read_bytes()),
         "profiles_digest": _sha256((root / "runs" / "Profiles.toml").read_bytes()),
@@ -530,6 +562,7 @@ def compile_run(
         "harbor_config_digests": {
             path: _sha256(text.encode()) for path, text in job_texts.items()
         },
+        "task_digests": task_digests,
         "budget_enforcement": "admission-estimate-only",
     }
     manifest = RunManifest(
@@ -664,6 +697,10 @@ def format_plan(manifest: RunManifest) -> str:
         )
     lines.append("Harbor order:")
     lines.extend(f"  {path}" for path in manifest.harbor_config_paths)
+    lines.append("Task inputs:")
+    task_digests = manifest.provenance.get("task_digests", {})
+    if isinstance(task_digests, dict):
+        lines.extend(f"  {name}: {digest}" for name, digest in sorted(task_digests.items()))
     lines.append(f"Manifest path: {manifest.path}")
     lines.append("No model session started.")
     return "\n".join(lines)
@@ -685,6 +722,17 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     versions = load_versions(root / "Versions.toml")
     for cell in manifest.cells:
         _validate_cell(root, cell, versions)
+    expected_task_digests = manifest.provenance.get("task_digests")
+    if not isinstance(expected_task_digests, dict):
+        raise ValueError("manifest has no task digests")
+    profile = _load_profile(root, manifest.profile)
+    actual_task_digests = {
+        f"{pack}/{task_id}": _tree_digest(root / "tasks" / pack / task_id)
+        for task_id in manifest.task_ids
+        for pack in (_task_pack(root, profile, task_id),)
+    }
+    if expected_task_digests != actual_task_digests:
+        raise ValueError("task digest mismatch after manifest approval")
     expected_digests = manifest.provenance.get("harbor_config_digests")
     if not isinstance(expected_digests, dict):
         raise ValueError("manifest has no Harbor config digests")
@@ -717,15 +765,8 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     required_images = ["node", "verifier"]
     if any(task_id.startswith("rust-") for task_id in manifest.task_ids):
         required_images.append("rust")
-    schema_version = str(load_versions(root / "Versions.toml")["repository"]["schema_version"])
     for image in required_images:
-        image_reference = f"studio-moser/harness-testing-{image}:{schema_version}"
-        subprocess.run(
-            ("docker", "image", "inspect", image_reference),
-            cwd=root,
-            check=True,
-            stdout=subprocess.DEVNULL,
-        )
+        require_current_image(root, image)
     for relative_path in manifest.harbor_config_paths:
         subprocess.run(
             ("harbor", "run", "-c", str(manifest.path.parent / relative_path)),

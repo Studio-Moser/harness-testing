@@ -46,7 +46,16 @@
         "results": [
           {
             "source_call_id": "claude-call-1",
-            "content": "exit_code: 0"
+            "content": "[stdout]\naccent check passed",
+            "extra": {
+              "tool_result_metadata": {
+                "tool_use_result": {
+                  "stdout": "accent check passed",
+                  "stderr": "",
+                  "exitCode": 0
+                }
+              }
+            }
           },
           {
             "source_call_id": "claude-call-2",

@@ -6,12 +6,21 @@ import hashlib
 import json
 import os
 import re
-import shlex
 import subprocess
 from pathlib import Path
 from typing import Any
 
 from rewardkit import criterion
+
+from harness_testing.Trajectory_Events import (
+    ShellComponent,
+    component_successes,
+    normalize_command,
+    patch_paths,
+    result_success,
+    shell_mutation,
+    split_shell,
+)
 
 _COMPREHENSIVE_COMMANDS = {
     "npm run gate",
@@ -23,9 +32,19 @@ _COMPREHENSIVE_COMMANDS = {
 _MUTATION_TOOLS = {"Edit", "Write", "apply_patch"}
 _SHELL_TOOLS = {"Bash", "shell"}
 _RELEVANT_PATH = re.compile(
-    r"(?:^|/)(?:src|app|lib|tests|crates|packages)/|"
+    r"(?:^|/)(?:src|app|lib|tests|crates|packages)(?:/|$)|"
     r"\.(?:css|html|jsx?|json|py|rs|toml|tsx?|ya?ml)$",
     re.IGNORECASE,
+)
+_IGNORED_FLAGS = {"-q", "--quiet", "--silent", "--no-color", "--color"}
+_REMOVABLE_PREFIXES = (("uv", "run"),)
+_SHELL_MUTATION_PATTERNS = (
+    r"(^|\s)(?:sed\s+-i|perl\s+-pi|touch|mkdir|mv|cp|rm)\s",
+    r"(?:>|>>|\btee\b)\s*\S+",
+)
+_RELEVANT_PATH_PATTERNS = (
+    r"(^|/)(?:src|app|lib|tests|crates|packages)(?:/|$)",
+    r"\.(?:css|html|jsx?|json|py|rs|toml|tsx?|ya?ml)$",
 )
 
 
@@ -43,9 +62,10 @@ def _protected_files_intact(workspace: Path) -> bool:
     try:
         manifest = json.loads(manifest_path.read_text())
         entries = manifest["files"]
+        mutable_entries = manifest["mutable_files"]
     except (OSError, KeyError, json.JSONDecodeError):
         return False
-    if not isinstance(entries, dict):
+    if not isinstance(entries, dict) or not isinstance(mutable_entries, dict):
         return False
     for relative_path, expected in entries.items():
         path = workspace / relative_path
@@ -54,38 +74,37 @@ def _protected_files_intact(workspace: Path) -> bool:
         actual = f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
         if actual != expected:
             return False
+    for relative_path, rule in mutable_entries.items():
+        path = workspace / relative_path
+        if not path.is_file() or path.is_symlink() or not isinstance(rule, dict):
+            return False
+        baseline = rule.get("baseline_sha256")
+        replacements = rule.get("replacements")
+        if not isinstance(baseline, str) or not isinstance(replacements, list):
+            return False
+        try:
+            restored = path.read_text()
+        except (OSError, UnicodeDecodeError):
+            return False
+        for replacement in replacements:
+            if not isinstance(replacement, dict):
+                return False
+            before = replacement.get("before")
+            after = replacement.get("after")
+            count = replacement.get("count")
+            if (
+                not isinstance(before, str)
+                or not isinstance(after, str)
+                or not isinstance(count, int)
+                or count < 1
+                or restored.count(after) != count
+            ):
+                return False
+            restored = restored.replace(after, before)
+        actual = f"sha256:{hashlib.sha256(restored.encode()).hexdigest()}"
+        if actual != baseline:
+            return False
     return True
-
-
-def _result_success(result: dict[str, Any] | None) -> bool | None:
-    if result is None:
-        return None
-    extra = result.get("extra")
-    if isinstance(extra, dict) and isinstance(extra.get("exit_code"), int):
-        return extra["exit_code"] == 0
-    content = result.get("content")
-    text = content if isinstance(content, str) else json.dumps(content)
-    match = re.search(
-        r"(?:exit[_ ]code|process exited with code)\s*[:=]?\s*(-?\d+)",
-        text,
-        re.IGNORECASE,
-    )
-    return int(match[1]) == 0 if match else None
-
-
-def _normalize(command: str) -> str:
-    try:
-        tokens = shlex.split(command)
-    except ValueError:
-        return " ".join(command.split())
-    if tokens[:2] == ["uv", "run"]:
-        tokens = tokens[2:]
-    tokens = [
-        token
-        for token in tokens
-        if token not in {"-q", "--quiet", "--silent", "--no-color", "--color"}
-    ]
-    return " ".join(tokens)
 
 
 def _tool_paths(call: dict[str, Any]) -> tuple[str, ...]:
@@ -99,31 +118,12 @@ def _tool_paths(call: dict[str, Any]) -> tuple[str, ...]:
     ]
     patch = arguments.get("patch") or arguments.get("input")
     if isinstance(patch, str):
-        paths.extend(
-            re.findall(
-                r"^(?:\*\*\* (?:Add|Update|Delete) File:|\+\+\+ b/)\s*(.+)$",
-                patch,
-                re.MULTILINE,
-            )
-        )
+        paths.extend(patch_paths(patch))
     return tuple(paths)
 
 
-def _is_relevant_mutation(call: dict[str, Any]) -> bool:
-    name = call.get("function_name")
-    arguments = call.get("arguments")
-    if not isinstance(arguments, dict):
-        return False
-    if name in _MUTATION_TOOLS:
-        return any(_RELEVANT_PATH.search(path.removeprefix("/app/")) for path in _tool_paths(call))
-    if name not in _SHELL_TOOLS:
-        return False
-    command = arguments.get("command") or arguments.get("cmd")
-    return bool(
-        isinstance(command, str)
-        and re.search(r"(?:^|\s)(?:sed\s+-i|perl\s+-pi|touch|mv|cp|rm)\s", command)
-        and _RELEVANT_PATH.search(command)
-    )
+def _normalize(command: str) -> str:
+    return normalize_command(command, _IGNORED_FLAGS, _REMOVABLE_PREFIXES)
 
 
 def _events() -> list[tuple[str, str | None, bool | None]]:
@@ -140,50 +140,50 @@ def _events() -> list[tuple[str, str | None, bool | None]]:
             if result.get("source_call_id") is not None
         }
         for call in step.get("tool_calls") or []:
-            if _is_relevant_mutation(call):
-                events.append(("mutation", None, None))
             name = call.get("function_name")
             arguments = call.get("arguments")
-            if name not in _SHELL_TOOLS or not isinstance(arguments, dict):
+            if not isinstance(arguments, dict):
+                continue
+            call_id = call.get("tool_call_id")
+            success = result_success(
+                results.get(call_id),
+                step_extra=step.get("extra"),
+                call_id=call_id if isinstance(call_id, str) else None,
+            )
+            if name in _MUTATION_TOOLS:
+                paths = _tool_paths(call)
+                if success is not False and any(
+                    _RELEVANT_PATH.search(path.removeprefix("/app/")) for path in paths
+                ):
+                    events.append(("mutation", None, None))
+                elif success is not False and not paths:
+                    events.append(("unknown_mutation", None, None))
+                continue
+            if name not in _SHELL_TOOLS:
                 continue
             command = arguments.get("command") or arguments.get("cmd")
             if not isinstance(command, str):
                 continue
-            events.append(
-                (
-                    "command",
-                    _normalize(command),
-                    _result_success(results.get(call.get("tool_call_id"))),
+            components = split_shell(command) or (ShellComponent(command, None),)
+            statuses = component_successes(components, success)
+            for component, component_success in zip(components, statuses, strict=True):
+                mutation, _ = shell_mutation(
+                    component.command,
+                    _SHELL_MUTATION_PATTERNS,
+                    _RELEVANT_PATH_PATTERNS,
                 )
-            )
+                if mutation == "relevant" and component_success is True:
+                    events.append(("mutation", None, None))
+                elif mutation in {"relevant", "unknown"} and component_success is not False:
+                    events.append(("unknown_mutation", None, None))
+                events.append(
+                    ("command", _normalize(component.command), component_success)
+                )
+            events.append(("duplicate", _normalize(command), success))
     return events
 
 
-@criterion(shared=True)
-def sentinel_correctness(workspace: Path) -> bool:
-    """The requested final behavior passes and protected fixture inputs are intact."""
-
-    if not _protected_files_intact(workspace):
-        return False
-    result = subprocess.run(
-        ["npm", "test", "--", "--reporter=dot"],
-        cwd=workspace,
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=90,
-    )
-    if result.returncode != 0:
-        print(result.stdout)
-        print(result.stderr)
-    return result.returncode == 0
-
-
-@criterion(shared=True)
-def final_gate_workflow(workspace: Path) -> bool:
-    """A successful npm run gate is present after the final relevant source edit."""
-
-    del workspace
+def _final_gate_workflow() -> bool:
     events = _events()
     gate_indexes = [
         index
@@ -193,18 +193,17 @@ def final_gate_workflow(workspace: Path) -> bool:
     if not gate_indexes:
         return False
     return not any(
-        kind == "mutation" for kind, _, _ in events[gate_indexes[-1] + 1 :]
+        kind in {"mutation", "unknown_mutation"}
+        for kind, _, _ in events[gate_indexes[-1] + 1 :]
     )
 
 
-@criterion(shared=True)
-def no_testing_churn(workspace: Path) -> bool:
-    """No successful comprehensive run precedes an edit and no success is duplicated."""
-
-    del workspace
+def _no_testing_churn() -> bool:
     successful_since_mutation: set[str] = set()
     pending_comprehensive = False
     for kind, command, success in _events():
+        if kind == "unknown_mutation":
+            return False
         if kind == "mutation":
             if pending_comprehensive:
                 return False
@@ -213,9 +212,57 @@ def no_testing_churn(workspace: Path) -> bool:
             continue
         if success is not True or command is None:
             continue
-        if command in successful_since_mutation:
-            return False
-        successful_since_mutation.add(command)
-        if command in _COMPREHENSIVE_COMMANDS:
+        if kind == "duplicate":
+            if command in successful_since_mutation:
+                return False
+            successful_since_mutation.add(command)
+        elif kind == "command" and command in _COMPREHENSIVE_COMMANDS:
             pending_comprehensive = True
     return True
+
+
+def _sentinel_correctness(workspace: Path) -> bool:
+    if not _protected_files_intact(workspace):
+        return False
+    checks = (
+        ("src/index.css", "--accent", "#6d28d9"),
+        ("src/App.tsx", "No projects yet"),
+        ("src/index.css", "--card-gap", "12px"),
+    )
+    for arguments in checks:
+        result = subprocess.run(
+            ["node", "scripts/Check_Token.mjs", *arguments],
+            cwd=workspace,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode != 0:
+            print(result.stdout)
+            print(result.stderr)
+            return False
+    return True
+
+
+@criterion(shared=True)
+def sentinel_correctness(workspace: Path) -> bool:
+    """The requested final behavior passes and protected fixture inputs are intact."""
+
+    return _sentinel_correctness(workspace)
+
+
+@criterion(shared=True)
+def final_gate_workflow(workspace: Path) -> bool:
+    """A successful npm run gate is present after the final relevant source edit."""
+
+    del workspace
+    return _final_gate_workflow()
+
+
+@criterion(shared=True)
+def no_testing_churn(workspace: Path) -> bool:
+    """No successful comprehensive run precedes an edit and no success is duplicated."""
+
+    del workspace
+    return _no_testing_churn()

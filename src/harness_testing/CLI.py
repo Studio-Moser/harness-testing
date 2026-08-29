@@ -78,7 +78,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     qa_parser.add_argument("--task", required=True)
     qa_parser.add_argument(
         "--case",
-        choices=("oracle", "nop", "near-miss", "adversarial"),
+        choices=("oracle", "nop", "near-miss", "adversarial", "source-tamper"),
         required=True,
     )
 

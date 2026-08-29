@@ -110,7 +110,25 @@ def test_failed_comprehensive_run_before_a_fix_is_diagnostic(grouped_policy):
 
     assert report.metrics["comprehensive_tests"] == 2
     assert report.metrics["premature_comprehensive_tests"] == 0
+    assert report.metrics["files_changed"] == 2
+
+
+def test_unknown_mutation_keeps_dependent_churn_metrics_null(grouped_policy):
+    report = trajectory_metrics(
+        load_trajectory(FIXTURES / "Unknown_Mutation.json"), grouped_policy
+    )
+
     assert report.metrics["files_changed"] is None
+    assert report.metrics["premature_comprehensive_tests"] is None
+    assert report.metrics["duplicate_successful_commands"] is None
+
+
+def test_compound_gate_then_late_mutation_is_premature(grouped_policy):
+    report = trajectory_metrics(
+        load_trajectory(FIXTURES / "Compound_Late_Mutation.json"), grouped_policy
+    )
+
+    assert report.metrics["premature_comprehensive_tests"] == 1
 
 
 def test_duplicate_successful_normalized_command_is_counted(grouped_policy):

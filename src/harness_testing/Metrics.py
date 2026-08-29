@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import re
-import shlex
 import tomllib
 from dataclasses import dataclass
 from datetime import datetime
@@ -14,6 +13,16 @@ from harbor.models.agent.context import AgentContext
 from harbor.models.trajectories import Trajectory
 from harbor.models.trajectories.observation_result import ObservationResult
 from harbor.models.trajectories.tool_call import ToolCall
+
+from harness_testing.Trajectory_Events import (
+    ShellComponent,
+    component_successes,
+    normalize_command,
+    patch_paths,
+    result_success,
+    shell_mutation,
+    split_shell,
+)
 
 
 @dataclass(frozen=True)
@@ -187,66 +196,12 @@ def load_metric_policy(
     )
 
 
-def _split_compound_shell(command: str) -> tuple[str, ...]:
-    components: list[str] = []
-    current: list[str] = []
-    quote: str | None = None
-    escaped = False
-    index = 0
-    while index < len(command):
-        character = command[index]
-        if escaped:
-            current.append(character)
-            escaped = False
-            index += 1
-            continue
-        if character == "\\" and quote != "'":
-            current.append(character)
-            escaped = True
-            index += 1
-            continue
-        if quote:
-            current.append(character)
-            if character == quote:
-                quote = None
-            index += 1
-            continue
-        if character in {"'", '"'}:
-            quote = character
-            current.append(character)
-            index += 1
-            continue
-        operator_length = 0
-        if command[index : index + 2] in {"&&", "||"}:
-            operator_length = 2
-        elif character in {";", "\n"}:
-            operator_length = 1
-        if operator_length:
-            component = "".join(current).strip()
-            if component:
-                components.append(component)
-            current = []
-            index += operator_length
-            continue
-        current.append(character)
-        index += 1
-    component = "".join(current).strip()
-    if component:
-        components.append(component)
-    return tuple(components)
-
-
 def _normalize_command(command: str, policy: MetricPolicy) -> str:
-    try:
-        tokens = shlex.split(command)
-    except ValueError:
-        return " ".join(command.split())
-    for prefix in policy.removable_prefixes:
-        if tuple(tokens[: len(prefix)]) == prefix:
-            tokens = tokens[len(prefix) :]
-            break
-    tokens = [token for token in tokens if token not in policy.ignored_flags]
-    return " ".join(tokens)
+    return normalize_command(
+        command,
+        policy.ignored_flags,
+        policy.removable_prefixes,
+    )
 
 
 def _classify_component(command: str, policy: MetricPolicy) -> CommandComponent:
@@ -274,8 +229,8 @@ def _classify_component(command: str, policy: MetricPolicy) -> CommandComponent:
 
 def classify_command(command: str, policy: MetricPolicy) -> CommandClassification:
     components = tuple(
-        _classify_component(component, policy)
-        for component in _split_compound_shell(command)
+        _classify_component(component.command, policy)
+        for component in split_shell(command)
     )
     if not components:
         components = (_classify_component(command, policy),)
@@ -283,30 +238,6 @@ def classify_command(command: str, policy: MetricPolicy) -> CommandClassificatio
         scope=max(components, key=lambda component: component.rank).scope,
         components=components,
     )
-
-
-def _result_text(result: ObservationResult) -> str:
-    if isinstance(result.content, str):
-        return result.content
-    if isinstance(result.content, list):
-        return "\n".join(
-            part.text or "" for part in result.content if part.type == "text"
-        )
-    return ""
-
-
-def _tool_success(result: ObservationResult | None) -> bool | None:
-    if result is None:
-        return None
-    if result.extra and isinstance(result.extra.get("exit_code"), int):
-        return result.extra["exit_code"] == 0
-    text = _result_text(result)
-    match = re.search(
-        r"(?:exit[_ ]code|process exited with code)\s*[:=]?\s*(-?\d+)",
-        text,
-        re.IGNORECASE,
-    )
-    return int(match[1]) == 0 if match else None
 
 
 def _tool_duration(tool_call: ToolCall, result: ObservationResult | None) -> float | None:
@@ -324,15 +255,6 @@ def _tool_command(tool_call: ToolCall, policy: MetricPolicy) -> str | None:
     return None
 
 
-def _patch_paths(patch: str) -> tuple[str, ...]:
-    paths = re.findall(
-        r"^(?:\*\*\* (?:Add|Update|Delete) File:|\+\+\+ b/)\s*(.+)$",
-        patch,
-        re.MULTILINE,
-    )
-    return tuple(path.strip() for path in paths)
-
-
 def _tool_paths(tool_call: ToolCall, policy: MetricPolicy) -> tuple[str, ...]:
     paths: list[str] = []
     for argument in policy.path_arguments:
@@ -342,7 +264,7 @@ def _tool_paths(tool_call: ToolCall, policy: MetricPolicy) -> tuple[str, ...]:
     if tool_call.function_name == "apply_patch":
         patch = tool_call.arguments.get("patch") or tool_call.arguments.get("input")
         if isinstance(patch, str):
-            paths.extend(_patch_paths(patch))
+            paths.extend(patch_paths(patch))
     return tuple(dict.fromkeys(paths))
 
 
@@ -354,19 +276,11 @@ def _is_relevant_path(path: str, policy: MetricPolicy) -> bool:
 def _shell_mutation(
     command: str, policy: MetricPolicy
 ) -> tuple[str, tuple[str, ...]]:
-    if not any(pattern.search(command) for pattern in policy.shell_mutation_patterns):
-        return "none", ()
-    candidate_paths = tuple(
-        dict.fromkeys(
-            re.findall(
-                r"(?:^|\s)(/?(?:[A-Za-z0-9_.-]+/)+[A-Za-z0-9_.-]+)(?:\s|$)",
-                command,
-            )
-        )
+    return shell_mutation(
+        command,
+        policy.shell_mutation_patterns,
+        policy.relevant_path_patterns,
     )
-    if any(_is_relevant_path(path, policy) for path in candidate_paths):
-        return "relevant", candidate_paths
-    return "unknown", candidate_paths
 
 
 def _tool_mutation(
@@ -470,6 +384,32 @@ def trajectory_metrics(
     context_event_count = 0
     diff_lines: list[int] = []
 
+    def record_mutation(
+        mutation: str,
+        paths: tuple[str, ...],
+        success: bool | None,
+        *,
+        shell_component: bool,
+    ) -> None:
+        nonlocal pending_comprehensive, premature_comprehensive, unknown_mutation
+        if success is False or mutation in {"none", "irrelevant"}:
+            return
+        if mutation == "relevant" and (success is True or not shell_component):
+            changed_paths.update(
+                path.removeprefix("/app/")
+                for path in paths
+                if _is_relevant_path(path, policy)
+            )
+            if policy.track_premature_comprehensive and pending_comprehensive:
+                premature_comprehensive += pending_comprehensive
+            pending_comprehensive = 0
+            successful_since_mutation.clear()
+            return
+        if mutation in {"relevant", "unknown"}:
+            unknown_mutation = True
+            pending_comprehensive = 0
+            successful_since_mutation.clear()
+
     for step in trajectory.steps:
         results = {
             result.source_call_id: result
@@ -479,27 +419,49 @@ def trajectory_metrics(
         for tool_call in step.tool_calls or []:
             tool_call_count += 1
             result = results.get(tool_call.tool_call_id)
-            success = _tool_success(result)
+            success = result_success(
+                result,
+                step_extra=step.extra,
+                call_id=tool_call.tool_call_id,
+            )
             command = _tool_command(tool_call, policy)
-            mutation, paths = _tool_mutation(tool_call, command, policy)
-            if success is not False and mutation == "relevant":
-                changed_paths.update(
-                    path.removeprefix("/app/")
-                    for path in paths
-                    if _is_relevant_path(path, policy)
-                )
-                if policy.track_premature_comprehensive and pending_comprehensive:
-                    premature_comprehensive += pending_comprehensive
-                    pending_comprehensive = 0
-                successful_since_mutation.clear()
-            elif success is not False and mutation == "unknown":
-                unknown_mutation = True
 
             if command is not None and tool_call.function_name in policy.shell_tools:
-                classification = classify_command(command, policy)
-                normalized = " && ".join(
-                    component.normalized for component in classification.components
+                shell_components = split_shell(command)
+                if not shell_components:
+                    shell_components = (ShellComponent(command, None),)
+                component_classifications = tuple(
+                    _classify_component(component.command, policy)
+                    for component in shell_components
                 )
+                classification = CommandClassification(
+                    scope=max(
+                        component_classifications,
+                        key=lambda component: component.rank,
+                    ).scope,
+                    components=component_classifications,
+                )
+                statuses = component_successes(shell_components, success)
+                for shell_component, component, component_success in zip(
+                    shell_components,
+                    component_classifications,
+                    statuses,
+                    strict=True,
+                ):
+                    mutation, paths = _shell_mutation(shell_component.command, policy)
+                    record_mutation(
+                        mutation,
+                        paths,
+                        component_success,
+                        shell_component=True,
+                    )
+                    if (
+                        component_success is True
+                        and component.scope == "comprehensive_test"
+                    ):
+                        pending_comprehensive += 1
+
+                normalized = _normalize_command(command, policy)
                 record = CommandRecord(
                     step_id=step.step_id,
                     tool_name=tool_call.function_name,
@@ -518,10 +480,16 @@ def trajectory_metrics(
                     ):
                         duplicate_success += 1
                     successful_since_mutation.add(normalized)
-                    if classification.scope == "comprehensive_test":
-                        pending_comprehensive += 1
                 if "git worktree" in normalized:
                     worktree_count += 1
+            else:
+                mutation, paths = _tool_mutation(tool_call, None, policy)
+                record_mutation(
+                    mutation,
+                    paths,
+                    success,
+                    shell_component=False,
+                )
 
             name = tool_call.function_name.lower()
             if "plan" in name:
@@ -570,8 +538,14 @@ def trajectory_metrics(
             record.scope == "comprehensive_test" for record in command_records
         ),
         "test_seconds": sum(test_durations) if test_durations else None,
-        "premature_comprehensive_tests": premature_comprehensive,
-        "duplicate_successful_commands": duplicate_success,
+        "premature_comprehensive_tests": (
+            None
+            if unknown_mutation and policy.track_premature_comprehensive
+            else premature_comprehensive
+        ),
+        "duplicate_successful_commands": (
+            None if unknown_mutation and policy.track_duplicate_success else duplicate_success
+        ),
         "plans": plan_count,
         "reviews": review_count,
         "subagents": subagent_count,

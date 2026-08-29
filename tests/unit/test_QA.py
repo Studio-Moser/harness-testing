@@ -24,6 +24,12 @@ def test_frozen_react_task_matches_the_grouped_contract():
     assert task.agent.network_mode.value == "allowlist"
     assert task.verifier.environment_mode.value == "separate"
     assert task.verifier.network_mode.value == "no-network"
+    workspace_artifact = next(
+        artifact
+        for artifact in task.artifacts
+        if not isinstance(artifact, str) and artifact.source == "/app"
+    )
+    assert workspace_artifact.exclude == [".git", "node_modules", "target"]
     assert package["dependencies"] == {
         "react": "19.2.8",
         "react-dom": "19.2.8",
@@ -59,12 +65,24 @@ def test_protected_file_manifest_matches_the_frozen_fixture():
         assert f"sha256:{hashlib.sha256(contents).hexdigest()}" == expected_digest
     assert "src/App.tsx" not in manifest["files"]
     assert "src/index.css" not in manifest["files"]
+    assert set(manifest["mutable_files"]) == {"src/App.tsx", "src/index.css"}
+    for relative_path, rule in manifest["mutable_files"].items():
+        contents = (TASK_ROOT / "environment" / relative_path).read_bytes()
+        assert f"sha256:{hashlib.sha256(contents).hexdigest()}" == rule[
+            "baseline_sha256"
+        ]
 
 
 def test_qa_job_is_single_session_model_free_and_uses_only_the_test_adapter(tmp_path):
     job = build_qa_job(REPOSITORY_ROOT, TASK_ID, "oracle", tmp_path / "jobs")
 
-    assert QA_CASES == ("oracle", "nop", "near-miss", "adversarial")
+    assert QA_CASES == (
+        "oracle",
+        "nop",
+        "near-miss",
+        "adversarial",
+        "source-tamper",
+    )
     assert job.n_attempts == 1
     assert job.n_concurrent_trials == 1
     assert job.retry.max_retries == 0

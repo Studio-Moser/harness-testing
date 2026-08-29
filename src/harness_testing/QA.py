@@ -12,21 +12,22 @@ import yaml
 from harbor.models.job.config import JobConfig
 from rewardkit import discover
 
-from harness_testing.Config import load_versions
-from harness_testing.Materialize import build_images
+from harness_testing.Materialize import build_images, image_is_current
 
-QA_CASES = ("oracle", "nop", "near-miss", "adversarial")
+QA_CASES = ("oracle", "nop", "near-miss", "adversarial", "source-tamper")
 _PREMATURE_SENTINEL_TASK = "react-grouped-ui-updates"
 _EXPECTED_SCORES = {
     "oracle": {"reward": 1.0, "workflow": 1.0, "efficiency": 1.0},
     "nop": {"reward": 0.0, "workflow": 0.0, "efficiency": 1.0},
     "near-miss": {"reward": 0.0, "workflow": 0.0, "efficiency": 1.0},
     "adversarial": {"reward": 0.0, "workflow": 1.0, "efficiency": 1.0},
+    "source-tamper": {"reward": 0.0, "workflow": 1.0, "efficiency": 1.0},
 }
 _CASE_SCRIPTS = {
     "nop": "Nop.sh",
     "near-miss": "Near_Miss.sh",
     "adversarial": "Adversarial.sh",
+    "source-tamper": "Source_Tamper.sh",
 }
 
 
@@ -86,16 +87,9 @@ def build_qa_job(root: Path, task_id: str, case: str, jobs_dir: Path) -> JobConf
 
 
 def _ensure_base_images(root: Path) -> None:
-    schema = str(load_versions(root / "Versions.toml")["repository"]["schema_version"])
     selected: list[str] = []
     for image in ("node", "verifier"):
-        reference = f"studio-moser/harness-testing-{image}:{schema}"
-        result = subprocess.run(
-            ["docker", "image", "inspect", reference],
-            check=False,
-            capture_output=True,
-        )
-        if result.returncode != 0:
+        if not image_is_current(root, image):
             selected.append(image)
     if selected:
         build_images(root, selected)

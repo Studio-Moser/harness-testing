@@ -13,5 +13,32 @@
     "tsconfig.json": "sha256:770b4140bbb581e2dfd9ea9946ffc9c75a1d86ba7d2db5f77c83e37cbdf9d808",
     "tsconfig.node.json": "sha256:5005b12dba2732696cd8b819102c146d6f96bb30510bc417d8f436d87d083890",
     "vite.config.ts": "sha256:744cfcb5142282ebb682aaed3e248a099ec1245569dd6588ef3c8ad9a19df25a"
+  },
+  "mutable_files": {
+    "src/App.tsx": {
+      "baseline_sha256": "sha256:d8cd0aedfac6209f55d4f1279c7270867530c0503e77d600075e92d7ee73cc34",
+      "replacements": [
+        {
+          "before": "No projects found",
+          "after": "No projects yet",
+          "count": 1
+        }
+      ]
+    },
+    "src/index.css": {
+      "baseline_sha256": "sha256:2b054111f67299d2239d2ac64c9ac950c0a2052bb5a08cf5da65f8182fa9b6e7",
+      "replacements": [
+        {
+          "before": "--accent: #2563eb",
+          "after": "--accent: #6d28d9",
+          "count": 1
+        },
+        {
+          "before": "--card-gap: 20px",
+          "after": "--card-gap: 12px",
+          "count": 1
+        }
+      ]
+    }
   }
 }

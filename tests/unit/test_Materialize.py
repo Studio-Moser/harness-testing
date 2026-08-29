@@ -9,6 +9,7 @@ from harness_testing.CLI import main
 from harness_testing.Materialize import (
     dockerfile_policy_errors,
     image_build_commands,
+    image_input_digest,
     materialize_arm,
 )
 
@@ -21,6 +22,26 @@ def test_dockerfiles_use_pinned_images_and_install_only_pinned_tools():
     assert errors == ()
 
 
+def test_base_image_context_excludes_local_and_benchmark_payloads():
+    dockerignore = (REPOSITORY_ROOT / ".dockerignore").read_text().splitlines()
+
+    assert set(dockerignore) >= {
+        ".git",
+        ".cache",
+        ".venv",
+        "arms/materialized",
+        "runs/generated",
+        "tasks",
+        "tests",
+    }
+
+
+def test_verifier_image_carries_the_shared_trajectory_decoder():
+    dockerfile = (REPOSITORY_ROOT / "images" / "Verifier.Dockerfile").read_text()
+
+    assert "src/harness_testing/Trajectory_Events.py" in dockerfile
+
+
 def test_image_build_commands_select_only_requested_images():
     commands = image_build_commands(REPOSITORY_ROOT, ("node", "verifier"))
 
@@ -30,6 +51,34 @@ def test_image_build_commands_select_only_requested_images():
         for command in commands
     )
     assert all("Rust_Agent.Dockerfile" not in command.arguments for command in commands)
+    assert all(
+        (
+            "--label",
+            "studio.moser.harness-testing.input-digest="
+            f"{image_input_digest(REPOSITORY_ROOT, command.image)}",
+        )
+        in tuple(zip(command.arguments, command.arguments[1:], strict=False))
+        for command in commands
+    )
+
+
+def test_verifier_image_digest_binds_the_shared_decoder(tmp_path: Path):
+    (tmp_path / "images").mkdir()
+    (tmp_path / "src" / "harness_testing").mkdir(parents=True)
+    for relative in (
+        "images/Verifier.Dockerfile",
+        "src/harness_testing/__init__.py",
+        "src/harness_testing/Trajectory_Events.py",
+    ):
+        source = REPOSITORY_ROOT / relative
+        destination = tmp_path / relative
+        destination.write_bytes(source.read_bytes())
+    first = image_input_digest(tmp_path, "verifier")
+    (tmp_path / "src" / "harness_testing" / "Trajectory_Events.py").write_text(
+        "changed\n"
+    )
+
+    assert image_input_digest(tmp_path, "verifier") != first
 
 
 def test_rust_image_recreates_global_cli_symlinks_after_copying_node_modules():

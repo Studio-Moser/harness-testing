@@ -24,7 +24,17 @@
         }
       ],
       "observation": {
-        "results": [{"source_call_id": "diagnostic-failure", "content": "exit_code: 1"}]
+        "results": [
+          {
+            "source_call_id": "diagnostic-failure",
+            "content": "[stderr]\nfailed\n\n[exit_code] 1",
+            "extra": {
+              "tool_result_metadata": {
+                "tool_use_result": {"stderr": "failed", "exitCode": 1}
+              }
+            }
+          }
+        ]
       },
       "llm_call_count": 1
     },
@@ -46,7 +56,7 @@
           "tool_call_id": "diagnostic-shell-mutation",
           "function_name": "Bash",
           "arguments": {
-            "command": "touch generated-marker"
+            "command": "touch src/generated-marker.ts"
           }
         }
       ],
@@ -55,7 +65,12 @@
           {"source_call_id": "diagnostic-edit", "content": "updated"},
           {
             "source_call_id": "diagnostic-shell-mutation",
-            "content": "exit_code: 0"
+            "content": "[stdout]\ncreated",
+            "extra": {
+              "tool_result_metadata": {
+                "tool_use_result": {"stdout": "created", "exitCode": 0}
+              }
+            }
           }
         ]
       },
@@ -73,7 +88,17 @@
         }
       ],
       "observation": {
-        "results": [{"source_call_id": "diagnostic-pass", "content": "exit_code: 0"}]
+        "results": [
+          {
+            "source_call_id": "diagnostic-pass",
+            "content": "[stdout]\npassed",
+            "extra": {
+              "tool_result_metadata": {
+                "tool_use_result": {"stdout": "passed", "exitCode": 0}
+              }
+            }
+          }
+        ]
       },
       "llm_call_count": 1
     }

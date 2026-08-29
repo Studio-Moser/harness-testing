@@ -8,7 +8,12 @@ import pytest
 import yaml
 
 from harness_testing.Config import load_job
-from harness_testing.Runs import RunCell, compile_run, verify_manifest_document
+from harness_testing.Runs import (
+    RunCell,
+    _verify_generated_inputs,
+    compile_run,
+    verify_manifest_document,
+)
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
 PROFILE_TEXT = """\
@@ -65,6 +70,12 @@ def run_root(tmp_path: Path) -> Path:
     (tmp_path / "runs" / "Profiles.toml").write_text(PROFILE_TEXT)
     (tmp_path / "tasks" / "workflow" / "task-one").mkdir(parents=True)
     (tmp_path / "tasks" / "workflow" / "task-two").mkdir()
+    (tmp_path / "tasks" / "workflow" / "task-one" / "instruction.md").write_text(
+        "task one\n"
+    )
+    (tmp_path / "tasks" / "workflow" / "task-two" / "instruction.md").write_text(
+        "task two\n"
+    )
     return tmp_path
 
 
@@ -147,6 +158,27 @@ def test_changed_manifest_is_rejected(run_root: Path):
 
     with pytest.raises(ValueError, match="digest"):
         verify_manifest_document(document)
+
+
+def test_manifest_digest_binds_every_selected_task_tree(run_root: Path):
+    first = _compile_pair(run_root)
+    task = run_root / "tasks" / "workflow" / "task-one" / "instruction.md"
+    task.write_text("changed task one\n")
+    second = _compile_pair(run_root)
+
+    assert first.provenance["task_digests"]["workflow/task-one"] != second.provenance[
+        "task_digests"
+    ]["workflow/task-one"]
+    assert first.digest != second.digest
+
+
+def test_execution_rejects_task_drift_after_manifest_approval(run_root: Path):
+    manifest = _compile_pair(run_root)
+    task = run_root / "tasks" / "workflow" / "task-one" / "instruction.md"
+    task.write_text("changed after approval\n")
+
+    with pytest.raises(ValueError, match="task digest mismatch"):
+        _verify_generated_inputs(run_root, manifest)
 
 
 def test_cell_provenance_must_match_provider_arm_and_candidate_commit(run_root: Path):

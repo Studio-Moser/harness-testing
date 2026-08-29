@@ -95,7 +95,7 @@ patterns = [
 
 [mutation]
 relevant_path_patterns = [
-  '(^|/)(?:src|app|lib|tests|crates|packages)/',
+  '(^|/)(?:src|app|lib|tests|crates|packages)(?:/|$)',
   '\.(?:css|html|jsx?|json|py|rs|toml|tsx?|ya?ml)$',
 ]
 shell_mutation_patterns = [
