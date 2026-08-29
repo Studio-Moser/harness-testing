@@ -1,0 +1,1 @@
+"""Studio Moser Harness Testing."""

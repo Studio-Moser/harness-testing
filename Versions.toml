@@ -1,0 +1,150 @@
+[repository]
+schema_version = "0.1.0"
+python = "3.12.14"
+uv = "0.11.19"
+
+[standards]
+harbor_task_schema = "1.4"
+atif = "1.7"
+
+[[sources]]
+name = "Harbor"
+url = "https://github.com/harbor-framework/harbor.git"
+version = "0.22.0"
+commit = "4407eb5227a2ff4f0d3f16b2eb48849382fdf276"
+
+[[sources]]
+name = "Superpowers"
+url = "https://github.com/obra/superpowers.git"
+version = "6.3.0"
+commit = "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+
+[[sources]]
+name = "Studio Harness"
+url = "https://github.com/Studio-Moser/skills-n-stuff.git"
+version = "0.8.1"
+commit = "ff8852e737a43a7e23f2cad423905f9361fde8ae"
+
+[[sources]]
+name = "DeepSWE"
+url = "https://github.com/datacurve-ai/deep-swe.git"
+version = "1.1"
+commit = "8cae5984d5dd0ee37445beff0e928dc10c331116"
+redistribute = false
+
+[[packages]]
+name = "harbor"
+ecosystem = "pypi"
+version = "0.22.0"
+
+[[packages]]
+name = "harbor-rewardkit"
+ecosystem = "pypi"
+version = "0.1.7"
+
+[[packages]]
+name = "PyYAML"
+ecosystem = "pypi"
+version = "6.0.3"
+
+[[packages]]
+name = "@anthropic-ai/claude-code"
+ecosystem = "npm"
+version = "2.1.236"
+
+[[packages]]
+name = "@openai/codex"
+ecosystem = "npm"
+version = "0.150.1"
+
+[[packages]]
+name = "@observablehq/framework"
+ecosystem = "npm"
+version = "1.13.4"
+
+[[packages]]
+name = "@observablehq/plot"
+ecosystem = "npm"
+version = "0.6.17"
+
+[[packages]]
+name = "@modelcontextprotocol/sdk"
+ecosystem = "npm"
+version = "2.1.1"
+
+[[packages]]
+name = "playwright"
+ecosystem = "pypi"
+version = "1.62.0"
+
+[[toolchains]]
+name = "Node.js"
+version = "22.23.2"
+
+[[toolchains]]
+name = "Rust"
+version = "1.89.0"
+
+[[containers]]
+name = "python"
+image = "python"
+tag = "3.12.14-slim-bookworm"
+digest = "sha256:0f5b26b9518d002b6173fd61daad821fa340635ebfec5bba471013f9ca114579"
+
+[[containers]]
+name = "node"
+image = "node"
+tag = "22.23.2-bookworm-slim"
+digest = "sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5"
+
+[[containers]]
+name = "rust"
+image = "rust"
+tag = "1.89.0-bookworm"
+digest = "sha256:948f9b08a66e7fe01b03a98ef1c7568292e07ec2e4fe90d88c07bb14563c84ff"
+
+[[containers]]
+name = "playwright"
+image = "mcr.microsoft.com/playwright/python"
+tag = "v1.62.0-noble"
+digest = "sha256:aa81288e738725378becba5b3e06cb0f3a7f012a610e87e8d767a090ea3f740d"
+
+[[actions]]
+name = "actions/checkout"
+commit = "d23441a48e516b6c34aea4fa41551a30e30af803"
+
+[[actions]]
+name = "actions/setup-python"
+commit = "ece7cb06caefa5fff74198d8649806c4678c61a1"
+
+[[actions]]
+name = "actions/setup-node"
+commit = "249970729cb0ef3589644e2896645e5dc5ba9c38"
+
+[[actions]]
+name = "actions/configure-pages"
+commit = "983d7736d9b0ae728b81ab479565c72886d7745b"
+
+[[actions]]
+name = "actions/upload-pages-artifact"
+commit = "7b1f4a764d45c48632c6b24a0339c27f5614fb0b"
+
+[[actions]]
+name = "actions/deploy-pages"
+commit = "d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e"
+
+[[models]]
+provider = "claude"
+agent = "claude-code"
+model = "claude-sonnet-4-6"
+effort = "high"
+input_usd_per_million_tokens = "3"
+output_usd_per_million_tokens = "15"
+
+[[models]]
+provider = "codex"
+agent = "codex"
+model = "gpt-5.6-terra"
+effort = "high"
+input_usd_per_million_tokens = "2"
+output_usd_per_million_tokens = "12"

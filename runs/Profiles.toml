@@ -1,0 +1,46 @@
+schema_version = "1"
+
+[profiles.smoke]
+attempts = 1
+agent_timeout_seconds = 900
+concurrency = 1
+packs = ["workflow"]
+max_sessions = 8
+estimated_input_tokens_per_session = 1000000
+estimated_output_tokens_per_session = 100000
+
+[profiles.checkpoint]
+attempts = 1
+agent_timeout_seconds = 1200
+concurrency = 1
+packs = ["contract", "workflow"]
+max_sessions = 64
+estimated_input_tokens_per_session = 1000000
+estimated_output_tokens_per_session = 100000
+
+[profiles.release]
+attempts = 1
+agent_timeout_seconds = 1800
+concurrency = 1
+packs = ["contract", "workflow"]
+max_sessions = 128
+estimated_input_tokens_per_session = 1000000
+estimated_output_tokens_per_session = 100000
+
+[profiles.calibration]
+attempts = 3
+agent_timeout_seconds = 1800
+concurrency = 1
+packs = ["contract", "workflow"]
+max_sessions = 512
+estimated_input_tokens_per_session = 1000000
+estimated_output_tokens_per_session = 100000
+
+[profiles.research]
+attempts = 1
+agent_timeout_seconds = 3600
+concurrency = 1
+packs = ["research"]
+max_sessions = 24
+estimated_input_tokens_per_session = 2000000
+estimated_output_tokens_per_session = 200000

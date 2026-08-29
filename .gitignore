@@ -1,0 +1,28 @@
+.DS_Store
+*.egg-info/
+*.py[cod]
+__pycache__/
+.cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Local Harbor execution and provider state
+jobs/
+raw-results/
+provider-homes/
+.claude/
+.codex/
+
+# Generated benchmark inputs
+arms/materialized/
+runs/generated/
+
+# Dashboard dependencies and output
+dashboard/node_modules/
+dashboard/dist/
+
+# Local credentials
+.env
+.env.*
+!.env.example
