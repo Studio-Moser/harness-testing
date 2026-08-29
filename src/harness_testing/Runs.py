@@ -40,6 +40,10 @@ _SUBSCRIPTION_HOSTS = {
     "claude": ("api.anthropic.com",),
     "codex": ("chatgpt.com", "auth.openai.com"),
 }
+_SUBSCRIPTION_SELECTORS = {
+    "claude": ("CLAUDE_FORCE_OAUTH", "1"),
+    "codex": ("CODEX_FORCE_AUTH_JSON", "1"),
+}
 
 
 @dataclass(frozen=True)
@@ -332,6 +336,15 @@ def _required_images(task_ids: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(image for image in ("node", "rust", "verifier") if image in required)
 
 
+def _subscription_selectors(cells: tuple[RunCell, ...]) -> dict[str, dict[str, str]]:
+    providers = {cell.provider for cell in cells}
+    return {
+        provider: {"name": name, "value": value}
+        for provider, (name, value) in _SUBSCRIPTION_SELECTORS.items()
+        if provider in providers
+    }
+
+
 def _task_pack(root: Path, profile: _Profile, task_id: str) -> str:
     matches = [
         pack for pack in profile.packs if (root / "tasks" / pack / task_id).is_dir()
@@ -403,7 +416,7 @@ def _job_document(
         agent_name = "claude-code"
         model_name = f"anthropic/{cell.model}"
         version = packages["@anthropic-ai/claude-code"]
-        environment = {"CLAUDE_FORCE_OAUTH": "1"} if billing_mode == "subscription" else {}
+        environment = {}
         if (bundle / "claude" / "plugin-seed").is_dir():
             environment["CLAUDE_CODE_PLUGIN_SEED_DIR"] = (
                 "/harness-arm/claude/plugin-seed"
@@ -413,11 +426,7 @@ def _job_document(
         agent_name = "codex"
         model_name = f"openai/{cell.model}"
         version = packages["@openai/codex"]
-        environment = (
-            {"CODEX_FORCE_AUTH_JSON": "1"}
-            if billing_mode == "subscription"
-            else {}
-        )
+        environment = {}
         skills = [str(bundle / "skills")] if (bundle / "skills").is_dir() else []
     hosts = (
         _SUBSCRIPTION_HOSTS[cell.provider]
@@ -465,11 +474,7 @@ def _job_document(
         ],
     }
     job = JobConfig.model_validate(raw)
-    document = job.model_dump(
-        mode="json",
-        exclude_none=True,
-        context={"redact_sensitive_env": False},
-    )
+    document = job.model_dump(mode="json", exclude_none=True)
     sensitive_keys = find_sensitive_keys(document)
     if sensitive_keys:
         raise ValueError(f"generated Harbor job contains sensitive keys: {sensitive_keys}")
@@ -622,6 +627,9 @@ def compile_run(
             "subscription-only-no-api-fallback"
             if billing_mode == "subscription"
             else "admission-estimate-only"
+        ),
+        "subscription_selectors": (
+            _subscription_selectors(cells) if billing_mode == "subscription" else {}
         ),
     }
     manifest = RunManifest(
@@ -814,6 +822,13 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
         manifest.estimated_budget_usd != manifest.api_equivalent_cost_usd
     ):
         raise ValueError("API manifest cost estimate is inconsistent")
+    expected_selectors = (
+        _subscription_selectors(manifest.cells)
+        if manifest.billing_mode == "subscription"
+        else {}
+    )
+    if manifest.provenance.get("subscription_selectors") != expected_selectors:
+        raise ValueError("manifest subscription selectors do not match its billing route")
     versions = load_versions(root / "Versions.toml")
     for cell in manifest.cells:
         _validate_cell(root, cell, versions)
@@ -910,8 +925,13 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     if image_errors:
         raise ValueError("image policy validation failed: " + "; ".join(image_errors))
     _verify_generated_inputs(root, manifest)
+    execution_environment = os.environ.copy()
+    for name, _ in _SUBSCRIPTION_SELECTORS.values():
+        execution_environment.pop(name, None)
     if manifest.billing_mode == "subscription":
         _verify_subscription_auth(manifest.cells, os.environ, Path.home())
+        for selector in _subscription_selectors(manifest.cells).values():
+            execution_environment[selector["name"]] = selector["value"]
     for image in _required_images(manifest.task_ids):
         require_current_image(root, image)
     for relative_path in manifest.harbor_config_paths:
@@ -919,4 +939,5 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
             ("harbor", "run", "-c", str(manifest.path.parent / relative_path)),
             cwd=root,
             check=True,
+            env=execution_environment,
         )

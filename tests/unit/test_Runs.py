@@ -266,6 +266,9 @@ def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Pat
     assert manifest.provenance["budget_enforcement"] == (
         "subscription-only-no-api-fallback"
     )
+    assert manifest.provenance["subscription_selectors"] == {
+        "codex": {"name": "CODEX_FORCE_AUTH_JSON", "value": "1"}
+    }
     loaded = Runs.load_manifest(manifest.path)
     assert loaded.billing_mode == "subscription"
     assert loaded.api_equivalent_cost_usd == Decimal("6.4")
@@ -277,10 +280,11 @@ def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Pat
         config_path = manifest.path.parent / relative_path
         job = yaml.safe_load(config_path.read_text())
         agent = job["agents"][0]
-        assert agent["env"] == {"CODEX_FORCE_AUTH_JSON": "1"}
+        assert agent.get("env", {}) == {}
         assert agent["extra_allowed_hosts"] == ["chatgpt.com", "auth.openai.com"]
         assert "OPENAI_API_KEY" not in json.dumps(job)
-        assert load_job(config_path).agents[0].env == {"CODEX_FORCE_AUTH_JSON": "1"}
+        assert "CODEX_FORCE_AUTH_JSON" not in config_path.read_text()
+        assert load_job(config_path).agents[0].env == {}
     candidate_config = next(
         manifest.path.parent / path
         for path in manifest.harbor_config_paths
@@ -291,6 +295,55 @@ def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Pat
     assert [resolved.name for resolved in resolve_skills(candidate_agent.skills)] == [
         "dev-task"
     ]
+
+
+def test_subscription_selector_is_scoped_to_the_harbor_process(
+    run_root: Path, monkeypatch: pytest.MonkeyPatch
+):
+    cell = _cell("codex", "A0", "baseline", "e")
+    _add_bundle(run_root, cell)
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="subscription",
+        cells=(cell,),
+        task_ids=("task-one",),
+        max_sessions=1,
+        max_budget_usd=Decimal("0"),
+    )
+    auth_path = run_root / "codex-auth.json"
+    auth_path.write_text(
+        json.dumps(
+            {
+                "auth_mode": "chatgpt",
+                "tokens": {
+                    "access_token": "access-secret",
+                    "refresh_token": "refresh-secret",
+                },
+            }
+        )
+    )
+    monkeypatch.setenv("CODEX_AUTH_JSON_PATH", str(auth_path))
+    monkeypatch.delenv("CODEX_FORCE_AUTH_JSON", raising=False)
+    for name in ("OPENAI_API_KEY", "OPENAI_BASE_URL", "OPENAI_API_BASE"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(Runs, "validate_repository", lambda root: ())
+    monkeypatch.setattr(Runs, "dockerfile_policy_errors", lambda root: ())
+    monkeypatch.setattr(Runs, "require_current_image", lambda root, image: None)
+    calls: list[dict[str, object]] = []
+
+    def fake_run(command, **kwargs):
+        calls.append(kwargs)
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    assert len(calls) == 1
+    child_environment = calls[0]["env"]
+    assert isinstance(child_environment, dict)
+    assert child_environment["CODEX_FORCE_AUTH_JSON"] == "1"
+    assert "CODEX_FORCE_AUTH_JSON" not in Runs.os.environ
 
 
 def test_subscription_and_api_budget_rules_are_distinct(run_root: Path):
