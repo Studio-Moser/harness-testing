@@ -101,4 +101,5 @@ relevant_path_patterns = [
 shell_mutation_patterns = [
   '(^|\s)(?:sed\s+-i|perl\s+-pi|touch|mkdir|mv|cp|rm)\s',
   '(?:>|>>|\btee\b)\s*\S+',
+  '''^(?:python(?:3)?|node)\s+(?:-c|-e)\b.*(?:write_text|write_bytes|writeFile|writeFileSync|appendFile|appendFileSync|unlink|unlinkSync|remove|rename|renameSync|mkdir|mkdirSync|rmdir|replace|open\s*\([^)]*,\s*['"][wax+])''',
 ]

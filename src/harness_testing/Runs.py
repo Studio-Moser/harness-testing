@@ -19,6 +19,7 @@ from harbor.models.job.config import JobConfig
 from harness_testing.Config import load_job, load_versions
 from harness_testing.Materialize import (
     dockerfile_policy_errors,
+    image_input_digest,
     materialize_arm,
     require_current_image,
 )
@@ -302,6 +303,15 @@ def _ordered_cells(cells: tuple[RunCell, ...]) -> tuple[RunCell, ...]:
     )
 
 
+def _required_images(task_ids: tuple[str, ...]) -> tuple[str, ...]:
+    required = {"verifier"}
+    if any(task_id.startswith("rust-") for task_id in task_ids):
+        required.add("rust")
+    if any(not task_id.startswith("rust-") for task_id in task_ids):
+        required.add("node")
+    return tuple(image for image in ("node", "rust", "verifier") if image in required)
+
+
 def _task_pack(root: Path, profile: _Profile, task_id: str) -> str:
     matches = [
         pack for pack in profile.packs if (root / "tasks" / pack / task_id).is_dir()
@@ -555,6 +565,9 @@ def compile_run(
         for task_id in task_ids
         for pack in (_task_pack(root, selected_profile, task_id),)
     }
+    image_input_digests = {
+        image: image_input_digest(root, image) for image in _required_images(task_ids)
+    }
     provenance: dict[str, object] = {
         "versions_digest": _sha256((root / "Versions.toml").read_bytes()),
         "profiles_digest": _sha256((root / "runs" / "Profiles.toml").read_bytes()),
@@ -563,6 +576,7 @@ def compile_run(
             path: _sha256(text.encode()) for path, text in job_texts.items()
         },
         "task_digests": task_digests,
+        "image_input_digests": image_input_digests,
         "budget_enforcement": "admission-estimate-only",
     }
     manifest = RunManifest(
@@ -701,6 +715,10 @@ def format_plan(manifest: RunManifest) -> str:
     task_digests = manifest.provenance.get("task_digests", {})
     if isinstance(task_digests, dict):
         lines.extend(f"  {name}: {digest}" for name, digest in sorted(task_digests.items()))
+    lines.append("Image inputs:")
+    image_digests = manifest.provenance.get("image_input_digests", {})
+    if isinstance(image_digests, dict):
+        lines.extend(f"  {name}: {digest}" for name, digest in sorted(image_digests.items()))
     lines.append(f"Manifest path: {manifest.path}")
     lines.append("No model session started.")
     return "\n".join(lines)
@@ -733,6 +751,15 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     }
     if expected_task_digests != actual_task_digests:
         raise ValueError("task digest mismatch after manifest approval")
+    expected_image_digests = manifest.provenance.get("image_input_digests")
+    if not isinstance(expected_image_digests, dict):
+        raise ValueError("manifest has no image input digests")
+    actual_image_digests = {
+        image: image_input_digest(root, image)
+        for image in _required_images(manifest.task_ids)
+    }
+    if expected_image_digests != actual_image_digests:
+        raise ValueError("image input digest mismatch after manifest approval")
     expected_digests = manifest.provenance.get("harbor_config_digests")
     if not isinstance(expected_digests, dict):
         raise ValueError("manifest has no Harbor config digests")
@@ -762,10 +789,7 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     if image_errors:
         raise ValueError("image policy validation failed: " + "; ".join(image_errors))
     _verify_generated_inputs(root, manifest)
-    required_images = ["node", "verifier"]
-    if any(task_id.startswith("rust-") for task_id in manifest.task_ids):
-        required_images.append("rust")
-    for image in required_images:
+    for image in _required_images(manifest.task_ids):
         require_current_image(root, image)
     for relative_path in manifest.harbor_config_paths:
         subprocess.run(

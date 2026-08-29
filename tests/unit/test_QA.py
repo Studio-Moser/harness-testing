@@ -57,6 +57,34 @@ def test_frozen_react_task_matches_the_grouped_contract():
     assert "forbidden between updates" in " ".join(instruction.split())
 
 
+def test_verifier_installs_a_frozen_subset_for_the_real_behavior_test():
+    environment_package = json.loads(
+        (TASK_ROOT / "environment" / "package.json").read_text()
+    )
+    verifier_package = json.loads(
+        (TASK_ROOT / "tests" / "Verifier" / "package.json").read_text()
+    )
+    available = {
+        **environment_package["dependencies"],
+        **environment_package["devDependencies"],
+    }
+    expected_names = {
+        "@vitejs/plugin-react",
+        "happy-dom",
+        "react",
+        "react-dom",
+        "vite",
+        "vitest",
+    }
+
+    assert verifier_package["dependencies"] == {
+        name: available[name] for name in sorted(expected_names)
+    }
+    dockerfile = (TASK_ROOT / "tests" / "Dockerfile").read_text()
+    assert "npm ci --ignore-scripts --no-audit --no-fund" in dockerfile
+    assert "/opt/react-sentinel" in dockerfile
+
+
 def test_protected_file_manifest_matches_the_frozen_fixture():
     manifest = json.loads((TASK_ROOT / "tests" / "Protected_Files.json").read_text())
 

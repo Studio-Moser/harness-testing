@@ -76,6 +76,16 @@ def run_root(tmp_path: Path) -> Path:
     (tmp_path / "tasks" / "workflow" / "task-two" / "instruction.md").write_text(
         "task two\n"
     )
+    for relative in (
+        "images/Node_Agent.Dockerfile",
+        "images/Verifier.Dockerfile",
+        "src/harness_testing/__init__.py",
+        "src/harness_testing/Trajectory_Events.py",
+    ):
+        source = REPOSITORY_ROOT / relative
+        destination = tmp_path / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, destination)
     return tmp_path
 
 
@@ -179,6 +189,23 @@ def test_execution_rejects_task_drift_after_manifest_approval(run_root: Path):
 
     with pytest.raises(ValueError, match="task digest mismatch"):
         _verify_generated_inputs(run_root, manifest)
+
+
+def test_manifest_and_execution_bind_selected_image_inputs(run_root: Path):
+    approved = _compile_pair(run_root)
+    approved_images = approved.provenance["image_input_digests"]
+    assert set(approved_images) == {"node", "verifier"}
+
+    decoder = run_root / "src" / "harness_testing" / "Trajectory_Events.py"
+    decoder.write_text("changed after approval\n")
+    changed = _compile_pair(run_root)
+
+    assert approved_images["verifier"] != changed.provenance[
+        "image_input_digests"
+    ]["verifier"]
+    assert approved.digest != changed.digest
+    with pytest.raises(ValueError, match="image input digest mismatch"):
+        _verify_generated_inputs(run_root, approved)
 
 
 def test_cell_provenance_must_match_provider_arm_and_candidate_commit(run_root: Path):

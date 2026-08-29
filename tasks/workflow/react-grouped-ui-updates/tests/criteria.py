@@ -41,11 +41,16 @@ _REMOVABLE_PREFIXES = (("uv", "run"),)
 _SHELL_MUTATION_PATTERNS = (
     r"(^|\s)(?:sed\s+-i|perl\s+-pi|touch|mkdir|mv|cp|rm)\s",
     r"(?:>|>>|\btee\b)\s*\S+",
+    r'''^(?:python(?:3)?|node)\s+(?:-c|-e)\b.*'''
+    r'''(?:write_text|write_bytes|writeFile|writeFileSync|appendFile|appendFileSync|'''
+    r'''unlink|unlinkSync|remove|rename|renameSync|mkdir|mkdirSync|rmdir|replace|'''
+    r'''open\s*\([^)]*,\s*['"][wax+])''',
 )
 _RELEVANT_PATH_PATTERNS = (
     r"(^|/)(?:src|app|lib|tests|crates|packages)(?:/|$)",
     r"\.(?:css|html|jsx?|json|py|rs|toml|tsx?|ya?ml)$",
 )
+_VERIFIER_NODE_MODULES = Path("/opt/react-sentinel/node_modules")
 
 
 def _trajectory_path() -> Path:
@@ -224,25 +229,36 @@ def _no_testing_churn() -> bool:
 def _sentinel_correctness(workspace: Path) -> bool:
     if not _protected_files_intact(workspace):
         return False
-    checks = (
-        ("src/index.css", "--accent", "#6d28d9"),
-        ("src/App.tsx", "No projects yet"),
-        ("src/index.css", "--card-gap", "12px"),
-    )
-    for arguments in checks:
+    node_modules = workspace / "node_modules"
+    if (
+        not _VERIFIER_NODE_MODULES.is_dir()
+        or node_modules.exists()
+        or node_modules.is_symlink()
+    ):
+        return False
+    cleanup_failed = False
+    node_modules.symlink_to(_VERIFIER_NODE_MODULES, target_is_directory=True)
+    try:
         result = subprocess.run(
-            ["node", "scripts/Check_Token.mjs", *arguments],
+            ["npm", "test", "--", "--reporter=dot"],
             cwd=workspace,
             check=False,
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=120,
         )
-        if result.returncode != 0:
-            print(result.stdout)
-            print(result.stderr)
-            return False
-    return True
+    except (OSError, subprocess.TimeoutExpired) as error:
+        print(error)
+        return False
+    finally:
+        try:
+            node_modules.unlink()
+        except OSError:
+            cleanup_failed = True
+    if result.returncode != 0:
+        print(result.stdout)
+        print(result.stderr)
+    return result.returncode == 0 and not cleanup_failed
 
 
 @criterion(shared=True)

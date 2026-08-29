@@ -1,6 +1,8 @@
 import importlib.util
 import json
 import shutil
+import subprocess
+import tomllib
 from pathlib import Path
 from types import ModuleType
 
@@ -96,8 +98,35 @@ def test_compound_gate_then_redirection_is_rejected(
     assert criteria._no_testing_churn() is False
 
 
+def test_gate_then_python_source_write_is_rejected(
+    criteria: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    trajectory = tmp_path / "trajectory.json"
+    _write_trajectory(
+        trajectory,
+        'npm run gate && python -c "from pathlib import Path; '
+        "Path('src/App.tsx').write_text('changed')\"",
+        exit_code=0,
+    )
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+
+    assert criteria._final_gate_workflow() is False
+    assert criteria._no_testing_churn() is False
+
+
+def test_sentinel_uses_the_repository_shell_mutation_policy(criteria: ModuleType):
+    with (REPOSITORY_ROOT / "policy" / "Command_Classification.toml").open(
+        "rb"
+    ) as policy_file:
+        policy = tomllib.load(policy_file)
+
+    assert tuple(policy["mutation"]["shell_mutation_patterns"]) == (
+        criteria._SHELL_MUTATION_PATTERNS
+    )
+
+
 def test_mutable_files_allow_only_the_three_declared_substitutions(
-    criteria: ModuleType, tmp_path: Path
+    criteria: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
     workspace = tmp_path / "workspace"
     shutil.copytree(TASK_ROOT / "environment", workspace)
@@ -110,9 +139,31 @@ def test_mutable_files_allow_only_the_three_declared_substitutions(
         .replace("--card-gap: 20px", "--card-gap: 12px")
     )
 
+    verifier_dependencies = tmp_path / "verifier-node_modules"
+    verifier_dependencies.mkdir()
+    monkeypatch.setattr(
+        criteria,
+        "_VERIFIER_NODE_MODULES",
+        verifier_dependencies,
+        raising=False,
+    )
+    commands: list[list[str]] = []
+
+    def run_behavior_test(command, *, cwd, **kwargs):
+        del kwargs
+        commands.append(command)
+        assert cwd == workspace
+        assert (workspace / "node_modules").is_symlink()
+        assert (workspace / "node_modules").resolve() == verifier_dependencies
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(criteria.subprocess, "run", run_behavior_test)
+
     assert criteria._protected_files_intact(workspace) is True
     assert not (workspace / "node_modules").exists()
     assert criteria._sentinel_correctness(workspace) is True
+    assert commands == [["npm", "test", "--", "--reporter=dot"]]
+    assert not (workspace / "node_modules").exists()
 
     app.write_text(
         "import './App.css'\n\n"

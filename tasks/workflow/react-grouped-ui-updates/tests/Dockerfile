@@ -8,4 +8,8 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && node --version \
     && npm --version
 
+COPY Verifier/package.json Verifier/package-lock.json /opt/react-sentinel/
+RUN cd /opt/react-sentinel \
+    && npm ci --ignore-scripts --no-audit --no-fund
+
 COPY --chmod=755 . /tests/

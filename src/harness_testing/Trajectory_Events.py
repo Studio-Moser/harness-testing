@@ -25,8 +25,12 @@ def _metadata(value: object, call_id: str | None) -> tuple[Mapping[str, Any], ..
     extra = _field(value, "extra")
     values: list[Mapping[str, Any]] = []
     if isinstance(extra, Mapping):
-        values.append(extra)
         details = extra.get("tool_call_details")
+        top_level = {
+            key: child for key, child in extra.items() if key != "tool_call_details"
+        }
+        if top_level:
+            values.append(top_level)
         if call_id and isinstance(details, Mapping):
             call_details = details.get(call_id)
             if isinstance(call_details, Mapping):
@@ -227,6 +231,14 @@ def _candidate_paths(command: str) -> tuple[str, ...]:
             or re.search(r"\.[A-Za-z0-9_-]+$", candidate)
         ):
             paths.append(candidate)
+    paths.extend(
+        re.findall(
+            r"(?:/app/)?(?:src|app|lib|tests|crates|packages)"
+            r"(?:/[A-Za-z0-9_.-]+)+",
+            command,
+            re.IGNORECASE,
+        )
+    )
     return tuple(dict.fromkeys(paths))
 
 

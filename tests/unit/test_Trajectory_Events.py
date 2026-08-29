@@ -46,6 +46,34 @@ def test_result_success_reads_codex_tool_metadata_from_the_step():
     assert result_success(result, step_extra=step_extra, call_id="codex-success") is True
 
 
+def test_result_success_isolated_to_the_selected_codex_tool_call():
+    success = ObservationResult(
+        source_call_id="codex-success",
+        content="completed",
+    )
+    failure = ObservationResult(
+        source_call_id="codex-failure",
+        content="failed",
+    )
+    step_extra = {
+        "tool_call_details": {
+            "codex-success": {"metadata": {"exit_code": 0}},
+            "codex-failure": {"metadata": {"exit_code": 1}},
+        }
+    }
+
+    assert result_success(
+        success,
+        step_extra=step_extra,
+        call_id="codex-success",
+    ) is True
+    assert result_success(
+        failure,
+        step_extra=step_extra,
+        call_id="codex-failure",
+    ) is False
+
+
 def test_compound_shell_order_and_provable_success_are_preserved():
     components = split_shell("cd /app && npm run gate && printf x >> src/App.tsx")
 
@@ -62,6 +90,8 @@ def test_declared_shell_mutations_detect_redirection_tee_and_relevant_directorie
     mutation_patterns = (
         r"(^|\s)(?:sed\s+-i|perl\s+-pi|touch|mkdir|mv|cp|rm)\s",
         r"(?:>|>>|\btee\b)\s*\S+",
+        r"^(?:python(?:3)?|node)\s+(?:-c|-e)\b.*"
+        r"(?:write_text|writeFile|writeFileSync|open\s*\(|unlink|remove|rename|mkdir)",
     )
     relevant_path_patterns = (
         r"(^|/)(?:src|app|lib|tests|crates|packages)(?:/|$)",
@@ -76,4 +106,10 @@ def test_declared_shell_mutations_detect_redirection_tee_and_relevant_directorie
     )[0] == "relevant"
     assert shell_mutation(
         "rm -rf src", mutation_patterns, relevant_path_patterns
+    )[0] == "relevant"
+    assert shell_mutation(
+        'python -c "from pathlib import Path; '
+        "Path('src/App.tsx').write_text('changed')\"",
+        mutation_patterns,
+        relevant_path_patterns,
     )[0] == "relevant"
