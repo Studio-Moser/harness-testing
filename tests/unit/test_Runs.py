@@ -178,6 +178,27 @@ def test_manifest_digest_is_canonical_and_stable(run_root: Path):
     assert len(first.digest) == 71
 
 
+def test_job_names_use_a_stable_run_id_that_changes_with_inputs(run_root: Path):
+    first = _compile_pair(run_root)
+    repeated = _compile_pair(run_root)
+    task = run_root / "tasks" / "workflow" / "task-one" / "instruction.md"
+    task.write_text("changed task one\n")
+    changed = _compile_pair(run_root)
+
+    first_run_id = first.provenance["run_id"]
+    assert first_run_id == repeated.provenance["run_id"]
+    assert first_run_id != changed.provenance["run_id"]
+    assert first_run_id.startswith("run-")
+
+    for manifest in (first, repeated, changed):
+        run_id = manifest.provenance["run_id"]
+        for relative_path in manifest.harbor_config_paths:
+            config = yaml.safe_load(
+                (manifest.path.parent / relative_path).read_text()
+            )
+            assert config["job_name"].startswith(f"{run_id}-")
+
+
 def test_changed_manifest_is_rejected(run_root: Path):
     manifest = _compile_pair(run_root)
     document = manifest.to_dict()

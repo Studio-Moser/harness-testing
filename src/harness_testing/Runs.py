@@ -443,6 +443,7 @@ def _job_document(
     root: Path,
     cell: RunCell,
     task_id: str,
+    run_id: str,
     dataset_path: Path,
     attempts: int,
     concurrency: int,
@@ -479,7 +480,7 @@ def _job_document(
         kwargs["config"] = provider_config
 
     raw: dict[str, object] = {
-        "job_name": f"{cell.label}-{task_id}",
+        "job_name": f"{run_id}-{cell.label}-{task_id}",
         "jobs_dir": "jobs/raw",
         "n_attempts": attempts,
         "n_concurrent_trials": concurrency,
@@ -624,32 +625,8 @@ def compile_run(
             f"max_budget_usd ${_decimal_text(max_budget_usd)}"
         )
 
-    research_dataset = _research_dataset(root, selected_profile)
-    job_texts: dict[str, str] = {}
-    index = 0
-    for task_id in task_ids:
-        _, dataset_path, _ = _task_location(
-            root, selected_profile, task_id, research_dataset
-        )
-        for cell in cells:
-            index += 1
-            _, text = _job_document(
-                root,
-                cell,
-                task_id,
-                dataset_path,
-                attempts,
-                concurrency,
-                timeout,
-                versions,
-                billing_mode,
-            )
-            relative_path = (
-                f"jobs/{index:03d}-{cell.provider}-{cell.role}-{cell.arm}-{task_id}.yaml"
-            )
-            job_texts[relative_path] = text
-
     schema_version = str(versions["repository"]["schema_version"])
+    research_dataset = _research_dataset(root, selected_profile)
     task_digests = {}
     for task_id in task_ids:
         pack, _, task_path = _task_location(
@@ -665,9 +642,76 @@ def compile_run(
         for provider, (_, path) in _AGENT_ADAPTERS.items()
         if provider in {cell.provider for cell in cells}
     }
+    versions_digest = _sha256((root / "Versions.toml").read_bytes())
+    profiles_digest = _sha256((root / "runs" / "Profiles.toml").read_bytes())
+
+    def build_job_documents(run_id: str) -> dict[str, tuple[dict[str, object], str]]:
+        documents = {}
+        index = 0
+        for task_id in task_ids:
+            _, dataset_path, _ = _task_location(
+                root, selected_profile, task_id, research_dataset
+            )
+            for cell in cells:
+                index += 1
+                document, text = _job_document(
+                    root,
+                    cell,
+                    task_id,
+                    run_id,
+                    dataset_path,
+                    attempts,
+                    concurrency,
+                    timeout,
+                    versions,
+                    billing_mode,
+                )
+                relative_path = (
+                    f"jobs/{index:03d}-{cell.provider}-{cell.role}-{cell.arm}-"
+                    f"{task_id}.yaml"
+                )
+                documents[relative_path] = (document, text)
+        return documents
+
+    provisional_jobs = build_job_documents("run-pending")
+    run_identity: dict[str, object] = {
+        "schema_version": schema_version,
+        "profile": profile,
+        "billing_mode": billing_mode,
+        "cells": [cell.to_dict() for cell in cells],
+        "task_ids": list(task_ids),
+        "attempts": attempts,
+        "concurrency": concurrency,
+        "agent_timeout_seconds": timeout,
+        "max_sessions": max_sessions,
+        "max_budget_usd": _decimal_text(max_budget_usd),
+        "versions_digest": versions_digest,
+        "profiles_digest": profiles_digest,
+        "task_digests": task_digests,
+        "image_input_digests": image_input_digests,
+        "agent_adapter_digests": agent_adapter_digests,
+        "harbor_configs": {
+            path: {
+                key: value
+                for key, value in document.items()
+                if key != "job_name"
+            }
+            for path, (document, _) in provisional_jobs.items()
+        },
+    }
+    if research_dataset is not None:
+        run_identity["deepswe_dataset_digest"] = research_dataset.digest
+    run_id = "run-" + _sha256(_canonical_json(run_identity)).removeprefix(
+        "sha256:"
+    )[:20]
+    job_texts = {
+        path: text for path, (_, text) in build_job_documents(run_id).items()
+    }
+
     provenance: dict[str, object] = {
-        "versions_digest": _sha256((root / "Versions.toml").read_bytes()),
-        "profiles_digest": _sha256((root / "runs" / "Profiles.toml").read_bytes()),
+        "run_id": run_id,
+        "versions_digest": versions_digest,
+        "profiles_digest": profiles_digest,
         "arm_digests": {cell.label: cell.bundle_digest for cell in cells},
         "harbor_config_digests": {
             path: _sha256(text.encode()) for path, text in job_texts.items()
