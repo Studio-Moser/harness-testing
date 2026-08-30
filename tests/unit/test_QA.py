@@ -182,6 +182,21 @@ def test_protected_file_manifest_matches_the_frozen_fixture():
         ]
 
 
+def test_rust_workspace_task_declares_its_supplied_tests_immutable():
+    task_root = (
+        REPOSITORY_ROOT / "tasks" / "workflow" / "rust-workspace-warning-summary"
+    )
+    instruction = (task_root / "instruction.md").read_text()
+    manifest = json.loads((task_root / "tests" / "Protected_Files.json").read_text())
+    supplied_tests = {
+        path.relative_to(task_root / "environment").as_posix()
+        for path in (task_root / "environment").glob("crates/*/tests/*.rs")
+    }
+
+    assert "do not add or edit project tests" in instruction
+    assert supplied_tests <= set(manifest["files"])
+
+
 def test_qa_job_is_single_session_model_free_and_uses_only_the_test_adapter(tmp_path):
     job = build_qa_job(REPOSITORY_ROOT, TASK_ID, "oracle", tmp_path / "jobs")
 

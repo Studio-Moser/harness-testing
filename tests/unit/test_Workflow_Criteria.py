@@ -77,6 +77,23 @@ def test_workflow_criteria_distinguish_direct_and_final_verification(
     assert Workflow_Criteria.command_after_last_mutation("npm test") is True
 
 
+def test_combined_cargo_command_covers_each_selected_package(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+    _write_trajectory(
+        trajectory,
+        ["cargo test --package event_model -p summary -p summary_cli"],
+    )
+
+    assert Workflow_Criteria.cargo_packages_succeeded(
+        ("event_model", "summary", "summary_cli")
+    )
+    assert not Workflow_Criteria.cargo_packages_succeeded(("missing",))
+
+
 def test_focused_commands_may_precede_later_mutations_but_final_gate_may_not(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

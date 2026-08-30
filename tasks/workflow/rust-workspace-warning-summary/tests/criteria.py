@@ -3,9 +3,9 @@ from pathlib import Path
 from rewardkit import criterion
 
 from harness_testing.Workflow_Criteria import (
+    cargo_packages_succeeded,
     cargo_test_correctness,
     command_after_last_mutation,
-    command_succeeded,
     no_testing_churn,
 )
 
@@ -20,12 +20,8 @@ def task_correctness(workspace: Path) -> bool:
 @criterion(shared=True)
 def required_workflow(workspace: Path) -> bool:
     del workspace
-    focused = (
-        "cargo test -p event_model",
-        "cargo test -p summary",
-        "cargo test -p summary_cli",
-    )
-    return all(command_succeeded(command) for command in focused) and (
+    focused = ("event_model", "summary", "summary_cli")
+    return cargo_packages_succeeded(focused) and (
         command_after_last_mutation("cargo test --workspace")
     )
 

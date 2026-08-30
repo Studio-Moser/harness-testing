@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import subprocess
 import tempfile
 from collections.abc import Sequence
@@ -295,6 +296,26 @@ def command_succeeded(command: str) -> bool:
         kind == "command" and observed == required and success is True
         for kind, observed, success in _events()
     )
+
+
+def cargo_packages_succeeded(packages: Sequence[str]) -> bool:
+    """Return true when successful focused Cargo tests cover every package."""
+
+    required = set(packages)
+    selected: set[str] = set()
+    for kind, command, success in _events():
+        if kind != "command" or command is None or success is not True:
+            continue
+        try:
+            arguments = shlex.split(command)
+        except ValueError:
+            continue
+        if arguments[:2] != ["cargo", "test"]:
+            continue
+        for index, argument in enumerate(arguments[:-1]):
+            if argument in {"-p", "--package"}:
+                selected.add(arguments[index + 1])
+    return bool(required) and required <= selected
 
 
 def no_comprehensive_commands() -> bool:

@@ -25,6 +25,9 @@ COPY --from=agent-tools /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -s ../lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe /usr/local/bin/claude \
     && ln -s ../lib/node_modules/@openai/codex/bin/codex.js /usr/local/bin/codex
 
+RUN printf '%s\n' 'export PATH="${CARGO_HOME:-/usr/local/cargo}/bin:$PATH"' \
+        > /etc/profile.d/rust-path.sh
+
 RUN node --version \
     && claude --version \
     && codex --version \

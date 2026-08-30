@@ -113,3 +113,27 @@ def test_declared_shell_mutations_detect_redirection_tee_and_relevant_directorie
         mutation_patterns,
         relevant_path_patterns,
     )[0] == "relevant"
+
+
+def test_diagnostic_redirections_are_not_source_mutations():
+    mutation_patterns = (r"(?:>|>>|\btee\b)\s*\S+",)
+    relevant_path_patterns = (
+        r"(^|/)(?:src|app|lib|tests|crates|packages)(?:/|$)",
+        r"\.(?:css|html|jsx?|json|py|rs|toml|tsx?|ya?ml)$",
+    )
+
+    assert shell_mutation(
+        "git -C /app status --short 2>&1",
+        mutation_patterns,
+        relevant_path_patterns,
+    )[0] == "none"
+    assert shell_mutation(
+        "rg --files /app 2>/dev/null",
+        mutation_patterns,
+        relevant_path_patterns,
+    )[0] == "none"
+    assert shell_mutation(
+        "printf x >> src/App.tsx 2>/dev/null",
+        mutation_patterns,
+        relevant_path_patterns,
+    )[0] == "relevant"

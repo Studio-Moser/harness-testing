@@ -8,6 +8,10 @@ from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
+_NON_MUTATING_REDIRECTION = re.compile(
+    r"(?<!\S)(?:(?:\d+|&)?>>?\s*/dev/null|(?:\d+)?[<>]&\d+)(?=\s|$)"
+)
+
 
 @dataclass(frozen=True)
 class ShellComponent:
@@ -247,13 +251,14 @@ def shell_mutation(
     mutation_patterns: Sequence[str | re.Pattern[str]],
     relevant_path_patterns: Sequence[str | re.Pattern[str]],
 ) -> tuple[str, tuple[str, ...]]:
+    candidate_command = _NON_MUTATING_REDIRECTION.sub("", command)
     compiled_mutations = tuple(
         pattern if isinstance(pattern, re.Pattern) else re.compile(pattern, re.IGNORECASE)
         for pattern in mutation_patterns
     )
-    if not any(pattern.search(command) for pattern in compiled_mutations):
+    if not any(pattern.search(candidate_command) for pattern in compiled_mutations):
         return "none", ()
-    paths = _candidate_paths(command)
+    paths = _candidate_paths(candidate_command)
     if not paths:
         return "unknown", ()
     compiled_paths = tuple(

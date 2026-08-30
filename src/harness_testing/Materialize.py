@@ -40,6 +40,7 @@ _IMAGE_INPUTS = {
     ),
 }
 _IMAGE_INPUT_LABEL = "studio.moser.harness-testing.input-digest"
+_ARM_MATERIALIZER_SCHEMA = "2"
 
 _ARM_LAYERS = {
     "A0": (),
@@ -586,37 +587,70 @@ def _prepare_plugin_inputs(
             for required_path in (
                 plugin_path / "skills",
                 plugin_path / "templates" / "AGENTS_Baseline.md",
-                plugin_path / "references" / "house-rules.md",
+                plugin_path / "references",
+                plugin_path / "scripts",
             ):
                 if not required_path.exists():
                     raise ValueError(f"missing expected Harness input: {required_path}")
-            if provider == "codex":
-                continue
             original = _read_json(
                 source.path / ".claude-plugin" / "marketplace.json",
                 "Harness Claude marketplace",
             )
             harness_entry = dict(_plugin_entry(original, "harness"))
-            harness_entry["source"] = "./plugins/harness"
             marketplace_name = str(original.get("name", "studio-moser"))
             marketplace_root = work / "marketplaces" / marketplace_name
-            (marketplace_root / ".claude-plugin").mkdir(parents=True)
-            (marketplace_root / ".claude-plugin" / "marketplace.json").write_text(
-                json.dumps(
+            version = str(manifest.get("version", ""))
+            (marketplace_root / "plugins").mkdir(parents=True)
+            _copy_tree(plugin_path, marketplace_root / "plugins" / "harness")
+            plugin_path = marketplace_root / "plugins" / "harness"
+            if provider == "claude":
+                harness_entry["source"] = "./plugins/harness"
+                (marketplace_root / ".claude-plugin").mkdir(parents=True)
+                _write_json(
+                    marketplace_root / ".claude-plugin" / "marketplace.json",
                     {
                         "name": marketplace_name,
                         "owner": original.get("owner", {"name": "Studio Moser"}),
                         "plugins": [harness_entry],
                     },
-                    indent=2,
-                    sort_keys=True,
                 )
-                + "\n"
-            )
-            (marketplace_root / "plugins").mkdir()
-            _copy_tree(plugin_path, marketplace_root / "plugins" / "harness")
-            plugin_path = marketplace_root / "plugins" / "harness"
-            version = str(manifest.get("version", ""))
+            else:
+                _write_json(
+                    plugin_path / ".codex-plugin" / "plugin.json",
+                    {
+                        "name": "harness",
+                        "version": version,
+                        "description": harness_entry.get(
+                            "description", "Studio Harness"
+                        ),
+                        "author": harness_entry.get(
+                            "author", {"name": "Studio Moser"}
+                        ),
+                        "license": harness_entry.get("license", "MIT"),
+                        "skills": "./skills/",
+                    },
+                )
+                _write_json(
+                    marketplace_root / ".agents" / "plugins" / "marketplace.json",
+                    {
+                        "name": marketplace_name,
+                        "interface": {"displayName": "Studio Moser"},
+                        "plugins": [
+                            {
+                                "name": "harness",
+                                "source": {
+                                    "source": "local",
+                                    "path": "./plugins/harness",
+                                },
+                                "policy": {
+                                    "installation": "AVAILABLE",
+                                    "authentication": "ON_INSTALL",
+                                },
+                                "category": "Developer Tools",
+                            }
+                        ],
+                    },
+                )
         else:
             raise ValueError(f"unsupported arm layer: {source.name}")
 
@@ -659,7 +693,10 @@ def _run_native_plugin_install(
         "-e",
         "HOME=/output/home",
     ]
-    commands = ["mkdir -p /output/home"]
+    commands = [
+        "mkdir -p /output/home"
+        + (" /output/provider-home" if provider == "codex" else "")
+    ]
     if provider == "claude":
         docker_arguments.extend(
             (
@@ -752,8 +789,6 @@ def _copy_harness_project_inputs(bundle: Path, provider: str, source: _SourceTre
     project_file = bundle / "project" / filename
     project_file.parent.mkdir(parents=True, exist_ok=True)
     project_file.write_text(f"{baseline}\n\n{house_rules}\n")
-    if provider == "codex":
-        _copy_tree(harness / "skills", bundle / "skills")
 
 
 def _assemble_claude_bundle(
@@ -863,7 +898,7 @@ def _delivery_surfaces(
             surface = "codex-plugin"
         else:
             capabilities = ["skills"]
-            surface = "harbor-skills"
+            surface = "codex-plugin"
         surfaces.append(
             {"layer": source.name, "surface": surface, "capabilities": capabilities}
         )
@@ -924,7 +959,7 @@ def _find_existing_bundle(
             or provenance.get("arm") != arm
             or provenance.get("layers") != list(layers)
             or provenance.get("sources") != expected_sources
-            or provenance.get("materializer_schema") != _schema_version(root)
+            or provenance.get("materializer_schema") != _ARM_MATERIALIZER_SCHEMA
         ):
             continue
         digest = str(provenance.get("bundle_digest", ""))
@@ -1000,7 +1035,7 @@ def materialize_arm(
             ],
             "delivery_surfaces": _delivery_surfaces(provider, sources, plugin_inputs),
             "generated_file_digests": generated_file_digests,
-            "materializer_schema": _schema_version(root),
+            "materializer_schema": _ARM_MATERIALIZER_SCHEMA,
         }
         digest = _sha256_bytes(_canonical_json(provenance))
         provenance["bundle_digest"] = digest

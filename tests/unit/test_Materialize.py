@@ -115,6 +115,13 @@ def test_rust_image_recreates_global_cli_symlinks_after_copying_node_modules():
     assert "COPY --from=agent-tools /usr/local/bin/codex" not in dockerfile
 
 
+def test_rust_image_restores_cargo_for_login_shells():
+    dockerfile = (REPOSITORY_ROOT / "images" / "Rust_Agent.Dockerfile").read_text()
+
+    assert "/etc/profile.d/rust-path.sh" in dockerfile
+    assert '${CARGO_HOME:-/usr/local/cargo}/bin:$PATH' in dockerfile
+
+
 def test_image_build_without_selection_stops_before_docker(capsys):
     assert main(["images", "build"]) == 2
 
@@ -211,7 +218,9 @@ def source_repositories(tmp_path: Path) -> dict[str, tuple[Path, str]]:
             ),
             "plugins/harness/skills/execute/SKILL.md": "# Execute\n",
             "plugins/harness/templates/AGENTS_Baseline.md": "# Benchmark baseline\n",
+            "plugins/harness/references/harness-contract.md": "# Contract\n",
             "plugins/harness/references/house-rules.md": "# House rules\n",
+            "plugins/harness/scripts/resolve-route.py": "#!/usr/bin/env python3\n",
         },
     )
     return {"Superpowers": superpowers, "Studio Harness": harness}
@@ -279,6 +288,92 @@ def test_materialization_uses_only_pinned_public_project_instructions(
     project_instructions = (bundle.path / "project" / "AGENTS.md").read_text()
     assert project_instructions == "# Benchmark baseline\n\n# House rules\n"
     assert "PRIVATE PERSONAL INSTRUCTIONS" not in project_instructions
+
+
+def test_codex_harness_materialization_preserves_plugin_companions(
+    tmp_path: Path,
+    source_repositories: dict[str, tuple[Path, str]],
+):
+    bundle = materialize_arm(
+        tmp_path,
+        "codex",
+        "A2",
+        source_overrides={"Studio Harness": source_repositories["Studio Harness"]},
+        native_cli=False,
+    )
+
+    plugin = (
+        bundle.path
+        / "codex"
+        / "provider-home"
+        / "plugins"
+        / "cache"
+        / "studio-moser"
+        / "harness"
+        / "0.8.1"
+    )
+    assert (plugin / ".codex-plugin" / "plugin.json").is_file()
+    assert (plugin / "skills" / "execute" / "SKILL.md").is_file()
+    assert (plugin / "references" / "harness-contract.md").is_file()
+    assert (plugin / "scripts" / "resolve-route.py").is_file()
+    assert not (bundle.path / "skills").exists()
+    marketplace = json.loads(
+        (
+            bundle.path
+            / "codex"
+            / "provider-home"
+            / "marketplaces"
+            / "studio-moser"
+            / ".agents"
+            / "plugins"
+            / "marketplace.json"
+        ).read_text()
+    )
+    assert marketplace["plugins"][0]["source"] == {
+        "source": "local",
+        "path": "./plugins/harness",
+    }
+    provenance = json.loads((bundle.path / "Provenance.json").read_text())
+    assert provenance["materializer_schema"] == "2"
+    assert provenance["delivery_surfaces"] == [
+        {
+            "layer": "Studio Harness",
+            "surface": "codex-plugin",
+            "capabilities": ["skills"],
+        }
+    ]
+
+
+def test_codex_native_installer_creates_its_config_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    marketplace = tmp_path / "marketplace"
+    plugin = marketplace / "plugins" / "harness"
+    plugin.mkdir(parents=True)
+    calls: list[list[str]] = []
+
+    def fake_run(arguments, **_kwargs):
+        calls.append(arguments)
+        return subprocess.CompletedProcess(arguments, 0, "", "")
+
+    monkeypatch.setattr(Materialize.subprocess, "run", fake_run)
+    plugin_input = Materialize._PluginInput(
+        layer="Studio Harness",
+        marketplace="studio-moser",
+        plugin="harness",
+        version="0.8.1",
+        path=marketplace,
+        plugin_path=plugin,
+    )
+
+    Materialize._run_native_plugin_install(
+        REPOSITORY_ROOT,
+        "codex",
+        (plugin_input,),
+        tmp_path / "output",
+    )
+
+    assert "mkdir -p /output/home /output/provider-home" in calls[0][-1]
 
 
 def test_provider_provenance_records_claude_hooks_but_codex_skills_only(
