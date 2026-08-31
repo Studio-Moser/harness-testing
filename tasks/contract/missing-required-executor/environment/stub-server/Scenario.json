@@ -1,1 +1,15 @@
-{"calls":[{"action":"capability-check","payload":{"executor":"codex-cli","working_directory":"/app"},"response":{"available":false,"check":"codex-cli capability: absent","reason":"required_executor_unavailable","unblock_choices":["resume when codex-cli is available","revise the required executor with user approval"]}}]}
+{
+  "contract": {
+    "actions": [
+      {"action": "capability-check", "description": "Check the exact required executor in its working directory.", "required": ["executor", "working_directory"]}
+    ]
+  },
+  "calls": [
+    {
+      "action": "capability-check",
+      "payload": {"executor": "codex-cli", "working_directory": "/app"},
+      "match": {"executor": "codex-cli", "working_directory": "/app"},
+      "response": {"available": false, "check": "codex-cli capability: absent", "reason": "required_executor_unavailable", "unblock_choices": ["resume when codex-cli is available", "revise the required executor with user approval"]}
+    }
+  ]
+}

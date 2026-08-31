@@ -29,7 +29,7 @@ task-id/
     efficiency/
 ```
 
-Contract tasks also carry protected expected calls/results and a deterministic local sidecar scenario. Rust tasks use the frozen crate and lockfile instead of the Node verifier subset.
+Contract tasks also carry protected expected calls/results and a deterministic local sidecar scenario. Their synthetic endpoint exposes action names and required payload fields through `harness-stub describe`, but never responses or expected results. Invalid calls are recorded without consuming the next required workflow step. Rust tasks use the frozen crate and lockfile instead of the Node verifier subset.
 
 The task configuration must preserve these boundaries:
 
@@ -50,7 +50,7 @@ Every task supplies one or more deterministic RewardKit criteria in exactly thes
 - `workflow/`: task-specific sequence requirements that are necessary to satisfy the instruction.
 - `efficiency/`: absolute policy violations such as a premature comprehensive suite or duplicate successful command.
 
-Do not reward plans, reviews, tool calls, or verbosity by themselves. Do not lower correctness because a correct solution was inefficient; keep the dimensions separate. The verifier must use preinstalled dependencies and must never download packages at runtime.
+Do not reward plans, reviews, tool calls, or verbosity by themselves. Do not lower correctness because required workflow calls were omitted or a correct solution was inefficient; keep the dimensions separate. Missing required calls affect workflow, while invalid, duplicate, or extra calls affect efficiency. The verifier must use preinstalled dependencies and must never download packages at runtime.
 
 ## Five model-free QA cases
 
@@ -61,7 +61,7 @@ Do not reward plans, reviews, tool calls, or verbosity by themselves. Do not low
 | `oracle` | The minimum reference implementation passes all intended dimensions. |
 | `nop` | An unchanged project cannot receive correctness or workflow credit. |
 | `near-miss` | A plausible incomplete implementation fails the criterion it misses. |
-| `adversarial` | Gaming tests, logs, or visible artifacts cannot manufacture a pass. |
+| `adversarial` | Fabricated evidence cannot pass the dimension it targets; a correct final artifact without required calls may pass correctness while failing workflow. |
 | `source-tamper` | Editing protected source is detected even when visible behavior appears correct. |
 
 The local `ScriptAgent` applies each frozen mutation and emits the declared command evidence; it never calls a model. Expected scores in `QA.json` are part of the task contract. A task is not eligible for a model-backed run until all five cases pass.

@@ -784,11 +784,10 @@ def _installed_plugin_source(
 def _copy_harness_project_inputs(bundle: Path, provider: str, source: _SourceTree) -> None:
     harness = source.path / "plugins" / "harness"
     baseline = (harness / "templates" / "AGENTS_Baseline.md").read_text().rstrip()
-    house_rules = (harness / "references" / "house-rules.md").read_text().rstrip()
     filename = "CLAUDE.md" if provider == "claude" else "AGENTS.md"
     project_file = bundle / "project" / filename
     project_file.parent.mkdir(parents=True, exist_ok=True)
-    project_file.write_text(f"{baseline}\n\n{house_rules}\n")
+    project_file.write_text(f"{baseline}\n")
 
 
 def _assemble_claude_bundle(

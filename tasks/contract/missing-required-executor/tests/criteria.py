@@ -5,6 +5,7 @@ from rewardkit import criterion
 from harness_testing.Contract_Criteria import (
     no_unrequested_lifecycle,
     result_matches_contract,
+    stub_calls_are_bounded,
     stub_calls_match,
 )
 
@@ -15,9 +16,7 @@ _EVENTS = Path("/var/log/harness/Events.jsonl")
 
 @criterion(shared=True)
 def task_correctness(workspace: Path) -> bool:
-    return result_matches_contract(workspace, _EXPECTED, _MANIFEST) and stub_calls_match(
-        _EXPECTED, _EVENTS
-    )
+    return result_matches_contract(workspace, _EXPECTED, _MANIFEST)
 
 
 @criterion(shared=True)
@@ -29,4 +28,4 @@ def required_workflow(workspace: Path) -> bool:
 @criterion(shared=True)
 def bounded_efficiency(workspace: Path) -> bool:
     del workspace
-    return no_unrequested_lifecycle()
+    return no_unrequested_lifecycle() and stub_calls_are_bounded(_EXPECTED, _EVENTS)

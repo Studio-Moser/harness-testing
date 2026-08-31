@@ -1,4 +1,10 @@
 {
+  "contract": {
+    "actions": [
+      {"action": "review", "description": "Dispatch one immutable target for independent review.", "required": ["operation", "route", "outcome", "context.mode", "context.files", "authority.working_directory", "authority.allowed_paths", "constraints", "verification.fixed_target"]},
+      {"action": "reproduce", "description": "Reproduce the returned review proof against the fixed target.", "required": ["check", "fixed_target", "path"]}
+    ]
+  },
   "calls": [
     {
       "action": "review",
@@ -11,6 +17,13 @@
         "route": "independent",
         "verification": {"expected": "Review.md names the fixed target and finding", "fixed_target": "ef4d5362c2b7f262cc0a6f85574a004e5313eb43", "seam": "Review.md target and finding check"}
       },
+      "match": {
+        "operation": "review",
+        "route": "independent",
+        "context": {"mode": "fresh", "files": ["src/Policy.ts"]},
+        "authority": {"working_directory": "/app", "allowed_paths": ["src/Policy.ts", "Review.md", "Harness_Result.json"]},
+        "verification": {"fixed_target": "ef4d5362c2b7f262cc0a6f85574a004e5313eb43"}
+      },
       "response": {
         "report": {"content": "# Independent Review\n\nTarget: ef4d5362c2b7f262cc0a6f85574a004e5313eb43\nFinding: `canPublish` accepts a caller assertion without independent evidence.\nVerdict: changes requested.\n", "path": "Review.md"},
         "proof": {"check": "Review.md target and finding: passed", "fixed_target": "ef4d5362c2b7f262cc0a6f85574a004e5313eb43"},
@@ -21,6 +34,7 @@
     {
       "action": "reproduce",
       "payload": {"check": "Review.md target and finding: passed", "fixed_target": "ef4d5362c2b7f262cc0a6f85574a004e5313eb43", "path": "Review.md"},
+      "match": {"fixed_target": "ef4d5362c2b7f262cc0a6f85574a004e5313eb43", "path": "Review.md"},
       "response": {"check": "Review.md target and finding: passed", "outcome": "proven", "target_unchanged": true}
     }
   ]

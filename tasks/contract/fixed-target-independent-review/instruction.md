@@ -3,6 +3,7 @@
 Review the current repository commit through the synthetic Harness endpoint:
 
 ```text
+harness-stub describe
 harness-stub ACTION 'JSON_OBJECT'
 ```
 

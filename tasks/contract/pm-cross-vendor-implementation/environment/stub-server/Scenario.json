@@ -1,4 +1,10 @@
 {
+  "contract": {
+    "actions": [
+      {"action": "dispatch", "description": "Dispatch the only ready slice through a provider-neutral bulk route.", "required": ["operation", "route", "outcome", "context.mode", "context.files", "authority.working_directory", "authority.allowed_paths", "authority.tools", "authority.approvals", "constraints", "verification.fixed_target"]},
+      {"action": "reproduce", "description": "Reproduce the returned implementation proof.", "required": ["check", "fixed_target", "path"]}
+    ]
+  },
   "calls": [
     {
       "action": "dispatch",
@@ -25,6 +31,18 @@
           "seam": "Implementation.md content matches the dispatched proof"
         }
       },
+      "match": {
+        "operation": "execute",
+        "route": "bulk",
+        "authority": {
+          "working_directory": "/app",
+          "allowed_paths": ["Ready_Slice.json", "Implementation.md", "Harness_Result.json"],
+          "tools": ["read", "write", "harness-stub"],
+          "approvals": []
+        },
+        "constraints": ["READY-17 only", "No external effects"],
+        "verification": {"fixed_target": "ready-slice:READY-17-v1"}
+      },
       "response": {
         "artifact": {
           "content": "Implemented READY-17 within the approved /app paths.\n",
@@ -50,6 +68,7 @@
         "fixed_target": "ready-slice:READY-17-v1",
         "path": "Implementation.md"
       },
+      "match": {"fixed_target": "ready-slice:READY-17-v1", "path": "Implementation.md"},
       "response": {
         "check": "Implementation.md content: passed",
         "outcome": "proven"

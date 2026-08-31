@@ -286,7 +286,7 @@ def test_materialization_uses_only_pinned_public_project_instructions(
     )
 
     project_instructions = (bundle.path / "project" / "AGENTS.md").read_text()
-    assert project_instructions == "# Benchmark baseline\n\n# House rules\n"
+    assert project_instructions == "# Benchmark baseline\n"
     assert "PRIVATE PERSONAL INSTRUCTIONS" not in project_instructions
 
 

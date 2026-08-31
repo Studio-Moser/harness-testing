@@ -1,1 +1,22 @@
-{"calls":[{"action":"execute","payload":{"authority":{"allowed_paths":["Records.json","Summary.json","Harness_Result.json"],"working_directory":"/app"},"constraints":["Transform Records.json only","No development lifecycle"],"context":{"files":["Records.json"],"mode":"fresh","state":"Three synthetic records"},"operation":"execute","outcome":"Create Summary.json with counts and source IDs.","route":"quick","verification":{"expected":"Summary.json has exact counts and source IDs","fixed_target":"records:snapshot-v1","seam":"direct JSON structure and traceability check"}},"response":{"artifact":{"json":{"counts":{"blocked":1,"ready":2},"source_ids":["R-1","R-2","R-3"]},"path":"Summary.json"},"proof":{"check":"Summary.json structure and traceability: passed","fixed_target":"records:snapshot-v1"},"route":{"actual_model":"gpt-5.6-luna","effort":"medium","executor":"native-agent","provider":"codex"},"status":"delivered"}},{"action":"verify","payload":{"check":"Summary.json structure and traceability: passed","fixed_target":"records:snapshot-v1","path":"Summary.json"},"response":{"outcome":"proven"}}]}
+{
+  "contract": {
+    "actions": [
+      {"action": "execute", "description": "Execute one bounded quick data transformation.", "required": ["operation", "route", "outcome", "context.files", "authority.working_directory", "authority.allowed_paths", "constraints", "verification.fixed_target"]},
+      {"action": "verify", "description": "Verify the returned summary directly.", "required": ["check", "fixed_target", "path"]}
+    ]
+  },
+  "calls": [
+    {
+      "action": "execute",
+      "payload": {"authority": {"allowed_paths": ["Records.json", "Summary.json", "Harness_Result.json"], "working_directory": "/app"}, "constraints": ["Transform Records.json only", "No development lifecycle"], "context": {"files": ["Records.json"], "mode": "fresh", "state": "Three synthetic records"}, "operation": "execute", "outcome": "Create Summary.json with counts and source IDs.", "route": "quick", "verification": {"expected": "Summary.json has exact counts and source IDs", "fixed_target": "records:snapshot-v1", "seam": "direct JSON structure and traceability check"}},
+      "match": {"authority": {"allowed_paths": ["Records.json", "Summary.json", "Harness_Result.json"], "working_directory": "/app"}, "constraints": ["Transform Records.json only", "No development lifecycle"], "operation": "execute", "route": "quick", "verification": {"fixed_target": "records:snapshot-v1"}},
+      "response": {"artifact": {"json": {"counts": {"blocked": 1, "ready": 2}, "source_ids": ["R-1", "R-2", "R-3"]}, "path": "Summary.json"}, "proof": {"check": "Summary.json structure and traceability: passed", "fixed_target": "records:snapshot-v1"}, "route": {"actual_model": "gpt-5.6-luna", "effort": "medium", "executor": "native-agent", "provider": "codex"}, "status": "delivered"}
+    },
+    {
+      "action": "verify",
+      "payload": {"check": "Summary.json structure and traceability: passed", "fixed_target": "records:snapshot-v1", "path": "Summary.json"},
+      "match": {"fixed_target": "records:snapshot-v1", "path": "Summary.json"},
+      "response": {"outcome": "proven"}
+    }
+  ]
+}

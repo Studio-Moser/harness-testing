@@ -19,7 +19,7 @@ category = "contract"
 tags = ["harness", "contract", "non-development", "scope"]
 change_class = "feature"
 verification_envelope = "contract"
-fixture_digest = "sha256:91337adff0b21b35d4eb62fcd6e7926768218f8b52a259d1aac3814335de6130"
+fixture_digest = "sha256:3ddc1aadb64b6df33f908f70ed20605ba000297502a12c7ea94d958ab17befd2"
 
 [agent]
 timeout_sec = 900.0

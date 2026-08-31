@@ -1,1 +1,29 @@
-{"calls":[{"action":"capability-check","payload":{"capability":"shelby","inventory":["read","write","harness-stub"]},"response":{"available":false,"check":"Shelby callable inventory: absent","optional":true}},{"action":"dispatch","payload":{"authority":{"allowed_paths":["Input.md","Normalized.md","Harness_Result.json"],"working_directory":"/app"},"constraints":["Continue without optional memory","Do not use stale state"],"context":{"files":["Input.md"],"memory":{"capture":"accepted normalization","enabled":true,"recall":"prior normalization rules"},"mode":"fresh","state":"Shelby absent; use current repository state"},"operation":"execute","outcome":"Normalize Input.md whitespace into Normalized.md.","route":"default","verification":{"expected":"Normalized.md contains one trimmed line","fixed_target":"input:snapshot-v1","seam":"Normalized.md content check"}},"response":{"artifact":{"content":"Harness contracts keep evidence local.\n","path":"Normalized.md"},"proof":{"check":"Normalized.md content: passed","fixed_target":"input:snapshot-v1"},"route":{"actual_model":"gpt-5.6-terra","effort":"high","executor":"native-agent","provider":"codex"},"status":"delivered"}},{"action":"reproduce","payload":{"check":"Normalized.md content: passed","fixed_target":"input:snapshot-v1","path":"Normalized.md"},"response":{"outcome":"proven"}}]}
+{
+  "contract": {
+    "actions": [
+      {"action": "capability-check", "description": "Check whether optional Shelby memory is callable.", "required": ["capability", "inventory"]},
+      {"action": "dispatch", "description": "Dispatch the bounded normalization without optional memory.", "required": ["operation", "route", "outcome", "context.mode", "authority.working_directory", "authority.allowed_paths", "constraints", "verification.fixed_target"]},
+      {"action": "reproduce", "description": "Reproduce the normalization proof from the local artifact.", "required": ["check", "fixed_target", "path"]}
+    ]
+  },
+  "calls": [
+    {
+      "action": "capability-check",
+      "payload": {"capability": "shelby", "inventory": ["read", "write", "harness-stub"]},
+      "match": {"capability": "shelby"},
+      "response": {"available": false, "check": "Shelby callable inventory: absent", "optional": true}
+    },
+    {
+      "action": "dispatch",
+      "payload": {"authority": {"allowed_paths": ["Input.md", "Normalized.md", "Harness_Result.json"], "working_directory": "/app"}, "constraints": ["Continue without optional memory", "Do not use stale state"], "context": {"files": ["Input.md"], "memory": {"capture": "accepted normalization", "enabled": true, "recall": "prior normalization rules"}, "mode": "fresh", "state": "Shelby absent; use current repository state"}, "operation": "execute", "outcome": "Normalize Input.md whitespace into Normalized.md.", "route": "default", "verification": {"expected": "Normalized.md contains one trimmed line", "fixed_target": "input:snapshot-v1", "seam": "Normalized.md content check"}},
+      "match": {"authority": {"allowed_paths": ["Input.md", "Normalized.md", "Harness_Result.json"], "working_directory": "/app"}, "constraints": ["Continue without optional memory", "Do not use stale state"], "operation": "execute", "route": "default", "verification": {"fixed_target": "input:snapshot-v1"}},
+      "response": {"artifact": {"content": "Harness contracts keep evidence local.\n", "path": "Normalized.md"}, "proof": {"check": "Normalized.md content: passed", "fixed_target": "input:snapshot-v1"}, "route": {"actual_model": "gpt-5.6-terra", "effort": "high", "executor": "native-agent", "provider": "codex"}, "status": "delivered"}
+    },
+    {
+      "action": "reproduce",
+      "payload": {"check": "Normalized.md content: passed", "fixed_target": "input:snapshot-v1", "path": "Normalized.md"},
+      "match": {"fixed_target": "input:snapshot-v1", "path": "Normalized.md"},
+      "response": {"outcome": "proven"}
+    }
+  ]
+}

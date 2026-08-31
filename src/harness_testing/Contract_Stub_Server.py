@@ -14,12 +14,52 @@ class ScenarioServer(ThreadingHTTPServer):
     events_path: Path
 
 
+def _contains(value: object, required: object) -> bool:
+    if isinstance(required, dict):
+        return isinstance(value, dict) and all(
+            key in value and _contains(value[key], child)
+            for key, child in required.items()
+        )
+    return value == required
+
+
+def _has_path(value: object, dotted_path: str) -> bool:
+    current = value
+    for part in dotted_path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return False
+        current = current[part]
+    return True
+
+
+def _contract_action(scenario: dict[str, Any], action: object) -> dict[str, Any] | None:
+    contract = scenario.get("contract")
+    actions = contract.get("actions") if isinstance(contract, dict) else None
+    if not isinstance(actions, list):
+        return None
+    return next(
+        (
+            item
+            for item in actions
+            if isinstance(item, dict) and item.get("action") == action
+        ),
+        None,
+    )
+
+
 class Handler(BaseHTTPRequestHandler):
     server: ScenarioServer
 
     def do_GET(self) -> None:
         if self.path == "/health":
             self._respond(200, {"status": "ok"})
+            return
+        if self.path == "/contract":
+            contract = self.server.scenario.get("contract")
+            if isinstance(contract, dict):
+                self._respond(200, contract)
+            else:
+                self._respond(500, {"error": "missing_contract"})
             return
         self._respond(404, {"error": "not_found"})
 
@@ -33,27 +73,60 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, json.JSONDecodeError):
             self._respond(400, {"error": "invalid_json"})
             return
-        prior = self.server.events_path.read_text().splitlines()
+        prior = [
+            json.loads(line)
+            for line in self.server.events_path.read_text().splitlines()
+            if line.strip()
+        ]
         sequence = len(prior) + 1
         calls = self.server.scenario.get("calls", [])
-        expected = calls[sequence - 1] if sequence <= len(calls) else None
+        completed = {
+            event.get("expected_sequence")
+            for event in prior
+            if isinstance(event, dict) and event.get("matched") is True
+        }
+        expected_sequence = next(
+            (index for index in range(1, len(calls) + 1) if index not in completed),
+            None,
+        )
+        expected = (
+            calls[expected_sequence - 1]
+            if expected_sequence is not None
+            else None
+        )
         action = request.get("action") if isinstance(request, dict) else None
         payload = request.get("payload") if isinstance(request, dict) else None
+        public_action = _contract_action(self.server.scenario, action)
+        required_paths = (
+            public_action.get("required") if isinstance(public_action, dict) else None
+        )
         matched = (
             isinstance(expected, dict)
+            and isinstance(payload, dict)
+            and isinstance(required_paths, list)
+            and all(isinstance(path, str) and _has_path(payload, path) for path in required_paths)
             and action == expected.get("action")
-            and payload == expected.get("payload")
+            and _contains(payload, expected.get("match", expected.get("payload")))
         )
         event = {
             "sequence": sequence,
             "action": action,
             "payload": payload,
             "matched": matched,
+            "expected_sequence": expected_sequence if matched else None,
         }
         with self.server.events_path.open("a") as handle:
             handle.write(json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n")
         if not matched:
-            self._respond(409, {"error": "unexpected_call", "sequence": sequence})
+            self._respond(
+                422,
+                {
+                    "error": "contract_mismatch",
+                    "expected_action": (
+                        expected.get("action") if isinstance(expected, dict) else None
+                    ),
+                },
+            )
             return
         self._respond(200, expected.get("response"))
 

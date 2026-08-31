@@ -3,6 +3,7 @@
 `/app/Ready_Slice.json` is the only ready item. Use the synthetic Harness endpoint through:
 
 ```text
+harness-stub describe
 harness-stub ACTION 'JSON_OBJECT'
 ```
 

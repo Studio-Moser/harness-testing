@@ -40,6 +40,15 @@ _TELEMETRY_KEYS = {
     "token_or_quota_usage",
 }
 _SHELBY_KEYS = {"project_id", "run_id", "checkpoint_ids"}
+_SEMANTIC_ROUTE_KEYS = {
+    "requested",
+    "actual_model",
+    "effort",
+    "provider",
+    "executor",
+    "resolution",
+    "fallback_reason",
+}
 _FORBIDDEN_LIFECYCLE = (
     re.compile(r"(?:^|[;&|]\s*|\s)(?:git\s+(?:checkout|switch|branch|commit|push)|gh\s+pr)\b"),
     re.compile(r"(?:^|[;&|]\s*|\s)(?:npm|pnpm|yarn)\s+(?:run\s+)?test\b"),
@@ -142,6 +151,39 @@ def _artifact_matches(path: Path, rule: object) -> bool:
     return False
 
 
+def _blocker_codes(blockers: list[str]) -> list[str]:
+    return [blocker.partition(":")[0].strip() for blocker in blockers]
+
+
+def _result_semantics_match(result: dict[str, Any], expected: dict[str, Any]) -> bool:
+    route = result["route"]
+    expected_route = expected["route"]
+    artifacts = result["artifacts"]
+    expected_artifacts = expected["artifacts"]
+    evidence = result["evidence"]
+    expected_evidence = expected["evidence"]
+    telemetry = result["telemetry"]
+    expected_telemetry = expected["telemetry"]
+    return (
+        result["status"] == expected["status"]
+        and all(
+            route[key] == expected_route[key] for key in _SEMANTIC_ROUTE_KEYS
+        )
+        and len(artifacts["files"]) == len(set(artifacts["files"]))
+        and set(artifacts["files"]) == set(expected_artifacts["files"])
+        and artifacts["report"] == expected_artifacts["report"]
+        and evidence["fixed_target"] == expected_evidence["fixed_target"]
+        and evidence["outcome"] == expected_evidence["outcome"]
+        and bool(evidence["checks"])
+        and telemetry["attempts"] == expected_telemetry["attempts"]
+        and telemetry["verification_failures"]
+        == expected_telemetry["verification_failures"]
+        and result["shelby"] == expected["shelby"]
+        and _blocker_codes(result["blockers"])
+        == _blocker_codes(expected["blockers"])
+    )
+
+
 def result_matches_contract(
     workspace: Path,
     expected_path: Path,
@@ -154,9 +196,11 @@ def result_matches_contract(
     if (
         not isinstance(expected, dict)
         or not _complete_result(result)
-        or result != expected.get("result")
+        or not _complete_result(expected.get("result"))
         or not protected_files_intact(workspace, protected_manifest)
     ):
+        return False
+    if not _result_semantics_match(result, expected["result"]):
         return False
     artifacts = expected.get("artifacts")
     if not isinstance(artifacts, dict):
@@ -171,12 +215,10 @@ def result_matches_contract(
     ) and all(isinstance(relative, str) for relative in artifacts)
 
 
-def stub_calls_match(expected_path: Path, events_path: Path) -> bool:
-    """Require the exact protected call sequence; handwritten results cannot pass."""
-
+def _stub_evidence(expected_path: Path, events_path: Path) -> tuple[list[Any], list[Any]] | None:
     expected = _json(expected_path)
     if not isinstance(expected, dict) or not isinstance(expected.get("calls"), list):
-        return False
+        return None
     try:
         events = [
             json.loads(line)
@@ -184,20 +226,83 @@ def stub_calls_match(expected_path: Path, events_path: Path) -> bool:
             if line.strip()
         ]
     except (OSError, json.JSONDecodeError):
+        return None
+    if not all(
+        isinstance(event, dict) and event.get("sequence") == sequence
+        for sequence, event in enumerate(events, 1)
+    ):
+        return None
+    return expected["calls"], events
+
+
+def stub_calls_match(expected_path: Path, events_path: Path) -> bool:
+    """Require every protected contract call without penalizing extra attempts."""
+
+    evidence = _stub_evidence(expected_path, events_path)
+    if evidence is None:
         return False
-    calls = expected["calls"]
-    if len(events) != len(calls):
-        return False
-    for sequence, (event, call) in enumerate(zip(events, calls, strict=True), 1):
-        if (
-            not isinstance(event, dict)
-            or not isinstance(call, dict)
-            or event.get("sequence") != sequence
-            or event.get("matched") is not True
-            or event.get("action") != call.get("action")
-            or event.get("payload") != call.get("payload")
+    calls, events = evidence
+    if events and not any("expected_sequence" in event for event in events):
+        cursor = 0
+        for call in calls:
+            while cursor < len(events) and not (
+                events[cursor].get("matched") is True
+                and events[cursor].get("action") == call.get("action")
+                and events[cursor].get("payload") == call.get("payload")
+            ):
+                cursor += 1
+            if cursor == len(events):
+                return False
+            cursor += 1
+        return True
+    for expected_sequence, call in enumerate(calls, 1):
+        if not isinstance(call, dict) or not any(
+            event.get("matched") is True
+            and event.get("expected_sequence") == expected_sequence
+            and event.get("action") == call.get("action")
+            for event in events
         ):
             return False
+    return True
+
+
+def stub_calls_are_bounded(expected_path: Path, events_path: Path) -> bool:
+    """Reject invalid, duplicate, or extra calls without requiring workflow completion."""
+
+    evidence = _stub_evidence(expected_path, events_path)
+    if evidence is None:
+        return False
+    calls, events = evidence
+    if events and not any("expected_sequence" in event for event in events):
+        remaining = set(range(len(calls)))
+        for event in events:
+            match = next(
+                (
+                    index
+                    for index in remaining
+                    if event.get("matched") is True
+                    and event.get("action") == calls[index].get("action")
+                    and event.get("payload") == calls[index].get("payload")
+                ),
+                None,
+            )
+            if match is None:
+                return False
+            remaining.remove(match)
+        return True
+    seen: set[int] = set()
+    for event in events:
+        expected_sequence = event.get("expected_sequence")
+        if (
+            event.get("matched") is not True
+            or not isinstance(expected_sequence, int)
+            or expected_sequence < 1
+            or expected_sequence > len(calls)
+            or expected_sequence in seen
+            or event.get("action") != calls[expected_sequence - 1].get("action")
+        ):
+            return False
+        seen.add(expected_sequence)
     return True
 
 
