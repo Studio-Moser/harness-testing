@@ -29,7 +29,7 @@ task-id/
     efficiency/
 ```
 
-Contract tasks also carry protected expected calls/results, evidence-fragment requirements, and a deterministic local sidecar scenario. Their synthetic endpoint optionally exposes action names and required payload fields through `harness-stub describe`, but never responses or expected results. Required values must match the protected JSON type and nonempty shape; protected lists compare as unordered sets. Mark only contiguous independent calls with the same protected `unordered_group`. Invalid calls are recorded without consuming the next required workflow step. Rust tasks use the frozen crate and lockfile instead of the Node verifier subset.
+Contract tasks also carry protected expected calls/results, exact evidence-prefix requirements, and a deterministic local sidecar scenario. Their synthetic endpoint optionally exposes action names and required payload fields through `harness-stub describe`, but never responses or expected results. Every required field must be protected-matched or listed in the call's protected `shape_only` array; use `shape_only` only for caller-authored prose. Required values must match the protected JSON type and nonempty shape, and protected lists compare as unordered sets. Mark only contiguous independent calls with the same protected `unordered_group`. Invalid calls are recorded without consuming the next required workflow step. Rust tasks use the frozen crate and lockfile instead of the Node verifier subset.
 
 The task configuration must preserve these boundaries:
 
@@ -50,7 +50,7 @@ Every task supplies one or more deterministic RewardKit criteria in exactly thes
 - `workflow/`: task-specific sequence requirements that are necessary to satisfy the instruction.
 - `efficiency/`: absolute policy violations such as a premature comprehensive suite or duplicate successful command.
 
-Do not reward plans, reviews, tool calls, or verbosity by themselves. Do not lower correctness because required workflow calls were omitted or a correct solution was inefficient; keep the dimensions separate. Correctness compares the semantic attempt multiset and requires each protected evidence-fragment group to appear in a distinct nonblank check. Missing required calls affect workflow, while invalid, duplicate, or extra calls affect efficiency. The verifier must use preinstalled dependencies and must never download packages at runtime.
+Do not reward plans, reviews, tool calls, or verbosity by themselves. Do not lower correctness because required workflow calls were omitted or a correct solution was inefficient; keep the dimensions separate. Correctness compares the semantic attempt multiset and requires each protected semantic evidence prefix to begin a distinct nonblank check; optional prose may follow the prefix. Missing required calls affect workflow, while invalid, duplicate, or extra calls affect efficiency. The verifier must use preinstalled dependencies and must never download packages at runtime.
 
 ## Five model-free QA cases
 

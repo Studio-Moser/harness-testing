@@ -34,6 +34,7 @@
       "match": {
         "operation": "execute",
         "route": "bulk",
+        "context": {"mode": "fork", "files": ["Ready_Slice.json"]},
         "authority": {
           "working_directory": "/app",
           "allowed_paths": ["Ready_Slice.json", "Implementation.md", "Harness_Result.json"],
@@ -43,6 +44,7 @@
         "constraints": ["READY-17 only", "No external effects"],
         "verification": {"fixed_target": "ready-slice:READY-17-v1"}
       },
+      "shape_only": ["outcome"],
       "response": {
         "artifact": {
           "content": "Implemented READY-17 within the approved /app paths.\n",
@@ -68,7 +70,7 @@
         "fixed_target": "ready-slice:READY-17-v1",
         "path": "Implementation.md"
       },
-      "match": {"fixed_target": "ready-slice:READY-17-v1", "path": "Implementation.md"},
+      "match": {"check": "Implementation.md content: passed", "fixed_target": "ready-slice:READY-17-v1", "path": "Implementation.md"},
       "response": {
         "check": "Implementation.md content: passed",
         "outcome": "proven"

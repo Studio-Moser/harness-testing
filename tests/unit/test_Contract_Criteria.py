@@ -44,7 +44,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     expected.write_text(
         json.dumps(
             {
-                "evidence_requirements": [["output.json"]],
+                "evidence_requirements": ["Output.json structure: passed"],
                 "result": _result(),
                 "calls": [
                     {
@@ -93,7 +93,9 @@ def test_contract_result_accepts_equivalent_proof_wording_and_telemetry(tmp_path
 
     result_path = workspace / "Harness_Result.json"
     result = json.loads(result_path.read_text())
-    result["evidence"]["checks"] = ["Output.json behavior independently verified"]
+    result["evidence"]["checks"] = [
+        "Output.json structure: passed; behavior independently verified"
+    ]
     result["telemetry"]["elapsed"] = "1.2s"
     result["telemetry"]["token_or_quota_usage"] = "reported by provider"
     result_path.write_text(json.dumps(result))
@@ -116,7 +118,11 @@ def test_contract_result_requires_nonblank_task_relevant_evidence(tmp_path):
     workspace, expected, manifest = _fixture(tmp_path)
     result_path = workspace / "Harness_Result.json"
 
-    for checks in ([""], ["Everything is fine"]):
+    for checks in (
+        [""],
+        ["Everything is fine"],
+        ["Output.json structure is not passed"],
+    ):
         result = json.loads(result_path.read_text())
         result["evidence"]["checks"] = checks
         result_path.write_text(json.dumps(result))

@@ -22,8 +22,10 @@
         "route": "independent",
         "context": {"mode": "fresh", "files": ["src/Policy.ts"]},
         "authority": {"working_directory": "/app", "allowed_paths": ["src/Policy.ts", "Review.md", "Harness_Result.json"]},
+        "constraints": ["Independent review cost approved", "Read-only fixed target"],
         "verification": {"fixed_target": "ef4d5362c2b7f262cc0a6f85574a004e5313eb43"}
       },
+      "shape_only": ["outcome"],
       "response": {
         "report": {"content": "# Independent Review\n\nTarget: ef4d5362c2b7f262cc0a6f85574a004e5313eb43\nFinding: `canPublish` accepts a caller assertion without independent evidence.\nVerdict: changes requested.\n", "path": "Review.md"},
         "proof": {"check": "Review.md target and finding: passed", "fixed_target": "ef4d5362c2b7f262cc0a6f85574a004e5313eb43"},
@@ -34,7 +36,7 @@
     {
       "action": "reproduce",
       "payload": {"check": "Review.md target and finding: passed", "fixed_target": "ef4d5362c2b7f262cc0a6f85574a004e5313eb43", "path": "Review.md"},
-      "match": {"fixed_target": "ef4d5362c2b7f262cc0a6f85574a004e5313eb43", "path": "Review.md"},
+      "match": {"check": "Review.md target and finding: passed", "fixed_target": "ef4d5362c2b7f262cc0a6f85574a004e5313eb43", "path": "Review.md"},
       "response": {"check": "Review.md target and finding: passed", "outcome": "proven", "target_unchanged": true}
     }
   ]

@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from harness_testing.Contract_Stub_Server import Handler, ScenarioServer
+from harness_testing.Contract_Stub_Server import Handler, ScenarioServer, _call_matches
 
 
 @contextmanager
@@ -47,6 +47,7 @@ def _running_server(tmp_path: Path, scenario: dict[str, object] | None = None):
                     "route": "bulk",
                     "verification": {"fixed_target": "fixture:v1"},
                 },
+                "shape_only": ["outcome"],
                 "response": {"status": "delivered"},
             }
         ],
@@ -153,6 +154,38 @@ def test_contract_validation_accepts_reordered_set_like_lists(tmp_path):
 
     assert status == 200
     assert body == {"status": "delivered"}
+
+
+def test_product_pulse_rejects_a_semantically_wrong_required_operation():
+    scenario_path = (
+        Path(__file__).parents[2]
+        / "tasks/contract/product-pulse-fanout-synthesis/environment/stub-server/Scenario.json"
+    )
+    scenario = json.loads(scenario_path.read_text())
+    expected = scenario["calls"][0]
+    payload = {**expected["payload"], "operation": "delete"}
+    required = scenario["contract"]["actions"][0]["required"]
+
+    assert not _call_matches(expected, "research", payload, required)
+
+
+def test_all_protected_scenario_reference_calls_cover_the_public_contract():
+    root = Path(__file__).parents[2]
+    for scenario_path in sorted(
+        root.glob("tasks/contract/*/environment/stub-server/Scenario.json")
+    ):
+        scenario = json.loads(scenario_path.read_text())
+        required_by_action = {
+            action["action"]: action["required"]
+            for action in scenario["contract"]["actions"]
+        }
+        for expected in scenario["calls"]:
+            assert _call_matches(
+                expected,
+                expected["action"],
+                expected["payload"],
+                required_by_action[expected["action"]],
+            ), scenario_path
 
 
 def test_unordered_fanout_accepts_reordered_and_concurrent_calls(tmp_path):

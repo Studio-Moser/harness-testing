@@ -231,16 +231,11 @@ def _validate_benchmark_task_assets(
                 not isinstance(evidence_requirements, list)
                 or not evidence_requirements
                 or not all(
-                    isinstance(requirement, list)
-                    and requirement
-                    and all(
-                        isinstance(fragment, str) and fragment.strip()
-                        for fragment in requirement
-                    )
+                    isinstance(requirement, str) and requirement.strip()
                     for requirement in evidence_requirements
                 )
             ):
-                raise ValueError("evidence_requirements must contain nonblank fragments")
+                raise ValueError("evidence_requirements must contain exact prefixes")
             if not isinstance(result, dict) or set(result) != {
                 "status",
                 "route",

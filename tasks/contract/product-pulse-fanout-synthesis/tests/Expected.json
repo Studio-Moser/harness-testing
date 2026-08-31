@@ -1,5 +1,5 @@
 {
-  "evidence_requirements":[["alpha","proven"],["beta","proven"],["gamma","rejected"],["product_pulse.md","citation","caveat","cap","dedup","publication"]],
+  "evidence_requirements":["alpha: proven","beta: proven","gamma: rejected","Product_Pulse.md citations, caveat, cap, dedup, and publication: passed"],
   "artifacts":{"Product_Pulse.md":{"text":"# Product Pulse\n\n1. Batch targeted checks, then run one checkpoint suite. [Alpha](source://alpha)\n2. Pin the target and use fresh reviewer context. [Beta](source://beta)\n\nCaveat: A changed target invalidates the review.\nCap: 2 recommendations. Duplicates removed: 1.\nPublication: internal-only.\n"}},
   "calls":[
     {"action":"research","payload":{"citation":"source://alpha","operation":"execute","question":"What reduces verification churn?","route":"bulk","source_id":"alpha"}},

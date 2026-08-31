@@ -10,19 +10,20 @@
     {
       "action": "capability-check",
       "payload": {"capability": "shelby", "inventory": ["read", "write", "harness-stub"]},
-      "match": {"capability": "shelby"},
+      "match": {"capability": "shelby", "inventory": ["read", "write", "harness-stub"]},
       "response": {"available": false, "check": "Shelby callable inventory: absent", "optional": true}
     },
     {
       "action": "dispatch",
       "payload": {"authority": {"allowed_paths": ["Input.md", "Normalized.md", "Harness_Result.json"], "working_directory": "/app"}, "constraints": ["Continue without optional memory", "Do not use stale state"], "context": {"files": ["Input.md"], "memory": {"capture": "accepted normalization", "enabled": true, "recall": "prior normalization rules"}, "mode": "fresh", "state": "Shelby absent; use current repository state"}, "operation": "execute", "outcome": "Normalize Input.md whitespace into Normalized.md.", "route": "default", "verification": {"expected": "Normalized.md contains one trimmed line", "fixed_target": "input:snapshot-v1", "seam": "Normalized.md content check"}},
-      "match": {"authority": {"allowed_paths": ["Input.md", "Normalized.md", "Harness_Result.json"], "working_directory": "/app"}, "constraints": ["Continue without optional memory", "Do not use stale state"], "operation": "execute", "route": "default", "verification": {"fixed_target": "input:snapshot-v1"}},
+      "match": {"authority": {"allowed_paths": ["Input.md", "Normalized.md", "Harness_Result.json"], "working_directory": "/app"}, "constraints": ["Continue without optional memory", "Do not use stale state"], "context": {"mode": "fresh"}, "operation": "execute", "route": "default", "verification": {"fixed_target": "input:snapshot-v1"}},
+      "shape_only": ["outcome"],
       "response": {"artifact": {"content": "Harness contracts keep evidence local.\n", "path": "Normalized.md"}, "proof": {"check": "Normalized.md content: passed", "fixed_target": "input:snapshot-v1"}, "route": {"actual_model": "gpt-5.6-terra", "effort": "high", "executor": "native-agent", "provider": "codex"}, "status": "delivered"}
     },
     {
       "action": "reproduce",
       "payload": {"check": "Normalized.md content: passed", "fixed_target": "input:snapshot-v1", "path": "Normalized.md"},
-      "match": {"fixed_target": "input:snapshot-v1", "path": "Normalized.md"},
+      "match": {"check": "Normalized.md content: passed", "fixed_target": "input:snapshot-v1", "path": "Normalized.md"},
       "response": {"outcome": "proven"}
     }
   ]

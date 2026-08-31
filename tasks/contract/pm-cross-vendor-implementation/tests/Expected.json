@@ -1,5 +1,5 @@
 {
-  "evidence_requirements": [["implementation.md", "content"]],
+  "evidence_requirements": ["Implementation.md content: passed"],
   "artifacts": {
     "Implementation.md": {
       "text": "Implemented READY-17 within the approved /app paths.\n"

@@ -167,23 +167,23 @@ def _attempts_match(actual: list[str], expected: list[str]) -> bool:
 
 
 def _evidence_matches(checks: list[str], requirements: object) -> bool:
-    if not isinstance(requirements, list) or not requirements:
+    if (
+        not isinstance(requirements, list)
+        or not requirements
+        or not all(
+            isinstance(requirement, str) and requirement.strip()
+            for requirement in requirements
+        )
+    ):
         return False
     available = set(range(len(checks)))
     for requirement in requirements:
-        if (
-            not isinstance(requirement, list)
-            or not requirement
-            or not all(isinstance(fragment, str) and fragment.strip() for fragment in requirement)
-        ):
-            return False
         match = next(
             (
                 index
                 for index in available
-                if all(
-                    fragment.casefold() in checks[index].casefold()
-                    for fragment in requirement
+                if checks[index].strip().casefold().startswith(
+                    requirement.strip().casefold()
                 )
             ),
             None,

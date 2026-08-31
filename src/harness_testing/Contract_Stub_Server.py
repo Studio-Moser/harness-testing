@@ -123,17 +123,26 @@ def _call_matches(
     payload: object,
     required_paths: object,
 ) -> bool:
+    match_rule = (
+        expected.get("match", expected.get("payload"))
+        if isinstance(expected, dict)
+        else None
+    )
+    shape_only = expected.get("shape_only", []) if isinstance(expected, dict) else None
     return (
         isinstance(expected, dict)
         and isinstance(payload, dict)
         and isinstance(required_paths, list)
+        and isinstance(shape_only, list)
+        and all(isinstance(path, str) for path in shape_only)
         and all(
             isinstance(path, str)
             and _valid_required_path(payload, expected.get("payload"), path)
+            and (path in shape_only or _path_value(match_rule, path)[0])
             for path in required_paths
         )
         and action == expected.get("action")
-        and _contains(payload, expected.get("match", expected.get("payload")))
+        and _contains(payload, match_rule)
     )
 
 
