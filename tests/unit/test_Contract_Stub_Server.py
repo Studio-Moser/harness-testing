@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from pathlib import Path
 from urllib.error import HTTPError
@@ -11,27 +12,38 @@ from harness_testing.Contract_Stub_Server import Handler, ScenarioServer
 
 
 @contextmanager
-def _running_server(tmp_path: Path):
-    contract = {
+def _running_server(tmp_path: Path, scenario: dict[str, object] | None = None):
+    contract: dict[str, object] = {
         "actions": [
             {
                 "action": "dispatch",
                 "description": "Dispatch the bounded request.",
-                "required": ["route", "verification.fixed_target"],
+                "required": [
+                    "allowed_paths",
+                    "deduplicate",
+                    "outcome",
+                    "route",
+                    "verification.fixed_target",
+                ],
             }
         ]
     }
     server = ScenarioServer(("127.0.0.1", 0), Handler)
-    server.scenario = {
+    server.scenario = scenario or {
         "contract": contract,
         "calls": [
             {
                 "action": "dispatch",
                 "payload": {
+                    "allowed_paths": ["Input.json", "Output.json"],
+                    "deduplicate": True,
+                    "outcome": "Deliver the bounded result.",
                     "route": "bulk",
                     "verification": {"fixed_target": "fixture:v1"},
                 },
                 "match": {
+                    "allowed_paths": ["Input.json", "Output.json"],
+                    "deduplicate": True,
                     "route": "bulk",
                     "verification": {"fixed_target": "fixture:v1"},
                 },
@@ -41,6 +53,7 @@ def _running_server(tmp_path: Path):
     }
     server.events_path = tmp_path / "Events.jsonl"
     server.events_path.write_text("")
+    server.events_lock = threading.Lock()
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -70,6 +83,16 @@ def _post_json(url: str, value: object) -> tuple[int, object]:
         return error.code, json.load(error)
 
 
+def _valid_payload() -> dict[str, object]:
+    return {
+        "allowed_paths": ["Input.json", "Output.json"],
+        "deduplicate": True,
+        "outcome": "Equivalent caller wording is allowed.",
+        "route": "bulk",
+        "verification": {"fixed_target": "fixture:v1"},
+    }
+
+
 def test_public_contract_is_discoverable_and_invalid_calls_do_not_advance(tmp_path):
     with _running_server(tmp_path) as (base_url, contract, events_path):
         assert _get_json(f"{base_url}/contract") == contract
@@ -79,8 +102,8 @@ def test_public_contract_is_discoverable_and_invalid_calls_do_not_advance(tmp_pa
             {
                 "action": "dispatch",
                 "payload": {
+                    **_valid_payload(),
                     "route": "quick",
-                    "verification": {"fixed_target": "fixture:v1"},
                 },
             },
         )
@@ -88,11 +111,7 @@ def test_public_contract_is_discoverable_and_invalid_calls_do_not_advance(tmp_pa
             f"{base_url}/invoke",
             {
                 "action": "dispatch",
-                "payload": {
-                    "route": "bulk",
-                    "verification": {"fixed_target": "fixture:v1"},
-                    "outcome": "Equivalent caller wording is allowed.",
-                },
+                "payload": _valid_payload(),
             },
         )
 
@@ -103,6 +122,85 @@ def test_public_contract_is_discoverable_and_invalid_calls_do_not_advance(tmp_pa
     events = [json.loads(line) for line in events_path.read_text().splitlines()]
     assert [event["expected_sequence"] for event in events] == [None, 1]
     assert [event["matched"] for event in events] == [False, True]
+
+
+def test_contract_validation_rejects_null_required_values_and_json_type_aliases(
+    tmp_path,
+):
+    invalid_payloads = [
+        {**_valid_payload(), "outcome": None},
+        {**_valid_payload(), "deduplicate": 1},
+    ]
+
+    for index, payload in enumerate(invalid_payloads):
+        case_path = tmp_path / str(index)
+        case_path.mkdir()
+        with _running_server(case_path) as (base_url, _, _):
+            status, _ = _post_json(
+                f"{base_url}/invoke", {"action": "dispatch", "payload": payload}
+            )
+        assert status == 422
+
+
+def test_contract_validation_accepts_reordered_set_like_lists(tmp_path):
+    payload = _valid_payload()
+    payload["allowed_paths"] = ["Output.json", "Input.json"]
+
+    with _running_server(tmp_path) as (base_url, _, _):
+        status, body = _post_json(
+            f"{base_url}/invoke", {"action": "dispatch", "payload": payload}
+        )
+
+    assert status == 200
+    assert body == {"status": "delivered"}
+
+
+def test_unordered_fanout_accepts_reordered_and_concurrent_calls(tmp_path):
+    count = 12
+    contract = {
+        "actions": [
+            {
+                "action": "research",
+                "description": "Research one independent source.",
+                "required": ["source_id"],
+            }
+        ]
+    }
+    scenario = {
+        "contract": contract,
+        "calls": [
+            {
+                "action": "research",
+                "payload": {"source_id": str(index)},
+                "match": {"source_id": str(index)},
+                "response": {"source_id": str(index)},
+                "unordered_group": "research",
+            }
+            for index in range(count)
+        ],
+    }
+
+    with (
+        _running_server(tmp_path, scenario) as (base_url, _, events_path),
+        ThreadPoolExecutor(max_workers=count) as executor,
+    ):
+        results = list(
+            executor.map(
+                lambda index: _post_json(
+                    f"{base_url}/invoke",
+                    {
+                        "action": "research",
+                        "payload": {"source_id": str(index)},
+                    },
+                ),
+                reversed(range(count)),
+            )
+        )
+
+    assert [status for status, _ in results] == [200] * count
+    events = [json.loads(line) for line in events_path.read_text().splitlines()]
+    assert [event["sequence"] for event in events] == list(range(1, count + 1))
+    assert {event["expected_sequence"] for event in events} == set(range(1, count + 1))
 
 
 def test_harness_stub_describe_prints_the_public_contract(tmp_path):
@@ -121,3 +219,24 @@ def test_harness_stub_describe_prints_the_public_contract(tmp_path):
 
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == contract
+
+
+def test_harness_stub_records_locally_rejected_json(tmp_path):
+    script = (
+        Path(__file__).parents[2]
+        / "tasks/contract/missing-required-executor/environment/Harness_Stub.mjs"
+    )
+    with _running_server(tmp_path) as (base_url, _, events_path):
+        result = subprocess.run(
+            ("node", str(script), "dispatch", "{"),
+            env={**os.environ, "HARNESS_STUB_URL": base_url},
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    assert result.returncode == 2
+    events = [json.loads(line) for line in events_path.read_text().splitlines()]
+    assert [(event["action"], event["matched"]) for event in events] == [
+        ("dispatch", False)
+    ]

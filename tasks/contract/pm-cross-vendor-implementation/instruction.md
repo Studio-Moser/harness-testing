@@ -1,9 +1,8 @@
 # Implement one ready PM slice through Harness
 
-`/app/Ready_Slice.json` is the only ready item. Use the synthetic Harness endpoint through:
+`/app/Ready_Slice.json` is the only ready item. Its public contract is available through `harness-stub describe` if needed. Use the synthetic Harness endpoint through:
 
 ```text
-harness-stub describe
 harness-stub ACTION 'JSON_OBJECT'
 ```
 

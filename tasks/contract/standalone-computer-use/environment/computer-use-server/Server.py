@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import base64
 import json
+import threading
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -16,23 +18,54 @@ from starlette.responses import HTMLResponse, JSONResponse
 EVENTS = Path("/var/log/computer-use/Events.jsonl")
 CAPTURE = Path("/var/log/computer-use/Capture.png")
 UI_URL = "http://127.0.0.1:8000/ui"
+EVENTS_LOCK = threading.Lock()
 
-mcp = MCPServer("harness-computer-use")
 browser: Browser | None = None
 page: Page | None = None
 playwright_runtime: Any = None
 
 
-def record(action: str, payload: dict[str, object]) -> None:
-    prior = EVENTS.read_text().splitlines() if EVENTS.exists() else []
-    event = {
-        "sequence": len(prior) + 1,
-        "action": action,
-        "payload": payload,
-        "matched": True,
-    }
-    with EVENTS.open("a") as handle:
-        handle.write(json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n")
+def record(action: object, payload: object, *, matched: bool = True) -> None:
+    with EVENTS_LOCK:
+        prior = EVENTS.read_text().splitlines() if EVENTS.exists() else []
+        event = {
+            "sequence": len(prior) + 1,
+            "action": action,
+            "payload": payload,
+            "matched": matched,
+        }
+        with EVENTS.open("a") as handle:
+            handle.write(
+                json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n"
+            )
+
+
+def _failed_tool_result(result: object) -> bool:
+    return getattr(result, "is_error", False) is True or (
+        isinstance(result, dict) and result.get("isError") is True
+    )
+
+
+def _raw_tool_call(context: Any) -> tuple[object, object]:
+    params = context.params if isinstance(context.params, Mapping) else {}
+    return params.get("name"), params.get("arguments")
+
+
+class AttemptRecorder:
+    async def __call__(self, context: Any, call_next: Any) -> object:
+        if context.method != "tools/call":
+            return await call_next(context)
+        try:
+            result = await call_next(context)
+        except Exception:
+            record(*_raw_tool_call(context), matched=False)
+            raise
+        if _failed_tool_result(result):
+            record(*_raw_tool_call(context), matched=False)
+        return result
+
+
+mcp = MCPServer("harness-computer-use", middleware=[AttemptRecorder()])
 
 
 async def active_page() -> Page:

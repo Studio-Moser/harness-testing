@@ -216,8 +216,31 @@ def _validate_benchmark_task_assets(
         try:
             expected = json.loads(expected_path.read_text())
             result = expected["result"]
-            if set(expected) != {"artifacts", "calls", "result"}:
-                raise ValueError("Expected.json requires artifacts, calls, and result")
+            if set(expected) != {
+                "artifacts",
+                "calls",
+                "evidence_requirements",
+                "result",
+            }:
+                raise ValueError(
+                    "Expected.json requires artifacts, calls, evidence_requirements, "
+                    "and result"
+                )
+            evidence_requirements = expected["evidence_requirements"]
+            if (
+                not isinstance(evidence_requirements, list)
+                or not evidence_requirements
+                or not all(
+                    isinstance(requirement, list)
+                    and requirement
+                    and all(
+                        isinstance(fragment, str) and fragment.strip()
+                        for fragment in requirement
+                    )
+                    for requirement in evidence_requirements
+                )
+            ):
+                raise ValueError("evidence_requirements must contain nonblank fragments")
             if not isinstance(result, dict) or set(result) != {
                 "status",
                 "route",

@@ -7,6 +7,7 @@ import json
 import os
 import re
 import struct
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -69,6 +70,10 @@ def _strings(value: object) -> bool:
     return isinstance(value, list) and all(isinstance(item, str) for item in value)
 
 
+def _nonblank_strings(value: object) -> bool:
+    return _strings(value) and all(item.strip() for item in value)
+
+
 def _optional_string(value: object) -> bool:
     return value is None or isinstance(value, str)
 
@@ -93,7 +98,7 @@ def _complete_result(result: object) -> bool:
         or set(telemetry) != _TELEMETRY_KEYS
         or not isinstance(shelby, dict)
         or set(shelby) != _SHELBY_KEYS
-        or not _strings(blockers)
+        or not _nonblank_strings(blockers)
     ):
         return False
     if (
@@ -110,11 +115,11 @@ def _complete_result(result: object) -> bool:
                 "fallback_reason",
             )
         )
-        or not _strings(route.get("attempted"))
-        or not _strings(artifacts.get("files"))
+        or not _nonblank_strings(route.get("attempted"))
+        or not _nonblank_strings(artifacts.get("files"))
         or not _optional_string(artifacts.get("report"))
         or not _optional_string(evidence.get("fixed_target"))
-        or not _strings(evidence.get("checks"))
+        or not _nonblank_strings(evidence.get("checks"))
         or evidence.get("outcome") not in {"proven", "unproven"}
         or not isinstance(telemetry.get("attempts"), int)
         or telemetry["attempts"] < 0
@@ -122,7 +127,7 @@ def _complete_result(result: object) -> bool:
         or telemetry["verification_failures"] < 0
         or not _optional_string(shelby.get("project_id"))
         or not _optional_string(shelby.get("run_id"))
-        or not _strings(shelby.get("checkpoint_ids"))
+        or not _nonblank_strings(shelby.get("checkpoint_ids"))
     ):
         return False
     if result["status"] == "accepted":
@@ -155,7 +160,43 @@ def _blocker_codes(blockers: list[str]) -> list[str]:
     return [blocker.partition(":")[0].strip() for blocker in blockers]
 
 
-def _result_semantics_match(result: dict[str, Any], expected: dict[str, Any]) -> bool:
+def _attempts_match(actual: list[str], expected: list[str]) -> bool:
+    return Counter(item.strip() for item in actual) == Counter(
+        item.strip() for item in expected
+    )
+
+
+def _evidence_matches(checks: list[str], requirements: object) -> bool:
+    if not isinstance(requirements, list) or not requirements:
+        return False
+    available = set(range(len(checks)))
+    for requirement in requirements:
+        if (
+            not isinstance(requirement, list)
+            or not requirement
+            or not all(isinstance(fragment, str) and fragment.strip() for fragment in requirement)
+        ):
+            return False
+        match = next(
+            (
+                index
+                for index in available
+                if all(
+                    fragment.casefold() in checks[index].casefold()
+                    for fragment in requirement
+                )
+            ),
+            None,
+        )
+        if match is None:
+            return False
+        available.remove(match)
+    return True
+
+
+def _result_semantics_match(
+    result: dict[str, Any], expected: dict[str, Any], evidence_requirements: object
+) -> bool:
     route = result["route"]
     expected_route = expected["route"]
     artifacts = result["artifacts"]
@@ -169,12 +210,13 @@ def _result_semantics_match(result: dict[str, Any], expected: dict[str, Any]) ->
         and all(
             route[key] == expected_route[key] for key in _SEMANTIC_ROUTE_KEYS
         )
+        and _attempts_match(route["attempted"], expected_route["attempted"])
         and len(artifacts["files"]) == len(set(artifacts["files"]))
         and set(artifacts["files"]) == set(expected_artifacts["files"])
         and artifacts["report"] == expected_artifacts["report"]
         and evidence["fixed_target"] == expected_evidence["fixed_target"]
         and evidence["outcome"] == expected_evidence["outcome"]
-        and bool(evidence["checks"])
+        and _evidence_matches(evidence["checks"], evidence_requirements)
         and telemetry["attempts"] == expected_telemetry["attempts"]
         and telemetry["verification_failures"]
         == expected_telemetry["verification_failures"]
@@ -200,7 +242,9 @@ def result_matches_contract(
         or not protected_files_intact(workspace, protected_manifest)
     ):
         return False
-    if not _result_semantics_match(result, expected["result"]):
+    if not _result_semantics_match(
+        result, expected["result"], expected.get("evidence_requirements")
+    ):
         return False
     artifacts = expected.get("artifacts")
     if not isinstance(artifacts, dict):

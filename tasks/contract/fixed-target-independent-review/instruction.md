@@ -1,9 +1,8 @@
 # Independently review one immutable target
 
-Review the current repository commit through the synthetic Harness endpoint:
+Review the current repository commit through the synthetic Harness endpoint. Its public contract is available through `harness-stub describe` if needed; dispatch with:
 
 ```text
-harness-stub describe
 harness-stub ACTION 'JSON_OBJECT'
 ```
 

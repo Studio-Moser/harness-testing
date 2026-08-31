@@ -44,6 +44,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     expected.write_text(
         json.dumps(
             {
+                "evidence_requirements": [["output.json"]],
                 "result": _result(),
                 "calls": [
                     {
@@ -92,13 +93,36 @@ def test_contract_result_accepts_equivalent_proof_wording_and_telemetry(tmp_path
 
     result_path = workspace / "Harness_Result.json"
     result = json.loads(result_path.read_text())
-    result["route"]["attempted"] = ["equivalent-route-attempt"]
-    result["evidence"]["checks"] = ["Output behavior independently verified"]
+    result["evidence"]["checks"] = ["Output.json behavior independently verified"]
     result["telemetry"]["elapsed"] = "1.2s"
     result["telemetry"]["token_or_quota_usage"] = "reported by provider"
     result_path.write_text(json.dumps(result))
 
     assert Contract_Criteria.result_matches_contract(workspace, expected, manifest)
+
+
+def test_contract_result_rejects_a_false_attempt_history(tmp_path):
+    workspace, expected, manifest = _fixture(tmp_path)
+
+    result_path = workspace / "Harness_Result.json"
+    result = json.loads(result_path.read_text())
+    result["route"]["attempted"] = ["made-a-dispatch@high"]
+    result_path.write_text(json.dumps(result))
+
+    assert not Contract_Criteria.result_matches_contract(workspace, expected, manifest)
+
+
+def test_contract_result_requires_nonblank_task_relevant_evidence(tmp_path):
+    workspace, expected, manifest = _fixture(tmp_path)
+    result_path = workspace / "Harness_Result.json"
+
+    for checks in ([""], ["Everything is fine"]):
+        result = json.loads(result_path.read_text())
+        result["evidence"]["checks"] = checks
+        result_path.write_text(json.dumps(result))
+        assert not Contract_Criteria.result_matches_contract(
+            workspace, expected, manifest
+        )
 
 
 def test_contract_result_rejects_the_wrong_semantic_route(tmp_path):
