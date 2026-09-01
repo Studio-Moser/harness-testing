@@ -42,7 +42,7 @@ _IMAGE_INPUTS = {
     ),
 }
 _IMAGE_INPUT_LABEL = "studio.moser.harness-testing.input-digest"
-_ARM_MATERIALIZER_SCHEMA = "2"
+_ARM_MATERIALIZER_SCHEMA = "3"
 
 _ARM_LAYERS = {
     "A0": (),
@@ -678,8 +678,38 @@ def _node_image(root: Path) -> str:
     return f"studio-moser/harness-testing-node:{_schema_version(root)}"
 
 
-def _run_native_plugin_install(
-    root: Path, provider: str, inputs: tuple[_PluginInput, ...], output: Path
+def _run_claude_plugin_validation(
+    root: Path, bundle: Path, inputs: tuple[_PluginInput, ...]
+) -> None:
+    if not inputs:
+        return
+    docker_arguments = [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--user",
+        f"{os.getuid()}:{os.getgid()}",
+        "-v",
+        f"{bundle}:/bundle:ro",
+        _node_image(root),
+        "sh",
+        "-lc",
+        " && ".join(
+            "claude plugin validate --strict "
+            f"/bundle/claude/plugins/{plugin_input.plugin}"
+            for plugin_input in inputs
+        ),
+    ]
+    completed = subprocess.run(docker_arguments, text=True, capture_output=True)
+    if completed.returncode:
+        details = completed.stderr.strip() or completed.stdout.strip()
+        raise ValueError(f"Claude plugin validation failed: {details}")
+
+
+def _run_codex_plugin_install(
+    root: Path, inputs: tuple[_PluginInput, ...], output: Path
 ) -> None:
     if not inputs:
         return
@@ -694,42 +724,20 @@ def _run_native_plugin_install(
         f"{os.getuid()}:{os.getgid()}",
         "-e",
         "HOME=/output/home",
+        "-e",
+        "CODEX_HOME=/output/provider-home",
     ]
-    commands = [
-        "mkdir -p /output/home"
-        + (" /output/provider-home" if provider == "codex" else "")
-    ]
-    if provider == "claude":
-        docker_arguments.extend(
-            (
-                "-e",
-                "CLAUDE_CONFIG_DIR=/output/config",
-                "-e",
-                "CLAUDE_CODE_PLUGIN_CACHE_DIR=/output/plugin-seed",
-            )
-        )
-    else:
-        docker_arguments.extend(("-e", "CODEX_HOME=/output/provider-home"))
+    commands = ["mkdir -p /output/home /output/provider-home"]
     for plugin_input in inputs:
         container_source = f"/sources/{plugin_input.marketplace}"
         docker_arguments.extend(("-v", f"{plugin_input.path}:{container_source}:ro"))
-        if provider == "claude":
-            commands.extend(
-                (
-                    f"claude plugin marketplace add {shlex.quote(container_source)} --scope user",
-                    "claude plugin install "
-                    f"{shlex.quote(f'{plugin_input.plugin}@{plugin_input.marketplace}')} "
-                    "--scope user",
-                )
+        commands.extend(
+            (
+                f"codex plugin marketplace add {shlex.quote(container_source)} --json",
+                "codex plugin add "
+                f"{shlex.quote(f'{plugin_input.plugin}@{plugin_input.marketplace}')} --json",
             )
-        else:
-            commands.extend(
-                (
-                    f"codex plugin marketplace add {shlex.quote(container_source)} --json",
-                    "codex plugin add "
-                    f"{shlex.quote(f'{plugin_input.plugin}@{plugin_input.marketplace}')} --json",
-                )
-            )
+        )
     docker_arguments.extend(
         (
             "-v",
@@ -743,7 +751,7 @@ def _run_native_plugin_install(
     completed = subprocess.run(docker_arguments, text=True, capture_output=True)
     if completed.returncode:
         details = completed.stderr.strip() or completed.stdout.strip()
-        raise ValueError(f"{provider} native plugin installation failed: {details}")
+        raise ValueError(f"Codex native plugin installation failed: {details}")
 
 
 def _write_json(path: Path, value: object) -> None:
@@ -751,33 +759,20 @@ def _write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
 
 
-def _installed_plugin_source(
-    provider: str,
-    native_output: Path,
-    plugin_input: _PluginInput,
-    native_cli: bool,
+def _installed_codex_plugin_source(
+    native_output: Path, plugin_input: _PluginInput, native_cli: bool
 ) -> Path:
     if not native_cli:
         return plugin_input.plugin_path
-    if provider == "claude":
-        path = (
-            native_output
-            / "plugin-seed"
-            / "cache"
-            / plugin_input.marketplace
-            / plugin_input.plugin
-            / plugin_input.version
-        )
-    else:
-        path = (
-            native_output
-            / "provider-home"
-            / "plugins"
-            / "cache"
-            / plugin_input.marketplace
-            / plugin_input.plugin
-            / plugin_input.version
-        )
+    path = (
+        native_output
+        / "provider-home"
+        / "plugins"
+        / "cache"
+        / plugin_input.marketplace
+        / plugin_input.plugin
+        / plugin_input.version
+    )
     if not path.is_dir():
         raise ValueError(f"native plugin installer did not create {path}")
     return path
@@ -795,36 +790,12 @@ def _copy_harness_project_inputs(bundle: Path, provider: str, source: _SourceTre
 def _assemble_claude_bundle(
     bundle: Path,
     inputs: tuple[_PluginInput, ...],
-    native_output: Path,
-    native_cli: bool,
 ) -> None:
-    if not inputs:
-        return
-    seed = bundle / "claude" / "plugin-seed"
-    enabled_plugins: dict[str, bool] = {}
-    known_marketplaces: dict[str, object] = {}
     for plugin_input in inputs:
-        source = _installed_plugin_source("claude", native_output, plugin_input, native_cli)
-        cache_path = (
-            seed
-            / "cache"
-            / plugin_input.marketplace
-            / plugin_input.plugin
-            / plugin_input.version
+        _copy_tree(
+            plugin_input.plugin_path,
+            bundle / "claude" / "plugins" / plugin_input.plugin,
         )
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        _copy_tree(source, cache_path)
-        marketplace_path = seed / "marketplaces" / plugin_input.marketplace
-        marketplace_path.parent.mkdir(parents=True, exist_ok=True)
-        _copy_tree(plugin_input.path, marketplace_path)
-        mounted_path = f"/harness-arm/claude/plugin-seed/marketplaces/{plugin_input.marketplace}"
-        known_marketplaces[plugin_input.marketplace] = {
-            "installLocation": mounted_path,
-            "source": {"path": mounted_path, "source": "directory"},
-        }
-        enabled_plugins[f"{plugin_input.plugin}@{plugin_input.marketplace}"] = True
-    _write_json(seed / "known_marketplaces.json", known_marketplaces)
-    _write_json(bundle / "claude" / "settings.json", {"enabledPlugins": enabled_plugins})
 
 
 def _codex_config(inputs: tuple[_PluginInput, ...]) -> str:
@@ -857,7 +828,9 @@ def _assemble_codex_bundle(
         return
     provider_home = bundle / "codex" / "provider-home"
     for plugin_input in inputs:
-        source = _installed_plugin_source("codex", native_output, plugin_input, native_cli)
+        source = _installed_codex_plugin_source(
+            native_output, plugin_input, native_cli
+        )
         cache_path = (
             provider_home
             / "plugins"
@@ -876,32 +849,57 @@ def _assemble_codex_bundle(
 
 def _delivery_surfaces(
     provider: str,
+    bundle: Path,
     sources: tuple[_SourceTree, ...],
     inputs: tuple[_PluginInput, ...],
 ) -> list[dict[str, object]]:
     plugin_inputs = {plugin_input.layer: plugin_input for plugin_input in inputs}
     surfaces: list[dict[str, object]] = []
     for source in sources:
+        plugin_input = plugin_inputs[source.name]
         if provider == "claude":
-            plugin = plugin_inputs[source.name]
-            capabilities = ["skills"]
-            if (plugin.plugin_path / "hooks").is_dir():
-                capabilities.append("hooks")
-            surface = "claude-plugin-seed"
-        elif source.name == "Superpowers":
+            plugin_path = bundle / "claude" / "plugins" / plugin_input.plugin
             manifest = _read_json(
-                source.path / ".codex-plugin" / "plugin.json", "Codex plugin manifest"
+                plugin_path / ".claude-plugin" / "plugin.json", "Claude plugin manifest"
             )
-            capabilities = ["skills"]
-            hooks = manifest.get("hooks")
-            if isinstance(hooks, dict) and hooks:
-                capabilities.append("hooks")
-            surface = "codex-plugin"
+            path = f"/harness-arm/claude/plugins/{plugin_input.plugin}"
+            surface = "claude-plugin-dir"
         else:
-            capabilities = ["skills"]
+            plugin_path = (
+                bundle
+                / "codex"
+                / "provider-home"
+                / "plugins"
+                / "cache"
+                / plugin_input.marketplace
+                / plugin_input.plugin
+                / plugin_input.version
+            )
+            manifest = _read_json(
+                plugin_path / ".codex-plugin" / "plugin.json", "Codex plugin manifest"
+            )
+            path = (
+                "/harness-arm/codex/provider-home/plugins/cache/"
+                f"{plugin_input.marketplace}/{plugin_input.plugin}/{plugin_input.version}"
+            )
             surface = "codex-plugin"
+
+        capabilities: list[str] = []
+        if (plugin_path / "skills").is_dir() or manifest.get("skills"):
+            capabilities.append("skills")
+        hooks = manifest.get("hooks")
+        if (
+            provider == "claude"
+            and ((plugin_path / "hooks").is_dir() or bool(hooks))
+        ) or (provider == "codex" and bool(hooks)):
+            capabilities.append("hooks")
         surfaces.append(
-            {"layer": source.name, "surface": surface, "capabilities": capabilities}
+            {
+                "layer": source.name,
+                "surface": surface,
+                "path": path,
+                "capabilities": capabilities,
+            }
         )
     return surfaces
 
@@ -1008,11 +1006,13 @@ def materialize_arm(
         bundle.mkdir()
         plugin_inputs = _prepare_plugin_inputs(work, provider, sources)
         native_output = temporary / "native-output"
-        if native_cli:
-            _run_native_plugin_install(root, provider, plugin_inputs, native_output)
         if provider == "claude":
-            _assemble_claude_bundle(bundle, plugin_inputs, native_output, native_cli)
+            _assemble_claude_bundle(bundle, plugin_inputs)
+            if native_cli:
+                _run_claude_plugin_validation(root, bundle, plugin_inputs)
         else:
+            if native_cli:
+                _run_codex_plugin_install(root, plugin_inputs, native_output)
             _assemble_codex_bundle(bundle, plugin_inputs, native_output, native_cli)
 
         harness = next((source for source in sources if source.name == "Studio Harness"), None)
@@ -1034,7 +1034,9 @@ def materialize_arm(
                 }
                 for source in sources
             ],
-            "delivery_surfaces": _delivery_surfaces(provider, sources, plugin_inputs),
+            "delivery_surfaces": _delivery_surfaces(
+                provider, bundle, sources, plugin_inputs
+            ),
             "generated_file_digests": generated_file_digests,
             "materializer_schema": _ARM_MATERIALIZER_SCHEMA,
         }

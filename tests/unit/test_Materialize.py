@@ -352,11 +352,15 @@ def test_codex_harness_materialization_preserves_plugin_companions(
         "path": "./plugins/harness",
     }
     provenance = json.loads((bundle.path / "Provenance.json").read_text())
-    assert provenance["materializer_schema"] == "2"
+    assert provenance["materializer_schema"] == "3"
     assert provenance["delivery_surfaces"] == [
         {
             "layer": "Studio Harness",
             "surface": "codex-plugin",
+            "path": (
+                "/harness-arm/codex/provider-home/plugins/cache/"
+                "studio-moser/harness/0.8.1"
+            ),
             "capabilities": ["skills"],
         }
     ]
@@ -384,9 +388,8 @@ def test_codex_native_installer_creates_its_config_home(
         plugin_path=plugin,
     )
 
-    Materialize._run_native_plugin_install(
+    Materialize._run_codex_plugin_install(
         REPOSITORY_ROOT,
-        "codex",
         (plugin_input,),
         tmp_path / "output",
     )
@@ -394,16 +397,54 @@ def test_codex_native_installer_creates_its_config_home(
     assert "mkdir -p /output/home /output/provider-home" in calls[0][-1]
 
 
-def test_provider_provenance_records_claude_hooks_but_codex_skills_only(
+def test_claude_materialization_copies_complete_plugin_directories_in_layer_order(
     tmp_path: Path, source_repositories: dict[str, tuple[Path, str]]
 ):
     claude = materialize_arm(
         tmp_path,
         "claude",
-        "A1",
-        source_overrides={"Superpowers": source_repositories["Superpowers"]},
+        "A3",
+        source_overrides=source_repositories,
         native_cli=False,
     )
+
+    provenance = json.loads((claude.path / "Provenance.json").read_text())
+    superpowers = claude.path / "claude" / "plugins" / "superpowers"
+    harness = claude.path / "claude" / "plugins" / "harness"
+    assert (superpowers / ".claude-plugin" / "plugin.json").is_file()
+    assert (superpowers / "skills" / "using-superpowers" / "SKILL.md").is_file()
+    assert (superpowers / "hooks" / "hooks.json").is_file()
+    assert (harness / ".claude-plugin" / "plugin.json").is_file()
+    assert (harness / "skills" / "execute" / "SKILL.md").is_file()
+    assert (harness / "references" / "harness-contract.md").is_file()
+    assert (harness / "scripts" / "resolve-route.py").is_file()
+    assert not (claude.path / "claude" / "plugin-seed").exists()
+    assert not (claude.path / "claude" / "known_marketplaces.json").exists()
+    assert not (claude.path / "claude" / "settings.json").exists()
+    assert provenance["materializer_schema"] == "3"
+    assert provenance["delivery_surfaces"] == [
+        {
+            "layer": "Superpowers",
+            "surface": "claude-plugin-dir",
+            "path": "/harness-arm/claude/plugins/superpowers",
+            "capabilities": ["skills", "hooks"],
+        },
+        {
+            "layer": "Studio Harness",
+            "surface": "claude-plugin-dir",
+            "path": "/harness-arm/claude/plugins/harness",
+            "capabilities": ["skills"],
+        },
+    ]
+    assert any(
+        path.endswith("/Provenance.json")
+        for path in provenance["generated_file_digests"]
+    )
+
+
+def test_provider_provenance_records_codex_superpowers_as_skills_only(
+    tmp_path: Path, source_repositories: dict[str, tuple[Path, str]]
+):
     codex = materialize_arm(
         tmp_path,
         "codex",
@@ -412,17 +453,18 @@ def test_provider_provenance_records_claude_hooks_but_codex_skills_only(
         native_cli=False,
     )
 
-    claude_provenance = json.loads((claude.path / "Provenance.json").read_text())
-    codex_provenance = json.loads((codex.path / "Provenance.json").read_text())
-    assert claude_provenance["delivery_surfaces"][0]["capabilities"] == [
-        "skills",
-        "hooks",
+    provenance = json.loads((codex.path / "Provenance.json").read_text())
+    assert provenance["delivery_surfaces"] == [
+        {
+            "layer": "Superpowers",
+            "surface": "codex-plugin",
+            "path": (
+                "/harness-arm/codex/provider-home/plugins/cache/"
+                "superpowers-dev/superpowers/6.3.0"
+            ),
+            "capabilities": ["skills"],
+        }
     ]
-    assert codex_provenance["delivery_surfaces"][0]["capabilities"] == ["skills"]
-    assert any(
-        path.endswith("/Provenance.json")
-        for path in claude_provenance["generated_file_digests"]
-    )
     assert (
         codex.path
         / "codex"
@@ -433,6 +475,48 @@ def test_provider_provenance_records_claude_hooks_but_codex_skills_only(
         / "plugins"
         / "marketplace.json"
     ).is_file()
+
+
+def test_claude_plugin_validation_is_network_isolated_and_read_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    bundle = tmp_path / "bundle"
+    bundle.mkdir()
+    calls: list[list[str]] = []
+
+    def fake_run(arguments, **_kwargs):
+        calls.append(arguments)
+        return subprocess.CompletedProcess(arguments, 0, "", "")
+
+    monkeypatch.setattr(Materialize.subprocess, "run", fake_run)
+    inputs = (
+        Materialize._PluginInput(
+            layer="Superpowers",
+            marketplace="superpowers-dev",
+            plugin="superpowers",
+            version="6.3.0",
+            path=tmp_path / "superpowers-marketplace",
+            plugin_path=tmp_path / "superpowers",
+        ),
+        Materialize._PluginInput(
+            layer="Studio Harness",
+            marketplace="studio-moser",
+            plugin="harness",
+            version="0.8.1",
+            path=tmp_path / "harness-marketplace",
+            plugin_path=tmp_path / "harness",
+        ),
+    )
+
+    Materialize._run_claude_plugin_validation(REPOSITORY_ROOT, bundle, inputs)
+
+    command = calls[0]
+    assert command[:6] == ["docker", "run", "--rm", "--network", "none", "--user"]
+    assert f"{bundle}:/bundle:ro" in command
+    assert command[-1] == (
+        "claude plugin validate --strict /bundle/claude/plugins/superpowers && "
+        "claude plugin validate --strict /bundle/claude/plugins/harness"
+    )
 
 
 def _deepswe_files(images: dict[str, str]) -> dict[str, str]:
