@@ -43,6 +43,7 @@ _TASK_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 _PROVIDER_ORDER = {"claude": 0, "codex": 1}
 _ROLE_ORDER = {"baseline": 0, "candidate": 1, "calibration": 2}
 _BILLING_MODES = {"api", "subscription"}
+_LOCAL_TASK_PACKS = ("contract", "workflow")
 _API_HOSTS = {
     "claude": ("api.anthropic.com",),
     "codex": ("api.openai.com",),
@@ -932,21 +933,56 @@ def _subscription_selectors(cells: tuple[RunCell, ...]) -> dict[str, dict[str, s
     }
 
 
+def _is_trusted_local_task(root: Path, pack: str, task_id: str) -> bool:
+    if pack not in _LOCAL_TASK_PACKS:
+        return False
+    tasks_root = root / "tasks"
+    pack_root = tasks_root / pack
+    task_root = pack_root / task_id
+    task_config = task_root / "task.toml"
+    if any(
+        path.is_symlink()
+        for path in (tasks_root, pack_root, task_root, task_config)
+    ):
+        return False
+    if (
+        not tasks_root.is_dir()
+        or not pack_root.is_dir()
+        or not task_root.is_dir()
+        or not task_config.is_file()
+    ):
+        return False
+    try:
+        trusted_root = root.resolve(strict=True)
+        resolved_tasks = tasks_root.resolve(strict=True)
+        resolved_pack = pack_root.resolve(strict=True)
+        resolved_task = task_root.resolve(strict=True)
+        resolved_config = task_config.resolve(strict=True)
+    except OSError:
+        return False
+    return (
+        resolved_tasks == trusted_root / "tasks"
+        and resolved_pack.is_relative_to(resolved_tasks)
+        and resolved_task.is_relative_to(resolved_pack)
+        and resolved_config.is_relative_to(resolved_task)
+    )
+
+
 def _task_pack(root: Path, profile: _Profile, task_id: str) -> str:
     matches = [
-        pack for pack in profile.packs if (root / "tasks" / pack / task_id).is_dir()
+        pack
+        for pack in profile.packs
+        if _is_trusted_local_task(root, pack, task_id)
     ]
     if len(matches) == 1:
         return matches[0]
     local_matches = [
-        path.parent.name
-        for path in (root / "tasks").glob(f"*/{task_id}")
-        if path.is_dir()
+        pack
+        for pack in _LOCAL_TASK_PACKS
+        if _is_trusted_local_task(root, pack, task_id)
     ]
     if not matches and len(local_matches) == 1:
         return local_matches[0]
-    if not matches and len(profile.packs) == 1:
-        return profile.packs[0]
     raise ValueError(f"task {task_id} does not resolve to exactly one profile pack")
 
 

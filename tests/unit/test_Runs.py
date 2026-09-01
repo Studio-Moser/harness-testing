@@ -229,6 +229,10 @@ commit = "{harness_commit}"
     (tmp_path / "tasks" / "workflow" / "task-two" / "instruction.md").write_text(
         "task two\n"
     )
+    for task_id in ("task-one", "task-two"):
+        (tmp_path / "tasks" / "workflow" / task_id / "task.toml").write_text(
+            'schema_version = "1.4"\n'
+        )
     for relative in (
         "images/Node_Agent.Dockerfile",
         "images/Verifier.Dockerfile",
@@ -1612,6 +1616,7 @@ def test_explicit_task_resolves_to_a_unique_pack_outside_profile_defaults(
     task = run_root / "tasks" / "contract" / "contract-task"
     task.mkdir(parents=True)
     (task / "instruction.md").write_text("contract task\n")
+    (task / "task.toml").write_text('schema_version = "1.4"\n')
     cell = _cell("codex", "A0", "baseline", "a")
     _add_bundle(run_root, cell)
 
@@ -1630,6 +1635,68 @@ def test_explicit_task_resolves_to_a_unique_pack_outside_profile_defaults(
         (manifest.path.parent / manifest.harbor_config_paths[0]).read_text()
     )
     assert config["datasets"][0]["path"] == "tasks/contract"
+
+
+@pytest.mark.parametrize(
+    ("profile_packs", "task_packs", "expected"),
+    (
+        (("workflow",), ("contract", "workflow"), "workflow"),
+        (("workflow",), (), None),
+        (("contract", "workflow"), ("contract", "workflow"), None),
+    ),
+    ids=("profile-precedence", "missing", "ambiguous"),
+)
+def test_task_pack_resolution_is_explicit_and_deterministic(
+    run_root: Path,
+    profile_packs: tuple[str, ...],
+    task_packs: tuple[str, ...],
+    expected: str | None,
+):
+    task_id = "resolution-task"
+    for pack in task_packs:
+        task = run_root / "tasks" / pack / task_id
+        task.mkdir(parents=True)
+        (task / "task.toml").write_text('schema_version = "1.4"\n')
+    profile = replace(Runs._load_profile(run_root, "smoke"), packs=profile_packs)
+
+    if expected is None:
+        with pytest.raises(ValueError, match="does not resolve"):
+            Runs._task_pack(run_root, profile, task_id)
+    else:
+        assert Runs._task_pack(run_root, profile, task_id) == expected
+
+
+@pytest.mark.parametrize(
+    "boundary",
+    ("arbitrary-pack", "task-directory-symlink", "task-toml-symlink"),
+)
+def test_task_pack_rejects_untrusted_local_candidates(
+    run_root: Path,
+    tmp_path: Path,
+    boundary: str,
+):
+    task_id = "untrusted-task"
+    if boundary == "arbitrary-pack":
+        task = run_root / "tasks" / "arbitrary" / task_id
+        task.mkdir(parents=True)
+        (task / "task.toml").write_text('schema_version = "1.4"\n')
+    elif boundary == "task-directory-symlink":
+        external = tmp_path / "external-task"
+        external.mkdir()
+        (external / "task.toml").write_text('schema_version = "1.4"\n')
+        task = run_root / "tasks" / "contract" / task_id
+        task.parent.mkdir()
+        task.symlink_to(external, target_is_directory=True)
+    else:
+        external = tmp_path / "external-task.toml"
+        external.write_text('schema_version = "1.4"\n')
+        task = run_root / "tasks" / "contract" / task_id
+        task.mkdir(parents=True)
+        (task / "task.toml").symlink_to(external)
+    profile = Runs._load_profile(run_root, "smoke")
+
+    with pytest.raises(ValueError, match="does not resolve"):
+        Runs._task_pack(run_root, profile, task_id)
 
 
 def test_manifest_digest_is_canonical_and_stable(run_root: Path):
