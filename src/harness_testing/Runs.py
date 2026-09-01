@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import subprocess
 import tomllib
 from collections.abc import Mapping
@@ -22,18 +23,13 @@ from harness_testing.Materialize import (
     _ARM_LAYERS,
     DEEPSWE_TASK_IDS,
     MaterializedDeepSWE,
-    _validate_existing_bundle,
+    _find_existing_bundle,
+    _resolve_source_trees,
     dockerfile_policy_errors,
     image_input_digest,
     load_deepswe_dataset,
     materialize_arm,
     require_current_image,
-)
-from harness_testing.Materialize import (
-    _canonical_json as _materialize_canonical_json,
-)
-from harness_testing.Materialize import (
-    _sha256_bytes as _materialize_sha256_bytes,
 )
 from harness_testing.Validate import find_sensitive_keys, validate_repository
 
@@ -315,31 +311,97 @@ def _bundle_provenance(bundle: Path) -> dict[str, Any]:
     return provenance
 
 
-def _validate_materialized_bundle(root: Path, cell: RunCell, bundle: Path) -> None:
-    materialized_root = root / "arms" / "materialized"
+def _validate_materialized_bundle(
+    root: Path,
+    cell: RunCell,
+    bundle: Path,
+    versions: dict[str, Any],
+) -> None:
+    trusted_root = root.resolve(strict=True)
+    arms_root = root / "arms"
+    materialized_root = arms_root / "materialized"
     provider_root = materialized_root / cell.provider
     arm_root = provider_root / cell.arm
     expected = arm_root / cell.bundle_digest.removeprefix("sha256:")
     if bundle != expected:
         raise ValueError(f"cell {cell.label} materialized arm path is invalid")
-    for path in (materialized_root, provider_root, arm_root, expected):
-        if path.is_symlink():
+    for path in (arms_root, materialized_root, provider_root, arm_root, expected):
+        try:
+            path_status = path.lstat()
+        except OSError as error:
+            raise ValueError(
+                f"cell {cell.label} materialized arm path is missing"
+            ) from error
+        if stat.S_ISLNK(path_status.st_mode):
             raise ValueError(
                 f"cell {cell.label} materialized arm path must not contain a symlink"
             )
-        if not path.is_dir():
+        if not stat.S_ISDIR(path_status.st_mode):
             raise ValueError(f"cell {cell.label} materialized arm path is missing")
+    expected_physical = (
+        trusted_root
+        / "arms"
+        / "materialized"
+        / cell.provider
+        / cell.arm
+        / cell.bundle_digest.removeprefix("sha256:")
+    )
+    if expected.resolve(strict=True) != expected_physical:
+        raise ValueError(f"cell {cell.label} materialized arm path is invalid")
     provenance_path = bundle / "Provenance.json"
     if provenance_path.is_symlink():
         raise ValueError(f"bundle provenance must not be a symlink: {bundle}")
-    _validate_existing_bundle(bundle, cell.bundle_digest)
-    provenance = _bundle_provenance(bundle)
-    unsigned_provenance = dict(provenance)
-    unsigned_provenance.pop("bundle_digest", None)
-    if _materialize_sha256_bytes(
-        _materialize_canonical_json(unsigned_provenance)
-    ) != cell.bundle_digest:
-        raise ValueError(f"cell {cell.label} materialized arm provenance digest mismatch")
+
+    source_overrides: dict[str, tuple[str | Path, str]] = {}
+    if cell.harness_commit is not None:
+        source_overrides["Studio Harness"] = (
+            _harness_source_pin(versions),
+            cell.harness_commit,
+        )
+    layers = _ARM_LAYERS[cell.arm]
+    sources = _resolve_source_trees(root, layers, source_overrides)
+    authoritative = _find_existing_bundle(
+        root,
+        cell.provider,
+        cell.arm,
+        layers,
+        sources,
+    )
+    if (
+        authoritative is None
+        or authoritative.digest != cell.bundle_digest
+        or authoritative.path.resolve(strict=True) != expected_physical
+    ):
+        raise ValueError(
+            f"cell {cell.label} delivery does not match pinned source materialization"
+        )
+
+    harness_source = next(
+        (source for source in sources if source.name == "Studio Harness"),
+        None,
+    )
+    if harness_source is not None:
+        source_template = (
+            harness_source.path
+            / "plugins"
+            / "harness"
+            / "templates"
+            / "AGENTS_Baseline.md"
+        )
+        instruction = bundle / "project" / (
+            "CLAUDE.md" if cell.provider == "claude" else "AGENTS.md"
+        )
+        try:
+            expected_instruction = f"{source_template.read_text().rstrip()}\n"
+            actual_instruction = instruction.read_text()
+        except OSError as error:
+            raise ValueError(
+                f"cell {cell.label} project instruction does not match pinned Harness source"
+            ) from error
+        if actual_instruction != expected_instruction:
+            raise ValueError(
+                f"cell {cell.label} project instruction does not match pinned Harness source"
+            )
 
 
 def _reject_control_symlinks(bundle: Path, path: Path, description: str) -> None:
@@ -694,7 +756,7 @@ def _validate_cell(root: Path, cell: RunCell, versions: dict[str, Any]) -> None:
     if model is None or cell.model != model.get("model") or cell.effort != model.get("effort"):
         raise ValueError(f"cell {cell.label} does not match the version ledger model pin")
     bundle_path = _bundle_path(root, cell)
-    _validate_materialized_bundle(root, cell, bundle_path)
+    _validate_materialized_bundle(root, cell, bundle_path, versions)
     provenance = _bundle_provenance(bundle_path)
     if (
         provenance.get("provider") != cell.provider

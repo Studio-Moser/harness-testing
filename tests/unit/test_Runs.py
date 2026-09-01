@@ -1,5 +1,6 @@
 import json
 import shutil
+import subprocess
 from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
@@ -9,12 +10,14 @@ import yaml
 from harbor.skills import resolve_skills
 
 import harness_testing.Runs as Runs
-from harness_testing.Config import load_job
+from harness_testing.Config import load_job, load_versions
 from harness_testing.Materialize import (
+    _ARM_LAYERS,
     DEEPSWE_TASK_IDS,
     MaterializedDeepSWE,
     _canonical_json,
     _file_digests,
+    _resolve_source_trees,
     _sha256_bytes,
 )
 from harness_testing.Runs import (
@@ -81,9 +84,140 @@ def _cell(
     )
 
 
+def _git_repository(path: Path, files: dict[str, str]) -> tuple[Path, str]:
+    path.mkdir()
+    subprocess.run(("git", "init", "--quiet", path), check=True)
+    subprocess.run(("git", "-C", path, "config", "user.name", "Harness Test"), check=True)
+    subprocess.run(
+        ("git", "-C", path, "config", "user.email", "harness@example.invalid"),
+        check=True,
+    )
+    for relative_path, contents in files.items():
+        destination = path / relative_path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(contents)
+    subprocess.run(("git", "-C", path, "add", "."), check=True)
+    subprocess.run(("git", "-C", path, "commit", "--quiet", "-m", "fixture"), check=True)
+    commit = subprocess.run(
+        ("git", "-C", path, "rev-parse", "HEAD"),
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    return path, commit
+
+
+@pytest.fixture(scope="session")
+def source_repositories(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> dict[str, tuple[Path, str]]:
+    root = tmp_path_factory.mktemp("run-source-repositories")
+    superpowers = _git_repository(
+        root / "superpowers",
+        {
+            ".claude-plugin/marketplace.json": json.dumps(
+                {
+                    "name": "superpowers-dev",
+                    "plugins": [
+                        {
+                            "name": "superpowers",
+                            "version": "6.3.0",
+                            "source": "./",
+                        }
+                    ],
+                }
+            ),
+            ".claude-plugin/plugin.json": json.dumps(
+                {"name": "superpowers", "version": "6.3.0"}
+            ),
+            ".agents/plugins/marketplace.json": json.dumps(
+                {
+                    "name": "superpowers-dev",
+                    "plugins": [
+                        {
+                            "name": "superpowers",
+                            "source": {"source": "url", "url": "./"},
+                        }
+                    ],
+                }
+            ),
+            ".codex-plugin/plugin.json": json.dumps(
+                {
+                    "name": "superpowers",
+                    "version": "6.3.0",
+                    "skills": "./skills/",
+                }
+            ),
+            "hooks/hooks.json": "{}\n",
+            "skills/using-superpowers/SKILL.md": "# Use Superpowers\n",
+        },
+    )
+    harness = _git_repository(
+        root / "harness",
+        {
+            ".claude-plugin/marketplace.json": json.dumps(
+                {
+                    "name": "studio-moser",
+                    "plugins": [
+                        {
+                            "name": "harness",
+                            "version": "0.8.1",
+                            "source": "./plugins/harness",
+                        }
+                    ],
+                }
+            ),
+            "plugins/harness/.claude-plugin/plugin.json": json.dumps(
+                {"name": "harness", "version": "0.8.1"}
+            ),
+            "plugins/harness/skills/execute/SKILL.md": "# Execute\n",
+            "plugins/harness/templates/AGENTS_Baseline.md": (
+                "# Benchmark baseline\n"
+            ),
+            "plugins/harness/references/harness-contract.md": "# Contract\n",
+            "plugins/harness/scripts/resolve-route.py": "#!/usr/bin/env python3\n",
+        },
+    )
+    return {"Superpowers": superpowers, "Studio Harness": harness}
+
+
 @pytest.fixture
-def run_root(tmp_path: Path) -> Path:
-    shutil.copy(REPOSITORY_ROOT / "Versions.toml", tmp_path / "Versions.toml")
+def run_root(
+    tmp_path: Path,
+    source_repositories: dict[str, tuple[Path, str]],
+) -> Path:
+    superpowers, superpowers_commit = source_repositories["Superpowers"]
+    harness, harness_commit = source_repositories["Studio Harness"]
+    versions = (REPOSITORY_ROOT / "Versions.toml").read_text()
+    versions = versions.replace(
+        """[[sources]]
+name = "Superpowers"
+url = "https://github.com/obra/superpowers.git"
+version = "6.3.0"
+commit = "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+""",
+        f"""[[sources]]
+name = "Superpowers"
+url = {json.dumps(str(superpowers))}
+version = "6.3.0"
+commit = "{superpowers_commit}"
+""",
+    )
+    versions = versions.replace(
+        """[[sources]]
+name = "Studio Harness"
+url = "https://github.com/Studio-Moser/skills-n-stuff.git"
+version = "0.8.1"
+commit = "ff8852e737a43a7e23f2cad423905f9361fde8ae"
+""",
+        f"""[[sources]]
+name = "Studio Harness"
+url = {json.dumps(str(harness))}
+version = "0.8.1"
+commit = "{harness_commit}"
+""",
+    )
+    (tmp_path / "Versions.toml").write_text(versions)
     (tmp_path / "runs").mkdir()
     (tmp_path / "runs" / "Profiles.toml").write_text(PROFILE_TEXT)
     (tmp_path / "tasks" / "workflow" / "task-one").mkdir(parents=True)
@@ -115,6 +249,20 @@ def run_root(tmp_path: Path) -> Path:
 
 
 def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> Path:
+    versions = load_versions(root / "Versions.toml")
+    pins = {
+        str(source["name"]): source for source in versions.get("sources", [])
+    }
+    source_overrides = {}
+    if cell.harness_commit is not None:
+        harness_pin = pins["Studio Harness"]
+        object.__setattr__(cell, "harness_commit", str(harness_pin["commit"]))
+        source_overrides["Studio Harness"] = (
+            str(harness_pin["url"]),
+            cell.harness_commit,
+        )
+    layers = _ARM_LAYERS[cell.arm]
+    source_trees = _resolve_source_trees(root, layers, source_overrides)
     path = (
         root
         / "arms"
@@ -124,17 +272,16 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
         / cell.bundle_digest.removeprefix("sha256:")
     )
     path.mkdir(parents=True, exist_ok=True)
-    sources = (
-        [{"name": "Studio Harness", "commit": cell.harness_commit}]
-        if cell.harness_commit
-        else []
-    )
-    layers = {
-        "A0": (),
-        "A1": ("Superpowers",),
-        "A2": ("Studio Harness",),
-        "A3": ("Superpowers", "Studio Harness"),
-    }[cell.arm]
+    sources = [
+        {
+            "name": source.name,
+            "url": source.url,
+            "version": source.version,
+            "commit": source.commit,
+            "source_tree_digest": source.digest,
+        }
+        for source in source_trees
+    ]
     delivery_surfaces = []
     for layer in layers:
         plugin_version = "6.3.0" if layer == "Superpowers" else "0.8.1"
@@ -659,8 +806,9 @@ def test_delivery_provenance_rejects_coherently_edited_harness_instruction(
     instruction = bundle / "project" / "CLAUDE.md"
     template.write_text("# Forged baseline\n")
     instruction.write_text("# Forged baseline\n")
+    _reseal_bundle(cell, bundle)
 
-    with pytest.raises(ValueError, match="materialized arm contents"):
+    with pytest.raises(ValueError, match="pinned Harness source"):
         compile_run(
             run_root,
             profile="smoke",
@@ -672,7 +820,7 @@ def test_delivery_provenance_rejects_coherently_edited_harness_instruction(
         )
 
 
-@pytest.mark.parametrize("component", ("provider", "arm", "bundle"))
+@pytest.mark.parametrize("component", ("arms", "provider", "arm", "bundle"))
 def test_delivery_provenance_rejects_symlinked_materialized_ancestor(
     run_root: Path, component: str
 ):
@@ -680,6 +828,7 @@ def test_delivery_provenance_rejects_symlinked_materialized_ancestor(
     bundle = _add_bundle(run_root, cell)
     materialized = run_root / "arms" / "materialized"
     targets = {
+        "arms": run_root / "arms",
         "provider": materialized / cell.provider,
         "arm": materialized / cell.provider / cell.arm,
         "bundle": bundle,
