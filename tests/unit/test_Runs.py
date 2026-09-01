@@ -1,6 +1,8 @@
 import json
+import os
 import shutil
 import subprocess
+import sys
 from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
@@ -1706,6 +1708,62 @@ def test_manifest_digest_is_canonical_and_stable(run_root: Path):
     assert first.digest == second.digest
     assert first.digest.startswith("sha256:")
     assert len(first.digest) == 71
+
+
+def test_manifest_is_stable_across_python_hash_seeds(run_root: Path):
+    cell = _cell("claude", "A0", "baseline", "a")
+    _add_bundle(run_root, cell)
+    script = """
+import json
+import sys
+from decimal import Decimal
+from pathlib import Path
+
+import yaml
+
+from harness_testing.Runs import RunCell, compile_run
+
+root = Path(sys.argv[1])
+cell = RunCell(**json.loads(sys.argv[2]))
+manifest = compile_run(
+    root,
+    profile="smoke",
+    billing_mode="api",
+    cells=(cell,),
+    task_ids=("task-one",),
+    max_sessions=1,
+    max_budget_usd=Decimal("100"),
+)
+job_bytes = []
+retry = []
+for relative_path in manifest.harbor_config_paths:
+    path = manifest.path.parent / relative_path
+    job_bytes.append(path.read_bytes().hex())
+    retry.append(yaml.safe_load(path.read_text())["retry"])
+print(json.dumps({
+    "run_id": manifest.provenance["run_id"],
+    "manifest_digest": manifest.digest,
+    "job_bytes": job_bytes,
+    "retry": retry,
+}, sort_keys=True))
+"""
+
+    results = []
+    for seed in ("1", "2"):
+        completed = subprocess.run(
+            (sys.executable, "-c", script, str(run_root), json.dumps(cell.to_dict())),
+            check=True,
+            cwd=REPOSITORY_ROOT,
+            env={**os.environ, "PYTHONHASHSEED": seed},
+            capture_output=True,
+            text=True,
+        )
+        results.append(json.loads(completed.stdout))
+
+    assert results[0] == results[1]
+    for retry in results[0]["retry"]:
+        assert retry["include_exceptions"] == sorted(retry["include_exceptions"])
+        assert retry["exclude_exceptions"] == sorted(retry["exclude_exceptions"])
 
 
 def test_job_names_use_a_stable_run_id_that_changes_with_inputs(run_root: Path):

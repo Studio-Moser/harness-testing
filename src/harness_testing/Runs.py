@@ -1132,6 +1132,12 @@ def _job_document(
     }
     job = JobConfig.model_validate(raw)
     document = job.model_dump(mode="json", exclude_none=True)
+    retry = document.get("retry")
+    if retry is not None:
+        for key in ("include_exceptions", "exclude_exceptions"):
+            exceptions = retry.get(key)
+            if exceptions is not None:
+                retry[key] = sorted(exceptions)
     sensitive_keys = find_sensitive_keys(document)
     if sensitive_keys:
         raise ValueError(f"generated Harbor job contains sensitive keys: {sensitive_keys}")
