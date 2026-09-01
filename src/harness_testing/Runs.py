@@ -22,11 +22,18 @@ from harness_testing.Materialize import (
     _ARM_LAYERS,
     DEEPSWE_TASK_IDS,
     MaterializedDeepSWE,
+    _validate_existing_bundle,
     dockerfile_policy_errors,
     image_input_digest,
     load_deepswe_dataset,
     materialize_arm,
     require_current_image,
+)
+from harness_testing.Materialize import (
+    _canonical_json as _materialize_canonical_json,
+)
+from harness_testing.Materialize import (
+    _sha256_bytes as _materialize_sha256_bytes,
 )
 from harness_testing.Validate import find_sensitive_keys, validate_repository
 
@@ -295,6 +302,8 @@ def _bundle_path(root: Path, cell: RunCell) -> Path:
 
 def _bundle_provenance(bundle: Path) -> dict[str, Any]:
     provenance_path = bundle / "Provenance.json"
+    if provenance_path.is_symlink():
+        raise ValueError(f"bundle provenance must not be a symlink: {bundle}")
     if not provenance_path.is_file():
         raise ValueError(f"bundle has no materialized provenance: {bundle}")
     try:
@@ -304,6 +313,33 @@ def _bundle_provenance(bundle: Path) -> dict[str, Any]:
     if not isinstance(provenance, dict):
         raise ValueError(f"bundle provenance must be an object: {bundle}")
     return provenance
+
+
+def _validate_materialized_bundle(root: Path, cell: RunCell, bundle: Path) -> None:
+    materialized_root = root / "arms" / "materialized"
+    provider_root = materialized_root / cell.provider
+    arm_root = provider_root / cell.arm
+    expected = arm_root / cell.bundle_digest.removeprefix("sha256:")
+    if bundle != expected:
+        raise ValueError(f"cell {cell.label} materialized arm path is invalid")
+    for path in (materialized_root, provider_root, arm_root, expected):
+        if path.is_symlink():
+            raise ValueError(
+                f"cell {cell.label} materialized arm path must not contain a symlink"
+            )
+        if not path.is_dir():
+            raise ValueError(f"cell {cell.label} materialized arm path is missing")
+    provenance_path = bundle / "Provenance.json"
+    if provenance_path.is_symlink():
+        raise ValueError(f"bundle provenance must not be a symlink: {bundle}")
+    _validate_existing_bundle(bundle, cell.bundle_digest)
+    provenance = _bundle_provenance(bundle)
+    unsigned_provenance = dict(provenance)
+    unsigned_provenance.pop("bundle_digest", None)
+    if _materialize_sha256_bytes(
+        _materialize_canonical_json(unsigned_provenance)
+    ) != cell.bundle_digest:
+        raise ValueError(f"cell {cell.label} materialized arm provenance digest mismatch")
 
 
 def _reject_control_symlinks(bundle: Path, path: Path, description: str) -> None:
@@ -658,6 +694,7 @@ def _validate_cell(root: Path, cell: RunCell, versions: dict[str, Any]) -> None:
     if model is None or cell.model != model.get("model") or cell.effort != model.get("effort"):
         raise ValueError(f"cell {cell.label} does not match the version ledger model pin")
     bundle_path = _bundle_path(root, cell)
+    _validate_materialized_bundle(root, cell, bundle_path)
     provenance = _bundle_provenance(bundle_path)
     if (
         provenance.get("provider") != cell.provider

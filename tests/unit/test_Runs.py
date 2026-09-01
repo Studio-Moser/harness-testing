@@ -10,7 +10,13 @@ from harbor.skills import resolve_skills
 
 import harness_testing.Runs as Runs
 from harness_testing.Config import load_job
-from harness_testing.Materialize import DEEPSWE_TASK_IDS, MaterializedDeepSWE
+from harness_testing.Materialize import (
+    DEEPSWE_TASK_IDS,
+    MaterializedDeepSWE,
+    _canonical_json,
+    _file_digests,
+    _sha256_bytes,
+)
 from harness_testing.Runs import (
     RunCell,
     _verify_generated_inputs,
@@ -108,7 +114,7 @@ def run_root(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def _add_bundle(root: Path, cell: RunCell) -> Path:
+def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> Path:
     path = (
         root
         / "arms"
@@ -215,20 +221,43 @@ def _add_bundle(root: Path, cell: RunCell) -> Path:
                 )
             )
         (provider_home / "config.toml").write_text("\n".join(sections))
-    (path / "Provenance.json").write_text(
-        json.dumps(
-            {
-                "provider": cell.provider,
-                "arm": cell.arm,
-                "layers": list(layers),
-                "sources": sources,
-                "delivery_surfaces": delivery_surfaces,
-                "bundle_digest": cell.bundle_digest,
-            }
-        )
-        + "\n"
-    )
-    return path
+    if skill_name is not None:
+        skill = path / "skills" / skill_name
+        skill.mkdir(parents=True)
+        (skill / "SKILL.md").write_text("# Dev task\n")
+    provenance: dict[str, object] = {
+        "provider": cell.provider,
+        "arm": cell.arm,
+        "layers": list(layers),
+        "sources": sources,
+        "delivery_surfaces": delivery_surfaces,
+        "generated_file_digests": _file_digests(path),
+        "materializer_schema": "3",
+    }
+    digest = _sha256_bytes(_canonical_json(provenance))
+    object.__setattr__(cell, "bundle_digest", digest)
+    provenance["bundle_digest"] = digest
+    (path / "Provenance.json").write_text(json.dumps(provenance) + "\n")
+    destination = path.parent / digest.removeprefix("sha256:")
+    if destination.exists():
+        shutil.rmtree(path)
+        return destination
+    path.rename(destination)
+    return destination
+
+
+def _reseal_bundle(cell: RunCell, bundle: Path) -> Path:
+    provenance_path = bundle / "Provenance.json"
+    provenance = json.loads(provenance_path.read_text())
+    provenance.pop("bundle_digest")
+    provenance["generated_file_digests"] = _file_digests(bundle)
+    digest = _sha256_bytes(_canonical_json(provenance))
+    object.__setattr__(cell, "bundle_digest", digest)
+    provenance["bundle_digest"] = digest
+    provenance_path.write_text(json.dumps(provenance) + "\n")
+    destination = bundle.parent / digest.removeprefix("sha256:")
+    bundle.rename(destination)
+    return destination
 
 
 def _claude_cells() -> tuple[RunCell, ...]:
@@ -361,6 +390,7 @@ def test_delivery_provenance_rejects_invalid_arm_claims(
     provenance = json.loads(provenance_path.read_text())
     mutate(provenance, bundle)
     provenance_path.write_text(json.dumps(provenance) + "\n")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="delivery"):
         compile_run(
@@ -378,6 +408,7 @@ def test_delivery_provenance_rejects_missing_host_directory(run_root: Path):
     cell = _cell("claude", "A1", "candidate", "a")
     bundle = _add_bundle(run_root, cell)
     shutil.rmtree(bundle / "claude" / "plugins" / "superpowers")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="delivery"):
         compile_run(
@@ -395,6 +426,7 @@ def test_delivery_provenance_rejects_unclaimed_a0_plugin(run_root: Path):
     cell = _cell("claude", "A0", "candidate", "a")
     bundle = _add_bundle(run_root, cell)
     (bundle / "claude" / "plugins" / "superpowers").mkdir(parents=True)
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="contamination"):
         compile_run(
@@ -418,6 +450,7 @@ def test_delivery_provenance_rejects_duplicate_targets(run_root: Path):
     ]
     shutil.rmtree(bundle / "claude" / "plugins" / "harness")
     provenance_path.write_text(json.dumps(provenance) + "\n")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="duplicate|canonical"):
         compile_run(
@@ -441,6 +474,7 @@ def test_delivery_provenance_rejects_renamed_in_root_path(run_root: Path):
     provenance = json.loads(provenance_path.read_text())
     provenance["delivery_surfaces"][0]["path"] = "/harness-arm/claude/plugins/renamed"
     provenance_path.write_text(json.dumps(provenance) + "\n")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="canonical"):
         compile_run(
@@ -464,6 +498,7 @@ def test_delivery_provenance_rejects_wrong_capabilities(
     provenance = json.loads(provenance_path.read_text())
     provenance["delivery_surfaces"][0]["capabilities"] = capabilities
     provenance_path.write_text(json.dumps(provenance) + "\n")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="capabilities"):
         compile_run(
@@ -483,6 +518,7 @@ def test_delivery_provenance_rejects_codex_a0_provider_home(run_root: Path):
     provider_home = bundle / "codex" / "provider-home"
     provider_home.mkdir(parents=True)
     (provider_home / "config.toml").write_text("[marketplaces.injected]\n")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="Codex delivery contamination"):
         compile_run(
@@ -516,6 +552,7 @@ def test_delivery_provenance_rejects_renamed_codex_marketplace(run_root: Path):
         0
     ]["path"].replace("superpowers-dev", "forged-marketplace")
     provenance_path.write_text(json.dumps(provenance) + "\n")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="canonical"):
         compile_run(
@@ -554,6 +591,7 @@ def test_delivery_provenance_rejects_renamed_codex_version(run_root: Path):
         0
     ]["path"].replace("6.3.0", "9.9.9")
     provenance_path.write_text(json.dumps(provenance) + "\n")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="canonical"):
         compile_run(
@@ -573,6 +611,7 @@ def test_delivery_provenance_rejects_unclaimed_project_instruction(run_root: Pat
     project = bundle / "project"
     project.mkdir()
     (project / "CLAUDE.md").write_text("unclaimed\n")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="project instruction"):
         compile_run(
@@ -590,8 +629,88 @@ def test_delivery_provenance_requires_harness_project_instruction(run_root: Path
     cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
     bundle = _add_bundle(run_root, cell)
     shutil.rmtree(bundle / "project")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="project instruction"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_coherently_edited_harness_instruction(
+    run_root: Path,
+):
+    cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
+    bundle = _add_bundle(run_root, cell)
+    template = (
+        bundle
+        / "claude"
+        / "plugins"
+        / "harness"
+        / "templates"
+        / "AGENTS_Baseline.md"
+    )
+    instruction = bundle / "project" / "CLAUDE.md"
+    template.write_text("# Forged baseline\n")
+    instruction.write_text("# Forged baseline\n")
+
+    with pytest.raises(ValueError, match="materialized arm contents"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+@pytest.mark.parametrize("component", ("provider", "arm", "bundle"))
+def test_delivery_provenance_rejects_symlinked_materialized_ancestor(
+    run_root: Path, component: str
+):
+    cell = _cell("claude", "A0", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    materialized = run_root / "arms" / "materialized"
+    targets = {
+        "provider": materialized / cell.provider,
+        "arm": materialized / cell.provider / cell.arm,
+        "bundle": bundle,
+    }
+    target = targets[component]
+    escaped = run_root / "escaped" / component
+    escaped.parent.mkdir(exist_ok=True)
+    target.rename(escaped)
+    target.symlink_to(escaped, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="materialized arm.*symlink"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_symlinked_provenance(run_root: Path):
+    cell = _cell("claude", "A0", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    provenance = bundle / "Provenance.json"
+    alias = bundle / "Provenance.alias.json"
+    provenance.rename(alias)
+    provenance.symlink_to(alias.name)
+
+    with pytest.raises(ValueError, match="provenance.*symlink"):
         compile_run(
             run_root,
             profile="smoke",
@@ -612,6 +731,7 @@ def test_delivery_provenance_rejects_symlinked_claude_plugin_manifest(run_root: 
     alias.write_text(manifest.read_text())
     manifest.unlink()
     manifest.symlink_to("../plugin-alias.json")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="symlink"):
         compile_run(
@@ -633,6 +753,7 @@ def test_delivery_provenance_rejects_symlinked_codex_config(run_root: Path):
     alias.write_text(config.read_text())
     config.unlink()
     config.symlink_to(alias)
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="symlink"):
         compile_run(
@@ -832,6 +953,7 @@ def test_cell_provenance_must_match_provider_arm_and_candidate_commit(run_root: 
     provenance = json.loads(provenance_path.read_text())
     provenance["provider"] = "claude"
     provenance_path.write_text(json.dumps(provenance) + "\n")
+    _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="arm provenance"):
         compile_run(
@@ -857,11 +979,8 @@ def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Pat
     baseline = _cell("codex", "A0", "baseline", "c")
     candidate = _cell("codex", "A2", "candidate", "d", "3" * 40)
     _add_bundle(run_root, baseline)
-    candidate_bundle = _add_bundle(run_root, candidate)
+    candidate_bundle = _add_bundle(run_root, candidate, skill_name="dev-task")
     candidate_skills = candidate_bundle / "skills"
-    skill = candidate_skills / "dev-task"
-    skill.mkdir(parents=True)
-    (skill / "SKILL.md").write_text("# Dev task\n")
 
     manifest = compile_run(
         run_root,
