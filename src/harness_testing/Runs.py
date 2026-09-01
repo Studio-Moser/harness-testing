@@ -52,6 +52,10 @@ _LAYER_PLUGIN_NAMES = {
     "Superpowers": "superpowers",
     "Studio Harness": "harness",
 }
+_CODEX_LAYER_MARKETPLACES = {
+    "Superpowers": "superpowers-dev",
+    "Studio Harness": "studio-moser",
+}
 _AGENT_ADAPTERS = {
     "claude": (
         "harness_testing.Claude_Agent:HarnessClaude",
@@ -302,6 +306,20 @@ def _bundle_provenance(bundle: Path) -> dict[str, Any]:
     return provenance
 
 
+def _reject_control_symlinks(bundle: Path, path: Path, description: str) -> None:
+    try:
+        relative = path.relative_to(bundle)
+    except ValueError as error:
+        raise ValueError(f"{description} is outside its bundle") from error
+    current = bundle
+    if current.is_symlink():
+        raise ValueError(f"{description} must not be a symlink")
+    for part in relative.parts:
+        current /= part
+        if current.is_symlink():
+            raise ValueError(f"{description} must not be a symlink")
+
+
 def _delivery_surface_host_path(bundle: Path, provider: str, value: object) -> Path:
     if not isinstance(value, str):
         raise ValueError("delivery surface path must be a string")
@@ -334,6 +352,7 @@ def _delivery_surface_host_path(bundle: Path, provider: str, value: object) -> P
             raise ValueError(f"delivery surface is outside its provider root: {value}")
         host_path = bundle / "codex" / "provider-home" / relative
 
+    _reject_control_symlinks(bundle, host_path, "delivery target")
     try:
         resolved_bundle = bundle.resolve(strict=True)
         resolved_path = host_path.resolve(strict=True)
@@ -347,14 +366,17 @@ def _delivery_surface_host_path(bundle: Path, provider: str, value: object) -> P
 def _actual_delivery_targets(bundle: Path, provider: str) -> set[Path]:
     if provider == "claude":
         plugin_root = bundle / "claude" / "plugins"
-        if not plugin_root.exists():
+        if not plugin_root.exists() and not plugin_root.is_symlink():
             return set()
         if not plugin_root.is_dir():
             raise ValueError("Claude delivery root is not a directory")
+        _reject_control_symlinks(bundle, plugin_root, "Claude delivery root")
+        for path in plugin_root.iterdir():
+            _reject_control_symlinks(bundle, path, "Claude delivery target")
         return {path.resolve(strict=True) for path in plugin_root.iterdir()}
 
     cache_root = bundle / "codex" / "provider-home" / "plugins" / "cache"
-    if not cache_root.exists():
+    if not cache_root.exists() and not cache_root.is_symlink():
         return set()
     if not cache_root.is_dir():
         raise ValueError("Codex delivery root is not a directory")
@@ -367,6 +389,8 @@ def _actual_delivery_targets(bundle: Path, provider: str) -> set[Path]:
 def _plugin_manifest(target: Path, provider: str) -> dict[str, object]:
     directory = ".claude-plugin" if provider == "claude" else ".codex-plugin"
     path = target / directory / "plugin.json"
+    if (target / directory).is_symlink() or path.is_symlink():
+        raise ValueError(f"delivery plugin manifest must not be a symlink: {target}")
     try:
         manifest = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError) as error:
@@ -378,6 +402,9 @@ def _plugin_manifest(target: Path, provider: str) -> dict[str, object]:
 
 def _observed_capabilities(target: Path, provider: str) -> list[str]:
     manifest = _plugin_manifest(target, provider)
+    for path in (target / "skills", target / "hooks"):
+        if path.is_symlink():
+            raise ValueError(f"delivery capability path must not be a symlink: {target}")
     capabilities: list[str] = []
     if (target / "skills").is_dir() or manifest.get("skills"):
         capabilities.append("skills")
@@ -404,13 +431,27 @@ def _canonical_delivery_path(
     if provider == "claude":
         return f"/harness-arm/claude/plugins/{plugin}"
 
+    root = bundle.parents[4]
+    source_versions = {
+        str(source["name"]): str(source["version"])
+        for source in load_versions(root / "Versions.toml").get("sources", [])
+        if isinstance(source, dict)
+        and isinstance(source.get("name"), str)
+        and isinstance(source.get("version"), str)
+    }
+    marketplace = _CODEX_LAYER_MARKETPLACES[layer]
+    version = source_versions.get(layer)
+    if version is None:
+        raise ValueError(f"canonical source version is missing for layer {layer}")
     cache_root = bundle / "codex" / "provider-home" / "plugins" / "cache"
     try:
-        marketplace, plugin_name, version = target.relative_to(cache_root).parts
+        actual_marketplace, plugin_name, actual_version = target.relative_to(cache_root).parts
     except ValueError as error:
         raise ValueError(f"delivery target is not canonical for layer {layer}") from error
     if (
-        plugin_name != plugin
+        actual_marketplace != marketplace
+        or plugin_name != plugin
+        or actual_version != version
         or not isinstance(manifest.get("version"), str)
         or manifest["version"] != version
     ):
@@ -424,21 +465,25 @@ def _canonical_delivery_path(
 def _validate_codex_provider_home(bundle: Path, targets: set[Path]) -> None:
     codex_root = bundle / "codex"
     if not targets:
-        if codex_root.exists():
+        if codex_root.exists() or codex_root.is_symlink():
             raise ValueError("Codex delivery contamination in A0")
         return
+    _reject_control_symlinks(bundle, codex_root, "Codex provider root")
     if not codex_root.is_dir() or {path.name for path in codex_root.iterdir()} != {
         "provider-home"
     }:
         raise ValueError("Codex delivery contamination in provider root")
 
     provider_home = codex_root / "provider-home"
+    _reject_control_symlinks(bundle, provider_home, "Codex provider home")
     expected_home_entries = {"config.toml", "marketplaces", "plugins"}
     if not provider_home.is_dir() or {
         path.name for path in provider_home.iterdir()
     } != expected_home_entries:
         raise ValueError("Codex delivery contamination in provider home")
     cache_root = provider_home / "plugins" / "cache"
+    _reject_control_symlinks(bundle, provider_home / "plugins", "Codex plugins root")
+    _reject_control_symlinks(bundle, cache_root, "Codex plugin cache")
     if not cache_root.is_dir() or {
         path.name for path in (provider_home / "plugins").iterdir()
     } != {"cache"}:
@@ -455,18 +500,29 @@ def _validate_codex_provider_home(bundle: Path, targets: set[Path]) -> None:
         raise ValueError("Codex delivery contamination in cache marketplaces")
     for marketplace, plugins in expected_paths.items():
         marketplace_path = cache_root / marketplace
+        _reject_control_symlinks(bundle, marketplace_path, "Codex cache marketplace")
         if not marketplace_path.is_dir() or {
             path.name for path in marketplace_path.iterdir()
         } != set(plugins):
             raise ValueError("Codex delivery contamination in cache plugins")
         for plugin, versions in plugins.items():
             plugin_path = marketplace_path / plugin
+            _reject_control_symlinks(bundle, plugin_path, "Codex cache plugin")
             if not plugin_path.is_dir() or {
                 path.name for path in plugin_path.iterdir()
             } != versions:
                 raise ValueError("Codex delivery contamination in cache versions")
+            for version in versions:
+                _reject_control_symlinks(
+                    bundle, plugin_path / version, "Codex cache plugin version"
+                )
 
     marketplaces = provider_home / "marketplaces"
+    _reject_control_symlinks(bundle, marketplaces, "Codex marketplaces")
+    for marketplace in expected_paths:
+        _reject_control_symlinks(
+            bundle, marketplaces / marketplace, "Codex marketplace"
+        )
     if not marketplaces.is_dir() or {
         path.name for path in marketplaces.iterdir()
     } != set(expected_paths) or not all(
@@ -474,7 +530,9 @@ def _validate_codex_provider_home(bundle: Path, targets: set[Path]) -> None:
     ):
         raise ValueError("Codex delivery contamination in marketplaces")
     try:
-        with (provider_home / "config.toml").open("rb") as config_file:
+        config_path = provider_home / "config.toml"
+        _reject_control_symlinks(bundle, config_path, "Codex provider config")
+        with config_path.open("rb") as config_file:
             config = tomllib.load(config_file)
     except (OSError, tomllib.TOMLDecodeError) as error:
         raise ValueError("Codex provider config is invalid") from error
@@ -499,6 +557,33 @@ def _validate_codex_provider_home(bundle: Path, targets: set[Path]) -> None:
         raise ValueError("Codex provider config contradicts delivery")
 
 
+def _validate_project_instruction(
+    bundle: Path,
+    provider: str,
+    layers: tuple[str, ...],
+    targets: dict[str, Path],
+) -> None:
+    project = bundle / "project"
+    if "Studio Harness" not in layers:
+        if project.exists() or project.is_symlink():
+            raise ValueError("project instruction is unclaimed")
+        return
+    filename = "CLAUDE.md" if provider == "claude" else "AGENTS.md"
+    instruction = project / filename
+    _reject_control_symlinks(bundle, project, "project instruction directory")
+    _reject_control_symlinks(bundle, instruction, "project instruction")
+    if not project.is_dir() or {path.name for path in project.iterdir()} != {filename}:
+        raise ValueError("project instruction contents are invalid")
+    if not instruction.is_file():
+        raise ValueError("project instruction is missing")
+    template = targets["Studio Harness"] / "templates" / "AGENTS_Baseline.md"
+    _reject_control_symlinks(bundle, template, "Harness instruction template")
+    if not template.is_file():
+        raise ValueError("Harness instruction template is missing")
+    if instruction.read_text() != f"{template.read_text().rstrip()}\n":
+        raise ValueError("project instruction does not match the Harness template")
+
+
 def _validated_delivery_surfaces(
     bundle: Path,
     provider: str,
@@ -518,6 +603,7 @@ def _validated_delivery_surfaces(
     expected_surface = "claude-plugin-dir" if provider == "claude" else "codex-plugin"
     validated: list[dict[str, object]] = []
     expected_targets: set[Path] = set()
+    targets: dict[str, Path] = {}
     for layer, surface in zip(expected_layers, surfaces, strict=True):
         if not isinstance(surface, dict):
             raise ValueError("delivery surface must be an object")
@@ -534,11 +620,13 @@ def _validated_delivery_surfaces(
         if surface.get("capabilities") != _observed_capabilities(target, provider):
             raise ValueError(f"delivery capabilities do not match layer {layer}")
         expected_targets.add(target)
+        targets[layer] = target
         validated.append(surface)
     if provider == "codex":
         _validate_codex_provider_home(bundle, expected_targets)
     elif _actual_delivery_targets(bundle, provider) != expected_targets:
         raise ValueError(f"delivery contamination does not match arm {arm}")
+    _validate_project_instruction(bundle, provider, expected_layers, targets)
     return tuple(validated)
 
 

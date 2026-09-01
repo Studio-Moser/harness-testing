@@ -163,6 +163,15 @@ def _add_bundle(root: Path, cell: RunCell) -> Path:
             )
             if layer == "Superpowers":
                 (path / relative / "hooks").mkdir(exist_ok=True)
+        if layer == "Studio Harness":
+            template = path / relative / "templates" / "AGENTS_Baseline.md"
+            template.parent.mkdir(exist_ok=True)
+            template.write_text("# Benchmark baseline\n")
+            instruction = path / "project" / (
+                "CLAUDE.md" if cell.provider == "claude" else "AGENTS.md"
+            )
+            instruction.parent.mkdir(exist_ok=True)
+            instruction.write_text("# Benchmark baseline\n")
         if cell.provider == "codex":
             manifest = path / relative / ".codex-plugin"
             manifest.mkdir(exist_ok=True)
@@ -476,6 +485,156 @@ def test_delivery_provenance_rejects_codex_a0_provider_home(run_root: Path):
     (provider_home / "config.toml").write_text("[marketplaces.injected]\n")
 
     with pytest.raises(ValueError, match="Codex delivery contamination"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_renamed_codex_marketplace(run_root: Path):
+    cell = _cell("codex", "A1", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    provider_home = bundle / "codex" / "provider-home"
+    (provider_home / "plugins" / "cache" / "superpowers-dev").rename(
+        provider_home / "plugins" / "cache" / "forged-marketplace"
+    )
+    (provider_home / "marketplaces" / "superpowers-dev").rename(
+        provider_home / "marketplaces" / "forged-marketplace"
+    )
+    config_path = provider_home / "config.toml"
+    config_path.write_text(
+        config_path.read_text().replace("superpowers-dev", "forged-marketplace")
+    )
+    provenance_path = bundle / "Provenance.json"
+    provenance = json.loads(provenance_path.read_text())
+    provenance["delivery_surfaces"][0]["path"] = provenance["delivery_surfaces"][
+        0
+    ]["path"].replace("superpowers-dev", "forged-marketplace")
+    provenance_path.write_text(json.dumps(provenance) + "\n")
+
+    with pytest.raises(ValueError, match="canonical"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_renamed_codex_version(run_root: Path):
+    cell = _cell("codex", "A1", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    plugin = (
+        bundle
+        / "codex"
+        / "provider-home"
+        / "plugins"
+        / "cache"
+        / "superpowers-dev"
+        / "superpowers"
+    )
+    version = plugin / "6.3.0"
+    forged = plugin / "9.9.9"
+    version.rename(forged)
+    manifest_path = forged / ".codex-plugin" / "plugin.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["version"] = "9.9.9"
+    manifest_path.write_text(json.dumps(manifest) + "\n")
+    provenance_path = bundle / "Provenance.json"
+    provenance = json.loads(provenance_path.read_text())
+    provenance["delivery_surfaces"][0]["path"] = provenance["delivery_surfaces"][
+        0
+    ]["path"].replace("6.3.0", "9.9.9")
+    provenance_path.write_text(json.dumps(provenance) + "\n")
+
+    with pytest.raises(ValueError, match="canonical"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_unclaimed_project_instruction(run_root: Path):
+    cell = _cell("claude", "A1", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    project = bundle / "project"
+    project.mkdir()
+    (project / "CLAUDE.md").write_text("unclaimed\n")
+
+    with pytest.raises(ValueError, match="project instruction"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_requires_harness_project_instruction(run_root: Path):
+    cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
+    bundle = _add_bundle(run_root, cell)
+    shutil.rmtree(bundle / "project")
+
+    with pytest.raises(ValueError, match="project instruction"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_symlinked_claude_plugin_manifest(run_root: Path):
+    cell = _cell("claude", "A1", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    plugin = bundle / "claude" / "plugins" / "superpowers"
+    manifest = plugin / ".claude-plugin" / "plugin.json"
+    alias = plugin / "plugin-alias.json"
+    alias.write_text(manifest.read_text())
+    manifest.unlink()
+    manifest.symlink_to("../plugin-alias.json")
+
+    with pytest.raises(ValueError, match="symlink"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_symlinked_codex_config(run_root: Path):
+    cell = _cell("codex", "A1", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    config = bundle / "codex" / "provider-home" / "config.toml"
+    alias = bundle / "config-alias.toml"
+    alias.write_text(config.read_text())
+    config.unlink()
+    config.symlink_to(alias)
+
+    with pytest.raises(ValueError, match="symlink"):
         compile_run(
             run_root,
             profile="smoke",
