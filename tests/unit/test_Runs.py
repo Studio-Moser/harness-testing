@@ -1606,6 +1606,32 @@ def test_static_job_verification_restarts_cells_for_each_task(run_root: Path):
         _verify_generated_inputs(run_root, reordered)
 
 
+def test_explicit_task_resolves_to_a_unique_pack_outside_profile_defaults(
+    run_root: Path,
+):
+    task = run_root / "tasks" / "contract" / "contract-task"
+    task.mkdir(parents=True)
+    (task / "instruction.md").write_text("contract task\n")
+    cell = _cell("codex", "A0", "baseline", "a")
+    _add_bundle(run_root, cell)
+
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="subscription",
+        cells=(cell,),
+        task_ids=("contract-task",),
+        max_sessions=1,
+        max_budget_usd=Decimal("0"),
+    )
+
+    assert set(manifest.provenance["task_digests"]) == {"contract/contract-task"}
+    config = yaml.safe_load(
+        (manifest.path.parent / manifest.harbor_config_paths[0]).read_text()
+    )
+    assert config["datasets"][0]["path"] == "tasks/contract"
+
+
 def test_manifest_digest_is_canonical_and_stable(run_root: Path):
     first = _compile_pair(run_root)
     second = _compile_pair(run_root)

@@ -938,6 +938,13 @@ def _task_pack(root: Path, profile: _Profile, task_id: str) -> str:
     ]
     if len(matches) == 1:
         return matches[0]
+    local_matches = [
+        path.parent.name
+        for path in (root / "tasks").glob(f"*/{task_id}")
+        if path.is_dir()
+    ]
+    if not matches and len(local_matches) == 1:
+        return local_matches[0]
     if not matches and len(profile.packs) == 1:
         return profile.packs[0]
     raise ValueError(f"task {task_id} does not resolve to exactly one profile pack")
