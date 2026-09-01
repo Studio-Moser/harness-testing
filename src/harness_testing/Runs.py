@@ -464,6 +464,12 @@ def _validate_materialized_bundle(
         raise ValueError(
             f"cell {cell.label} materialized arm provenance digest mismatch"
         )
+    if (
+        provenance.get("provider") != cell.provider
+        or provenance.get("arm") != cell.arm
+        or provenance.get("bundle_digest") != cell.bundle_digest
+    ):
+        raise ValueError(f"cell {cell.label} arm provenance does not match its digest")
 
     source_overrides: dict[str, tuple[str | Path, str]] = {}
     if cell.harness_commit is not None:
@@ -878,12 +884,6 @@ def _validate_cell(root: Path, cell: RunCell, versions: dict[str, Any]) -> None:
     bundle_path = _bundle_path(root, cell)
     _validate_materialized_bundle(root, cell, bundle_path, versions)
     provenance = _bundle_provenance(bundle_path)
-    if (
-        provenance.get("provider") != cell.provider
-        or provenance.get("arm") != cell.arm
-        or provenance.get("bundle_digest") != cell.bundle_digest
-    ):
-        raise ValueError(f"cell {cell.label} arm provenance does not match its digest")
     source_commits = {
         source.get("name"): source.get("commit")
         for source in provenance.get("sources", [])
