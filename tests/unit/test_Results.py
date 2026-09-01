@@ -424,3 +424,33 @@ def test_publication_rejects_an_old_or_missing_run_manifest(tmp_path: Path):
     output = root / "results" / "current.json"
     written = sanitize_public_result(root, source, output)
     assert json.loads(output.read_text()) == written
+
+
+def test_publication_normalizes_an_invalid_manifest_budget(tmp_path: Path):
+    root = _result_root(tmp_path)
+    candidate = _load("Valid.json")
+    manifest = json.loads(MANIFEST_FIXTURE.read_text())
+    manifest["max_budget_usd"] = "not-a-number"
+    manifest["digest"] = _manifest_digest(manifest)
+    digest = manifest["digest"]
+    assert isinstance(digest, str)
+    manifest_path = root / "runs" / "generated" / digest.removeprefix("sha256:")
+    manifest_path.mkdir(parents=True)
+    (manifest_path / "Manifest.json").write_text(json.dumps(manifest))
+    candidate["run"]["manifest_digest"] = digest
+    candidate["provenance"]["methodology_schema"] = "0.2.0"
+    _refresh_identity(candidate)
+    source = root / "candidate.json"
+    source.write_text(json.dumps(candidate))
+    output = root / "results" / "invalid-budget.json"
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "^result is not in the current compatibility series: "
+            "run manifest is unavailable or invalid: invalid numeric value$"
+        ),
+    ):
+        sanitize_public_result(root, source, output)
+
+    assert not output.exists()

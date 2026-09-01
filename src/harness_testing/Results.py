@@ -10,6 +10,7 @@ import stat
 import subprocess
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from decimal import InvalidOperation
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -529,6 +530,8 @@ def _current_series_errors(
         )
         try:
             manifest = load_manifest(manifest_path)
+        except InvalidOperation:
+            errors.append("run manifest is unavailable or invalid: invalid numeric value")
         except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
             errors.append(f"run manifest is unavailable or invalid: {error}")
         else:
