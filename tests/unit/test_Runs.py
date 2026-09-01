@@ -19,6 +19,7 @@ from harness_testing.Materialize import (
     _file_digests,
     _resolve_source_trees,
     _sha256_bytes,
+    _tree_digest,
 )
 from harness_testing.Runs import (
     RunCell,
@@ -809,6 +810,117 @@ def test_delivery_provenance_rejects_coherently_edited_harness_instruction(
     _reseal_bundle(cell, bundle)
 
     with pytest.raises(ValueError, match="pinned Harness source"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_poisoned_reused_source_cache(
+    run_root: Path,
+):
+    versions_path = run_root / "Versions.toml"
+    versions = load_versions(versions_path)
+    harness_repository = Path(
+        next(
+            source["url"]
+            for source in versions["sources"]
+            if source["name"] == "Studio Harness"
+        )
+    )
+    versions_path.write_text(
+        versions_path.read_text().replace(
+            f"url = {json.dumps(str(harness_repository))}",
+            f"url = {json.dumps(harness_repository.as_uri())}",
+            1,
+        )
+    )
+    cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
+    bundle = _add_bundle(run_root, cell)
+    versions = load_versions(versions_path)
+    harness_pin = next(
+        source
+        for source in versions["sources"]
+        if source["name"] == "Studio Harness"
+    )
+    cached_source = _resolve_source_trees(
+        run_root,
+        _ARM_LAYERS[cell.arm],
+        {
+            "Studio Harness": (
+                str(harness_pin["url"]),
+                cell.harness_commit,
+            )
+        },
+    )[0]
+    forged_instruction = "# Forged cached baseline\n"
+    (
+        cached_source.path
+        / "plugins"
+        / "harness"
+        / "templates"
+        / "AGENTS_Baseline.md"
+    ).write_text(forged_instruction)
+    (
+        bundle
+        / "claude"
+        / "plugins"
+        / "harness"
+        / "templates"
+        / "AGENTS_Baseline.md"
+    ).write_text(forged_instruction)
+    (bundle / "project" / "CLAUDE.md").write_text(forged_instruction)
+    provenance_path = bundle / "Provenance.json"
+    provenance = json.loads(provenance_path.read_text())
+    provenance["sources"][0]["source_tree_digest"] = _tree_digest(
+        cached_source.path
+    )
+    provenance_path.write_text(json.dumps(provenance) + "\n")
+    _reseal_bundle(cell, bundle)
+
+    with pytest.raises(ValueError, match="pinned source"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_rehashed_uninspected_plugin_payload(
+    run_root: Path,
+):
+    cell = _cell("claude", "A1", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    payload_relative = (
+        Path("claude")
+        / "plugins"
+        / "superpowers"
+        / "skills"
+        / "payload"
+        / "SKILL.md"
+    )
+    payload = bundle / payload_relative
+    payload.parent.mkdir()
+    payload.write_text("# Approved payload\n")
+    bundle = _reseal_bundle(cell, bundle)
+
+    payload = bundle / payload_relative
+    payload.write_text("# Replaced payload\n")
+    provenance_path = bundle / "Provenance.json"
+    provenance = json.loads(provenance_path.read_text())
+    provenance["generated_file_digests"] = _file_digests(bundle)
+    provenance_path.write_text(json.dumps(provenance) + "\n")
+
+    with pytest.raises(ValueError, match="provenance digest"):
         compile_run(
             run_root,
             profile="smoke",

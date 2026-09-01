@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import re
 import stat
 import subprocess
+import tarfile
+import tempfile
 import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
@@ -18,6 +21,7 @@ from typing import Any
 import yaml
 from harbor.models.job.config import JobConfig
 
+import harness_testing.Materialize as Materialize
 from harness_testing.Config import load_job, load_versions
 from harness_testing.Materialize import (
     _ARM_LAYERS,
@@ -311,6 +315,100 @@ def _bundle_provenance(bundle: Path) -> dict[str, Any]:
     return provenance
 
 
+def _authoritative_source_trees(
+    root: Path,
+    layers: tuple[str, ...],
+    source_overrides: Mapping[str, tuple[str | Path, str]],
+    versions: dict[str, Any],
+    destination: Path,
+) -> tuple[Materialize._SourceTree, ...]:
+    cached_sources = _resolve_source_trees(root, layers, source_overrides)
+    pins = {
+        str(source["name"]): source
+        for source in versions.get("sources", [])
+    }
+    authoritative: list[Materialize._SourceTree] = []
+    for index, source in enumerate(cached_sources):
+        if source.name in source_overrides:
+            repository_source, commit = source_overrides[source.name]
+        else:
+            pin = pins.get(source.name)
+            if pin is None:
+                raise ValueError(f"Versions.toml has no source pin for {source.name}")
+            repository_source, commit = str(pin["url"]), str(pin["commit"])
+        if commit != source.commit:
+            raise ValueError(f"pinned source commit changed for {source.name}")
+
+        repository = Materialize._local_repository(repository_source)
+        if repository is None:
+            cache_key = hashlib.sha256(str(repository_source).encode()).hexdigest()
+            repository = (
+                root
+                / ".cache"
+                / "source-repositories"
+                / f"{cache_key}.git"
+            )
+        try:
+            resolved_commit = (
+                Materialize._run_git(
+                    (
+                        "--no-replace-objects",
+                        "rev-parse",
+                        "--verify",
+                        f"{commit}^{{commit}}",
+                    ),
+                    cwd=repository,
+                )
+                .stdout.decode()
+                .strip()
+            )
+            if resolved_commit != commit:
+                raise ValueError(
+                    f"pinned source Git object is invalid for {source.name}"
+                )
+            Materialize._run_git(
+                (
+                    "--no-replace-objects",
+                    "fsck",
+                    "--strict",
+                    "--no-dangling",
+                    commit,
+                ),
+                cwd=repository,
+            )
+            archive = Materialize._run_git(
+                (
+                    "--no-replace-objects",
+                    "archive",
+                    "--format=tar",
+                    commit,
+                ),
+                cwd=repository,
+            ).stdout
+        except (OSError, subprocess.CalledProcessError) as error:
+            raise ValueError(
+                f"pinned source Git object is invalid for {source.name}"
+            ) from error
+
+        tree = destination / f"source-{index}"
+        tree.mkdir()
+        try:
+            with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as archive_file:
+                archive_file.extractall(tree, filter="data")
+        except (OSError, tarfile.TarError) as error:
+            raise ValueError(
+                f"pinned source Git archive is invalid for {source.name}"
+            ) from error
+        authoritative.append(
+            replace(
+                source,
+                path=tree,
+                digest=Materialize._tree_digest(tree),
+            )
+        )
+    return tuple(authoritative)
+
+
 def _validate_materialized_bundle(
     root: Path,
     cell: RunCell,
@@ -351,6 +449,19 @@ def _validate_materialized_bundle(
     provenance_path = bundle / "Provenance.json"
     if provenance_path.is_symlink():
         raise ValueError(f"bundle provenance must not be a symlink: {bundle}")
+    provenance = _bundle_provenance(bundle)
+    unsigned_provenance = dict(provenance)
+    unsigned_provenance.pop("bundle_digest", None)
+    canonical_digest = Materialize._sha256_bytes(
+        Materialize._canonical_json(unsigned_provenance)
+    )
+    if (
+        canonical_digest != cell.bundle_digest
+        or bundle.name != canonical_digest.removeprefix("sha256:")
+    ):
+        raise ValueError(
+            f"cell {cell.label} materialized arm provenance digest mismatch"
+        )
 
     source_overrides: dict[str, tuple[str | Path, str]] = {}
     if cell.harness_commit is not None:
@@ -359,49 +470,56 @@ def _validate_materialized_bundle(
             cell.harness_commit,
         )
     layers = _ARM_LAYERS[cell.arm]
-    sources = _resolve_source_trees(root, layers, source_overrides)
-    authoritative = _find_existing_bundle(
-        root,
-        cell.provider,
-        cell.arm,
-        layers,
-        sources,
-    )
-    if (
-        authoritative is None
-        or authoritative.digest != cell.bundle_digest
-        or authoritative.path.resolve(strict=True) != expected_physical
-    ):
-        raise ValueError(
-            f"cell {cell.label} delivery does not match pinned source materialization"
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        sources = _authoritative_source_trees(
+            root,
+            layers,
+            source_overrides,
+            versions,
+            Path(temporary_directory),
         )
-
-    harness_source = next(
-        (source for source in sources if source.name == "Studio Harness"),
-        None,
-    )
-    if harness_source is not None:
-        source_template = (
-            harness_source.path
-            / "plugins"
-            / "harness"
-            / "templates"
-            / "AGENTS_Baseline.md"
+        authoritative = _find_existing_bundle(
+            root,
+            cell.provider,
+            cell.arm,
+            layers,
+            sources,
         )
-        instruction = bundle / "project" / (
-            "CLAUDE.md" if cell.provider == "claude" else "AGENTS.md"
-        )
-        try:
-            expected_instruction = f"{source_template.read_text().rstrip()}\n"
-            actual_instruction = instruction.read_text()
-        except OSError as error:
+        if (
+            authoritative is None
+            or authoritative.digest != cell.bundle_digest
+            or authoritative.path.resolve(strict=True) != expected_physical
+        ):
             raise ValueError(
-                f"cell {cell.label} project instruction does not match pinned Harness source"
-            ) from error
-        if actual_instruction != expected_instruction:
-            raise ValueError(
-                f"cell {cell.label} project instruction does not match pinned Harness source"
+                f"cell {cell.label} delivery does not match pinned source materialization"
             )
+
+        harness_source = next(
+            (source for source in sources if source.name == "Studio Harness"),
+            None,
+        )
+        if harness_source is not None:
+            source_template = (
+                harness_source.path
+                / "plugins"
+                / "harness"
+                / "templates"
+                / "AGENTS_Baseline.md"
+            )
+            instruction = bundle / "project" / (
+                "CLAUDE.md" if cell.provider == "claude" else "AGENTS.md"
+            )
+            try:
+                expected_instruction = f"{source_template.read_text().rstrip()}\n"
+                actual_instruction = instruction.read_text()
+            except OSError as error:
+                raise ValueError(
+                    f"cell {cell.label} project instruction does not match pinned Harness source"
+                ) from error
+            if actual_instruction != expected_instruction:
+                raise ValueError(
+                    f"cell {cell.label} project instruction does not match pinned Harness source"
+                )
 
 
 def _reject_control_symlinks(bundle: Path, path: Path, description: str) -> None:
