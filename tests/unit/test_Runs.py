@@ -308,6 +308,12 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
             surface = "codex-plugin"
         (path / relative).mkdir(parents=True, exist_ok=True)
         (path / relative / "skills").mkdir(exist_ok=True)
+        plugin_skill_name = (
+            "using-superpowers" if layer == "Superpowers" else "execute"
+        )
+        skill = path / relative / "skills" / plugin_skill_name
+        skill.mkdir()
+        (skill / "SKILL.md").write_text(f"# {plugin_skill_name}\n")
         if cell.provider == "claude":
             manifest = path / relative / ".claude-plugin"
             manifest.mkdir(exist_ok=True)
@@ -466,6 +472,424 @@ def _compile_pair(root: Path, **overrides):
     }
     arguments.update(overrides)
     return compile_run(**arguments)
+
+
+def _benchmark_plugins(arm: str) -> list[str]:
+    return {
+        "A0": [],
+        "A1": ["superpowers"],
+        "A2": ["harness"],
+        "A3": ["superpowers", "harness"],
+    }[arm]
+
+
+def _benchmark_skills(arm: str) -> list[str]:
+    return {
+        "A0": [],
+        "A1": ["superpowers:using-superpowers"],
+        "A2": ["harness:execute"],
+        "A3": ["superpowers:using-superpowers", "harness:execute"],
+    }[arm]
+
+
+def _codex_inventory_record(plugin: str) -> dict[str, object]:
+    marketplace = "superpowers-dev" if plugin == "superpowers" else "studio-moser"
+    version = "6.3.0" if plugin == "superpowers" else "0.8.1"
+    return {
+        "name": plugin,
+        "pluginId": f"{plugin}@{marketplace}",
+        "marketplaceName": marketplace,
+        "version": version,
+        "enabled": True,
+        "installed": True,
+    }
+
+
+def _write_completed_job(
+    root: Path,
+    cell: RunCell,
+    job_name: str,
+    *,
+    plugins: list[object] | None = None,
+    skills: list[object] | None = None,
+    reward: float = 1.0,
+    exception_info: object = None,
+    attempts: int = 1,
+) -> None:
+    job = root / "jobs" / "raw" / job_name
+    job.mkdir(parents=True)
+    (job / "result.json").write_text(
+        json.dumps(
+            {
+                "n_total_trials": attempts,
+                "stats": {
+                    "n_completed_trials": attempts,
+                    "n_errored_trials": 0,
+                    "n_running_trials": 0,
+                    "n_pending_trials": 0,
+                    "n_cancelled_trials": 0,
+                }
+            }
+        )
+        + "\n"
+    )
+    expected_plugins = _benchmark_plugins(cell.arm)
+    for attempt in range(1, attempts + 1):
+        trial = job / f"trial-{attempt}"
+        agent = trial / "agent"
+        verifier = trial / "verifier"
+        agent.mkdir(parents=True)
+        verifier.mkdir()
+        (trial / "result.json").write_text(
+            json.dumps(
+                {
+                    "exception_info": exception_info,
+                    "verifier_result": {"rewards": {"reward": reward}},
+                }
+            )
+            + "\n"
+        )
+        (verifier / "reward.json").write_text(
+            json.dumps({"reward": reward}) + "\n"
+        )
+        if cell.provider == "claude":
+            event = {
+                "type": "system",
+                "subtype": "init",
+                "plugins": plugins if plugins is not None else expected_plugins,
+                "skills": skills if skills is not None else _benchmark_skills(cell.arm),
+            }
+            (agent / "claude-code.txt").write_text(json.dumps(event) + "\n")
+        else:
+            installed = (
+                plugins
+                if plugins is not None
+                else [_codex_inventory_record(plugin) for plugin in expected_plugins]
+            )
+            (agent / "plugin-inventory.json").write_text(
+                json.dumps(
+                    {
+                        "installed": installed,
+                        "available": [
+                            {
+                                "name": "provider-builtin",
+                                "pluginId": "provider-builtin@provider",
+                            }
+                        ],
+                    }
+                )
+                + "\n"
+            )
+
+
+@pytest.mark.parametrize(
+    "cell",
+    (
+        _cell("claude", "A3", "candidate", "a", "a" * 40),
+        _cell("codex", "A3", "candidate", "b", "b" * 40),
+    ),
+    ids=("claude", "codex"),
+)
+def test_completed_job_delivery_accepts_expected_plugins_and_skill_directories(
+    run_root: Path,
+    cell: RunCell,
+):
+    _add_bundle(run_root, cell)
+    if cell.provider == "claude":
+        plugins: list[object] = [
+            {"name": "provider-builtin"},
+            {"name": "superpowers@superpowers-dev"},
+            "harness@studio-moser",
+        ]
+        skills: list[object] = [
+            "provider:built-in",
+            "superpowers:using-superpowers",
+            "harness:execute",
+        ]
+    else:
+        plugins = [
+            {
+                "name": "provider-builtin",
+                "pluginId": "provider-builtin@provider",
+                "marketplaceName": "provider",
+                "version": "1.0.0",
+                "enabled": True,
+                "installed": True,
+            },
+            _codex_inventory_record("superpowers"),
+            _codex_inventory_record("harness"),
+        ]
+        skills = []
+    _write_completed_job(
+        run_root,
+        cell,
+        "valid-delivery",
+        plugins=plugins,
+        skills=skills,
+    )
+
+    assert Runs._completed_job_errors(
+        run_root,
+        cell,
+        "valid-delivery",
+        frozenset({"superpowers:using-superpowers", "harness:execute"}),
+    ) == ()
+
+
+def test_completed_job_delivery_rejects_a0_benchmark_contamination(run_root: Path):
+    cell = _cell("claude", "A0", "baseline", "a")
+    _add_bundle(run_root, cell)
+    _write_completed_job(
+        run_root,
+        cell,
+        "contaminated-delivery",
+        plugins=["provider-builtin", "superpowers@superpowers-dev"],
+        skills=["provider:built-in", "superpowers:using-superpowers"],
+    )
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        cell,
+        "contaminated-delivery",
+        frozenset({"superpowers:using-superpowers", "harness:execute"}),
+    )
+
+    assert any("plugin" in error and "superpowers" in error for error in errors)
+    assert any("skill" in error and "superpowers:using-superpowers" in error for error in errors)
+
+
+def test_completed_job_delivery_rejects_missing_expected_a2_plugin(run_root: Path):
+    cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
+    _add_bundle(run_root, cell)
+    _write_completed_job(run_root, cell, "missing-delivery", plugins=[])
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        cell,
+        "missing-delivery",
+        frozenset({"harness:execute"}),
+    )
+
+    assert any("plugin" in error and "harness" in error for error in errors)
+
+
+def test_completed_job_delivery_rejects_codex_a0_benchmark_contamination(
+    run_root: Path,
+):
+    cell = _cell("codex", "A0", "baseline", "a")
+    _add_bundle(run_root, cell)
+    _write_completed_job(
+        run_root,
+        cell,
+        "codex-contaminated-delivery",
+        plugins=[_codex_inventory_record("harness")],
+    )
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        cell,
+        "codex-contaminated-delivery",
+        frozenset(),
+    )
+
+    assert any("plugin" in error and "harness" in error for error in errors)
+
+
+def test_completed_job_correctness_zero_passes_infrastructure(run_root: Path):
+    cell = _cell("codex", "A0", "baseline", "a")
+    _add_bundle(run_root, cell)
+    _write_completed_job(run_root, cell, "correctness-zero", reward=0.0)
+
+    assert Runs._completed_job_errors(
+        run_root,
+        cell,
+        "correctness-zero",
+        frozenset(),
+    ) == ()
+
+
+def test_completed_job_delivery_accepts_one_trial_per_attempt(run_root: Path):
+    cell = _cell("codex", "A0", "baseline", "a")
+    _add_bundle(run_root, cell)
+    _write_completed_job(run_root, cell, "two-attempts", attempts=2)
+
+    assert Runs._completed_job_errors(
+        run_root,
+        cell,
+        "two-attempts",
+        frozenset(),
+    ) == ()
+
+
+def test_completed_job_delivery_rejects_trial_exception(run_root: Path):
+    cell = _cell("claude", "A0", "baseline", "a")
+    _add_bundle(run_root, cell)
+    _write_completed_job(
+        run_root,
+        cell,
+        "exception-delivery",
+        exception_info={"exception_type": "TimeoutError", "exception_message": "timed out"},
+    )
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        cell,
+        "exception-delivery",
+        frozenset(),
+    )
+
+    assert any("trial exception" in error for error in errors)
+
+
+def test_completed_job_delivery_rejects_malformed_benchmark_evidence_with_a_cap(
+    run_root: Path,
+):
+    cell = _cell("claude", "A0", "baseline", "a")
+    _add_bundle(run_root, cell)
+    _write_completed_job(
+        run_root,
+        cell,
+        "malformed-delivery",
+        plugins=[{"display": "superpowers"} for _ in range(20)],
+        skills=["provider:built-in"],
+    )
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        cell,
+        "malformed-delivery",
+        frozenset({"superpowers:using-superpowers"}),
+    )
+
+    assert errors == tuple(
+        "malformed-delivery: "
+        f"Claude plugin entry {index} has malformed benchmark plugin evidence"
+        for index in range(12)
+    )
+
+
+def test_completed_job_delivery_rejects_ambiguous_benchmark_evidence(
+    run_root: Path,
+):
+    cell = _cell("claude", "A1", "candidate", "a")
+    _add_bundle(run_root, cell)
+    _write_completed_job(
+        run_root,
+        cell,
+        "ambiguous-delivery",
+        plugins=["superpowers", {"name": "superpowers@superpowers-dev"}],
+    )
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        cell,
+        "ambiguous-delivery",
+        frozenset({"superpowers:using-superpowers"}),
+    )
+
+    assert any("ambiguous benchmark plugin superpowers" in error for error in errors)
+
+
+def _stub_execution_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(Runs, "validate_repository", lambda root: ())
+    monkeypatch.setattr(Runs, "dockerfile_policy_errors", lambda root: ())
+    monkeypatch.setattr(Runs, "require_current_image", lambda root, image: None)
+
+
+def test_delivery_canary_stops_before_the_second_task(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    manifest = _compile_pair(run_root)
+    _stub_execution_preflight(monkeypatch)
+    calls: list[str] = []
+    real_run = subprocess.run
+
+    def fake_run(command, **kwargs):
+        if command[0] != "harbor":
+            return real_run(command, **kwargs)
+        job = load_job(Path(command[-1]))
+        index = len(calls)
+        calls.append(job.job_name)
+        cell = manifest.cells[index % len(manifest.cells)]
+        _write_completed_job(
+            run_root,
+            cell,
+            job.job_name,
+            plugins=[] if index == 1 else None,
+        )
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    with pytest.raises(ValueError, match="delivery canary failed"):
+        Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    assert calls == [
+        load_job(manifest.path.parent / path).job_name
+        for path in manifest.harbor_config_paths[:2]
+    ]
+
+
+def test_delivery_canary_correctness_zero_runs_every_task(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    manifest = _compile_pair(run_root)
+    _stub_execution_preflight(monkeypatch)
+    calls: list[str] = []
+    real_run = subprocess.run
+
+    def fake_run(command, **kwargs):
+        if command[0] != "harbor":
+            return real_run(command, **kwargs)
+        job = load_job(Path(command[-1]))
+        index = len(calls)
+        calls.append(job.job_name)
+        cell = manifest.cells[index % len(manifest.cells)]
+        _write_completed_job(run_root, cell, job.job_name, reward=0.0)
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    assert calls == [
+        load_job(manifest.path.parent / path).job_name
+        for path in manifest.harbor_config_paths
+    ]
+
+
+def test_delivery_failure_after_canary_stops_immediately(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    manifest = _compile_pair(run_root)
+    _stub_execution_preflight(monkeypatch)
+    calls: list[str] = []
+    real_run = subprocess.run
+
+    def fake_run(command, **kwargs):
+        if command[0] != "harbor":
+            return real_run(command, **kwargs)
+        job = load_job(Path(command[-1]))
+        index = len(calls)
+        calls.append(job.job_name)
+        cell = manifest.cells[index % len(manifest.cells)]
+        _write_completed_job(
+            run_root,
+            cell,
+            job.job_name,
+            plugins=[] if index == 2 else None,
+        )
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    with pytest.raises(ValueError, match="job delivery failed"):
+        Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    assert calls == [
+        load_job(manifest.path.parent / path).job_name
+        for path in manifest.harbor_config_paths[:3]
+    ]
 
 
 def test_generated_claude_jobs_follow_exact_arm_delivery_provenance(
@@ -1328,6 +1752,7 @@ def test_subscription_selector_is_scoped_to_the_harbor_process(
     monkeypatch.setattr(Runs, "validate_repository", lambda root: ())
     monkeypatch.setattr(Runs, "dockerfile_policy_errors", lambda root: ())
     monkeypatch.setattr(Runs, "require_current_image", lambda root, image: None)
+    monkeypatch.setattr(Runs, "_completed_job_errors", lambda *args: ())
     calls: list[dict[str, object]] = []
 
     def fake_run(command, **kwargs):

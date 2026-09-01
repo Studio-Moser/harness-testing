@@ -1,8 +1,71 @@
+import asyncio
 import json
 from pathlib import Path
 
+import pytest
+
 from harness_testing.Codex_Agent import HarnessCodex
 from harness_testing.Trajectory_Events import result_success
+
+
+def test_codex_inventory_is_recorded_after_effective_config_upload(tmp_path: Path):
+    agent = HarnessCodex(
+        logs_dir=tmp_path,
+        model_name="openai/gpt-5.6-terra",
+        version="0.150.1",
+    )
+    calls: list[tuple[str, object]] = []
+
+    async def fake_upload(environment, **kwargs):
+        calls.append(("upload", kwargs))
+
+    async def fake_exec(environment, *, command, env=None, **kwargs):
+        calls.append(("exec", {"command": command, "env": env}))
+
+    agent._upload_config_text = fake_upload
+    agent.exec_as_agent = fake_exec
+
+    asyncio.run(
+        agent._upload_effective_config(
+            object(),
+            {"model_reasoning_effort": "high"},
+            "/tmp/codex-home/config.toml",
+        )
+    )
+
+    assert [name for name, _ in calls] == ["upload", "exec"]
+    inventory = calls[1][1]
+    assert inventory["env"] == {"CODEX_HOME": "/tmp/codex-home"}
+    assert "codex plugin list --json" in inventory["command"]
+    assert "/logs/agent/plugin-inventory.json" in inventory["command"]
+
+
+def test_codex_inventory_failure_propagates_from_effective_config_upload(
+    tmp_path: Path,
+):
+    agent = HarnessCodex(
+        logs_dir=tmp_path,
+        model_name="openai/gpt-5.6-terra",
+        version="0.150.1",
+    )
+
+    async def fake_upload(environment, **kwargs):
+        return None
+
+    async def failing_exec(environment, *, command, **kwargs):
+        raise RuntimeError("inventory command exited 1")
+
+    agent._upload_config_text = fake_upload
+    agent.exec_as_agent = failing_exec
+
+    with pytest.raises(RuntimeError, match="inventory command exited 1"):
+        asyncio.run(
+            agent._upload_effective_config(
+                object(),
+                {"model_reasoning_effort": "high"},
+                "/tmp/codex-home/config.toml",
+            )
+        )
 
 
 def _write_session(session_dir: Path) -> None:

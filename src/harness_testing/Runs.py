@@ -63,6 +63,8 @@ _CODEX_LAYER_MARKETPLACES = {
     "Superpowers": "superpowers-dev",
     "Studio Harness": "studio-moser",
 }
+_BENCHMARK_PLUGIN_NAMES = frozenset(_LAYER_PLUGIN_NAMES.values())
+_MAX_DELIVERY_ERRORS = 12
 _AGENT_ADAPTERS = {
     "claude": (
         "harness_testing.Claude_Agent:HarnessClaude",
@@ -1615,6 +1617,350 @@ def _verify_subscription_auth(
             raise ValueError("Claude subscription credential is missing")
 
 
+def _expected_runtime_delivery(
+    root: Path,
+    cell: RunCell,
+) -> tuple[dict[str, dict[str, object]], frozenset[str]]:
+    bundle = _bundle_path(root, cell)
+    surfaces = _validated_delivery_surfaces(bundle, cell.provider, cell.arm)
+    plugins: dict[str, dict[str, object]] = {}
+    skills: set[str] = set()
+    for surface in surfaces:
+        layer = str(surface["layer"])
+        plugin = _LAYER_PLUGIN_NAMES[layer]
+        target = _delivery_surface_host_path(bundle, cell.provider, surface["path"])
+        skill_root = target / "skills"
+        if skill_root.is_dir():
+            skills.update(
+                f"{plugin}:{path.name}"
+                for path in sorted(skill_root.iterdir())
+                if path.is_dir()
+            )
+        if cell.provider == "codex":
+            marketplace = _CODEX_LAYER_MARKETPLACES[layer]
+            version = target.name
+            plugins[plugin] = {
+                "name": plugin,
+                "pluginId": f"{plugin}@{marketplace}",
+                "marketplaceName": marketplace,
+                "version": version,
+                "enabled": True,
+                "installed": True,
+            }
+        else:
+            plugins[plugin] = {"name": plugin}
+    return plugins, frozenset(skills)
+
+
+def _benchmark_skill_names(root: Path, cells: tuple[RunCell, ...]) -> frozenset[str]:
+    names: set[str] = set()
+    for cell in cells:
+        if cell.arm == "A0":
+            continue
+        _, skills = _expected_runtime_delivery(root, cell)
+        names.update(skills)
+    return frozenset(names)
+
+
+def _benchmark_looking(value: object) -> bool:
+    try:
+        text = json.dumps(value, sort_keys=True).lower()
+    except (TypeError, ValueError):
+        text = repr(value).lower()
+    return bool(
+        re.search(
+            r"(?<![a-z0-9_-])(?:superpowers|harness)(?:@|:|[^a-z0-9_-]|$)",
+            text,
+        )
+        or "superpowers-dev" in text
+        or "studio-moser" in text
+    )
+
+
+def _claude_delivery_errors(
+    evidence_path: Path,
+    expected_plugins: frozenset[str],
+    expected_skills: frozenset[str],
+    benchmark_skill_names: frozenset[str],
+) -> list[str]:
+    errors: list[str] = []
+    try:
+        lines = evidence_path.read_text().splitlines()
+    except (OSError, UnicodeDecodeError):
+        return ["Claude startup evidence is unreadable"]
+    init_events: list[dict[str, object]] = []
+    for line_number, line in enumerate(lines, start=1):
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            if _benchmark_looking(line):
+                errors.append(
+                    f"Claude line {line_number} has malformed benchmark startup evidence"
+                )
+                if len(errors) == _MAX_DELIVERY_ERRORS:
+                    break
+            continue
+        if (
+            isinstance(event, dict)
+            and event.get("type") == "system"
+            and event.get("subtype") == "init"
+        ):
+            init_events.append(event)
+    if len(init_events) != 1:
+        errors.append(f"Claude startup evidence has {len(init_events)} primary init events")
+        return errors
+
+    event = init_events[0]
+    raw_plugins = event.get("plugins")
+    observed_plugins: set[str] = set()
+    seen_plugins: set[str] = set()
+    if not isinstance(raw_plugins, list):
+        errors.append("Claude startup benchmark plugins are malformed")
+    else:
+        for index, entry in enumerate(raw_plugins):
+            name = entry.get("name") if isinstance(entry, dict) else entry
+            normalized: str | None = None
+            if isinstance(name, str):
+                parts = name.split("@")
+                if len(parts) <= 2 and parts[0]:
+                    normalized = parts[0]
+            if normalized not in _BENCHMARK_PLUGIN_NAMES:
+                candidate = name if isinstance(name, str) else entry
+                if _benchmark_looking(candidate):
+                    errors.append(
+                        f"Claude plugin entry {index} has malformed benchmark plugin evidence"
+                    )
+                    if len(errors) == _MAX_DELIVERY_ERRORS:
+                        break
+                continue
+            if normalized in seen_plugins:
+                errors.append(
+                    f"Claude plugin entry {index} has ambiguous benchmark plugin {normalized}"
+                )
+                if len(errors) == _MAX_DELIVERY_ERRORS:
+                    break
+                continue
+            seen_plugins.add(normalized)
+            observed_plugins.add(normalized)
+
+    raw_skills = event.get("skills")
+    observed_skills: set[str] = set()
+    seen_skills: set[str] = set()
+    if not isinstance(raw_skills, list):
+        errors.append("Claude startup benchmark skills are malformed")
+    else:
+        for index, entry in enumerate(raw_skills):
+            if isinstance(entry, str) and entry in benchmark_skill_names:
+                if entry in seen_skills:
+                    errors.append(
+                        f"Claude skill entry {index} has ambiguous benchmark skill {entry}"
+                    )
+                    if len(errors) == _MAX_DELIVERY_ERRORS:
+                        break
+                    continue
+                seen_skills.add(entry)
+                observed_skills.add(entry)
+            elif _benchmark_looking(entry) and not isinstance(entry, str):
+                errors.append(
+                    f"Claude skill entry {index} has malformed benchmark skill evidence"
+                )
+                if len(errors) == _MAX_DELIVERY_ERRORS:
+                    break
+    if observed_plugins != expected_plugins:
+        errors.append(
+            "Claude benchmark plugins mismatch: "
+            f"expected {sorted(expected_plugins)}, observed {sorted(observed_plugins)}"
+        )
+    if observed_skills != expected_skills:
+        errors.append(
+            "Claude benchmark skills mismatch: "
+            f"expected {sorted(expected_skills)}, observed {sorted(observed_skills)}"
+        )
+    return errors
+
+
+def _codex_delivery_errors(
+    evidence_path: Path,
+    expected_plugins: dict[str, dict[str, object]],
+) -> list[str]:
+    try:
+        document = json.loads(evidence_path.read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return ["Codex plugin inventory is unreadable"]
+    if not isinstance(document, dict) or not isinstance(document.get("installed"), list):
+        return ["Codex plugin inventory installed entries are malformed"]
+
+    errors: list[str] = []
+    observed: dict[str, dict[str, object]] = {}
+    for index, entry in enumerate(document["installed"]):
+        if not isinstance(entry, dict):
+            if _benchmark_looking(entry):
+                errors.append(
+                    f"Codex installed entry {index} has malformed benchmark plugin evidence"
+                )
+                if len(errors) == _MAX_DELIVERY_ERRORS:
+                    break
+            continue
+        name = entry.get("name")
+        plugin_id = entry.get("pluginId")
+        benchmark_name = (
+            name
+            if isinstance(name, str) and name in _BENCHMARK_PLUGIN_NAMES
+            else plugin_id.split("@", 1)[0]
+            if isinstance(plugin_id, str)
+            and plugin_id.split("@", 1)[0] in _BENCHMARK_PLUGIN_NAMES
+            else None
+        )
+        if benchmark_name is None:
+            identity = (name, plugin_id, entry.get("marketplaceName"))
+            candidate = entry if all(value is None for value in identity) else identity
+            if _benchmark_looking(candidate):
+                errors.append(
+                    f"Codex installed entry {index} has malformed benchmark plugin evidence"
+                )
+                if len(errors) == _MAX_DELIVERY_ERRORS:
+                    break
+            continue
+        normalized = {
+            field: entry.get(field)
+            for field in (
+                "name",
+                "pluginId",
+                "marketplaceName",
+                "version",
+                "enabled",
+                "installed",
+            )
+        }
+        expected_marketplace = (
+            "superpowers-dev" if benchmark_name == "superpowers" else "studio-moser"
+        )
+        if (
+            normalized["name"] != benchmark_name
+            or normalized["pluginId"]
+            != f"{benchmark_name}@{expected_marketplace}"
+            or normalized["marketplaceName"] != expected_marketplace
+            or not isinstance(normalized["version"], str)
+            or normalized["enabled"] is not True
+            or normalized["installed"] is not True
+        ):
+            errors.append(
+                f"Codex installed entry {index} has malformed benchmark plugin evidence"
+            )
+            if len(errors) == _MAX_DELIVERY_ERRORS:
+                break
+            continue
+        if benchmark_name in observed:
+            errors.append(
+                f"Codex installed entry {index} has ambiguous benchmark plugin {benchmark_name}"
+            )
+            if len(errors) == _MAX_DELIVERY_ERRORS:
+                break
+            continue
+        observed[benchmark_name] = normalized
+    if observed != expected_plugins:
+        errors.append(
+            "Codex benchmark plugins mismatch: "
+            f"expected {sorted(expected_plugins)}, observed {sorted(observed)}"
+        )
+    return errors
+
+
+def _read_json_object(path: Path) -> dict[str, object] | None:
+    try:
+        value = json.loads(path.read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _completed_job_errors(
+    root: Path,
+    cell: RunCell,
+    job_name: str,
+    benchmark_skill_names: frozenset[str],
+) -> tuple[str, ...]:
+    errors: list[str] = []
+    job_dir = root / "jobs" / "raw" / job_name
+    job_result = _read_json_object(job_dir / "result.json")
+    if job_result is None:
+        return (f"{job_name}: Harbor job result is unreadable",)
+    stats = job_result.get("stats")
+    n_total_trials = job_result.get("n_total_trials")
+    if type(n_total_trials) is not int or n_total_trials < 1:
+        errors.append(f"{job_name}: Harbor job trial count is invalid")
+        n_total_trials = 0
+    expected_counts = {
+        "n_completed_trials": n_total_trials,
+        "n_errored_trials": 0,
+        "n_running_trials": 0,
+        "n_pending_trials": 0,
+        "n_cancelled_trials": 0,
+    }
+    if not isinstance(stats, dict) or any(
+        type(stats.get(name)) is not int or stats.get(name) != expected
+        for name, expected in expected_counts.items()
+    ):
+        errors.append(
+            f"{job_name}: Harbor job did not complete one clean trial per attempt"
+        )
+
+    trial_dirs = (
+        sorted(
+            path
+            for path in job_dir.iterdir()
+            if path.is_dir() and (path / "result.json").is_file()
+        )
+        if job_dir.is_dir()
+        else []
+    )
+    if len(trial_dirs) != n_total_trials:
+        errors.append(f"{job_name}: Harbor job has {len(trial_dirs)} trial results")
+        return tuple(errors[:_MAX_DELIVERY_ERRORS])
+
+    try:
+        expected_plugin_records, expected_skills = _expected_runtime_delivery(root, cell)
+    except (OSError, ValueError) as error:
+        errors.append(f"{job_name}: arm delivery provenance is invalid: {error}")
+        return tuple(errors[:_MAX_DELIVERY_ERRORS])
+    expected_plugins = frozenset(expected_plugin_records)
+    for trial_dir in trial_dirs:
+        label = job_name if n_total_trials == 1 else f"{job_name}/{trial_dir.name}"
+        trial_result = _read_json_object(trial_dir / "result.json")
+        if trial_result is None:
+            errors.append(f"{label}: Harbor trial result is unreadable")
+        else:
+            if trial_result.get("exception_info") is not None:
+                errors.append(f"{label}: Harbor trial exception is present")
+            verifier_result = trial_result.get("verifier_result")
+            rewards = (
+                verifier_result.get("rewards")
+                if isinstance(verifier_result, dict)
+                else None
+            )
+            if not isinstance(rewards, dict):
+                errors.append(f"{label}: Harbor verifier rewards are missing")
+        if _read_json_object(trial_dir / "verifier" / "reward.json") is None:
+            errors.append(f"{label}: Harbor verifier reward artifact is unreadable")
+
+        if cell.provider == "claude":
+            delivery_errors = _claude_delivery_errors(
+                trial_dir / "agent" / "claude-code.txt",
+                expected_plugins,
+                expected_skills,
+                benchmark_skill_names,
+            )
+        else:
+            delivery_errors = _codex_delivery_errors(
+                trial_dir / "agent" / "plugin-inventory.json",
+                expected_plugin_records,
+            )
+        errors.extend(f"{label}: {error}" for error in delivery_errors)
+        if len(errors) >= _MAX_DELIVERY_ERRORS:
+            break
+    return tuple(errors[:_MAX_DELIVERY_ERRORS])
+
+
 def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     """Execute only a previously compiled manifest with an exact digest approval."""
 
@@ -1641,10 +1987,39 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     profile = _load_profile(root, manifest.profile)
     for image in _required_images(profile, manifest.task_ids):
         require_current_image(root, image)
-    for relative_path in manifest.harbor_config_paths:
+    benchmark_skill_names = _benchmark_skill_names(root, manifest.cells)
+    canary_jobs: list[tuple[RunCell, str]] = []
+    for index, relative_path in enumerate(manifest.harbor_config_paths):
+        config_path = manifest.path.parent / relative_path
+        cell = manifest.cells[index % len(manifest.cells)]
+        job_name = load_job(config_path).job_name
         subprocess.run(
-            ("harbor", "run", "-c", str(manifest.path.parent / relative_path)),
+            ("harbor", "run", "-c", str(config_path)),
             cwd=root,
             check=True,
             env=execution_environment,
         )
+        if index < len(manifest.cells):
+            canary_jobs.append((cell, job_name))
+            if index + 1 == len(manifest.cells):
+                errors = [
+                    error
+                    for canary_cell, canary_job_name in canary_jobs
+                    for error in _completed_job_errors(
+                        root,
+                        canary_cell,
+                        canary_job_name,
+                        benchmark_skill_names,
+                    )
+                ][:_MAX_DELIVERY_ERRORS]
+                if errors:
+                    raise ValueError("delivery canary failed: " + "; ".join(errors))
+            continue
+        errors = _completed_job_errors(
+            root,
+            cell,
+            job_name,
+            benchmark_skill_names,
+        )
+        if errors:
+            raise ValueError("job delivery failed: " + "; ".join(errors))

@@ -10,6 +10,7 @@ from typing import Any, override
 from urllib.parse import unquote, urlparse
 
 from harbor.agents.installed.codex import Codex
+from harbor.environments.base import BaseEnvironment
 from harbor.models.trajectories import Observation, ObservationResult, ToolCall, Trajectory
 
 
@@ -169,6 +170,24 @@ def _native_call(
 
 class HarnessCodex(Codex):
     """Codex with a narrow Harbor 0.22.0 code-mode trajectory compatibility fix."""
+
+    @override
+    async def _upload_effective_config(
+        self,
+        environment: BaseEnvironment,
+        config: dict[str, Any],
+        remote_path: str,
+    ) -> None:
+        await super()._upload_effective_config(environment, config, remote_path)
+        await self.exec_as_agent(
+            environment,
+            command=(
+                "if [ -s ~/.nvm/nvm.sh ]; then . ~/.nvm/nvm.sh; fi; "
+                "mkdir -p /logs/agent; "
+                "codex plugin list --json > /logs/agent/plugin-inventory.json"
+            ),
+            env={"CODEX_HOME": self._REMOTE_CODEX_HOME.as_posix()},
+        )
 
     @override
     def _convert_events_to_trajectory(self, session_dir: Path) -> Trajectory | None:
