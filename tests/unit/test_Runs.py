@@ -131,6 +131,7 @@ def _add_bundle(root: Path, cell: RunCell) -> Path:
     }[cell.arm]
     delivery_surfaces = []
     for layer in layers:
+        plugin_version = "6.3.0" if layer == "Superpowers" else "0.8.1"
         if cell.provider == "claude":
             plugin = "superpowers" if layer == "Superpowers" else "harness"
             relative = Path("claude") / "plugins" / plugin
@@ -139,7 +140,7 @@ def _add_bundle(root: Path, cell: RunCell) -> Path:
         else:
             marketplace = "superpowers-dev" if layer == "Superpowers" else "studio-moser"
             plugin = "superpowers" if layer == "Superpowers" else "harness"
-            version = "6.3.0" if layer == "Superpowers" else "0.8.1"
+            version = plugin_version
             relative = (
                 Path("codex")
                 / "provider-home"
@@ -152,18 +153,59 @@ def _add_bundle(root: Path, cell: RunCell) -> Path:
             provider_path = f"/harness-arm/{relative.as_posix()}"
             surface = "codex-plugin"
         (path / relative).mkdir(parents=True, exist_ok=True)
+        (path / relative / "skills").mkdir(exist_ok=True)
+        if cell.provider == "claude":
+            manifest = path / relative / ".claude-plugin"
+            manifest.mkdir(exist_ok=True)
+            (manifest / "plugin.json").write_text(
+                json.dumps({"name": plugin, "version": plugin_version})
+                + "\n"
+            )
+            if layer == "Superpowers":
+                (path / relative / "hooks").mkdir(exist_ok=True)
         if cell.provider == "codex":
             manifest = path / relative / ".codex-plugin"
             manifest.mkdir(exist_ok=True)
-            (manifest / "plugin.json").write_text("{}\n")
+            (manifest / "plugin.json").write_text(
+                json.dumps({"name": plugin, "version": version}) + "\n"
+            )
         delivery_surfaces.append(
             {
                 "layer": layer,
                 "surface": surface,
                 "path": provider_path,
-                "capabilities": ["skills"],
+                "capabilities": (
+                    ["skills", "hooks"]
+                    if cell.provider == "claude" and layer == "Superpowers"
+                    else ["skills"]
+                ),
             }
         )
+    if cell.provider == "codex" and layers:
+        provider_home = path / "codex" / "provider-home"
+        marketplaces = {
+            surface["path"].split("/")[-3] for surface in delivery_surfaces
+        }
+        for marketplace in marketplaces:
+            (provider_home / "marketplaces" / marketplace).mkdir(parents=True)
+        sections = []
+        for surface in delivery_surfaces:
+            marketplace, plugin, _ = surface["path"].rsplit("/", 3)[-3:]
+            sections.extend(
+                (
+                    f"[marketplaces.{marketplace}]",
+                    'source_type = "local"',
+                    (
+                        'source = "/harness-arm/codex/provider-home/marketplaces/'
+                        f'{marketplace}"'
+                    ),
+                    "",
+                    f'[plugins."{plugin}@{marketplace}"]',
+                    "enabled = true",
+                    "",
+                )
+            )
+        (provider_home / "config.toml").write_text("\n".join(sections))
     (path / "Provenance.json").write_text(
         json.dumps(
             {
@@ -189,7 +231,7 @@ def _claude_cells() -> tuple[RunCell, ...]:
     )
 
 
-def _compile_claude_matrix(root: Path):
+def _compile_claude_matrix(root: Path, task_ids: tuple[str, ...] = ("task-one",)):
     cells = _claude_cells()
     for cell in cells:
         _add_bundle(root, cell)
@@ -198,8 +240,8 @@ def _compile_claude_matrix(root: Path):
         profile="calibration",
         billing_mode="api",
         cells=cells,
-        task_ids=("task-one",),
-        max_sessions=4,
+        task_ids=task_ids,
+        max_sessions=4 * len(task_ids),
         max_budget_usd=Decimal("100"),
         attempts=1,
     )
@@ -357,6 +399,94 @@ def test_delivery_provenance_rejects_unclaimed_a0_plugin(run_root: Path):
         )
 
 
+def test_delivery_provenance_rejects_duplicate_targets(run_root: Path):
+    cell = _cell("claude", "A3", "candidate", "a", "a" * 40)
+    bundle = _add_bundle(run_root, cell)
+    provenance_path = bundle / "Provenance.json"
+    provenance = json.loads(provenance_path.read_text())
+    provenance["delivery_surfaces"][1]["path"] = provenance["delivery_surfaces"][0][
+        "path"
+    ]
+    shutil.rmtree(bundle / "claude" / "plugins" / "harness")
+    provenance_path.write_text(json.dumps(provenance) + "\n")
+
+    with pytest.raises(ValueError, match="duplicate|canonical"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_renamed_in_root_path(run_root: Path):
+    cell = _cell("claude", "A1", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    source = bundle / "claude" / "plugins" / "superpowers"
+    renamed = source.with_name("renamed")
+    source.rename(renamed)
+    provenance_path = bundle / "Provenance.json"
+    provenance = json.loads(provenance_path.read_text())
+    provenance["delivery_surfaces"][0]["path"] = "/harness-arm/claude/plugins/renamed"
+    provenance_path.write_text(json.dumps(provenance) + "\n")
+
+    with pytest.raises(ValueError, match="canonical"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+@pytest.mark.parametrize("capabilities", ([], None), ids=("wrong", "missing"))
+def test_delivery_provenance_rejects_wrong_capabilities(
+    run_root: Path, capabilities: object
+):
+    cell = _cell("claude", "A1", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    provenance_path = bundle / "Provenance.json"
+    provenance = json.loads(provenance_path.read_text())
+    provenance["delivery_surfaces"][0]["capabilities"] = capabilities
+    provenance_path.write_text(json.dumps(provenance) + "\n")
+
+    with pytest.raises(ValueError, match="capabilities"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_codex_a0_provider_home(run_root: Path):
+    cell = _cell("codex", "A0", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    provider_home = bundle / "codex" / "provider-home"
+    provider_home.mkdir(parents=True)
+    (provider_home / "config.toml").write_text("[marketplaces.injected]\n")
+
+    with pytest.raises(ValueError, match="Codex delivery contamination"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
 def test_generated_claude_plugin_seed_environment_is_rejected(run_root: Path):
     manifest = _compile_claude_matrix(run_root)
     relative_path = manifest.harbor_config_paths[0]
@@ -397,12 +527,42 @@ def test_manifest_binds_selected_custom_agent_adapters(run_root: Path):
         _verify_generated_inputs(run_root, manifest)
 
 
+def test_single_provider_manifest_binds_both_custom_agent_adapters(run_root: Path):
+    cell = _cell("claude", "A0", "candidate", "a")
+    _add_bundle(run_root, cell)
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="api",
+        cells=(cell,),
+        task_ids=("task-one",),
+        max_sessions=1,
+        max_budget_usd=Decimal("100"),
+    )
+
+    assert set(manifest.provenance["agent_adapter_digests"]) == {"claude", "codex"}
+    adapter = run_root / "src" / "harness_testing" / "Codex_Agent.py"
+    adapter.write_text("changed after approval\n")
+    with pytest.raises(ValueError, match="agent adapter digest mismatch"):
+        _verify_generated_inputs(run_root, manifest)
+
+
 def test_static_job_verification_uses_task_major_cell_order(run_root: Path):
     manifest = _compile_claude_matrix(run_root)
     reordered = replace(
         manifest,
         harbor_config_paths=tuple(reversed(manifest.harbor_config_paths)),
     )
+
+    with pytest.raises(ValueError, match="order mismatch"):
+        _verify_generated_inputs(run_root, reordered)
+
+
+def test_static_job_verification_restarts_cells_for_each_task(run_root: Path):
+    manifest = _compile_claude_matrix(run_root, ("task-one", "task-two"))
+    paths = list(manifest.harbor_config_paths)
+    paths[4], paths[5] = paths[5], paths[4]
+    reordered = replace(manifest, harbor_config_paths=tuple(paths))
 
     with pytest.raises(ValueError, match="order mismatch"):
         _verify_generated_inputs(run_root, reordered)

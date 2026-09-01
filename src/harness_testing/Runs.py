@@ -48,6 +48,10 @@ _SUBSCRIPTION_SELECTORS = {
     "claude": ("CLAUDE_FORCE_OAUTH", "1"),
     "codex": ("CODEX_FORCE_AUTH_JSON", "1"),
 }
+_LAYER_PLUGIN_NAMES = {
+    "Superpowers": "superpowers",
+    "Studio Harness": "harness",
+}
 _AGENT_ADAPTERS = {
     "claude": (
         "harness_testing.Claude_Agent:HarnessClaude",
@@ -360,6 +364,141 @@ def _actual_delivery_targets(bundle: Path, provider: str) -> set[Path]:
     }
 
 
+def _plugin_manifest(target: Path, provider: str) -> dict[str, object]:
+    directory = ".claude-plugin" if provider == "claude" else ".codex-plugin"
+    path = target / directory / "plugin.json"
+    try:
+        manifest = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"delivery plugin manifest is invalid: {target}") from error
+    if not isinstance(manifest, dict):
+        raise ValueError(f"delivery plugin manifest is invalid: {target}")
+    return manifest
+
+
+def _observed_capabilities(target: Path, provider: str) -> list[str]:
+    manifest = _plugin_manifest(target, provider)
+    capabilities: list[str] = []
+    if (target / "skills").is_dir() or manifest.get("skills"):
+        capabilities.append("skills")
+    hooks = manifest.get("hooks")
+    if (
+        provider == "claude"
+        and ((target / "hooks").is_dir() or bool(hooks))
+    ) or (provider == "codex" and bool(hooks)):
+        capabilities.append("hooks")
+    return capabilities
+
+
+def _canonical_delivery_path(
+    bundle: Path,
+    provider: str,
+    layer: str,
+    target: Path,
+) -> str:
+    plugin = _LAYER_PLUGIN_NAMES[layer]
+    manifest = _plugin_manifest(target, provider)
+    target_plugin = target.name if provider == "claude" else target.parent.name
+    if target_plugin != plugin or manifest.get("name") != plugin:
+        raise ValueError(f"delivery target is not canonical for layer {layer}")
+    if provider == "claude":
+        return f"/harness-arm/claude/plugins/{plugin}"
+
+    cache_root = bundle / "codex" / "provider-home" / "plugins" / "cache"
+    try:
+        marketplace, plugin_name, version = target.relative_to(cache_root).parts
+    except ValueError as error:
+        raise ValueError(f"delivery target is not canonical for layer {layer}") from error
+    if (
+        plugin_name != plugin
+        or not isinstance(manifest.get("version"), str)
+        or manifest["version"] != version
+    ):
+        raise ValueError(f"delivery target is not canonical for layer {layer}")
+    return (
+        "/harness-arm/codex/provider-home/plugins/cache/"
+        f"{marketplace}/{plugin}/{version}"
+    )
+
+
+def _validate_codex_provider_home(bundle: Path, targets: set[Path]) -> None:
+    codex_root = bundle / "codex"
+    if not targets:
+        if codex_root.exists():
+            raise ValueError("Codex delivery contamination in A0")
+        return
+    if not codex_root.is_dir() or {path.name for path in codex_root.iterdir()} != {
+        "provider-home"
+    }:
+        raise ValueError("Codex delivery contamination in provider root")
+
+    provider_home = codex_root / "provider-home"
+    expected_home_entries = {"config.toml", "marketplaces", "plugins"}
+    if not provider_home.is_dir() or {
+        path.name for path in provider_home.iterdir()
+    } != expected_home_entries:
+        raise ValueError("Codex delivery contamination in provider home")
+    cache_root = provider_home / "plugins" / "cache"
+    if not cache_root.is_dir() or {
+        path.name for path in (provider_home / "plugins").iterdir()
+    } != {"cache"}:
+        raise ValueError("Codex delivery contamination in plugin cache")
+
+    expected_paths: dict[str, dict[str, set[str]]] = {}
+    for target in targets:
+        try:
+            marketplace, plugin, version = target.relative_to(cache_root).parts
+        except ValueError as error:
+            raise ValueError("Codex delivery target is outside its cache") from error
+        expected_paths.setdefault(marketplace, {}).setdefault(plugin, set()).add(version)
+    if {path.name for path in cache_root.iterdir()} != set(expected_paths):
+        raise ValueError("Codex delivery contamination in cache marketplaces")
+    for marketplace, plugins in expected_paths.items():
+        marketplace_path = cache_root / marketplace
+        if not marketplace_path.is_dir() or {
+            path.name for path in marketplace_path.iterdir()
+        } != set(plugins):
+            raise ValueError("Codex delivery contamination in cache plugins")
+        for plugin, versions in plugins.items():
+            plugin_path = marketplace_path / plugin
+            if not plugin_path.is_dir() or {
+                path.name for path in plugin_path.iterdir()
+            } != versions:
+                raise ValueError("Codex delivery contamination in cache versions")
+
+    marketplaces = provider_home / "marketplaces"
+    if not marketplaces.is_dir() or {
+        path.name for path in marketplaces.iterdir()
+    } != set(expected_paths) or not all(
+        (marketplaces / marketplace).is_dir() for marketplace in expected_paths
+    ):
+        raise ValueError("Codex delivery contamination in marketplaces")
+    try:
+        with (provider_home / "config.toml").open("rb") as config_file:
+            config = tomllib.load(config_file)
+    except (OSError, tomllib.TOMLDecodeError) as error:
+        raise ValueError("Codex provider config is invalid") from error
+    expected_config = {
+        "marketplaces": {
+            marketplace: {
+                "source_type": "local",
+                "source": (
+                    "/harness-arm/codex/provider-home/marketplaces/"
+                    f"{marketplace}"
+                ),
+            }
+            for marketplace in expected_paths
+        },
+        "plugins": {
+            f"{plugin}@{marketplace}": {"enabled": True}
+            for marketplace, plugins in expected_paths.items()
+            for plugin in plugins
+        },
+    }
+    if config != expected_config:
+        raise ValueError("Codex provider config contradicts delivery")
+
+
 def _validated_delivery_surfaces(
     bundle: Path,
     provider: str,
@@ -385,11 +524,20 @@ def _validated_delivery_surfaces(
         if surface.get("layer") != layer or surface.get("surface") != expected_surface:
             raise ValueError(f"delivery surface does not match layer {layer}")
         target = _delivery_surface_host_path(bundle, provider, surface.get("path"))
+        if target in expected_targets:
+            raise ValueError(f"duplicate delivery target for layer {layer}")
         if provider == "claude" and target.parent != (bundle / "claude" / "plugins").resolve():
             raise ValueError("Claude plugin delivery target must be a direct child")
+        canonical_path = _canonical_delivery_path(bundle, provider, layer, target)
+        if surface.get("path") != canonical_path:
+            raise ValueError(f"delivery path is not canonical for layer {layer}")
+        if surface.get("capabilities") != _observed_capabilities(target, provider):
+            raise ValueError(f"delivery capabilities do not match layer {layer}")
         expected_targets.add(target)
         validated.append(surface)
-    if _actual_delivery_targets(bundle, provider) != expected_targets:
+    if provider == "codex":
+        _validate_codex_provider_home(bundle, expected_targets)
+    elif _actual_delivery_targets(bundle, provider) != expected_targets:
         raise ValueError(f"delivery contamination does not match arm {arm}")
     return tuple(validated)
 
@@ -758,7 +906,6 @@ def compile_run(
     agent_adapter_digests = {
         provider: _sha256((root / path).read_bytes())
         for provider, (_, path) in _AGENT_ADAPTERS.items()
-        if provider in {cell.provider for cell in cells}
     }
     versions_digest = _sha256((root / "Versions.toml").read_bytes())
     profiles_digest = _sha256((root / "runs" / "Profiles.toml").read_bytes())
@@ -1080,7 +1227,6 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     actual_adapter_digests = {
         provider: _sha256((root / path).read_bytes())
         for provider, (_, path) in _AGENT_ADAPTERS.items()
-        if provider in {cell.provider for cell in manifest.cells}
     }
     if expected_adapter_digests != actual_adapter_digests:
         raise ValueError("agent adapter digest mismatch after manifest approval")
