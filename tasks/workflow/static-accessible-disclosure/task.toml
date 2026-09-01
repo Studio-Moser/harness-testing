@@ -18,7 +18,7 @@ category = "workflow"
 tags = ["html", "javascript", "accessibility", "testing-churn"]
 change_class = "small"
 verification_envelope = "small"
-fixture_digest = "sha256:ead18b80419ccfab802be534629eb09a1fae706d6a62763897d49a381c7de03f"
+fixture_digest = "sha256:d50746d136e00e94247bccb367ecd3d4ba228dc3e4e94ed7c559120f83ef3075"
 
 [agent]
 timeout_sec = 900.0

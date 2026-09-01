@@ -1,5 +1,5 @@
-FROM studio-moser/harness-testing-node:0.1.0 AS node-runtime
-FROM studio-moser/harness-testing-verifier:0.1.0
+FROM studio-moser/harness-testing-node:0.2.0 AS node-runtime
+FROM studio-moser/harness-testing-verifier:0.2.0
 
 COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
 COPY --from=node-runtime /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm

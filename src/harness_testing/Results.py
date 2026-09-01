@@ -17,6 +17,9 @@ from uuid import UUID
 from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import SchemaError
 
+from harness_testing.Config import load_versions
+from harness_testing.Runs import load_manifest
+
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 _SENSITIVE_KEY = re.compile(
     r"(?:^|_)(?:api_key|access_token|refresh_token|auth_token|authorization|password|"
@@ -495,6 +498,59 @@ def trend_series_key(document: Mapping[str, object]) -> str:
     return str(compatibility["key"])
 
 
+def _current_series_errors(
+    root: Path, document: Mapping[str, object]
+) -> tuple[str, ...]:
+    schema_version = str(load_versions(root / "Versions.toml")["repository"]["schema_version"])
+    errors: list[str] = []
+    provenance = document.get("provenance")
+    methodology_schema = (
+        provenance.get("methodology_schema")
+        if isinstance(provenance, Mapping)
+        else None
+    )
+    if methodology_schema != schema_version:
+        errors.append(
+            f"methodology schema {methodology_schema} does not match repository schema "
+            f"{schema_version}"
+        )
+
+    run = document.get("run")
+    manifest_digest = run.get("manifest_digest") if isinstance(run, Mapping) else None
+    if not isinstance(manifest_digest, str) or not _DIGEST.fullmatch(manifest_digest):
+        errors.append("run manifest digest is invalid")
+    else:
+        manifest_path = (
+            root
+            / "runs"
+            / "generated"
+            / manifest_digest.removeprefix("sha256:")
+            / "Manifest.json"
+        )
+        try:
+            manifest = load_manifest(manifest_path)
+        except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+            errors.append(f"run manifest is unavailable or invalid: {error}")
+        else:
+            if manifest.digest != manifest_digest:
+                errors.append("run manifest digest does not match the result")
+            if manifest.schema_version != schema_version:
+                errors.append(
+                    f"manifest schema {manifest.schema_version} does not match repository "
+                    f"schema {schema_version}"
+                )
+
+    compatibility = document.get("compatibility")
+    reviewed_mapping = (
+        compatibility.get("reviewed_mapping")
+        if isinstance(compatibility, Mapping)
+        else object()
+    )
+    if reviewed_mapping is not None:
+        errors.append("current compatibility series forbids a reviewed mapping")
+    return tuple(errors)
+
+
 def sanitize_public_result(
     root: Path, source_path: Path, output_path: Path
 ) -> dict[str, object]:
@@ -517,6 +573,13 @@ def sanitize_public_result(
     run = public["run"]
     if is_public and isinstance(run, Mapping) and run.get("finalized") is not True:
         raise ValueError("results/ accepts only finalized public results")
+    if is_public:
+        series_errors = _current_series_errors(root, public)
+        if series_errors:
+            raise ValueError(
+                "result is not in the current compatibility series: "
+                + "; ".join(series_errors)
+            )
     contents = json.dumps(public, indent=2, sort_keys=True) + "\n"
     if output_path.exists():
         if output_path.read_text() != contents:

@@ -41,6 +41,13 @@ _POLICY_PATHS = {
     "policy/Verification_Envelopes.toml",
     "src/harness_testing/Metrics.py",
 }
+_HARNESS_RESULT_SCHEMA_TESTS = {
+    "tests/unit/test_Contract_Criteria.py",
+    "tests/unit/test_Contract_Stub_Server.py",
+    "tests/unit/test_Harness_Result.py",
+    "tests/unit/test_Materialize.py",
+    "tests/unit/test_Validate.py",
+}
 _FULL_DETERMINISTIC_COMMANDS = (
     ("uv", "run", "ruff", "check", "src", "tests"),
     ("uv", "run", "pytest", "tests/unit", "-q"),
@@ -853,6 +860,10 @@ def affected_validation_commands(
             images.add("verifier")
         if name.startswith("images/"):
             unit_tests.add("tests/unit/test_Materialize.py")
+
+        if name == "src/harness_testing/Harness_Result.schema.json":
+            unit_tests.update(_HARNESS_RESULT_SCHEMA_TESTS)
+            images.add("verifier")
 
         if name in _POLICY_PATHS or name.startswith("policy/"):
             unit_tests.update(

@@ -862,7 +862,7 @@ def test_deepswe_derived_dockerfile_uses_pinned_clis_without_touching_app():
     dockerfile = deepswe_derived_dockerfile(
         REPOSITORY_ROOT,
         "registry.invalid/task@sha256:" + "a" * 64,
-        "studio-moser/harness-testing-node:0.1.0",
+        "studio-moser/harness-testing-node:0.2.0",
         original_user="agent",
     )
 
@@ -883,7 +883,7 @@ def test_deepswe_agent_tools_build_matches_the_pinned_task_platform():
     )
     assert (
         "--tag",
-        "studio-moser/harness-testing-node:0.1.0-linux-amd64",
+        "studio-moser/harness-testing-node:0.2.0-linux-amd64",
     ) in tuple(zip(arguments, arguments[1:], strict=False))
 
 

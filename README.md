@@ -39,7 +39,7 @@ uv run harness-test task qa --pack contract --all-cases
 | A2 | Studio Harness | Studio Harness contribution in isolation |
 | A3 | Superpowers, then Studio Harness | Interaction and overlap calibration |
 
-Claude can deliver Superpowers through skills and hooks. Codex receives the same pinned Superpowers content through its skills surface; it is labeled **skills-only** in reports. Studio Harness uses each provider’s supported native surface.
+Claude receives immutable plugin directories through repeatable `--plugin-dir` flags. Those directories are checked without a model by `claude plugin validate --strict`; no plugin seed is created. Codex keeps native marketplace and plugin materialization, records its plugin inventory before dispatch, and exposes Superpowers as **skills-only**. Studio Harness uses each provider’s supported native surface.
 
 ## What is scored
 
@@ -53,9 +53,9 @@ The initial workflow pack covers React, TypeScript, static HTML/CSS/JavaScript, 
 
 ## Runs, results, and dashboard
 
-`harness-test run plan` writes an ignored, content-addressed manifest and starts no model session. `harness-test run execute` accepts only that exact manifest digest. Subscription mode forbids API-key fallback; API mode exposes an admission estimate and explicit maximum, not a provider-side hard stop.
+`harness-test run plan` writes an ignored, content-addressed manifest and starts no model session. `harness-test run execute` accepts only that exact manifest digest. The first selected task is the delivery canary across every selected cell: a correctness zero continues, while an infrastructure or delivery failure stops the run. Subscription mode forbids API-key fallback; API mode exposes an admission estimate and explicit maximum, not a provider-side hard stop.
 
-Raw Harbor jobs remain under ignored local paths. Only reviewed, finalized files produced through `harness-test result sanitize` may enter `results/`. The Observable Framework dashboard reads only those schema-valid files and publishes six views: Latest, Trends, Comparisons, Task matrix, Run detail, and Quality versus efficiency.
+Raw Harbor jobs remain under ignored local paths. Only reviewed, finalized files produced through `harness-test result sanitize` may enter `results/`; publication also requires a content-valid current-series manifest and no reviewed mapping. Old hidden-contract and plugin-seed cohorts remain local and quarantined, with no regrade or mapping into schema `0.2.0`. The Observable Framework dashboard reads only those schema-valid files and publishes six views: Latest, Trends, Comparisons, Task matrix, Run detail, and Quality versus efficiency.
 
 See [Methodology](docs/Methodology.md), [Runbook](docs/Runbook.md), [Task Authoring](docs/Task_Authoring.md), and the [DeepSWE Capability Pack](docs/Capability_Pack.md).
 

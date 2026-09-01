@@ -29,7 +29,7 @@ task-id/
     efficiency/
 ```
 
-Contract tasks also carry protected expected calls/results, exact evidence-prefix requirements, and a deterministic local sidecar scenario. Their synthetic endpoint optionally exposes action names and required payload fields through `harness-stub describe`, but never responses or expected results. Every required field must be protected-matched or listed in the call's protected `shape_only` array; use `shape_only` only for caller-authored prose. Required values must match the protected JSON type and nonempty shape, and protected lists compare as unordered sets. Mark only contiguous independent calls with the same protected `unordered_group`. Invalid calls are recorded without consuming the next required workflow step. Rust tasks use the frozen crate and lockfile instead of the Node verifier subset.
+Contract tasks also carry protected expected calls/results, exact evidence-prefix requirements, and a deterministic local sidecar scenario. `harness-stub describe` exposes the universal result schema and task-specific public actions, including required payload fields, but never protected answers, responses, or expected results. Every required field must be protected-matched or listed in the call's protected `shape_only` array; use `shape_only` only for caller-authored prose. Required values must match the protected JSON type and nonempty shape, and protected lists compare as unordered sets. Mark only contiguous independent calls with the same protected `unordered_group`. Invalid calls are recorded without consuming the next required workflow step. Rust tasks use the frozen crate and lockfile instead of the Node verifier subset.
 
 The task configuration must preserve these boundaries:
 
@@ -76,7 +76,7 @@ uv run harness-test task qa --task TASK_ID --case oracle
 uv run harness-test task qa --task TASK_ID --case nop
 ```
 
-After the complete pack is authored, run its five-case gate once:
+At the checkpoint, run the full deterministic gates once, including the pack’s five-case gate:
 
 ```bash
 uv run harness-test task qa --pack workflow --all-cases
@@ -90,4 +90,4 @@ Do not run the pack between task edits. If only a criterion or classifier change
 
 Before release, inspect representative passes, failures, efficient trials, and outliers in Harbor’s local viewer. Quarantine a task that is ambiguous, contaminated, nondeterministic, unfair across providers, or broken by its own fixture.
 
-Changing the task digest, pack composition, scorer, command classifier, environment image, provider-agent major contract, or methodology schema breaks the compatibility key by default. Preserve an old series or create a dated reviewed mapping; never silently join incompatible results.
+Changing the task digest, pack composition, scorer, command classifier, environment image, provider-agent major contract, or methodology schema breaks the compatibility key by default. The repaired series is schema `0.2.0`; old hidden-contract and plugin-seed cohorts remain local and quarantined, are not regraded, and receive no reviewed mapping into the repaired series.

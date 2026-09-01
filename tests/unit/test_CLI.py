@@ -8,7 +8,7 @@ def test_version_reports_repository_schema(capsys):
         main(["--version"])
 
     assert exit_info.value.code == 0
-    assert capsys.readouterr().out == "harness-test 0.1.0\n"
+    assert capsys.readouterr().out == "harness-test 0.2.0\n"
 
 
 def test_task_qa_dispatches_one_named_deterministic_case(monkeypatch, capsys):

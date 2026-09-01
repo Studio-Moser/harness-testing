@@ -1,5 +1,7 @@
 import copy
+import hashlib
 import json
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -19,6 +21,9 @@ from harness_testing.Results import (
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
 FIXTURE_ROOT = REPOSITORY_ROOT / "tests" / "Fixtures" / "Public_Results"
+MANIFEST_FIXTURE = (
+    REPOSITORY_ROOT / "tests" / "Fixtures" / "Run_Manifests" / "Repaired_Manifest.json"
+)
 
 
 def _load(name: str) -> dict[str, object]:
@@ -32,7 +37,7 @@ def _result_root(path: Path) -> Path:
         (REPOSITORY_ROOT / "policy" / "Public_Result.schema.json").read_bytes()
     )
     (path / "Versions.toml").write_text(
-        '[repository]\nschema_version = "0.1.0"\n'
+        '[repository]\nschema_version = "0.2.0"\n'
     )
     return path
 
@@ -42,6 +47,15 @@ def _refresh_identity(document: dict[str, object]) -> None:
     assert isinstance(compatibility, dict)
     compatibility["key"] = compatibility_key(document)
     document["result_id"] = public_result_id(document)
+
+
+def _manifest_digest(document: dict[str, object]) -> str:
+    unsigned = dict(document)
+    unsigned.pop("digest", None)
+    contents = json.dumps(
+        unsigned, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode()
+    return f"sha256:{hashlib.sha256(contents).hexdigest()}"
 
 
 def _source_job(root: Path) -> tuple[Path, Path]:
@@ -362,3 +376,51 @@ def test_finalization_requires_both_reviews_and_a_complete_run(tmp_path: Path):
     source.write_text(json.dumps(local))
     with pytest.raises(ValueError, match="results/ accepts only finalized"):
         sanitize_public_result(root, source, root / "results" / "partial.json")
+
+
+def test_publication_rejects_an_old_or_missing_run_manifest(tmp_path: Path):
+    root = _result_root(tmp_path)
+    candidate = _load("Valid.json")
+    manifest = json.loads(MANIFEST_FIXTURE.read_text())
+    digest = manifest["digest"]
+    assert isinstance(digest, str)
+    manifest_path = root / "runs" / "generated" / digest.removeprefix("sha256:")
+    manifest_path /= "Manifest.json"
+    candidate["run"]["manifest_digest"] = digest
+    candidate["provenance"]["methodology_schema"] = "0.2.0"
+    _refresh_identity(candidate)
+    source = root / "candidate.json"
+    source.write_text(json.dumps(candidate))
+
+    with pytest.raises(ValueError, match="current compatibility series"):
+        sanitize_public_result(root, source, root / "results" / "missing.json")
+
+    old_manifest = copy.deepcopy(manifest)
+    old_manifest["schema_version"] = "0.1.0"
+    old_manifest["digest"] = _manifest_digest(old_manifest)
+    old_digest = old_manifest["digest"]
+    assert isinstance(old_digest, str)
+    old_path = root / "runs" / "generated" / old_digest.removeprefix("sha256:")
+    old_path.mkdir(parents=True)
+    (old_path / "Manifest.json").write_text(json.dumps(old_manifest))
+    candidate["run"]["manifest_digest"] = old_digest
+    _refresh_identity(candidate)
+    source.write_text(json.dumps(candidate))
+    with pytest.raises(ValueError, match="manifest schema 0.1.0"):
+        sanitize_public_result(root, source, root / "results" / "old.json")
+
+    manifest_path.parent.mkdir(parents=True)
+    shutil.copyfile(MANIFEST_FIXTURE, manifest_path)
+    candidate["run"]["manifest_digest"] = digest
+    candidate["provenance"]["methodology_schema"] = "0.1.0"
+    _refresh_identity(candidate)
+    source.write_text(json.dumps(candidate))
+    with pytest.raises(ValueError, match="methodology schema 0.1.0"):
+        sanitize_public_result(root, source, root / "results" / "methodology.json")
+
+    candidate["provenance"]["methodology_schema"] = "0.2.0"
+    _refresh_identity(candidate)
+    source.write_text(json.dumps(candidate))
+    output = root / "results" / "current.json"
+    written = sanitize_public_result(root, source, output)
+    assert json.loads(output.read_text()) == written

@@ -18,7 +18,7 @@ category = "workflow"
 tags = ["html", "css", "grouped", "testing-churn"]
 change_class = "grouped"
 verification_envelope = "grouped"
-fixture_digest = "sha256:31c7905ade50524e6da7cba1aef34a0dd31dae72b6877d7cad55e3514a8f63e9"
+fixture_digest = "sha256:66c45252fa95a09d03da69d753d3de134a87829076f6c244109dee90e3ea2cc3"
 
 [agent]
 timeout_sec = 900.0

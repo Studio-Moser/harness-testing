@@ -19,7 +19,7 @@ category = "contract"
 tags = ["harness", "contract", "shelby", "optional-capability"]
 change_class = "feature"
 verification_envelope = "contract"
-fixture_digest = "sha256:77fd2980dc4087e6ca951264d46231c283446150a96d96da8c66fd398ea7c9f0"
+fixture_digest = "sha256:cffb5fdecc24b99ad5640686ddef3bf1d2226da6d7c52c9e624acb2f91a52862"
 
 [agent]
 timeout_sec = 900.0

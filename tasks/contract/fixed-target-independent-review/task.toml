@@ -19,7 +19,7 @@ category = "contract"
 tags = ["harness", "contract", "review", "fixed-target"]
 change_class = "feature"
 verification_envelope = "contract"
-fixture_digest = "sha256:a79317c3dfb1d53f770820e6b50c48f502e146d0da8dbb44077e273c519e3c6c"
+fixture_digest = "sha256:3a69c74851dceeaf9514488efddabe1c65e93a640ccb86e0199f6f364baf465d"
 
 [agent]
 timeout_sec = 900.0

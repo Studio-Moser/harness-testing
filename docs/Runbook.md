@@ -33,7 +33,7 @@ npm --prefix dashboard test
 npm --prefix dashboard run build
 ```
 
-Save the full unit suite and both all-case pack runs for one checkpoint. `harness-test validate --changed-from COMMIT` uses the same policy in CI: it groups related unit modules into one pytest invocation and escalates only shared execution-contract changes.
+Run the full deterministic gates once at the checkpoint. `harness-test validate --changed-from COMMIT` uses the same policy in CI: it groups related unit modules into one pytest invocation and escalates only shared execution-contract changes.
 
 ## Materialize an arm
 
@@ -48,7 +48,7 @@ uv run harness-test arm materialize \
   --harness-commit FULL_40_CHARACTER_COMMIT
 ```
 
-Materialized bundles stay under ignored `arms/materialized/` and are mounted read-only in task containers.
+Materialized bundles stay under ignored `arms/materialized/` and are mounted read-only in task containers. Claude copies immutable plugin directories and supplies each one with a repeatable `--plugin-dir`; materialization runs model-free `claude plugin validate --strict` and creates no plugin seed. Codex uses its native marketplace/plugin layout, with Superpowers recorded as skills-only, and writes a plugin inventory before agent dispatch.
 
 ## Plan before any model-backed run
 
@@ -75,6 +75,8 @@ uv run harness-test run execute \
   --manifest runs/generated/MANIFEST_DIRECTORY/Manifest.json \
   --approve sha256:EXACT_APPROVED_DIGEST
 ```
+
+The first selected task runs as the delivery canary across every selected cell. A correctness zero is valid task evidence and continues the run. Any infrastructure or delivery failure stops execution before the second task; later delivery failures also stop immediately.
 
 ### Subscription authentication
 
@@ -115,7 +117,9 @@ uv run harness-test result sanitize \
   --output results/Reviewed_Result.json
 ```
 
-`results/` accepts finalized, reviewed, non-partial, non-quarantined data only. Use `runs/generated/` for local staging. The sanitizer rejects raw trajectories, reasoning, command/tool output, environment variables, auth-looking fields, home paths, arbitrary Harbor extras, unknown telemetry, and mismatched identities.
+`results/` accepts finalized, reviewed, non-partial, non-quarantined data only. It resolves `run.manifest_digest` only through the matching content-addressed `runs/generated/` manifest, revalidates that manifest’s digest, and requires both manifest and methodology schema to match the current repository series with no reviewed mapping. Use `runs/generated/` for inspectable local staging. The sanitizer rejects raw trajectories, reasoning, command/tool output, environment variables, auth-looking fields, home paths, arbitrary Harbor extras, unknown telemetry, and mismatched identities.
+
+Old hidden-contract and plugin-seed cohorts stay local and quarantined. Do not regrade them or create a reviewed mapping into schema `0.2.0`.
 
 ## Dashboard
 

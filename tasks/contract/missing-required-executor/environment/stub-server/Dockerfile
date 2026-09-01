@@ -1,4 +1,4 @@
-FROM studio-moser/harness-testing-verifier:0.1.0
+FROM studio-moser/harness-testing-verifier:0.2.0
 
 COPY Scenario.json /opt/harness-contract/Scenario.json
 RUN mkdir -p /var/log/harness

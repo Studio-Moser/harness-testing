@@ -1,4 +1,4 @@
-FROM studio-moser/harness-testing-rust:0.1.0
+FROM studio-moser/harness-testing-rust:0.2.0
 
 COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates

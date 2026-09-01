@@ -278,6 +278,25 @@ def test_affected_validation_routes_dashboard_images_and_core_schema_changes():
     assert any(command[-2:] == ("workflow", "--all-cases") for command in core)
     assert any(command[-2:] == ("contract", "--all-cases") for command in core)
 
+    result_schema = affected_validation_commands(
+        REPOSITORY_ROOT,
+        [Path("src/harness_testing/Harness_Result.schema.json")],
+    )
+    assert result_schema == (
+        (
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/unit/test_Contract_Criteria.py",
+            "tests/unit/test_Contract_Stub_Server.py",
+            "tests/unit/test_Harness_Result.py",
+            "tests/unit/test_Materialize.py",
+            "tests/unit/test_Validate.py",
+        ),
+        ("uv", "run", "harness-test", "images", "build", "--verifier"),
+    )
+
 
 def test_markdown_validation_checks_local_links_without_network(
     tmp_path, monkeypatch

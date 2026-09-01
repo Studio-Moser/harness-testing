@@ -18,7 +18,7 @@ category = "workflow"
 tags = ["react", "typescript", "bug-fix", "testing-churn"]
 change_class = "small"
 verification_envelope = "small"
-fixture_digest = "sha256:9dc17227ba147f7a7a20c990418914e439f13ca7d7645c60c6cca6efe21c5fe7"
+fixture_digest = "sha256:4b3385645d0278a4812b4330030e3fc5616b70d1f7335b619386a71cb56b0065"
 
 [agent]
 timeout_sec = 900.0
