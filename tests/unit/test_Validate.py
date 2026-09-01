@@ -1,5 +1,6 @@
 import copy
 import json
+import shutil
 from pathlib import Path
 
 from test_Config import VALID_TASK
@@ -93,6 +94,48 @@ def test_repository_static_validation_is_deterministic(capsys):
 
     assert main(["validate", "--static-only"]) == 0
     assert capsys.readouterr().out == "Static validation passed.\n"
+
+
+def test_contract_expectation_validation_reports_public_schema_errors(tmp_path):
+    source = REPOSITORY_ROOT / "tasks/contract/missing-required-executor"
+    task_root = tmp_path / source.name
+    shutil.copytree(source, task_root)
+    expected_path = task_root / "tests/Expected.json"
+    expected = json.loads(expected_path.read_text())
+    expected["result"]["route"]["actual_model"] = ""
+    expected_path.write_text(json.dumps(expected))
+
+    failures = Validate._validate_benchmark_task_assets(
+        task_root / "task.toml",
+        Validate.load_task(task_root / "task.toml", expected_schema="1.4"),
+    )
+
+    assert any(
+        failure.message
+        == "invalid contract expectation: HarnessResult /route/actual_model: anyOf"
+        for failure in failures
+    )
+
+
+def test_contract_scenario_rejects_reserved_public_schema_key(tmp_path):
+    source = REPOSITORY_ROOT / "tasks/contract/missing-required-executor"
+    task_root = tmp_path / source.name
+    shutil.copytree(source, task_root)
+    scenario_path = task_root / "environment/stub-server/Scenario.json"
+    scenario = json.loads(scenario_path.read_text())
+    scenario["contract"]["harness_result_schema"] = {}
+    scenario_path.write_text(json.dumps(scenario))
+
+    failures = Validate._validate_benchmark_task_assets(
+        task_root / "task.toml",
+        Validate.load_task(task_root / "task.toml", expected_schema="1.4"),
+    )
+
+    assert any(
+        "invalid contract scenario: scenario contract reserves harness_result_schema"
+        in failure.message
+        for failure in failures
+    )
 
 
 def test_version_ledger_pins_the_python_mcp_sdk_used_by_computer_use():

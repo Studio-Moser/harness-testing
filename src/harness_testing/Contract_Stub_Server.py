@@ -9,11 +9,24 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from harness_testing.Harness_Result import load_harness_result_schema
+
 
 class ScenarioServer(ThreadingHTTPServer):
     scenario: dict[str, Any]
     events_path: Path
     events_lock: threading.Lock
+
+
+def public_contract(scenario: dict[str, Any]) -> dict[str, Any]:
+    contract = scenario.get("contract")
+    actions = contract.get("actions") if isinstance(contract, dict) else None
+    if not isinstance(actions, list):
+        raise ValueError("scenario contract has no public actions")
+    return {
+        "actions": actions,
+        "harness_result_schema": load_harness_result_schema(),
+    }
 
 
 def _contains(value: object, required: object) -> bool:
@@ -154,10 +167,9 @@ class Handler(BaseHTTPRequestHandler):
             self._respond(200, {"status": "ok"})
             return
         if self.path == "/contract":
-            contract = self.server.scenario.get("contract")
-            if isinstance(contract, dict):
-                self._respond(200, contract)
-            else:
+            try:
+                self._respond(200, public_contract(self.server.scenario))
+            except ValueError:
                 self._respond(500, {"error": "missing_contract"})
             return
         self._respond(404, {"error": "not_found"})

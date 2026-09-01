@@ -9,6 +9,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from harness_testing.Contract_Stub_Server import Handler, ScenarioServer, _call_matches
+from harness_testing.Harness_Result import load_harness_result_schema
 
 
 @contextmanager
@@ -96,7 +97,13 @@ def _valid_payload() -> dict[str, object]:
 
 def test_public_contract_is_discoverable_and_invalid_calls_do_not_advance(tmp_path):
     with _running_server(tmp_path) as (base_url, contract, events_path):
-        assert _get_json(f"{base_url}/contract") == contract
+        public = _get_json(f"{base_url}/contract")
+        assert public == {
+            "actions": contract["actions"],
+            "harness_result_schema": load_harness_result_schema(),
+        }
+        assert "calls" not in public
+        assert "response" not in json.dumps(public)
 
         invalid_status, invalid = _post_json(
             f"{base_url}/invoke",
@@ -251,7 +258,13 @@ def test_harness_stub_describe_prints_the_public_contract(tmp_path):
         )
 
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout) == contract
+    public = json.loads(result.stdout)
+    assert public == {
+        "actions": contract["actions"],
+        "harness_result_schema": load_harness_result_schema(),
+    }
+    assert "calls" not in public
+    assert "response" not in json.dumps(public)
 
 
 def test_harness_stub_records_locally_rejected_json(tmp_path):

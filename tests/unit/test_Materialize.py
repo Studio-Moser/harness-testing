@@ -48,6 +48,8 @@ def test_base_image_context_excludes_local_and_benchmark_payloads():
 def test_verifier_image_carries_shared_workflow_support():
     dockerfile = (REPOSITORY_ROOT / "images" / "Verifier.Dockerfile").read_text()
 
+    assert "src/harness_testing/Harness_Result.py" in dockerfile
+    assert "src/harness_testing/Harness_Result.schema.json" in dockerfile
     assert "src/harness_testing/Trajectory_Events.py" in dockerfile
     assert "src/harness_testing/Workflow_Criteria.py" in dockerfile
 
@@ -80,6 +82,8 @@ def test_verifier_image_digest_binds_the_shared_decoder(tmp_path: Path):
         "src/harness_testing/__init__.py",
         "src/harness_testing/Contract_Criteria.py",
         "src/harness_testing/Contract_Stub_Server.py",
+        "src/harness_testing/Harness_Result.py",
+        "src/harness_testing/Harness_Result.schema.json",
         "src/harness_testing/Trajectory_Events.py",
         "src/harness_testing/Workflow_Criteria.py",
     ):
@@ -99,6 +103,20 @@ def test_verifier_image_digest_binds_the_shared_decoder(tmp_path: Path):
     )
 
     assert image_input_digest(tmp_path, "verifier") != criteria_first
+
+    schema_first = image_input_digest(tmp_path, "verifier")
+    (tmp_path / "src" / "harness_testing" / "Harness_Result.py").write_text(
+        "changed\n"
+    )
+
+    assert image_input_digest(tmp_path, "verifier") != schema_first
+
+    resource_first = image_input_digest(tmp_path, "verifier")
+    (tmp_path / "src" / "harness_testing" / "Harness_Result.schema.json").write_text(
+        "changed\n"
+    )
+
+    assert image_input_digest(tmp_path, "verifier") != resource_first
 
 
 def test_rust_image_recreates_global_cli_symlinks_after_copying_node_modules():

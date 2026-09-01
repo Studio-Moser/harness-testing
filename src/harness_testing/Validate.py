@@ -19,6 +19,7 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
 
 from harness_testing.Config import load_job, load_task, load_trajectory, load_versions
+from harness_testing.Harness_Result import harness_result_schema_errors
 
 _FULL_COMMIT = re.compile(r"^[0-9a-f]{40}$")
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -236,16 +237,14 @@ def _validate_benchmark_task_assets(
                 )
             ):
                 raise ValueError("evidence_requirements must contain exact prefixes")
-            if not isinstance(result, dict) or set(result) != {
-                "status",
-                "route",
-                "artifacts",
-                "evidence",
-                "telemetry",
-                "shelby",
-                "blockers",
-            }:
-                raise ValueError("result does not contain the complete HarnessResult")
+            errors = harness_result_schema_errors(result)
+            if errors:
+                raise ValueError(
+                    "; ".join(
+                        f"HarnessResult {pointer}: {validator}"
+                        for pointer, validator in errors
+                    )
+                )
             qa = json.loads(qa_path.read_text())
             if set(qa["cases"]) != {
                 "oracle",
@@ -302,6 +301,9 @@ def _validate_benchmark_task_assets(
             scenario_path = environment_directory / "stub-server" / "Scenario.json"
             try:
                 scenario = json.loads(scenario_path.read_text())
+                contract = scenario.get("contract")
+                if isinstance(contract, dict) and "harness_result_schema" in contract:
+                    raise ValueError("scenario contract reserves harness_result_schema")
                 scenario_calls = [
                     {"action": call["action"], "payload": call["payload"]}
                     for call in scenario["calls"]
