@@ -91,10 +91,13 @@ def run_root(tmp_path: Path) -> Path:
     for relative in (
         "images/Node_Agent.Dockerfile",
         "images/Verifier.Dockerfile",
+        "src/harness_testing/Claude_Agent.py",
         "src/harness_testing/Codex_Agent.py",
         "src/harness_testing/__init__.py",
         "src/harness_testing/Contract_Criteria.py",
         "src/harness_testing/Contract_Stub_Server.py",
+        "src/harness_testing/Harness_Result.py",
+        "src/harness_testing/Harness_Result.schema.json",
         "src/harness_testing/Trajectory_Events.py",
         "src/harness_testing/Workflow_Criteria.py",
     ):
@@ -120,18 +123,86 @@ def _add_bundle(root: Path, cell: RunCell) -> Path:
         if cell.harness_commit
         else []
     )
+    layers = {
+        "A0": (),
+        "A1": ("Superpowers",),
+        "A2": ("Studio Harness",),
+        "A3": ("Superpowers", "Studio Harness"),
+    }[cell.arm]
+    delivery_surfaces = []
+    for layer in layers:
+        if cell.provider == "claude":
+            plugin = "superpowers" if layer == "Superpowers" else "harness"
+            relative = Path("claude") / "plugins" / plugin
+            provider_path = f"/harness-arm/{relative.as_posix()}"
+            surface = "claude-plugin-dir"
+        else:
+            marketplace = "superpowers-dev" if layer == "Superpowers" else "studio-moser"
+            plugin = "superpowers" if layer == "Superpowers" else "harness"
+            version = "6.3.0" if layer == "Superpowers" else "0.8.1"
+            relative = (
+                Path("codex")
+                / "provider-home"
+                / "plugins"
+                / "cache"
+                / marketplace
+                / plugin
+                / version
+            )
+            provider_path = f"/harness-arm/{relative.as_posix()}"
+            surface = "codex-plugin"
+        (path / relative).mkdir(parents=True, exist_ok=True)
+        if cell.provider == "codex":
+            manifest = path / relative / ".codex-plugin"
+            manifest.mkdir(exist_ok=True)
+            (manifest / "plugin.json").write_text("{}\n")
+        delivery_surfaces.append(
+            {
+                "layer": layer,
+                "surface": surface,
+                "path": provider_path,
+                "capabilities": ["skills"],
+            }
+        )
     (path / "Provenance.json").write_text(
         json.dumps(
             {
                 "provider": cell.provider,
                 "arm": cell.arm,
+                "layers": list(layers),
                 "sources": sources,
+                "delivery_surfaces": delivery_surfaces,
                 "bundle_digest": cell.bundle_digest,
             }
         )
         + "\n"
     )
     return path
+
+
+def _claude_cells() -> tuple[RunCell, ...]:
+    return (
+        _cell("claude", "A0", "candidate", "0"),
+        _cell("claude", "A1", "candidate", "1"),
+        _cell("claude", "A2", "candidate", "2", "2" * 40),
+        _cell("claude", "A3", "candidate", "3", "3" * 40),
+    )
+
+
+def _compile_claude_matrix(root: Path):
+    cells = _claude_cells()
+    for cell in cells:
+        _add_bundle(root, cell)
+    return compile_run(
+        root,
+        profile="calibration",
+        billing_mode="api",
+        cells=cells,
+        task_ids=("task-one",),
+        max_sessions=4,
+        max_budget_usd=Decimal("100"),
+        attempts=1,
+    )
 
 
 def _paired_cells(root: Path) -> tuple[RunCell, RunCell]:
@@ -167,6 +238,174 @@ def _compile_pair(root: Path, **overrides):
     }
     arguments.update(overrides)
     return compile_run(**arguments)
+
+
+def test_generated_claude_jobs_follow_exact_arm_delivery_provenance(
+    run_root: Path,
+):
+    manifest = _compile_claude_matrix(run_root)
+    agents = [
+        load_job(manifest.path.parent / path).agents[0]
+        for path in manifest.harbor_config_paths
+    ]
+    a0_agent, a1_agent, a2_agent, a3_agent = agents
+
+    assert a0_agent.import_path == "harness_testing.Claude_Agent:HarnessClaude"
+    assert "plugin_dirs" not in a0_agent.kwargs
+    assert a1_agent.kwargs["plugin_dirs"] == [
+        "/harness-arm/claude/plugins/superpowers"
+    ]
+    assert a2_agent.kwargs["plugin_dirs"] == [
+        "/harness-arm/claude/plugins/harness"
+    ]
+    assert a3_agent.kwargs["plugin_dirs"] == [
+        "/harness-arm/claude/plugins/superpowers",
+        "/harness-arm/claude/plugins/harness",
+    ]
+    assert all(agent.env == {} and agent.skills == [] for agent in agents)
+
+
+@pytest.mark.parametrize(
+    ("description", "mutate"),
+    [
+        (
+            "outside-provider-path",
+            lambda provenance, bundle: provenance["delivery_surfaces"][0].update(
+                {"path": "/outside/claude/plugins/superpowers"}
+            ),
+        ),
+        (
+            "wrong-layer-order",
+            lambda provenance, bundle: provenance.update(
+                {"layers": ["Studio Harness", "Superpowers"]}
+            ),
+        ),
+        (
+            "extra-a0-layer",
+            lambda provenance, bundle: provenance.update(
+                {
+                    "layers": ["Superpowers"],
+                    "delivery_surfaces": [
+                        {
+                            "layer": "Superpowers",
+                            "surface": "claude-plugin-dir",
+                            "path": "/harness-arm/claude/plugins/superpowers",
+                            "capabilities": ["skills"],
+                        }
+                    ],
+                }
+            ),
+        ),
+    ],
+    ids=lambda value: value if isinstance(value, str) else None,
+)
+def test_delivery_provenance_rejects_invalid_arm_claims(
+    run_root: Path, description: str, mutate
+):
+    arm = "A3" if description != "extra-a0-layer" else "A0"
+    harness_commit = "a" * 40 if arm == "A3" else None
+    cell = _cell("claude", arm, "candidate", "a", harness_commit)
+    bundle = _add_bundle(run_root, cell)
+    provenance_path = bundle / "Provenance.json"
+    provenance = json.loads(provenance_path.read_text())
+    mutate(provenance, bundle)
+    provenance_path.write_text(json.dumps(provenance) + "\n")
+
+    with pytest.raises(ValueError, match="delivery"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_missing_host_directory(run_root: Path):
+    cell = _cell("claude", "A1", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    shutil.rmtree(bundle / "claude" / "plugins" / "superpowers")
+
+    with pytest.raises(ValueError, match="delivery"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_delivery_provenance_rejects_unclaimed_a0_plugin(run_root: Path):
+    cell = _cell("claude", "A0", "candidate", "a")
+    bundle = _add_bundle(run_root, cell)
+    (bundle / "claude" / "plugins" / "superpowers").mkdir(parents=True)
+
+    with pytest.raises(ValueError, match="contamination"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+        )
+
+
+def test_generated_claude_plugin_seed_environment_is_rejected(run_root: Path):
+    manifest = _compile_claude_matrix(run_root)
+    relative_path = manifest.harbor_config_paths[0]
+    path = manifest.path.parent / relative_path
+    document = yaml.safe_load(path.read_text())
+    document["agents"][0]["env"] = {
+        "CLAUDE_CODE_PLUGIN_SEED_DIR": "/harness-arm/claude/plugin-seed"
+    }
+    text = yaml.safe_dump(document, sort_keys=False)
+    path.write_text(text)
+    manifest.provenance["harbor_config_digests"][relative_path] = Runs._sha256(
+        text.encode()
+    )
+
+    with pytest.raises(ValueError, match="plugin seed"):
+        _verify_generated_inputs(run_root, manifest)
+
+
+def test_manifest_binds_selected_custom_agent_adapters(run_root: Path):
+    claude = _cell("claude", "A0", "baseline", "a")
+    codex = _cell("codex", "A0", "candidate", "b")
+    for cell in (claude, codex):
+        _add_bundle(run_root, cell)
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="api",
+        cells=(claude, codex),
+        task_ids=("task-one",),
+        max_sessions=2,
+        max_budget_usd=Decimal("100"),
+    )
+
+    assert set(manifest.provenance["agent_adapter_digests"]) == {"claude", "codex"}
+    adapter = run_root / "src" / "harness_testing" / "Claude_Agent.py"
+    adapter.write_text("changed after approval\n")
+    with pytest.raises(ValueError, match="agent adapter digest mismatch"):
+        _verify_generated_inputs(run_root, manifest)
+
+
+def test_static_job_verification_uses_task_major_cell_order(run_root: Path):
+    manifest = _compile_claude_matrix(run_root)
+    reordered = replace(
+        manifest,
+        harbor_config_paths=tuple(reversed(manifest.harbor_config_paths)),
+    )
+
+    with pytest.raises(ValueError, match="order mismatch"):
+        _verify_generated_inputs(run_root, reordered)
 
 
 def test_manifest_digest_is_canonical_and_stable(run_root: Path):

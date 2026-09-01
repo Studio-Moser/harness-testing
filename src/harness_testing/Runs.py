@@ -19,6 +19,7 @@ from harbor.models.job.config import JobConfig
 
 from harness_testing.Config import load_job, load_versions
 from harness_testing.Materialize import (
+    _ARM_LAYERS,
     DEEPSWE_TASK_IDS,
     MaterializedDeepSWE,
     dockerfile_policy_errors,
@@ -48,6 +49,10 @@ _SUBSCRIPTION_SELECTORS = {
     "codex": ("CODEX_FORCE_AUTH_JSON", "1"),
 }
 _AGENT_ADAPTERS = {
+    "claude": (
+        "harness_testing.Claude_Agent:HarnessClaude",
+        Path("src/harness_testing/Claude_Agent.py"),
+    ),
     "codex": (
         "harness_testing.Codex_Agent:HarnessCodex",
         Path("src/harness_testing/Codex_Agent.py"),
@@ -280,6 +285,122 @@ def _bundle_path(root: Path, cell: RunCell) -> Path:
     )
 
 
+def _bundle_provenance(bundle: Path) -> dict[str, Any]:
+    provenance_path = bundle / "Provenance.json"
+    if not provenance_path.is_file():
+        raise ValueError(f"bundle has no materialized provenance: {bundle}")
+    try:
+        provenance = json.loads(provenance_path.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"bundle provenance is invalid: {bundle}") from error
+    if not isinstance(provenance, dict):
+        raise ValueError(f"bundle provenance must be an object: {bundle}")
+    return provenance
+
+
+def _delivery_surface_host_path(bundle: Path, provider: str, value: object) -> Path:
+    if not isinstance(value, str):
+        raise ValueError("delivery surface path must be a string")
+    provider_path = Path(value)
+    if not provider_path.is_absolute() or ".." in provider_path.parts:
+        raise ValueError(f"unsafe delivery surface path: {value!r}")
+
+    arm_root = Path("/harness-arm")
+    codex_root = Path("/tmp/codex-home")
+    try:
+        arm_relative = provider_path.relative_to(arm_root)
+    except ValueError:
+        arm_relative = None
+    if arm_relative is not None:
+        if provider == "claude":
+            expected_prefix = ("claude", "plugins")
+        else:
+            expected_prefix = ("codex", "provider-home", "plugins", "cache")
+        if arm_relative.parts[: len(expected_prefix)] != expected_prefix:
+            raise ValueError(f"delivery surface is outside its provider root: {value}")
+        host_path = bundle.joinpath(*arm_relative.parts)
+    else:
+        if provider != "codex":
+            raise ValueError(f"delivery surface is outside its provider root: {value}")
+        try:
+            relative = provider_path.relative_to(codex_root)
+        except ValueError as error:
+            raise ValueError(f"delivery surface is outside its provider root: {value}") from error
+        if relative.parts[:2] != ("plugins", "cache"):
+            raise ValueError(f"delivery surface is outside its provider root: {value}")
+        host_path = bundle / "codex" / "provider-home" / relative
+
+    try:
+        resolved_bundle = bundle.resolve(strict=True)
+        resolved_path = host_path.resolve(strict=True)
+    except OSError as error:
+        raise ValueError(f"delivery surface target is missing: {value}") from error
+    if not resolved_path.is_relative_to(resolved_bundle) or not resolved_path.is_dir():
+        raise ValueError(f"delivery surface target is invalid: {value}")
+    return resolved_path
+
+
+def _actual_delivery_targets(bundle: Path, provider: str) -> set[Path]:
+    if provider == "claude":
+        plugin_root = bundle / "claude" / "plugins"
+        if not plugin_root.exists():
+            return set()
+        if not plugin_root.is_dir():
+            raise ValueError("Claude delivery root is not a directory")
+        return {path.resolve(strict=True) for path in plugin_root.iterdir()}
+
+    cache_root = bundle / "codex" / "provider-home" / "plugins" / "cache"
+    if not cache_root.exists():
+        return set()
+    if not cache_root.is_dir():
+        raise ValueError("Codex delivery root is not a directory")
+    return {
+        manifest.parent.parent.resolve(strict=True)
+        for manifest in cache_root.rglob(".codex-plugin/plugin.json")
+    }
+
+
+def _validated_delivery_surfaces(
+    bundle: Path,
+    provider: str,
+    arm: str,
+) -> tuple[dict[str, object], ...]:
+    provenance = _bundle_provenance(bundle)
+    expected_layers = _ARM_LAYERS.get(arm)
+    if expected_layers is None:
+        raise ValueError(f"unsupported arm delivery policy: {arm}")
+    layers = provenance.get("layers")
+    if not isinstance(layers, list) or tuple(layers) != expected_layers:
+        raise ValueError(f"delivery layers do not match arm {arm}")
+    surfaces = provenance.get("delivery_surfaces")
+    if not isinstance(surfaces, list) or len(surfaces) != len(expected_layers):
+        raise ValueError(f"delivery surfaces do not match arm {arm}")
+
+    expected_surface = "claude-plugin-dir" if provider == "claude" else "codex-plugin"
+    validated: list[dict[str, object]] = []
+    expected_targets: set[Path] = set()
+    for layer, surface in zip(expected_layers, surfaces, strict=True):
+        if not isinstance(surface, dict):
+            raise ValueError("delivery surface must be an object")
+        if surface.get("layer") != layer or surface.get("surface") != expected_surface:
+            raise ValueError(f"delivery surface does not match layer {layer}")
+        target = _delivery_surface_host_path(bundle, provider, surface.get("path"))
+        if provider == "claude" and target.parent != (bundle / "claude" / "plugins").resolve():
+            raise ValueError("Claude plugin delivery target must be a direct child")
+        expected_targets.add(target)
+        validated.append(surface)
+    if _actual_delivery_targets(bundle, provider) != expected_targets:
+        raise ValueError(f"delivery contamination does not match arm {arm}")
+    return tuple(validated)
+
+
+def _claude_plugin_dirs(bundle: Path, arm: str) -> list[str]:
+    return [
+        str(surface["path"])
+        for surface in _validated_delivery_surfaces(bundle, "claude", arm)
+    ]
+
+
 def _validate_cell(root: Path, cell: RunCell, versions: dict[str, Any]) -> None:
     if cell.provider not in _PROVIDER_ORDER:
         raise ValueError(f"unsupported provider in cell {cell.label}: {cell.provider}")
@@ -301,10 +422,7 @@ def _validate_cell(root: Path, cell: RunCell, versions: dict[str, Any]) -> None:
     if model is None or cell.model != model.get("model") or cell.effort != model.get("effort"):
         raise ValueError(f"cell {cell.label} does not match the version ledger model pin")
     bundle_path = _bundle_path(root, cell)
-    provenance_path = bundle_path / "Provenance.json"
-    if not provenance_path.is_file():
-        raise ValueError(f"cell {cell.label} has no materialized provenance")
-    provenance = json.loads(provenance_path.read_text())
+    provenance = _bundle_provenance(bundle_path)
     if (
         provenance.get("provider") != cell.provider
         or provenance.get("arm") != cell.arm
@@ -321,6 +439,7 @@ def _validate_cell(root: Path, cell: RunCell, versions: dict[str, Any]) -> None:
             raise ValueError(f"cell {cell.label} arm provenance has the wrong Harness commit")
     elif "Studio Harness" in source_commits:
         raise ValueError(f"cell {cell.label} arm provenance unexpectedly includes Harness")
+    _validated_delivery_surfaces(bundle_path, cell.provider, cell.arm)
 
 
 def _ordered_cells(cells: tuple[RunCell, ...]) -> tuple[RunCell, ...]:
@@ -398,8 +517,7 @@ def _task_location(
 
 def _provider_config(bundle: Path, provider: str) -> dict[str, object]:
     if provider == "claude":
-        path = bundle / "claude" / "settings.json"
-        return json.loads(path.read_text()) if path.is_file() else {}
+        return {}
     path = bundle / "codex" / "provider-home" / "config.toml"
     if not path.is_file():
         return {}
@@ -454,14 +572,10 @@ def _job_document(
     bundle = _bundle_path(root, cell)
     packages = _package_versions(versions)
     if cell.provider == "claude":
-        agent_identity = {"name": "claude-code"}
+        agent_identity = {"import_path": _AGENT_ADAPTERS["claude"][0]}
         model_name = f"anthropic/{cell.model}"
         version = packages["@anthropic-ai/claude-code"]
         environment = {}
-        if (bundle / "claude" / "plugin-seed").is_dir():
-            environment["CLAUDE_CODE_PLUGIN_SEED_DIR"] = (
-                "/harness-arm/claude/plugin-seed"
-            )
         skills: list[str] = []
     else:
         agent_identity = {"import_path": _AGENT_ADAPTERS["codex"][0]}
@@ -478,6 +592,10 @@ def _job_document(
     provider_config = _provider_config(bundle, cell.provider)
     if provider_config:
         kwargs["config"] = provider_config
+    if cell.provider == "claude":
+        plugin_dirs = _claude_plugin_dirs(bundle, cell.arm)
+        if plugin_dirs:
+            kwargs["plugin_dirs"] = plugin_dirs
 
     raw: dict[str, object] = {
         "job_name": f"{run_id}-{cell.label}-{task_id}",
@@ -969,14 +1087,37 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     expected_digests = manifest.provenance.get("harbor_config_digests")
     if not isinstance(expected_digests, dict):
         raise ValueError("manifest has no Harbor config digests")
-    for relative_path in manifest.harbor_config_paths:
+    if not manifest.cells:
+        raise ValueError("manifest has no cells")
+    for index, relative_path in enumerate(manifest.harbor_config_paths):
         if relative_path.startswith("/") or ".." in Path(relative_path).parts:
             raise ValueError(f"unsafe Harbor config path: {relative_path}")
         path = manifest.path.parent / relative_path
         expected = expected_digests.get(relative_path)
         if expected != _sha256(path.read_bytes()):
             raise ValueError(f"Harbor config digest mismatch: {relative_path}")
-        load_job(path)
+        job = load_job(path)
+        cell = manifest.cells[index % len(manifest.cells)]
+        if f"-{cell.label}-" not in job.job_name:
+            raise ValueError(f"Harbor config order mismatch: {relative_path}")
+        agent = job.agents[0]
+        expected_import_path = _AGENT_ADAPTERS[cell.provider][0]
+        if agent.import_path != expected_import_path:
+            raise ValueError(f"Harbor agent adapter mismatch: {relative_path}")
+        if cell.provider != "claude":
+            continue
+        if "CLAUDE_CODE_PLUGIN_SEED_DIR" in agent.env:
+            raise ValueError(f"Claude plugin seed is forbidden: {relative_path}")
+        if agent.env != {} or agent.skills != []:
+            raise ValueError(f"Claude delivery has unsupported surfaces: {relative_path}")
+        expected_plugin_dirs = _claude_plugin_dirs(_bundle_path(root, cell), cell.arm)
+        actual_plugin_dirs = agent.kwargs.get("plugin_dirs")
+        if actual_plugin_dirs is not None and not isinstance(actual_plugin_dirs, list):
+            raise ValueError(f"Claude plugin directories are invalid: {relative_path}")
+        if (actual_plugin_dirs or []) != expected_plugin_dirs:
+            raise ValueError(f"Claude plugin directories do not match delivery: {relative_path}")
+        if "config" in agent.kwargs:
+            raise ValueError(f"Claude settings config is forbidden: {relative_path}")
 
 
 def _verify_subscription_auth(
