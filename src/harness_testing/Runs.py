@@ -1722,7 +1722,9 @@ def _claude_delivery_errors(
             normalized: str | None = None
             if isinstance(name, str):
                 parts = name.split("@")
-                if len(parts) <= 2 and parts[0]:
+                if (len(parts) == 1 and parts[0]) or (
+                    len(parts) == 2 and all(part.strip() for part in parts)
+                ):
                     normalized = parts[0]
             if normalized not in _BENCHMARK_PLUGIN_NAMES:
                 candidate = name if isinstance(name, str) else entry
@@ -1750,17 +1752,24 @@ def _claude_delivery_errors(
         errors.append("Claude startup benchmark skills are malformed")
     else:
         for index, entry in enumerate(raw_skills):
-            if isinstance(entry, str) and entry in benchmark_skill_names:
-                if entry in seen_skills:
+            if isinstance(entry, str):
+                if entry in benchmark_skill_names:
+                    if entry in seen_skills:
+                        errors.append(
+                            f"Claude skill entry {index} has ambiguous benchmark skill {entry}"
+                        )
+                        if len(errors) == _MAX_DELIVERY_ERRORS:
+                            break
+                        continue
+                    seen_skills.add(entry)
+                    observed_skills.add(entry)
+                elif _benchmark_looking(entry):
                     errors.append(
-                        f"Claude skill entry {index} has ambiguous benchmark skill {entry}"
+                        f"Claude skill entry {index} has unexpected benchmark skill {entry}"
                     )
                     if len(errors) == _MAX_DELIVERY_ERRORS:
                         break
-                    continue
-                seen_skills.add(entry)
-                observed_skills.add(entry)
-            elif _benchmark_looking(entry) and not isinstance(entry, str):
+            elif _benchmark_looking(entry):
                 errors.append(
                     f"Claude skill entry {index} has malformed benchmark skill evidence"
                 )
@@ -1930,7 +1939,9 @@ def _completed_job_errors(
         if trial_result is None:
             errors.append(f"{label}: Harbor trial result is unreadable")
         else:
-            if trial_result.get("exception_info") is not None:
+            if "exception_info" not in trial_result:
+                errors.append(f"{label}: Harbor trial exception evidence is missing")
+            elif trial_result["exception_info"] is not None:
                 errors.append(f"{label}: Harbor trial exception is present")
             verifier_result = trial_result.get("verifier_result")
             rewards = (

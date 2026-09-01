@@ -514,6 +514,7 @@ def _write_completed_job(
     skills: list[object] | None = None,
     reward: float = 1.0,
     exception_info: object = None,
+    include_exception_info: bool = True,
     attempts: int = 1,
 ) -> None:
     job = root / "jobs" / "raw" / job_name
@@ -540,15 +541,12 @@ def _write_completed_job(
         verifier = trial / "verifier"
         agent.mkdir(parents=True)
         verifier.mkdir()
-        (trial / "result.json").write_text(
-            json.dumps(
-                {
-                    "exception_info": exception_info,
-                    "verifier_result": {"rewards": {"reward": reward}},
-                }
-            )
-            + "\n"
-        )
+        trial_result = {
+            "verifier_result": {"rewards": {"reward": reward}},
+        }
+        if include_exception_info:
+            trial_result["exception_info"] = exception_info
+        (trial / "result.json").write_text(json.dumps(trial_result) + "\n")
         (verifier / "reward.json").write_text(
             json.dumps({"reward": reward}) + "\n"
         )
@@ -673,6 +671,61 @@ def test_completed_job_delivery_rejects_missing_expected_a2_plugin(run_root: Pat
     assert any("plugin" in error and "harness" in error for error in errors)
 
 
+def test_completed_job_delivery_rejects_unselected_benchmark_skill_namespace(
+    run_root: Path,
+):
+    baseline = _cell("claude", "A0", "baseline", "a")
+    harness = _cell("claude", "A2", "candidate", "b", "b" * 40)
+    for cell in (baseline, harness):
+        _add_bundle(run_root, cell)
+    benchmark_skill_names = Runs._benchmark_skill_names(
+        run_root,
+        (baseline, harness),
+    )
+    assert benchmark_skill_names == frozenset({"harness:execute"})
+    _write_completed_job(
+        run_root,
+        baseline,
+        "unselected-skill-delivery",
+        skills=["provider:built-in", "superpowers:using-superpowers"],
+    )
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        baseline,
+        "unselected-skill-delivery",
+        benchmark_skill_names,
+    )
+
+    assert any(
+        "skill" in error and "superpowers:using-superpowers" in error
+        for error in errors
+    )
+
+
+def test_completed_job_delivery_rejects_blank_benchmark_plugin_marketplace(
+    run_root: Path,
+):
+    cell = _cell("claude", "A1", "candidate", "a")
+    _add_bundle(run_root, cell)
+    benchmark_skill_names = Runs._benchmark_skill_names(run_root, (cell,))
+    _write_completed_job(
+        run_root,
+        cell,
+        "blank-marketplace-delivery",
+        plugins=["provider-builtin", "superpowers@"],
+    )
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        cell,
+        "blank-marketplace-delivery",
+        benchmark_skill_names,
+    )
+
+    assert any("malformed benchmark plugin" in error for error in errors)
+
+
 def test_completed_job_delivery_rejects_codex_a0_benchmark_contamination(
     run_root: Path,
 ):
@@ -739,6 +792,26 @@ def test_completed_job_delivery_rejects_trial_exception(run_root: Path):
     )
 
     assert any("trial exception" in error for error in errors)
+
+
+def test_completed_job_delivery_rejects_missing_exception_evidence(run_root: Path):
+    cell = _cell("codex", "A0", "baseline", "a")
+    _add_bundle(run_root, cell)
+    _write_completed_job(
+        run_root,
+        cell,
+        "missing-exception-evidence",
+        include_exception_info=False,
+    )
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        cell,
+        "missing-exception-evidence",
+        Runs._benchmark_skill_names(run_root, (cell,)),
+    )
+
+    assert any("exception" in error and "missing" in error for error in errors)
 
 
 def test_completed_job_delivery_rejects_malformed_benchmark_evidence_with_a_cap(
