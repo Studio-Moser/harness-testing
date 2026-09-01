@@ -11,37 +11,10 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from harness_testing.Harness_Result import harness_result_schema_errors
 from harness_testing.Workflow_Criteria import protected_files_intact
 
-_RESULT_KEYS = {
-    "status",
-    "route",
-    "artifacts",
-    "evidence",
-    "telemetry",
-    "shelby",
-    "blockers",
-}
-_ROUTE_KEYS = {
-    "requested",
-    "actual_model",
-    "effort",
-    "provider",
-    "executor",
-    "resolution",
-    "attempted",
-    "fallback_reason",
-}
-_ARTIFACT_KEYS = {"files", "report"}
-_EVIDENCE_KEYS = {"fixed_target", "checks", "outcome"}
-_TELEMETRY_KEYS = {
-    "attempts",
-    "elapsed",
-    "verification_failures",
-    "token_or_quota_usage",
-}
-_SHELBY_KEYS = {"project_id", "run_id", "checkpoint_ids"}
-_SEMANTIC_ROUTE_KEYS = {
+_SEMANTIC_ROUTE_KEYS = (
     "requested",
     "actual_model",
     "effort",
@@ -49,7 +22,8 @@ _SEMANTIC_ROUTE_KEYS = {
     "executor",
     "resolution",
     "fallback_reason",
-}
+)
+_MAX_DIAGNOSTICS = 12
 _FORBIDDEN_LIFECYCLE = (
     re.compile(r"(?:^|[;&|]\s*|\s)(?:git\s+(?:checkout|switch|branch|commit|push)|gh\s+pr)\b"),
     re.compile(r"(?:^|[;&|]\s*|\s)(?:npm|pnpm|yarn)\s+(?:run\s+)?test\b"),
@@ -64,77 +38,6 @@ def _json(path: Path) -> Any:
         return json.loads(path.read_text())
     except (OSError, json.JSONDecodeError):
         return None
-
-
-def _strings(value: object) -> bool:
-    return isinstance(value, list) and all(isinstance(item, str) for item in value)
-
-
-def _nonblank_strings(value: object) -> bool:
-    return _strings(value) and all(item.strip() for item in value)
-
-
-def _optional_string(value: object) -> bool:
-    return value is None or isinstance(value, str)
-
-
-def _complete_result(result: object) -> bool:
-    if not isinstance(result, dict) or set(result) != _RESULT_KEYS:
-        return False
-    route = result.get("route")
-    artifacts = result.get("artifacts")
-    evidence = result.get("evidence")
-    telemetry = result.get("telemetry")
-    shelby = result.get("shelby")
-    blockers = result.get("blockers")
-    if (
-        not isinstance(route, dict)
-        or set(route) != _ROUTE_KEYS
-        or not isinstance(artifacts, dict)
-        or set(artifacts) != _ARTIFACT_KEYS
-        or not isinstance(evidence, dict)
-        or set(evidence) != _EVIDENCE_KEYS
-        or not isinstance(telemetry, dict)
-        or set(telemetry) != _TELEMETRY_KEYS
-        or not isinstance(shelby, dict)
-        or set(shelby) != _SHELBY_KEYS
-        or not _nonblank_strings(blockers)
-    ):
-        return False
-    if (
-        result.get("status") not in {"accepted", "failed", "blocked", "abandoned"}
-        or not isinstance(route.get("requested"), str)
-        or not all(
-            _optional_string(route.get(name))
-            for name in (
-                "actual_model",
-                "effort",
-                "provider",
-                "executor",
-                "resolution",
-                "fallback_reason",
-            )
-        )
-        or not _nonblank_strings(route.get("attempted"))
-        or not _nonblank_strings(artifacts.get("files"))
-        or not _optional_string(artifacts.get("report"))
-        or not _optional_string(evidence.get("fixed_target"))
-        or not _nonblank_strings(evidence.get("checks"))
-        or evidence.get("outcome") not in {"proven", "unproven"}
-        or not isinstance(telemetry.get("attempts"), int)
-        or telemetry["attempts"] < 0
-        or not isinstance(telemetry.get("verification_failures"), int)
-        or telemetry["verification_failures"] < 0
-        or not _optional_string(shelby.get("project_id"))
-        or not _optional_string(shelby.get("run_id"))
-        or not _nonblank_strings(shelby.get("checkpoint_ids"))
-    ):
-        return False
-    if result["status"] == "accepted":
-        return evidence["outcome"] == "proven" and not blockers
-    if result["status"] == "blocked":
-        return evidence["outcome"] == "unproven" and bool(blockers)
-    return True
 
 
 def _artifact_matches(path: Path, rule: object) -> bool:
@@ -194,9 +97,9 @@ def _evidence_matches(checks: list[str], requirements: object) -> bool:
     return True
 
 
-def _result_semantics_match(
+def _result_semantic_diagnostics(
     result: dict[str, Any], expected: dict[str, Any], evidence_requirements: object
-) -> bool:
+) -> list[str]:
     route = result["route"]
     expected_route = expected["route"]
     artifacts = result["artifacts"]
@@ -205,25 +108,90 @@ def _result_semantics_match(
     expected_evidence = expected["evidence"]
     telemetry = result["telemetry"]
     expected_telemetry = expected["telemetry"]
-    return (
-        result["status"] == expected["status"]
-        and all(
-            route[key] == expected_route[key] for key in _SEMANTIC_ROUTE_KEYS
+    diagnostics: list[str] = []
+    if result["status"] != expected["status"]:
+        diagnostics.append("result-semantics:/status:mismatch")
+    for key in _SEMANTIC_ROUTE_KEYS:
+        if route[key] != expected_route[key]:
+            diagnostics.append(f"result-semantics:/route/{key}:mismatch")
+    if not _attempts_match(route["attempted"], expected_route["attempted"]):
+        diagnostics.append("result-semantics:/route/attempted:mismatch")
+    if len(artifacts["files"]) != len(set(artifacts["files"])):
+        diagnostics.append("result-semantics:/artifacts/files:duplicate")
+    if set(artifacts["files"]) != set(expected_artifacts["files"]):
+        diagnostics.append("result-semantics:/artifacts/files:mismatch")
+    if artifacts["report"] != expected_artifacts["report"]:
+        diagnostics.append("result-semantics:/artifacts/report:mismatch")
+    if evidence["fixed_target"] != expected_evidence["fixed_target"]:
+        diagnostics.append("result-semantics:/evidence/fixed_target:mismatch")
+    if not _evidence_matches(evidence["checks"], evidence_requirements):
+        diagnostics.append("result-semantics:/evidence/checks:missing-prefix")
+    if evidence["outcome"] != expected_evidence["outcome"]:
+        diagnostics.append("result-semantics:/evidence/outcome:mismatch")
+    if telemetry["attempts"] != expected_telemetry["attempts"]:
+        diagnostics.append("result-semantics:/telemetry/attempts:mismatch")
+    if telemetry["verification_failures"] != expected_telemetry["verification_failures"]:
+        diagnostics.append("result-semantics:/telemetry/verification_failures:mismatch")
+    if result["shelby"] != expected["shelby"]:
+        diagnostics.append("result-semantics:/shelby:mismatch")
+    if _blocker_codes(result["blockers"]) != _blocker_codes(expected["blockers"]):
+        diagnostics.append("result-semantics:/blockers:mismatch")
+    return diagnostics
+
+
+def _artifact_path(relative: str) -> str:
+    return relative if relative.startswith("/") else f"/{relative}"
+
+
+def result_contract_diagnostics(
+    workspace: Path,
+    expected_path: Path,
+    protected_manifest: Path,
+) -> tuple[str, ...]:
+    """Return bounded local reasons a contract result does not match."""
+
+    result_path = workspace / "Harness_Result.json"
+    try:
+        result = json.loads(result_path.read_text())
+    except FileNotFoundError:
+        return ("result-json:/Harness_Result.json:missing",)
+    except (OSError, json.JSONDecodeError):
+        return ("result-json:/Harness_Result.json:malformed",)
+
+    result_schema_errors = harness_result_schema_errors(result)
+    diagnostics = [
+        f"result-schema:{path}:{code}"
+        for path, code in result_schema_errors
+    ]
+    expected = _json(expected_path)
+    expected_result = expected.get("result") if isinstance(expected, dict) else None
+    expected_schema_errors = harness_result_schema_errors(expected_result)
+    expected_artifacts = expected.get("artifacts") if isinstance(expected, dict) else None
+    protected_intact = protected_files_intact(workspace, protected_manifest)
+    if (
+        not isinstance(expected, dict)
+        or expected_schema_errors
+        or not isinstance(expected_artifacts, dict)
+        or not all(isinstance(relative, str) for relative in expected_artifacts)
+        or not protected_intact
+    ):
+        diagnostics.append("protected-state:/:mismatch")
+
+    if not result_schema_errors and not expected_schema_errors and isinstance(expected, dict):
+        diagnostics.extend(
+            _result_semantic_diagnostics(
+                result, expected_result, expected.get("evidence_requirements")
+            )
         )
-        and _attempts_match(route["attempted"], expected_route["attempted"])
-        and len(artifacts["files"]) == len(set(artifacts["files"]))
-        and set(artifacts["files"]) == set(expected_artifacts["files"])
-        and artifacts["report"] == expected_artifacts["report"]
-        and evidence["fixed_target"] == expected_evidence["fixed_target"]
-        and evidence["outcome"] == expected_evidence["outcome"]
-        and _evidence_matches(evidence["checks"], evidence_requirements)
-        and telemetry["attempts"] == expected_telemetry["attempts"]
-        and telemetry["verification_failures"]
-        == expected_telemetry["verification_failures"]
-        and result["shelby"] == expected["shelby"]
-        and _blocker_codes(result["blockers"])
-        == _blocker_codes(expected["blockers"])
-    )
+
+    if isinstance(expected_artifacts, dict):
+        for relative, rule in expected_artifacts.items():
+            if not isinstance(relative, str):
+                continue
+            path = Path(relative) if Path(relative).is_absolute() else workspace / relative
+            if not _artifact_matches(path, rule):
+                diagnostics.append(f"artifact:{_artifact_path(relative)}:mismatch")
+    return tuple(diagnostics[:_MAX_DIAGNOSTICS])
 
 
 def result_matches_contract(
@@ -233,30 +201,12 @@ def result_matches_contract(
 ) -> bool:
     """Check the complete result, frozen inputs, and independently visible outputs."""
 
-    expected = _json(expected_path)
-    result = _json(workspace / "Harness_Result.json")
-    if (
-        not isinstance(expected, dict)
-        or not _complete_result(result)
-        or not _complete_result(expected.get("result"))
-        or not protected_files_intact(workspace, protected_manifest)
-    ):
-        return False
-    if not _result_semantics_match(
-        result, expected["result"], expected.get("evidence_requirements")
-    ):
-        return False
-    artifacts = expected.get("artifacts")
-    if not isinstance(artifacts, dict):
-        return False
-    return all(
-        _artifact_matches(
-            Path(relative) if Path(relative).is_absolute() else workspace / relative,
-            rule,
-        )
-        for relative, rule in artifacts.items()
-        if isinstance(relative, str)
-    ) and all(isinstance(relative, str) for relative in artifacts)
+    diagnostics = result_contract_diagnostics(
+        workspace, expected_path, protected_manifest
+    )
+    for diagnostic in diagnostics:
+        print(f"harness-contract: {diagnostic}")
+    return not diagnostics
 
 
 def _stub_evidence(expected_path: Path, events_path: Path) -> tuple[list[Any], list[Any]] | None:

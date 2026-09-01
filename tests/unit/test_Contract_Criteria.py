@@ -153,6 +153,102 @@ def test_contract_result_requires_the_complete_public_shape(tmp_path):
     assert not Contract_Criteria.result_matches_contract(workspace, expected, manifest)
 
 
+def test_contract_diagnostics_distinguish_json_schema_semantics_and_artifacts(tmp_path):
+    workspace, expected, manifest = _fixture(tmp_path)
+    result_path = workspace / "Harness_Result.json"
+    result_path.write_text("{")
+    assert Contract_Criteria.result_contract_diagnostics(
+        workspace, expected, manifest
+    ) == ("result-json:/Harness_Result.json:malformed",)
+
+    result = _result()
+    result["route"]["actual_model"] = ""
+    result_path.write_text(json.dumps(result))
+    assert any(
+        item == "result-schema:/route/actual_model:anyOf"
+        for item in Contract_Criteria.result_contract_diagnostics(
+            workspace, expected, manifest
+        )
+    )
+
+    result = _result()
+    result["route"]["requested"] = "quick"
+    result_path.write_text(json.dumps(result))
+    assert any(
+        item == "result-semantics:/route/requested:mismatch"
+        for item in Contract_Criteria.result_contract_diagnostics(
+            workspace, expected, manifest
+        )
+    )
+
+    (workspace / "Output.json").write_text('{"value":3}\n')
+    result_path.write_text(json.dumps(_result()))
+    assert any(
+        item == "artifact:/Output.json:mismatch"
+        for item in Contract_Criteria.result_contract_diagnostics(
+            workspace, expected, manifest
+        )
+    )
+
+
+def test_contract_diagnostics_are_bounded_to_twelve_entries(tmp_path):
+    workspace, expected, manifest = _fixture(tmp_path)
+    result = _result()
+    result.update({"status": "invalid", "blockers": [""]})
+    result["route"].update(
+        {
+            "requested": "invalid",
+            "actual_model": "",
+            "effort": "",
+            "provider": "",
+            "executor": "",
+            "resolution": "invalid",
+            "attempted": [""],
+            "fallback_reason": "",
+        }
+    )
+    result["artifacts"].update({"files": [""], "report": ""})
+    result["evidence"].update(
+        {"fixed_target": "", "checks": [""], "outcome": "invalid"}
+    )
+    result["telemetry"].update(
+        {
+            "attempts": -1,
+            "elapsed": "",
+            "verification_failures": -1,
+            "token_or_quota_usage": "",
+        }
+    )
+    result["shelby"].update(
+        {"project_id": "", "run_id": "", "checkpoint_ids": [""]}
+    )
+    (workspace / "Harness_Result.json").write_text(json.dumps(result))
+
+    assert (
+        len(
+            Contract_Criteria.result_contract_diagnostics(
+                workspace, expected, manifest
+            )
+        )
+        == 12
+    )
+
+
+def test_contract_result_prints_only_local_diagnostics(tmp_path, capsys):
+    workspace, expected, manifest = _fixture(tmp_path)
+    result = _result()
+    result["route"]["requested"] = "quick"
+    (workspace / "Harness_Result.json").write_text(json.dumps(result))
+
+    assert not Contract_Criteria.result_matches_contract(workspace, expected, manifest)
+    diagnostics = Contract_Criteria.result_contract_diagnostics(
+        workspace, expected, manifest
+    )
+    assert capsys.readouterr().out.splitlines() == [
+        f"harness-contract: {diagnostic}" for diagnostic in diagnostics
+    ]
+
+
 def test_contract_workflow_allows_extra_attempts_but_efficiency_rejects_them(tmp_path):
     workspace, expected, _ = _fixture(tmp_path)
     events = tmp_path / "Events.jsonl"
