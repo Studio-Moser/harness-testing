@@ -236,7 +236,7 @@ def image_input_digest(root: Path, image: str) -> str:
 def image_reference(root: Path, image: str) -> str:
     if image not in _IMAGE_DOCKERFILES:
         raise ValueError(f"unknown image: {image}")
-    return f"studio-moser/harness-testing-{image}:{_schema_version(root)}"
+    return f"studio-moser/harness-testing-{image}:{_image_version(root)}"
 
 
 def image_is_current(root: Path, image: str) -> bool:
@@ -268,8 +268,7 @@ def require_current_image(root: Path, image: str) -> None:
 def image_build_commands(
     root: Path, selected_images: Iterable[str]
 ) -> tuple[ImageBuildCommand, ...]:
-    versions = load_versions(root / "Versions.toml")
-    schema_version = str(versions["repository"]["schema_version"])
+    image_version = _image_version(root)
     commands: list[ImageBuildCommand] = []
     for image in selected_images:
         if image not in _IMAGE_DOCKERFILES:
@@ -289,7 +288,7 @@ def image_build_commands(
                     "--file",
                     str(dockerfile),
                     "--tag",
-                    f"studio-moser/harness-testing-{image}:{schema_version}",
+                    f"studio-moser/harness-testing-{image}:{image_version}",
                     str(root),
                 ),
             )
@@ -305,7 +304,7 @@ def _platform_image_reference(root: Path, image: str, platform: str) -> str:
     platform_tag = platform.replace("/", "-").replace("_", "-")
     return (
         f"studio-moser/harness-testing-{image}:"
-        f"{_schema_version(root)}-{platform_tag}"
+        f"{_image_version(root)}-{platform_tag}"
     )
 
 
@@ -408,6 +407,14 @@ def _schema_version(root: Path) -> str:
     if not versions_path.is_file():
         return "0.1.0"
     return str(load_versions(versions_path)["repository"]["schema_version"])
+
+
+def _image_version(root: Path) -> str:
+    versions_path = root / "Versions.toml"
+    if not versions_path.is_file():
+        return "0.1.0"
+    repository = load_versions(versions_path)["repository"]
+    return str(repository.get("image_version", repository["schema_version"]))
 
 
 def _source_pins(root: Path) -> dict[str, dict[str, object]]:
@@ -675,7 +682,7 @@ def _prepare_plugin_inputs(
 
 
 def _node_image(root: Path) -> str:
-    return f"studio-moser/harness-testing-node:{_schema_version(root)}"
+    return f"studio-moser/harness-testing-node:{_image_version(root)}"
 
 
 def _run_claude_plugin_validation(
@@ -688,12 +695,6 @@ def _run_claude_plugin_validation(
         f"/bundle/claude/plugins/{plugin_input.plugin}"
         for plugin_input in inputs
     ]
-    validator = root / "images" / "Validate_Claude_Harness_Hook.mjs"
-    if any(plugin_input.plugin == "harness" for plugin_input in inputs):
-        commands.append(
-            "node /validate-claude-harness-hook.mjs "
-            "/bundle/claude/plugins/harness"
-        )
     docker_arguments = [
         "docker",
         "run",
@@ -704,8 +705,6 @@ def _run_claude_plugin_validation(
         f"{os.getuid()}:{os.getgid()}",
         "-v",
         f"{bundle}:/bundle:ro",
-        "-v",
-        f"{validator}:/validate-claude-harness-hook.mjs:ro",
         _node_image(root),
         "sh",
         "-lc",

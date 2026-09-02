@@ -76,6 +76,7 @@ _PROVIDER_FIELDS = (
     "model",
     "effort",
 )
+_SKILL_EVALUATION_FIELDS = ("mode", "name", "invocation")
 _TASK_FIELDS = ("id", "package", "pack", "digest")
 _DATASET_FIELDS = ("id", "digest")
 _PROVENANCE_FIELDS = (
@@ -340,7 +341,11 @@ def compatibility_key(document: Mapping[str, object]) -> str:
     dataset = document["dataset"]
     provenance = document["provenance"]
     provider = document["provider"]
-    if not all(isinstance(value, Mapping) for value in (task, dataset, provenance, provider)):
+    skill_evaluation = document["skill_evaluation"]
+    if not all(
+        isinstance(value, Mapping)
+        for value in (task, dataset, provenance, provider, skill_evaluation)
+    ):
         raise ValueError("public result has invalid compatibility inputs")
     inputs = {
         "task_digest": task["digest"],
@@ -350,6 +355,8 @@ def compatibility_key(document: Mapping[str, object]) -> str:
         "environment_image_digest": provenance["environment_image_digest"],
         "provider_agent_contract": provider["agent_contract"],
         "methodology_schema": provenance["methodology_schema"],
+        "skill_evaluation_mode": skill_evaluation["mode"],
+        "skill_evaluation_name": skill_evaluation["name"],
     }
     return _sha256(_canonical_json(inputs))
 
@@ -445,6 +452,9 @@ def _construct_allowlisted(document: Mapping[str, object]) -> dict[str, object]:
         "run": _select(document["run"], _RUN_FIELDS),
         "review": _select(document["review"], _REVIEW_FIELDS),
         "provider": _select(document["provider"], _PROVIDER_FIELDS),
+        "skill_evaluation": _select(
+            document["skill_evaluation"], _SKILL_EVALUATION_FIELDS
+        ),
         "arm": {
             "id": arm["id"],
             "role": arm["role"],
@@ -541,6 +551,19 @@ def _current_series_errors(
                 errors.append(
                     f"manifest schema {manifest.schema_version} does not match repository "
                     f"schema {schema_version}"
+                )
+            expected_evaluation = (
+                manifest.skill_evaluation.to_dict()
+                if manifest.skill_evaluation is not None
+                else {"mode": "none", "name": None}
+            )
+            public_evaluation = document.get("skill_evaluation")
+            if not isinstance(public_evaluation, Mapping) or any(
+                public_evaluation.get(field) != value
+                for field, value in expected_evaluation.items()
+            ):
+                errors.append(
+                    "skill evaluation mode or name does not match the run manifest"
                 )
 
     compatibility = document.get("compatibility")

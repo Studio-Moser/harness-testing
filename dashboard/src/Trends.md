@@ -70,6 +70,16 @@ const churn = series.flatMap((result) => [
     run: result.result_id
   }
 ]).filter((point) => point.value != null);
+const discovery = results
+  .filter((result) => result.skill_evaluation.mode === "discovery")
+  .map((result) => ({
+    date: new Date(result.run.finished_at),
+    value: result.skill_evaluation.invocation === "implicit" ? 1 : 0,
+    provider: result.provider.agent,
+    skill: result.skill_evaluation.name,
+    run: result.result_id
+  }));
+const discoveryObserved = discovery.reduce((total, point) => total + point.value, 0);
 ```
 
 ```js
@@ -139,5 +149,31 @@ series.length
     Plot.ruleY([0]),
     Plot.lineY(churn, {x: "date", y: "value", stroke: "metric"}),
     Plot.dot(churn, {x: "date", y: "value", stroke: "metric", tip: true})
+  ]
+}))}</div>
+
+## Skill discovery
+
+```js
+discovery.length
+  ? html`<div class="note">Observed ${discoveryObserved} of ${discovery.length} automatic skill selections (${(discoveryObserved / discovery.length * 100).toFixed(1)}%). Discovery is diagnostic and has no pass threshold.</div>`
+  : html`<div class="note">No finalized discovery observations are available.</div>`
+```
+
+<div class="card">${resize((width) => Plot.plot({
+  title: "Automatic skill selection",
+  width,
+  height: 300,
+  y: {domain: [0, 1], ticks: [0, 1], label: "Observed"},
+  color: {legend: true},
+  marks: [
+    Plot.ruleY([0, 1]),
+    Plot.dot(discovery, {
+      x: "date",
+      y: "value",
+      fill: "provider",
+      tip: true,
+      title: (point) => `${point.provider}\n${point.skill}\n${point.value ? "Observed" : "Not observed"}`
+    })
   ]
 }))}</div>

@@ -1,5 +1,6 @@
 [repository]
-schema_version = "0.2.0"
+schema_version = "0.3.0"
+image_version = "0.2.0"
 python = "3.12.14"
 uv = "0.11.19"
 
@@ -22,8 +23,8 @@ commit = "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
 [[sources]]
 name = "Studio Harness"
 url = "https://github.com/Studio-Moser/skills-n-stuff.git"
-version = "0.8.6"
-commit = "e89d0b2e81c8fdd7694dc26fbcbfd06b0c17414f"
+version = "0.8.7"
+commit = "a0fec5021b442c4db2a8889b3a722d838f66e117"
 
 [[sources]]
 name = "DeepSWE"

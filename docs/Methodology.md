@@ -10,6 +10,10 @@ The benchmark is comparative, not a universal model leaderboard. Results remain 
 
 Every tracked workflow or contract task contains a frozen starting project, instruction, oracle, protected-file manifest, deterministic verifier, and five QA cases. Dependencies, toolchains, container images, upstream repositories, provider agents, models, and actions are pinned in `Versions.toml`.
 
+The repository schema versions manifests and public methodology. The separate
+image version keeps unchanged local runtime images pinned when only reporting or
+run-control semantics advance.
+
 Tasks use no live product repositories or private project data. The environment and separate verifier have no network. The agent receives only the provider hosts required by the selected billing route. `/app` and `/logs/agent/trajectory.json` are retained as local Harbor artifacts for verification and regrading.
 
 The research profile uses a separately materialized six-task DeepSWE cohort. The pinned upstream tree has no license file, so the fetched tasks and derived images remain in ignored local storage and are never redistributed. See [Capability Pack](Capability_Pack.md).
@@ -38,6 +42,11 @@ Each arm is materialized into an immutable, read-only bundle with source commits
 Every manifest names explicit cells and tasks. No matrix is implicit. Baseline and candidate cells force concurrency one and are ordered deterministically by provider, role, and arm so paired evidence is not mixed by parallel quota or load effects. Release evidence uses a fresh baseline in the same evaluation window as its candidate.
 
 The dry run records the session count, order, timeouts, task/image/arm/adapter digests, estimated API-equivalent usage, billing route, and approval digest. It starts no model. Execution revalidates every digest and accepts only the exact approval string. The first selected task runs across every selected cell as the delivery canary. A correctness score of zero continues execution; an infrastructure or delivery failure stops before the next task.
+
+Skill capability runs add the provider-native explicit invocation marker and
+retain the original task as its arguments. Skill discovery runs retain the raw
+task, require at least five attempts, and report the observed invocation rate
+without a release threshold. Ordinary runs declare no skill evaluation.
 
 ## Score dimensions
 
@@ -73,10 +82,10 @@ An unfair, ambiguous, contaminated, or broken task is quarantined before finaliz
 
 A verifier or scorer repair does not authorize another model session. If the source job retained `/app` and `/logs/agent/trajectory.json`, run Harbor’s verifier-only regrade through `harness-test regrade`. The wrapper records the immutable source-job digest and new job identity; it never overwrites the source.
 
-The trend compatibility key binds the task digest, dataset composition, scorer, classifier, environment image, provider-agent major contract, and methodology schema. The repaired model-visible contract, scorer, adapter, arm schema, and verifier start schema `0.2.0` without a reviewed mapping to the invalid series. Old hidden-contract and plugin-seed cohorts remain local, partial, and quarantined; they are neither regraded nor mapped into `0.2.0` because their agents did not receive the repaired public contract.
+The trend compatibility key binds the task digest, dataset composition, scorer, classifier, environment image, provider-agent major contract, methodology schema, and skill-evaluation mode/name. Schema `0.3.0` separates ordinary runs, explicit capability, and automatic discovery; the observed discovery outcome does not split its own series. The earlier repaired model-visible contract began at schema `0.2.0` without a reviewed mapping to the invalid series. Old hidden-contract and plugin-seed cohorts remain local, partial, and quarantined because their agents did not receive the repaired public contract.
 
 ## Publication boundary
 
 Public results are constructed from an allowlist and validated against `policy/Public_Result.schema.json`; raw Harbor objects are never recursively copied and filtered. `finalized=true` requires task review, infrastructure review, complete coverage, and no quarantine. Publication under `results/` additionally requires the result methodology and content-valid generated run manifest to use the current repository schema, with no reviewed compatibility mapping. The content-derived result identity makes later mutation visible.
 
-Only schema-valid JSON under `results/` reaches the static dashboard. The loader fails closed on unknown fields and reads no `jobs/` path. The dashboard offers no analytics SDK, API server, database, prompt view, or trajectory view.
+Only schema-valid JSON under `results/` reaches the static dashboard. Skill results expose only mode, canonical name, and invocation classification; raw prompts and trajectories stay local. The loader fails closed on unknown fields and reads no `jobs/` path. The dashboard offers no analytics SDK, API server, database, prompt view, or trajectory view.

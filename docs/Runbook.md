@@ -64,6 +64,39 @@ uv run harness-test run plan \
   --max-budget-usd 0
 ```
 
+Use exactly one skill-evaluation mode when the run is about a skill. Capability
+uses provider-native explicit invocation while preserving the task as skill
+arguments:
+
+```bash
+uv run harness-test run plan \
+  --profile smoke \
+  --billing-mode subscription \
+  --cell codex:A2:candidate:FULL_40_CHARACTER_COMMIT \
+  --task missing-rubric \
+  --invoke-skill harness:execute \
+  --max-sessions 1 \
+  --max-budget-usd 0
+```
+
+Discovery uses the unchanged task and needs at least five attempts:
+
+```bash
+uv run harness-test run plan \
+  --profile smoke \
+  --billing-mode subscription \
+  --cell codex:A2:candidate:FULL_40_CHARACTER_COMMIT \
+  --task missing-rubric \
+  --observe-skill harness:execute \
+  --attempts 5 \
+  --max-sessions 5 \
+  --max-budget-usd 0
+```
+
+After execution, `Skill_Evaluation.json` beside the ignored manifest contains
+only per-trial invocation classifications and the aggregate rate. Discovery is
+diagnostic; its rate is never converted into a release pass or failure.
+
 For paired evidence, name both cells explicitly and keep concurrency one. A2 and A3 cell specifications include the exact Studio Harness commit as the fourth colon-separated field.
 
 Review the printed provider/model/effort, tasks, attempts, session order, timeouts, incremental cost, API-equivalent estimate, input digests, manifest path, and manifest digest. Obtain a fresh explicit approval for that digest. Approval of an older manifest never authorizes a regenerated or duplicate run.
@@ -119,7 +152,7 @@ uv run harness-test result sanitize \
 
 `results/` accepts finalized, reviewed, non-partial, non-quarantined data only. It resolves `run.manifest_digest` only through the matching content-addressed `runs/generated/` manifest, revalidates that manifest’s digest, and requires both manifest and methodology schema to match the current repository series with no reviewed mapping. Use `runs/generated/` for inspectable local staging. The sanitizer rejects raw trajectories, reasoning, command/tool output, environment variables, auth-looking fields, home paths, arbitrary Harbor extras, unknown telemetry, and mismatched identities.
 
-Old hidden-contract and plugin-seed cohorts stay local and quarantined. Do not regrade them or create a reviewed mapping into schema `0.2.0`.
+Old hidden-contract and plugin-seed cohorts stay local and quarantined. Do not regrade them or create a reviewed mapping into current schema `0.3.0`.
 
 ## Dashboard
 

@@ -7,6 +7,10 @@ from pathlib import PurePosixPath
 from typing import Any, override
 
 from harbor.agents.installed.claude_code import ClaudeCode
+from harbor.environments.base import BaseEnvironment
+from harbor.models.agent.context import AgentContext
+
+from harness_testing.Skill_Evaluation import explicit_instruction, validate_skill_name
 
 
 class HarnessClaude(ClaudeCode):
@@ -16,6 +20,7 @@ class HarnessClaude(ClaudeCode):
         self,
         *args: Any,
         plugin_dirs: list[str] | None = None,
+        skill_invocation: str | None = None,
         **kwargs: Any,
     ) -> None:
         values = [] if plugin_dirs is None else plugin_dirs
@@ -33,7 +38,22 @@ class HarnessClaude(ClaudeCode):
                 "/harness-arm/claude/plugins"
             )
         self._plugin_dirs = paths
+        self._skill_invocation = (
+            validate_skill_name(skill_invocation)
+            if skill_invocation is not None
+            else None
+        )
         super().__init__(*args, **kwargs)
+
+    @override
+    async def run(
+        self, instruction: str, environment: BaseEnvironment, context: AgentContext
+    ) -> None:
+        if self._skill_invocation is not None:
+            instruction = explicit_instruction(
+                "claude", self._skill_invocation, instruction
+            )
+        await super().run(instruction, environment, context)
 
     @override
     def build_cli_flags(self) -> str:

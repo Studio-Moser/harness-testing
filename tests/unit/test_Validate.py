@@ -56,6 +56,7 @@ version = "1.0.0"
     failures = validate_versions_file(versions_path)
 
     assert any("full 40-character commit" in failure.message for failure in failures)
+    assert any("image_version" in failure.message for failure in failures)
 
 
 def test_sensitive_key_scan_rejects_credentials_without_rejecting_metrics():

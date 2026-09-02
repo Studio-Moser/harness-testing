@@ -11,7 +11,10 @@ from urllib.parse import unquote, urlparse
 
 from harbor.agents.installed.codex import Codex
 from harbor.environments.base import BaseEnvironment
+from harbor.models.agent.context import AgentContext
 from harbor.models.trajectories import Observation, ObservationResult, ToolCall, Trajectory
+
+from harness_testing.Skill_Evaluation import explicit_instruction, validate_skill_name
 
 
 def _raw_events(session_dir: Path) -> list[dict[str, Any]]:
@@ -170,6 +173,27 @@ def _native_call(
 
 class HarnessCodex(Codex):
     """Codex with a narrow Harbor 0.22.0 code-mode trajectory compatibility fix."""
+
+    def __init__(
+        self,
+        *args: Any,
+        skill_invocation: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        self._skill_invocation = (
+            validate_skill_name(skill_invocation)
+            if skill_invocation is not None
+            else None
+        )
+        super().__init__(*args, **kwargs)
+
+    @override
+    async def run(
+        self, instruction: str, environment: BaseEnvironment, context: AgentContext
+    ) -> None:
+        if self._skill_invocation is not None:
+            instruction = explicit_instruction("codex", self._skill_invocation, instruction)
+        await super().run(instruction, environment, context)
 
     @override
     async def _upload_effective_config(

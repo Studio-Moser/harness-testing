@@ -10,6 +10,7 @@
     "run",
     "review",
     "provider",
+    "skill_evaluation",
     "arm",
     "task",
     "dataset",
@@ -102,6 +103,40 @@
         "model": {"type": "string", "minLength": 1, "maxLength": 128},
         "effort": {"type": "string", "minLength": 1, "maxLength": 32}
       }
+    },
+    "skill_evaluation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "name", "invocation"],
+          "properties": {
+            "mode": {"const": "none"},
+            "name": {"type": "null"},
+            "invocation": {"const": "none"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "name", "invocation"],
+          "properties": {
+            "mode": {"const": "capability"},
+            "name": {"$ref": "#/$defs/skillName"},
+            "invocation": {"const": "explicit"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "name", "invocation"],
+          "properties": {
+            "mode": {"const": "discovery"},
+            "name": {"$ref": "#/$defs/skillName"},
+            "invocation": {"enum": ["implicit", "not-observed"]}
+          }
+        }
+      ]
     },
     "arm": {
       "type": "object",
@@ -358,6 +393,10 @@
         {"$ref": "#/$defs/commit"},
         {"type": "null"}
       ]
+    },
+    "skillName": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*(?::[a-z0-9][a-z0-9-]*)?$"
     },
     "timestamp": {
       "type": "string",

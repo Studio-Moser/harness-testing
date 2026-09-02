@@ -222,7 +222,7 @@ def source_repositories(tmp_path: Path) -> dict[str, tuple[Path, str]]:
         "plugins": [
             {
                 "name": "harness",
-                "version": "0.8.6",
+                "version": "0.8.7",
                 "source": "./plugins/harness",
             }
         ],
@@ -232,15 +232,13 @@ def source_repositories(tmp_path: Path) -> dict[str, tuple[Path, str]]:
         {
             ".claude-plugin/marketplace.json": json.dumps(harness_marketplace),
             "plugins/harness/.claude-plugin/plugin.json": json.dumps(
-                {"name": "harness", "version": "0.8.6"}
+                {"name": "harness", "version": "0.8.7"}
             ),
-            "plugins/harness/hooks/hooks.json": '{"hooks": {}}\n',
             "plugins/harness/skills/execute/SKILL.md": "# Execute\n",
             "plugins/harness/templates/AGENTS_Baseline.md": "# Benchmark baseline\n",
             "plugins/harness/references/harness-contract.md": "# Contract\n",
             "plugins/harness/references/house-rules.md": "# House rules\n",
             "plugins/harness/scripts/resolve-route.py": "#!/usr/bin/env python3\n",
-            "plugins/harness/scripts/activate-execute-skill.mjs": "#!/usr/bin/env node\n",
         },
     )
     return {"Superpowers": superpowers, "Studio Harness": harness}
@@ -330,7 +328,7 @@ def test_codex_harness_materialization_preserves_plugin_companions(
         / "cache"
         / "studio-moser"
         / "harness"
-        / "0.8.6"
+        / "0.8.7"
     )
     assert (plugin / ".codex-plugin" / "plugin.json").is_file()
     assert (plugin / "skills" / "execute" / "SKILL.md").is_file()
@@ -361,7 +359,7 @@ def test_codex_harness_materialization_preserves_plugin_companions(
             "surface": "codex-plugin",
             "path": (
                 "/harness-arm/codex/provider-home/plugins/cache/"
-                "studio-moser/harness/0.8.6"
+                "studio-moser/harness/0.8.7"
             ),
             "capabilities": ["skills"],
         }
@@ -385,7 +383,7 @@ def test_codex_native_installer_creates_its_config_home(
         layer="Studio Harness",
         marketplace="studio-moser",
         plugin="harness",
-        version="0.8.6",
+        version="0.8.7",
         path=marketplace,
         plugin_path=plugin,
     )
@@ -417,11 +415,10 @@ def test_claude_materialization_copies_complete_plugin_directories_in_layer_orde
     assert (superpowers / "skills" / "using-superpowers" / "SKILL.md").is_file()
     assert (superpowers / "hooks" / "hooks.json").is_file()
     assert (harness / ".claude-plugin" / "plugin.json").is_file()
-    assert (harness / "hooks" / "hooks.json").is_file()
+    assert not (harness / "hooks").exists()
     assert (harness / "skills" / "execute" / "SKILL.md").is_file()
     assert (harness / "references" / "harness-contract.md").is_file()
     assert (harness / "scripts" / "resolve-route.py").is_file()
-    assert (harness / "scripts" / "activate-execute-skill.mjs").is_file()
     assert not (claude.path / "claude" / "plugin-seed").exists()
     assert not (claude.path / "claude" / "known_marketplaces.json").exists()
     assert not (claude.path / "claude" / "settings.json").exists()
@@ -437,7 +434,7 @@ def test_claude_materialization_copies_complete_plugin_directories_in_layer_orde
             "layer": "Studio Harness",
             "surface": "claude-plugin-dir",
             "path": "/harness-arm/claude/plugins/harness",
-            "capabilities": ["skills", "hooks"],
+            "capabilities": ["skills"],
         },
     ]
     assert any(
@@ -506,7 +503,7 @@ def test_claude_plugin_validation_is_network_isolated_and_read_only(
             layer="Studio Harness",
             marketplace="studio-moser",
             plugin="harness",
-            version="0.8.6",
+            version="0.8.7",
             path=tmp_path / "harness-marketplace",
             plugin_path=tmp_path / "harness",
         ),
@@ -517,82 +514,11 @@ def test_claude_plugin_validation_is_network_isolated_and_read_only(
     command = calls[0]
     assert command[:6] == ["docker", "run", "--rm", "--network", "none", "--user"]
     assert f"{bundle}:/bundle:ro" in command
-    validator = REPOSITORY_ROOT / "images" / "Validate_Claude_Harness_Hook.mjs"
-    assert f"{validator}:/validate-claude-harness-hook.mjs:ro" in command
+    assert not any("validate-claude-harness-hook" in argument for argument in command)
     assert command[-1] == (
         "claude plugin validate --strict /bundle/claude/plugins/superpowers && "
-        "claude plugin validate --strict /bundle/claude/plugins/harness && "
-        "node /validate-claude-harness-hook.mjs /bundle/claude/plugins/harness"
+        "claude plugin validate --strict /bundle/claude/plugins/harness"
     )
-
-
-def test_claude_harness_hook_validator_runs_the_declared_runtime(tmp_path: Path):
-    plugin = tmp_path / "harness"
-    (plugin / "hooks").mkdir(parents=True)
-    (plugin / "scripts").mkdir()
-    (plugin / "hooks" / "hooks.json").write_text(
-        json.dumps(
-            {
-                "hooks": {
-                    "UserPromptSubmit": [
-                        {
-                            "hooks": [
-                                {
-                                    "type": "command",
-                                    "command": "node",
-                                    "args": [
-                                        "${CLAUDE_PLUGIN_ROOT}/scripts/activate.mjs"
-                                    ],
-                                }
-                            ]
-                        }
-                    ]
-                }
-            }
-        )
-    )
-    (plugin / "scripts" / "activate.mjs").write_text(
-        """import {readFileSync} from "node:fs";
-const event = JSON.parse(readFileSync(0, "utf8"));
-if (event.prompt.includes("HarnessResult")) {
-  process.stdout.write(JSON.stringify({hookSpecificOutput: {
-    hookEventName: "UserPromptSubmit",
-    additionalContext: "/harness:execute `route.fallback_reason` path:<absolute-path>",
-  }}));
-}
-"""
-    )
-    validator = REPOSITORY_ROOT / "images" / "Validate_Claude_Harness_Hook.mjs"
-
-    valid = subprocess.run(
-        ("node", validator, plugin), capture_output=True, text=True
-    )
-    assert valid.returncode == 0, valid.stderr
-
-    activation = plugin / "scripts" / "activate.mjs"
-    activation.write_text(
-        activation.read_text().replace(
-            'additionalContext: "/harness:execute `route.fallback_reason` path:<absolute-path>",',
-            'additionalContext: "/harness:execute `route.fallback_reason` '
-            'path:<absolute-path>" + "x".repeat(4_000),',
-        )
-    )
-    bloated = subprocess.run(
-        ("node", validator, plugin), capture_output=True, text=True
-    )
-    assert bloated.returncode == 1
-    assert "4,000-byte" in bloated.stderr
-
-    hooks = json.loads((plugin / "hooks" / "hooks.json").read_text())
-    hooks["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"] = (
-        "missing-hook-runtime"
-    )
-    (plugin / "hooks" / "hooks.json").write_text(json.dumps(hooks))
-    invalid = subprocess.run(
-        ("node", validator, plugin), capture_output=True, text=True
-    )
-    assert invalid.returncode == 1
-    assert "missing-hook-runtime" in invalid.stderr
 
 
 def _deepswe_files(images: dict[str, str]) -> dict[str, str]:

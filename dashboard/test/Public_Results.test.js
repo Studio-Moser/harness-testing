@@ -59,6 +59,11 @@ test("loads only finalized public results, preserves nulls, and groups compatibi
   assert.equal(report.results.length, 1);
   assert.equal(report.results[0].efficiency.reasoning_tokens, null);
   assert.equal(report.results[0].efficiency.test_seconds, null);
+  assert.deepEqual(report.results[0].skill_evaluation, {
+    mode: "none",
+    name: null,
+    invocation: "none"
+  });
   assert.deepEqual(report.compatibility_series, [
     {
       key: valid.compatibility.key,

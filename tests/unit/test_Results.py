@@ -38,7 +38,7 @@ def _result_root(path: Path) -> Path:
         (REPOSITORY_ROOT / "policy" / "Public_Result.schema.json").read_bytes()
     )
     (path / "Versions.toml").write_text(
-        '[repository]\nschema_version = "0.2.0"\n'
+        '[repository]\nschema_version = "0.3.0"\n'
     )
     return path
 
@@ -246,6 +246,7 @@ def test_valid_public_result_is_constructed_from_only_allowlisted_fields(
         "run",
         "review",
         "provider",
+        "skill_evaluation",
         "arm",
         "task",
         "dataset",
@@ -311,6 +312,48 @@ def test_unknown_telemetry_is_rejected_instead_of_published():
 
     with pytest.raises(ValueError, match="Additional properties are not allowed"):
         construct_public_result(REPOSITORY_ROOT, document)
+
+
+def test_skill_evaluation_is_required_and_mode_consistent():
+    missing = _load("Valid.json")
+    missing.pop("skill_evaluation")
+    with pytest.raises(ValueError, match="skill_evaluation"):
+        construct_public_result(REPOSITORY_ROOT, missing)
+
+    contradictory = _load("Valid.json")
+    contradictory["skill_evaluation"] = {
+        "mode": "capability",
+        "name": "harness:execute",
+        "invocation": "implicit",
+    }
+    _refresh_identity(contradictory)
+    with pytest.raises(ValueError, match="skill_evaluation"):
+        construct_public_result(REPOSITORY_ROOT, contradictory)
+
+
+def test_skill_evaluation_mode_and_name_split_compatibility_not_observation():
+    ordinary = _load("Valid.json")
+    capability = copy.deepcopy(ordinary)
+    capability["skill_evaluation"] = {
+        "mode": "capability",
+        "name": "harness:execute",
+        "invocation": "explicit",
+    }
+    discovery = copy.deepcopy(ordinary)
+    discovery["skill_evaluation"] = {
+        "mode": "discovery",
+        "name": "harness:execute",
+        "invocation": "implicit",
+    }
+    not_observed = copy.deepcopy(discovery)
+    not_observed["skill_evaluation"]["invocation"] = "not-observed"
+
+    keys = {
+        compatibility_key(document)
+        for document in (ordinary, capability, discovery)
+    }
+    assert len(keys) == 3
+    assert compatibility_key(discovery) == compatibility_key(not_observed)
 
 
 @pytest.mark.parametrize(
@@ -390,7 +433,7 @@ def test_publication_rejects_an_old_or_missing_run_manifest(tmp_path: Path):
     manifest_path = root / "runs" / "generated" / digest.removeprefix("sha256:")
     manifest_path /= "Manifest.json"
     candidate["run"]["manifest_digest"] = digest
-    candidate["provenance"]["methodology_schema"] = "0.2.0"
+    candidate["provenance"]["methodology_schema"] = "0.3.0"
     _refresh_identity(candidate)
     source = root / "candidate.json"
     source.write_text(json.dumps(candidate))
@@ -421,7 +464,7 @@ def test_publication_rejects_an_old_or_missing_run_manifest(tmp_path: Path):
     with pytest.raises(ValueError, match="methodology schema 0.1.0"):
         sanitize_public_result(root, source, root / "results" / "methodology.json")
 
-    candidate["provenance"]["methodology_schema"] = "0.2.0"
+    candidate["provenance"]["methodology_schema"] = "0.3.0"
     _refresh_identity(candidate)
     source.write_text(json.dumps(candidate))
     output = root / "results" / "current.json"
@@ -441,7 +484,7 @@ def test_publication_normalizes_an_invalid_manifest_budget(tmp_path: Path):
     manifest_path.mkdir(parents=True)
     (manifest_path / "Manifest.json").write_text(json.dumps(manifest))
     candidate["run"]["manifest_digest"] = digest
-    candidate["provenance"]["methodology_schema"] = "0.2.0"
+    candidate["provenance"]["methodology_schema"] = "0.3.0"
     _refresh_identity(candidate)
     source = root / "candidate.json"
     source.write_text(json.dumps(candidate))
@@ -457,3 +500,28 @@ def test_publication_normalizes_an_invalid_manifest_budget(tmp_path: Path):
         sanitize_public_result(root, source, output)
 
     assert not output.exists()
+
+
+def test_publication_rejects_skill_evaluation_that_mismatches_manifest(
+    tmp_path: Path,
+):
+    root = _result_root(tmp_path)
+    candidate = _load("Valid.json")
+    manifest = json.loads(MANIFEST_FIXTURE.read_text())
+    manifest["skill_evaluation"] = {
+        "mode": "capability",
+        "name": "harness:execute",
+    }
+    manifest["digest"] = _manifest_digest(manifest)
+    digest = manifest["digest"]
+    assert isinstance(digest, str)
+    manifest_path = root / "runs" / "generated" / digest.removeprefix("sha256:")
+    manifest_path.mkdir(parents=True)
+    (manifest_path / "Manifest.json").write_text(json.dumps(manifest))
+    candidate["run"]["manifest_digest"] = digest
+    _refresh_identity(candidate)
+    source = root / "candidate.json"
+    source.write_text(json.dumps(candidate))
+
+    with pytest.raises(ValueError, match="skill evaluation.*manifest"):
+        sanitize_public_result(root, source, root / "results" / "mismatch.json")

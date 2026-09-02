@@ -98,6 +98,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     plan_parser.add_argument("--attempts", type=int)
     plan_parser.add_argument("--concurrency", type=int)
     plan_parser.add_argument("--agent-timeout-seconds", type=int)
+    skill_evaluation = plan_parser.add_mutually_exclusive_group()
+    skill_evaluation.add_argument("--invoke-skill")
+    skill_evaluation.add_argument("--observe-skill")
     execute_parser = run_subparsers.add_parser(
         "execute", help="execute an exact approved manifest"
     )
@@ -216,6 +219,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(arguments.output)
     elif arguments.command == "run" and arguments.run_command == "plan":
         from harness_testing.Runs import format_plan, plan_run
+        from harness_testing.Skill_Evaluation import SkillEvaluation
+
+        evaluation = (
+            SkillEvaluation("capability", arguments.invoke_skill)
+            if arguments.invoke_skill is not None
+            else SkillEvaluation("discovery", arguments.observe_skill)
+            if arguments.observe_skill is not None
+            else None
+        )
 
         manifest = plan_run(
             _repository_root(),
@@ -228,6 +240,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             attempts=arguments.attempts,
             concurrency=arguments.concurrency,
             agent_timeout_seconds=arguments.agent_timeout_seconds,
+            skill_evaluation=evaluation,
         )
         print(format_plan(manifest))
     elif arguments.command == "run" and arguments.run_command == "execute":

@@ -77,6 +77,20 @@ selected
   : html`<div class="note">Unavailable</div>`
 ```
 
+## Skill evaluation
+
+```js
+selected
+  ? Inputs.table([
+      {
+        mode: selected.skill_evaluation.mode,
+        skill: selected.skill_evaluation.name ?? "None",
+        invocation: selected.skill_evaluation.invocation
+      }
+    ])
+  : html`<div class="note">Unavailable</div>`
+```
+
 ## Provenance and methodology
 
 ```js

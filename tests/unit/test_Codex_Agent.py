@@ -68,6 +68,46 @@ def test_codex_inventory_failure_propagates_from_effective_config_upload(
         )
 
 
+def test_codex_adapter_accepts_only_a_canonical_skill_invocation(tmp_path: Path):
+    agent = HarnessCodex(
+        logs_dir=tmp_path,
+        model_name="openai/gpt-5.6-terra",
+        version="0.150.1",
+        skill_invocation="harness:execute",
+    )
+
+    assert agent._skill_invocation == "harness:execute"
+    with pytest.raises(ValueError, match="skill name"):
+        HarnessCodex(
+            logs_dir=tmp_path,
+            model_name="openai/gpt-5.6-terra",
+            version="0.150.1",
+            skill_invocation="$harness:execute",
+        )
+
+
+def test_codex_adapter_prefixes_explicit_skill_before_base_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    instructions: list[str] = []
+
+    async def fake_run(self, instruction, environment, context):
+        del self, environment, context
+        instructions.append(instruction)
+
+    monkeypatch.setattr("harness_testing.Codex_Agent.Codex.run", fake_run)
+    agent = HarnessCodex(
+        logs_dir=tmp_path,
+        model_name="openai/gpt-5.6-terra",
+        version="0.150.1",
+        skill_invocation="harness:execute",
+    )
+
+    asyncio.run(agent.run("Original task\n", object(), object()))
+
+    assert instructions == ["$harness:execute Original task\n"]
+
+
 def _write_session(session_dir: Path) -> None:
     events = [
         {

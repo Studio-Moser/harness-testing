@@ -29,6 +29,7 @@ from harness_testing.Runs import (
     compile_run,
     verify_manifest_document,
 )
+from harness_testing.Skill_Evaluation import SkillEvaluation
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
 PROFILE_TEXT = """\
@@ -164,23 +165,21 @@ def source_repositories(
                     "plugins": [
                         {
                             "name": "harness",
-                            "version": "0.8.6",
+                            "version": "0.8.7",
                             "source": "./plugins/harness",
                         }
                     ],
                 }
             ),
             "plugins/harness/.claude-plugin/plugin.json": json.dumps(
-                {"name": "harness", "version": "0.8.6"}
+                {"name": "harness", "version": "0.8.7"}
             ),
-            "plugins/harness/hooks/hooks.json": '{"hooks": {}}\n',
             "plugins/harness/skills/execute/SKILL.md": "# Execute\n",
             "plugins/harness/templates/AGENTS_Baseline.md": (
                 "# Benchmark baseline\n"
             ),
             "plugins/harness/references/harness-contract.md": "# Contract\n",
             "plugins/harness/scripts/resolve-route.py": "#!/usr/bin/env python3\n",
-            "plugins/harness/scripts/activate-execute-skill.mjs": "#!/usr/bin/env node\n",
         },
     )
     return {"Superpowers": superpowers, "Studio Harness": harness}
@@ -212,13 +211,13 @@ commit = "{superpowers_commit}"
         """[[sources]]
 name = "Studio Harness"
 url = "https://github.com/Studio-Moser/skills-n-stuff.git"
-version = "0.8.6"
-commit = "e89d0b2e81c8fdd7694dc26fbcbfd06b0c17414f"
+version = "0.8.7"
+commit = "a0fec5021b442c4db2a8889b3a722d838f66e117"
 """,
         f"""[[sources]]
 name = "Studio Harness"
 url = {json.dumps(str(harness))}
-version = "0.8.6"
+version = "0.8.7"
 commit = "{harness_commit}"
 """,
     )
@@ -247,6 +246,7 @@ commit = "{harness_commit}"
         "src/harness_testing/Contract_Stub_Server.py",
         "src/harness_testing/Harness_Result.py",
         "src/harness_testing/Harness_Result.schema.json",
+        "src/harness_testing/Skill_Evaluation.py",
         "src/harness_testing/Trajectory_Events.py",
         "src/harness_testing/Workflow_Criteria.py",
     ):
@@ -293,7 +293,7 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
     ]
     delivery_surfaces = []
     for layer in layers:
-        plugin_version = "6.3.0" if layer == "Superpowers" else "0.8.6"
+        plugin_version = "6.3.0" if layer == "Superpowers" else "0.8.7"
         if cell.provider == "claude":
             plugin = "superpowers" if layer == "Superpowers" else "harness"
             relative = Path("claude") / "plugins" / plugin
@@ -329,7 +329,7 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
                 json.dumps({"name": plugin, "version": plugin_version})
                 + "\n"
             )
-            if layer in ("Superpowers", "Studio Harness"):
+            if layer == "Superpowers":
                 (path / relative / "hooks").mkdir(exist_ok=True)
         if layer == "Studio Harness":
             template = path / relative / "templates" / "AGENTS_Baseline.md"
@@ -354,7 +354,7 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
                 "capabilities": (
                     ["skills", "hooks"]
                     if cell.provider == "claude"
-                    and layer in ("Superpowers", "Studio Harness")
+                    and layer == "Superpowers"
                     else ["skills"]
                 ),
             }
@@ -503,7 +503,7 @@ def _benchmark_skills(arm: str) -> list[str]:
 
 def _codex_inventory_record(plugin: str) -> dict[str, object]:
     marketplace = "superpowers-dev" if plugin == "superpowers" else "studio-moser"
-    version = "6.3.0" if plugin == "superpowers" else "0.8.6"
+    version = "6.3.0" if plugin == "superpowers" else "0.8.7"
     return {
         "name": plugin,
         "pluginId": f"{plugin}@{marketplace}",
@@ -525,6 +525,7 @@ def _write_completed_job(
     exception_info: object = None,
     include_exception_info: bool = True,
     attempts: int = 1,
+    skill_invoked: bool = False,
 ) -> None:
     job = root / "jobs" / "raw" / job_name
     job.mkdir(parents=True)
@@ -587,6 +588,42 @@ def _write_completed_job(
                 )
                 + "\n"
             )
+        if skill_invoked and cell.provider == "claude":
+            call = {
+                "tool_call_id": f"skill-{attempt}",
+                "function_name": "Skill",
+                "arguments": {"skill": "harness:execute"},
+            }
+        elif skill_invoked:
+            call = {
+                "tool_call_id": f"skill-{attempt}",
+                "function_name": "shell",
+                "arguments": {
+                    "cmd": (
+                        "sed -n '1,220p' /harness-arm/codex/provider-home/"
+                        "plugins/cache/studio-moser/harness/0.8.7/skills/"
+                        "execute/SKILL.md"
+                    )
+                },
+            }
+        else:
+            call = None
+        (agent / "trajectory.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": "ATIF-v1.7",
+                    "steps": [
+                        {
+                            "step_id": 1,
+                            "source": "agent",
+                            "message": "",
+                            "tool_calls": [] if call is None else [call],
+                        }
+                    ],
+                }
+            )
+            + "\n"
+        )
 
 
 @pytest.mark.parametrize(
@@ -974,6 +1011,52 @@ def test_delivery_failure_after_canary_stops_immediately(
     ]
 
 
+def test_discovery_execution_writes_one_safe_observation_per_trial(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    cell = _cell("codex", "A2", "candidate", "a", "a" * 40)
+    _add_bundle(run_root, cell)
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="api",
+        cells=(cell,),
+        task_ids=("task-one",),
+        max_sessions=5,
+        max_budget_usd=Decimal("100"),
+        attempts=5,
+        skill_evaluation=SkillEvaluation("discovery", "harness:execute"),
+    )
+    _stub_execution_preflight(monkeypatch)
+    real_run = subprocess.run
+
+    def fake_run(command, **kwargs):
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
+            return real_run(command, **kwargs)
+        job = load_job(Path(command[-1]))
+        _write_completed_job(
+            run_root,
+            cell,
+            job.job_name,
+            attempts=5,
+            skill_invoked=True,
+        )
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    report = json.loads((manifest.path.parent / "Skill_Evaluation.json").read_text())
+    assert report["aggregate"] == {
+        "numerator": 5,
+        "denominator": 5,
+        "rate": 1.0,
+    }
+    assert len(report["trials"]) == 5
+    assert {trial["invocation"] for trial in report["trials"]} == {"implicit"}
+
+
 def test_generated_claude_jobs_follow_exact_arm_delivery_provenance(
     run_root: Path,
 ):
@@ -997,6 +1080,93 @@ def test_generated_claude_jobs_follow_exact_arm_delivery_provenance(
         "/harness-arm/claude/plugins/harness",
     ]
     assert all(agent.env == {} and agent.skills == [] for agent in agents)
+
+
+def test_capability_manifest_round_trip_and_job_kwargs(run_root: Path):
+    claude = _cell("claude", "A2", "candidate", "a", "a" * 40)
+    codex = _cell("codex", "A2", "candidate", "b", "b" * 40)
+    for cell in (claude, codex):
+        _add_bundle(run_root, cell)
+    evaluation = SkillEvaluation("capability", "harness:execute")
+
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="subscription",
+        cells=(claude, codex),
+        task_ids=("task-one",),
+        max_sessions=2,
+        max_budget_usd=Decimal("0"),
+        skill_evaluation=evaluation,
+    )
+
+    assert manifest.skill_evaluation == evaluation
+    assert Runs.load_manifest(manifest.path).skill_evaluation == evaluation
+    assert manifest.to_dict()["skill_evaluation"] == {
+        "mode": "capability",
+        "name": "harness:execute",
+    }
+    for path in manifest.harbor_config_paths:
+        assert load_job(manifest.path.parent / path).agents[0].kwargs[
+            "skill_invocation"
+        ] == "harness:execute"
+    assert "Skill evaluation: capability harness:execute" in Runs.format_plan(manifest)
+
+
+def test_discovery_requires_five_attempts_and_keeps_job_prompt_unmodified(
+    run_root: Path,
+):
+    cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
+    _add_bundle(run_root, cell)
+    evaluation = SkillEvaluation("discovery", "harness:execute")
+
+    with pytest.raises(ValueError, match="discovery.*five"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=4,
+            max_budget_usd=Decimal("100"),
+            attempts=4,
+            skill_evaluation=evaluation,
+        )
+
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="api",
+        cells=(cell,),
+        task_ids=("task-one",),
+        max_sessions=5,
+        max_budget_usd=Decimal("100"),
+        attempts=5,
+        skill_evaluation=evaluation,
+    )
+    agent = load_job(
+        manifest.path.parent / manifest.harbor_config_paths[0]
+    ).agents[0]
+    assert "skill_invocation" not in agent.kwargs
+
+
+def test_skill_evaluation_rejects_a_skill_absent_from_any_selected_arm(
+    run_root: Path,
+):
+    cell = _cell("codex", "A1", "candidate", "a")
+    _add_bundle(run_root, cell)
+
+    with pytest.raises(ValueError, match="does not expose skill harness:execute"):
+        compile_run(
+            run_root,
+            profile="smoke",
+            billing_mode="api",
+            cells=(cell,),
+            task_ids=("task-one",),
+            max_sessions=1,
+            max_budget_usd=Decimal("100"),
+            skill_evaluation=SkillEvaluation("capability", "harness:execute"),
+        )
 
 
 @pytest.mark.parametrize(
@@ -1590,6 +1760,27 @@ def test_single_provider_manifest_binds_both_custom_agent_adapters(run_root: Pat
     assert set(manifest.provenance["agent_adapter_digests"]) == {"claude", "codex"}
     adapter = run_root / "src" / "harness_testing" / "Codex_Agent.py"
     adapter.write_text("changed after approval\n")
+    with pytest.raises(ValueError, match="agent adapter digest mismatch"):
+        _verify_generated_inputs(run_root, manifest)
+
+
+def test_manifest_binds_shared_skill_invocation_adapter_code(run_root: Path):
+    cell = _cell("codex", "A2", "candidate", "a", "a" * 40)
+    _add_bundle(run_root, cell)
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="api",
+        cells=(cell,),
+        task_ids=("task-one",),
+        max_sessions=1,
+        max_budget_usd=Decimal("100"),
+        skill_evaluation=SkillEvaluation("capability", "harness:execute"),
+    )
+
+    shared = run_root / "src" / "harness_testing" / "Skill_Evaluation.py"
+    shared.write_text("changed after approval\n")
+
     with pytest.raises(ValueError, match="agent adapter digest mismatch"):
         _verify_generated_inputs(run_root, manifest)
 

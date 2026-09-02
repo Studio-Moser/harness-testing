@@ -432,6 +432,8 @@ def validate_versions_file(path: Path) -> tuple[ValidationFailure, ...]:
     repository = versions.get("repository", {})
     if not repository.get("schema_version"):
         failures.append(_failure(path, "repository schema_version is required"))
+    if not repository.get("image_version"):
+        failures.append(_failure(path, "repository image_version is required"))
 
     seen_sources: set[str] = set()
     for source in versions.get("sources", []):

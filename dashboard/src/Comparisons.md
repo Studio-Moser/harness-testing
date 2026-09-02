@@ -85,6 +85,9 @@ latest.length
       latest.map((result) => ({
         provider: result.provider.name,
         delivery: deliveryLabel(result),
+        skill_mode: result.skill_evaluation.mode,
+        skill: result.skill_evaluation.name ?? "None",
+        invocation: result.skill_evaluation.invocation,
         task: result.task.id,
         role: result.arm.role,
         correctness: formatScore(result.dimensions.correctness),

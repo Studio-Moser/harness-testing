@@ -8,7 +8,7 @@ def test_version_reports_repository_schema(capsys):
         main(["--version"])
 
     assert exit_info.value.code == 0
-    assert capsys.readouterr().out == "harness-test 0.2.0\n"
+    assert capsys.readouterr().out == "harness-test 0.3.0\n"
 
 
 def test_task_qa_dispatches_one_named_deterministic_case(monkeypatch, capsys):
@@ -98,6 +98,7 @@ def test_run_plan_requires_and_forwards_billing_mode(monkeypatch, capsys):
         ]
     ) == 0
     assert calls[0][1]["billing_mode"] == "subscription"
+    assert calls[0][1]["skill_evaluation"] is None
     assert capsys.readouterr().out == "planned\n"
 
     with pytest.raises(SystemExit) as exit_info:
@@ -118,3 +119,44 @@ def test_run_plan_requires_and_forwards_billing_mode(monkeypatch, capsys):
             ]
         )
     assert exit_info.value.code == 2
+
+
+@pytest.mark.parametrize(
+    ("flag", "mode"),
+    (("--invoke-skill", "capability"), ("--observe-skill", "discovery")),
+)
+def test_run_plan_forwards_mutually_exclusive_skill_evaluation(
+    monkeypatch, capsys, flag, mode
+):
+    from harness_testing.CLI import main
+
+    calls = []
+    monkeypatch.setattr(
+        "harness_testing.Runs.plan_run",
+        lambda root, **arguments: calls.append(arguments) or object(),
+    )
+    monkeypatch.setattr("harness_testing.Runs.format_plan", lambda manifest: "planned")
+    arguments = [
+        "run",
+        "plan",
+        "--profile",
+        "smoke",
+        "--billing-mode",
+        "subscription",
+        "--cell",
+        "codex:A2:candidate:" + "a" * 40,
+        "--task",
+        "missing-rubric",
+        "--max-sessions",
+        "5",
+        "--max-budget-usd",
+        "0",
+        flag,
+        "harness:execute",
+    ]
+
+    assert main(arguments) == 0
+    evaluation = calls[0]["skill_evaluation"]
+    assert evaluation.mode == mode
+    assert evaluation.name == "harness:execute"
+    assert capsys.readouterr().out == "planned\n"

@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "result_id": "sha256:1a28f36b77cb159a5c234ae138f0e9eeefb36b560e68c6980d86bff24f16e1a7",
+  "result_id": "sha256:9753f5c38955ef2dbb0ecb9ed82f5652873f170c5dd9788f6ea9068e85326940",
   "run": {
     "id": "1cbb21e3-9cf8-498a-aebb-8bef11205f2a",
     "trial_id": "f62d5921-369b-40a8-abc7-3b4f80071e38",
@@ -27,6 +27,11 @@
     "model": "gpt-5.6-terra",
     "effort": "high"
   },
+  "skill_evaluation": {
+    "mode": "none",
+    "name": null,
+    "invocation": "none"
+  },
   "arm": {
     "id": "A0",
     "role": "baseline",
@@ -50,11 +55,11 @@
     "environment_image_digest": "sha256:2a7931448b89adca3349ec557dcea0113fe45201e2f4f941ca9ce78afff8d271",
     "scorer_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
     "classifier_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
-    "methodology_schema": "1",
+    "methodology_schema": "0.3.0",
     "methodology_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
   },
   "compatibility": {
-    "key": "sha256:7d47bb5b133fbc8daef8e98c71eea14bdecfbbeb0f948eb128759654c7a390f5",
+    "key": "sha256:91fff856e44fc4ce90322086f267924e55afe55a6fc85f81db005f4b2b341b9b",
     "reviewed_mapping": null
   },
   "dimensions": {
@@ -104,8 +109,8 @@
     },
     {
       "label": "Methodology source",
-      "url": "https://github.com/Studio-Moser/skills-n-stuff/commit/e89d0b2e81c8fdd7694dc26fbcbfd06b0c17414f",
-      "digest": "e89d0b2e81c8fdd7694dc26fbcbfd06b0c17414f"
+      "url": "https://github.com/Studio-Moser/skills-n-stuff/commit/a0fec5021b442c4db2a8889b3a722d838f66e117",
+      "digest": "a0fec5021b442c4db2a8889b3a722d838f66e117"
     }
   ]
 }

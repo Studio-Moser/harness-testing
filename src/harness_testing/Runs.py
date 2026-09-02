@@ -36,6 +36,7 @@ from harness_testing.Materialize import (
     materialize_arm,
     require_current_image,
 )
+from harness_testing.Skill_Evaluation import SkillEvaluation, write_skill_evaluation_report
 from harness_testing.Validate import find_sensitive_keys, validate_repository
 
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -77,6 +78,7 @@ _AGENT_ADAPTERS = {
         Path("src/harness_testing/Codex_Agent.py"),
     ),
 }
+_AGENT_ADAPTER_SHARED_PATHS = (Path("src/harness_testing/Skill_Evaluation.py"),)
 
 
 @dataclass(frozen=True)
@@ -108,6 +110,7 @@ class RunManifest:
     schema_version: str
     profile: str
     billing_mode: str
+    skill_evaluation: SkillEvaluation | None
     cells: tuple[RunCell, ...]
     task_ids: tuple[str, ...]
     attempts: int
@@ -128,6 +131,11 @@ class RunManifest:
             "schema_version": self.schema_version,
             "profile": self.profile,
             "billing_mode": self.billing_mode,
+            "skill_evaluation": (
+                self.skill_evaluation.to_dict()
+                if self.skill_evaluation is not None
+                else None
+            ),
             "cells": [cell.to_dict() for cell in self.cells],
             "task_ids": list(self.task_ids),
             "attempts": self.attempts,
@@ -147,6 +155,8 @@ class RunManifest:
 
     @classmethod
     def from_document(cls, document: dict[str, object], path: Path) -> RunManifest:
+        if "skill_evaluation" not in document:
+            raise ValueError("manifest skill_evaluation is missing")
         cells = tuple(
             RunCell(
                 label=str(cell["label"]),
@@ -171,6 +181,9 @@ class RunManifest:
             schema_version=str(document["schema_version"]),
             profile=str(document["profile"]),
             billing_mode=str(document["billing_mode"]),
+            skill_evaluation=SkillEvaluation.from_document(
+                document["skill_evaluation"]
+            ),
             cells=cells,
             task_ids=tuple(str(task) for task in document["task_ids"]),
             attempts=int(document["attempts"]),
@@ -217,6 +230,17 @@ def _decimal_text(value: Decimal) -> str:
 
 def _sha256(contents: bytes) -> str:
     return f"sha256:{hashlib.sha256(contents).hexdigest()}"
+
+
+def _agent_adapter_digests(root: Path) -> dict[str, str]:
+    digests: dict[str, str] = {}
+    for provider, (_, adapter_path) in _AGENT_ADAPTERS.items():
+        paths = (adapter_path, *_AGENT_ADAPTER_SHARED_PATHS)
+        inputs = {
+            path.as_posix(): _sha256((root / path).read_bytes()) for path in paths
+        }
+        digests[provider] = _sha256(_canonical_json(inputs))
+    return digests
 
 
 def _canonical_json(value: object) -> bytes:
@@ -1067,6 +1091,7 @@ def _job_document(
     timeout: int,
     versions: dict[str, Any],
     billing_mode: str,
+    skill_evaluation: SkillEvaluation | None,
 ) -> tuple[dict[str, object], str]:
     bundle = _bundle_path(root, cell)
     packages = _package_versions(versions)
@@ -1088,6 +1113,8 @@ def _job_document(
         else _API_HOSTS[cell.provider]
     )
     kwargs: dict[str, object] = {"version": version, "reasoning_effort": cell.effort}
+    if skill_evaluation is not None and skill_evaluation.mode == "capability":
+        kwargs["skill_invocation"] = skill_evaluation.name
     provider_config = _provider_config(bundle, cell.provider)
     if provider_config:
         kwargs["config"] = provider_config
@@ -1183,6 +1210,7 @@ def compile_run(
     attempts: int | None = None,
     concurrency: int | None = None,
     agent_timeout_seconds: int | None = None,
+    skill_evaluation: SkillEvaluation | None = None,
 ) -> RunManifest:
     """Compile immutable one-cell task shards and write a dry-run manifest."""
 
@@ -1201,6 +1229,14 @@ def compile_run(
         raise ValueError("at least one explicit --task is required")
     if attempts < 1:
         raise ValueError("attempts must be positive")
+    if not isinstance(skill_evaluation, (SkillEvaluation, type(None))):
+        raise ValueError("skill_evaluation must be a SkillEvaluation or None")
+    if (
+        skill_evaluation is not None
+        and skill_evaluation.mode == "discovery"
+        and attempts < 5
+    ):
+        raise ValueError("skill discovery requires at least five attempts")
     if timeout < 1:
         raise ValueError("agent timeout must be positive")
     if concurrency < 1:
@@ -1228,6 +1264,13 @@ def compile_run(
     for cell in cells:
         _validate_cell(root, cell, versions)
     cells = _ordered_cells(cells)
+    if skill_evaluation is not None:
+        for cell in cells:
+            _, delivered_skills = _expected_runtime_delivery(root, cell)
+            if skill_evaluation.name not in delivered_skills:
+                raise ValueError(
+                    f"cell {cell.label} does not expose skill {skill_evaluation.name}"
+                )
     session_count = len(cells) * len(task_ids) * attempts
     if session_count > max_sessions:
         raise ValueError(f"run needs {session_count} sessions but max_sessions {max_sessions}")
@@ -1260,10 +1303,7 @@ def compile_run(
         image: image_input_digest(root, image)
         for image in _required_images(selected_profile, task_ids)
     }
-    agent_adapter_digests = {
-        provider: _sha256((root / path).read_bytes())
-        for provider, (_, path) in _AGENT_ADAPTERS.items()
-    }
+    agent_adapter_digests = _agent_adapter_digests(root)
     versions_digest = _sha256((root / "Versions.toml").read_bytes())
     profiles_digest = _sha256((root / "runs" / "Profiles.toml").read_bytes())
 
@@ -1287,6 +1327,7 @@ def compile_run(
                     timeout,
                     versions,
                     billing_mode,
+                    skill_evaluation,
                 )
                 relative_path = (
                     f"jobs/{index:03d}-{cell.provider}-{cell.role}-{cell.arm}-"
@@ -1300,6 +1341,9 @@ def compile_run(
         "schema_version": schema_version,
         "profile": profile,
         "billing_mode": billing_mode,
+        "skill_evaluation": (
+            skill_evaluation.to_dict() if skill_evaluation is not None else None
+        ),
         "cells": [cell.to_dict() for cell in cells],
         "task_ids": list(task_ids),
         "attempts": attempts,
@@ -1356,6 +1400,7 @@ def compile_run(
         schema_version=schema_version,
         profile=profile,
         billing_mode=billing_mode,
+        skill_evaluation=skill_evaluation,
         cells=cells,
         task_ids=task_ids,
         attempts=attempts,
@@ -1447,6 +1492,7 @@ def plan_run(
     attempts: int | None = None,
     concurrency: int | None = None,
     agent_timeout_seconds: int | None = None,
+    skill_evaluation: SkillEvaluation | None = None,
 ) -> RunManifest:
     if not cell_specifications:
         raise ValueError("at least one explicit --cell is required; no matrix is implicit")
@@ -1462,6 +1508,7 @@ def plan_run(
         attempts=attempts,
         concurrency=concurrency,
         agent_timeout_seconds=agent_timeout_seconds,
+        skill_evaluation=skill_evaluation,
     )
 
 
@@ -1474,6 +1521,12 @@ def format_plan(manifest: RunManifest) -> str:
             "subscription (no API-key fallback)"
             if manifest.billing_mode == "subscription"
             else "api"
+        ),
+        "Skill evaluation: "
+        + (
+            f"{manifest.skill_evaluation.mode} {manifest.skill_evaluation.name}"
+            if manifest.skill_evaluation is not None
+            else "none"
         ),
         f"Tasks: {', '.join(manifest.task_ids)}",
         f"Attempts: {manifest.attempts}",
@@ -1581,10 +1634,7 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     if expected_image_digests != actual_image_digests:
         raise ValueError("image input digest mismatch after manifest approval")
     expected_adapter_digests = manifest.provenance.get("agent_adapter_digests")
-    actual_adapter_digests = {
-        provider: _sha256((root / path).read_bytes())
-        for provider, (_, path) in _AGENT_ADAPTERS.items()
-    }
+    actual_adapter_digests = _agent_adapter_digests(root)
     if expected_adapter_digests != actual_adapter_digests:
         raise ValueError("agent adapter digest mismatch after manifest approval")
     expected_digests = manifest.provenance.get("harbor_config_digests")
@@ -1607,6 +1657,20 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
         expected_import_path = _AGENT_ADAPTERS[cell.provider][0]
         if agent.import_path != expected_import_path:
             raise ValueError(f"Harbor agent adapter mismatch: {relative_path}")
+        expected_skill_invocation = (
+            manifest.skill_evaluation.name
+            if manifest.skill_evaluation is not None
+            and manifest.skill_evaluation.mode == "capability"
+            else None
+        )
+        actual_skill_invocation = agent.kwargs.get("skill_invocation")
+        if actual_skill_invocation != expected_skill_invocation or (
+            expected_skill_invocation is None
+            and "skill_invocation" in agent.kwargs
+        ):
+            raise ValueError(
+                f"Harbor skill invocation does not match evaluation: {relative_path}"
+            )
         if cell.provider != "claude":
             continue
         if "CLAUDE_CODE_PLUGIN_SEED_DIR" in agent.env:
@@ -2022,6 +2086,38 @@ def _completed_job_errors(
     return tuple(errors[:_MAX_DELIVERY_ERRORS])
 
 
+def _skill_evaluation_trials(
+    root: Path, manifest: RunManifest
+) -> tuple[dict[str, object], ...]:
+    trials: list[dict[str, object]] = []
+    cell_count = len(manifest.cells)
+    for index, relative_path in enumerate(manifest.harbor_config_paths):
+        cell = manifest.cells[index % cell_count]
+        task_id = manifest.task_ids[index // cell_count]
+        job_name = load_job(manifest.path.parent / relative_path).job_name
+        job_dir = root / "jobs" / "raw" / job_name
+        trial_dirs = sorted(
+            path
+            for path in job_dir.iterdir()
+            if path.is_dir() and (path / "result.json").is_file()
+        )
+        trials.extend(
+            {
+                "provider": cell.provider,
+                "cell": cell.label,
+                "task": task_id,
+                "attempt": attempt,
+                "trajectory": trial_dir / "agent" / "trajectory.json",
+            }
+            for attempt, trial_dir in enumerate(trial_dirs, start=1)
+        )
+    if len(trials) != manifest.session_count:
+        raise ValueError(
+            "skill evaluation trial count does not match the approved manifest"
+        )
+    return tuple(trials)
+
+
 def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     """Execute only a previously compiled manifest with an exact digest approval."""
 
@@ -2084,3 +2180,17 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
         )
         if errors:
             raise ValueError("job delivery failed: " + "; ".join(errors))
+    if manifest.skill_evaluation is not None:
+        report = write_skill_evaluation_report(
+            manifest.path.parent / "Skill_Evaluation.json",
+            manifest_digest=manifest.digest,
+            evaluation=manifest.skill_evaluation,
+            trials=_skill_evaluation_trials(root, manifest),
+        )
+        aggregate = report["aggregate"]
+        if isinstance(aggregate, dict):
+            print(
+                "Skill invocation: "
+                f"{aggregate['numerator']}/{aggregate['denominator']} "
+                f"({aggregate['rate']:.0%})"
+            )
