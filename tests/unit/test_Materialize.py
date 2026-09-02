@@ -222,7 +222,7 @@ def source_repositories(tmp_path: Path) -> dict[str, tuple[Path, str]]:
         "plugins": [
             {
                 "name": "harness",
-                "version": "0.8.5",
+                "version": "0.8.6",
                 "source": "./plugins/harness",
             }
         ],
@@ -232,7 +232,7 @@ def source_repositories(tmp_path: Path) -> dict[str, tuple[Path, str]]:
         {
             ".claude-plugin/marketplace.json": json.dumps(harness_marketplace),
             "plugins/harness/.claude-plugin/plugin.json": json.dumps(
-                {"name": "harness", "version": "0.8.5"}
+                {"name": "harness", "version": "0.8.6"}
             ),
             "plugins/harness/hooks/hooks.json": '{"hooks": {}}\n',
             "plugins/harness/skills/execute/SKILL.md": "# Execute\n",
@@ -330,7 +330,7 @@ def test_codex_harness_materialization_preserves_plugin_companions(
         / "cache"
         / "studio-moser"
         / "harness"
-        / "0.8.5"
+        / "0.8.6"
     )
     assert (plugin / ".codex-plugin" / "plugin.json").is_file()
     assert (plugin / "skills" / "execute" / "SKILL.md").is_file()
@@ -361,7 +361,7 @@ def test_codex_harness_materialization_preserves_plugin_companions(
             "surface": "codex-plugin",
             "path": (
                 "/harness-arm/codex/provider-home/plugins/cache/"
-                "studio-moser/harness/0.8.5"
+                "studio-moser/harness/0.8.6"
             ),
             "capabilities": ["skills"],
         }
@@ -385,7 +385,7 @@ def test_codex_native_installer_creates_its_config_home(
         layer="Studio Harness",
         marketplace="studio-moser",
         plugin="harness",
-        version="0.8.5",
+        version="0.8.6",
         path=marketplace,
         plugin_path=plugin,
     )
@@ -506,7 +506,7 @@ def test_claude_plugin_validation_is_network_isolated_and_read_only(
             layer="Studio Harness",
             marketplace="studio-moser",
             plugin="harness",
-            version="0.8.5",
+            version="0.8.6",
             path=tmp_path / "harness-marketplace",
             plugin_path=tmp_path / "harness",
         ),
@@ -568,6 +568,20 @@ if (event.prompt.includes("HarnessResult")) {
         ("node", validator, plugin), capture_output=True, text=True
     )
     assert valid.returncode == 0, valid.stderr
+
+    activation = plugin / "scripts" / "activate.mjs"
+    activation.write_text(
+        activation.read_text().replace(
+            'additionalContext: "/harness:execute `route.fallback_reason` path:<absolute-path>",',
+            'additionalContext: "/harness:execute `route.fallback_reason` '
+            'path:<absolute-path>" + "x".repeat(4_000),',
+        )
+    )
+    bloated = subprocess.run(
+        ("node", validator, plugin), capture_output=True, text=True
+    )
+    assert bloated.returncode == 1
+    assert "4,000-byte" in bloated.stderr
 
     hooks = json.loads((plugin / "hooks" / "hooks.json").read_text())
     hooks["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"] = (

@@ -91,6 +91,6 @@ if (
 ) {
   fail("activation context omits required Harness contract guidance");
 }
-if (Buffer.byteLength(context) >= 10_000) {
-  fail("activation context exceeds the 10,000-byte inline ceiling");
+if (Buffer.byteLength(context) >= 4_000) {
+  fail("activation context exceeds the 4,000-byte benchmark ceiling");
 }
