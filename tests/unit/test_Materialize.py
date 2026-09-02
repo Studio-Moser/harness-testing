@@ -222,7 +222,7 @@ def source_repositories(tmp_path: Path) -> dict[str, tuple[Path, str]]:
         "plugins": [
             {
                 "name": "harness",
-                "version": "0.8.2",
+                "version": "0.8.3",
                 "source": "./plugins/harness",
             }
         ],
@@ -232,7 +232,7 @@ def source_repositories(tmp_path: Path) -> dict[str, tuple[Path, str]]:
         {
             ".claude-plugin/marketplace.json": json.dumps(harness_marketplace),
             "plugins/harness/.claude-plugin/plugin.json": json.dumps(
-                {"name": "harness", "version": "0.8.2"}
+                {"name": "harness", "version": "0.8.3"}
             ),
             "plugins/harness/skills/execute/SKILL.md": "# Execute\n",
             "plugins/harness/templates/AGENTS_Baseline.md": "# Benchmark baseline\n",
@@ -328,7 +328,7 @@ def test_codex_harness_materialization_preserves_plugin_companions(
         / "cache"
         / "studio-moser"
         / "harness"
-        / "0.8.2"
+        / "0.8.3"
     )
     assert (plugin / ".codex-plugin" / "plugin.json").is_file()
     assert (plugin / "skills" / "execute" / "SKILL.md").is_file()
@@ -359,7 +359,7 @@ def test_codex_harness_materialization_preserves_plugin_companions(
             "surface": "codex-plugin",
             "path": (
                 "/harness-arm/codex/provider-home/plugins/cache/"
-                "studio-moser/harness/0.8.2"
+                "studio-moser/harness/0.8.3"
             ),
             "capabilities": ["skills"],
         }
@@ -383,7 +383,7 @@ def test_codex_native_installer_creates_its_config_home(
         layer="Studio Harness",
         marketplace="studio-moser",
         plugin="harness",
-        version="0.8.2",
+        version="0.8.3",
         path=marketplace,
         plugin_path=plugin,
     )
@@ -502,7 +502,7 @@ def test_claude_plugin_validation_is_network_isolated_and_read_only(
             layer="Studio Harness",
             marketplace="studio-moser",
             plugin="harness",
-            version="0.8.2",
+            version="0.8.3",
             path=tmp_path / "harness-marketplace",
             plugin_path=tmp_path / "harness",
         ),
