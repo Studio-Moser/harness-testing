@@ -683,6 +683,17 @@ def _run_claude_plugin_validation(
 ) -> None:
     if not inputs:
         return
+    commands = [
+        "claude plugin validate --strict "
+        f"/bundle/claude/plugins/{plugin_input.plugin}"
+        for plugin_input in inputs
+    ]
+    validator = root / "images" / "Validate_Claude_Harness_Hook.mjs"
+    if any(plugin_input.plugin == "harness" for plugin_input in inputs):
+        commands.append(
+            "node /validate-claude-harness-hook.mjs "
+            "/bundle/claude/plugins/harness"
+        )
     docker_arguments = [
         "docker",
         "run",
@@ -693,14 +704,12 @@ def _run_claude_plugin_validation(
         f"{os.getuid()}:{os.getgid()}",
         "-v",
         f"{bundle}:/bundle:ro",
+        "-v",
+        f"{validator}:/validate-claude-harness-hook.mjs:ro",
         _node_image(root),
         "sh",
         "-lc",
-        " && ".join(
-            "claude plugin validate --strict "
-            f"/bundle/claude/plugins/{plugin_input.plugin}"
-            for plugin_input in inputs
-        ),
+        " && ".join(commands),
     ]
     completed = subprocess.run(docker_arguments, text=True, capture_output=True)
     if completed.returncode:

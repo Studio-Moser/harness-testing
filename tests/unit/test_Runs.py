@@ -164,14 +164,14 @@ def source_repositories(
                     "plugins": [
                         {
                             "name": "harness",
-                            "version": "0.8.4",
+                            "version": "0.8.5",
                             "source": "./plugins/harness",
                         }
                     ],
                 }
             ),
             "plugins/harness/.claude-plugin/plugin.json": json.dumps(
-                {"name": "harness", "version": "0.8.4"}
+                {"name": "harness", "version": "0.8.5"}
             ),
             "plugins/harness/hooks/hooks.json": '{"hooks": {}}\n',
             "plugins/harness/skills/execute/SKILL.md": "# Execute\n",
@@ -180,7 +180,7 @@ def source_repositories(
             ),
             "plugins/harness/references/harness-contract.md": "# Contract\n",
             "plugins/harness/scripts/resolve-route.py": "#!/usr/bin/env python3\n",
-            "plugins/harness/scripts/activate-execute-skill.py": "#!/usr/bin/env python3\n",
+            "plugins/harness/scripts/activate-execute-skill.mjs": "#!/usr/bin/env node\n",
         },
     )
     return {"Superpowers": superpowers, "Studio Harness": harness}
@@ -212,13 +212,13 @@ commit = "{superpowers_commit}"
         """[[sources]]
 name = "Studio Harness"
 url = "https://github.com/Studio-Moser/skills-n-stuff.git"
-version = "0.8.4"
-commit = "8ae043c4676eb121bab711ce84649c8d2485eac2"
+version = "0.8.5"
+commit = "ac01331761cd4d2b8349e35d4cbc2442efcf50de"
 """,
         f"""[[sources]]
 name = "Studio Harness"
 url = {json.dumps(str(harness))}
-version = "0.8.4"
+version = "0.8.5"
 commit = "{harness_commit}"
 """,
     )
@@ -293,7 +293,7 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
     ]
     delivery_surfaces = []
     for layer in layers:
-        plugin_version = "6.3.0" if layer == "Superpowers" else "0.8.4"
+        plugin_version = "6.3.0" if layer == "Superpowers" else "0.8.5"
         if cell.provider == "claude":
             plugin = "superpowers" if layer == "Superpowers" else "harness"
             relative = Path("claude") / "plugins" / plugin
@@ -503,7 +503,7 @@ def _benchmark_skills(arm: str) -> list[str]:
 
 def _codex_inventory_record(plugin: str) -> dict[str, object]:
     marketplace = "superpowers-dev" if plugin == "superpowers" else "studio-moser"
-    version = "6.3.0" if plugin == "superpowers" else "0.8.4"
+    version = "6.3.0" if plugin == "superpowers" else "0.8.5"
     return {
         "name": plugin,
         "pluginId": f"{plugin}@{marketplace}",
