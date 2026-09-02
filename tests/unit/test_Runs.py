@@ -22,6 +22,7 @@ from harness_testing.Materialize import (
     _resolve_source_trees,
     _sha256_bytes,
     _tree_digest,
+    materialize_arm,
 )
 from harness_testing.Runs import (
     RunCell,
@@ -481,6 +482,79 @@ def _compile_pair(root: Path, **overrides):
     }
     arguments.update(overrides)
     return compile_run(**arguments)
+
+
+def test_codex_candidate_version_can_differ_from_ledger_version(
+    run_root: Path,
+    source_repositories: dict[str, tuple[Path, str]],
+):
+    pinned_source, _ = source_repositories["Studio Harness"]
+    candidate_source = run_root / "candidate-harness"
+    subprocess.run(
+        ("git", "clone", "--quiet", pinned_source, candidate_source), check=True
+    )
+    subprocess.run(
+        ("git", "-C", candidate_source, "config", "user.name", "Harness Test"),
+        check=True,
+    )
+    subprocess.run(
+        ("git", "-C", candidate_source, "config", "user.email", "harness@example.invalid"),
+        check=True,
+    )
+    for manifest_path in (
+        candidate_source / "plugins/harness/.claude-plugin/plugin.json",
+        candidate_source / ".claude-plugin/marketplace.json",
+    ):
+        manifest = json.loads(manifest_path.read_text())
+        if manifest_path.name == "marketplace.json":
+            manifest["plugins"][0]["version"] = "0.8.8"
+        else:
+            manifest["version"] = "0.8.8"
+        manifest_path.write_text(json.dumps(manifest))
+    subprocess.run(("git", "-C", candidate_source, "add", "."), check=True)
+    subprocess.run(
+        ("git", "-C", candidate_source, "commit", "--quiet", "-m", "candidate"),
+        check=True,
+    )
+    candidate_commit = subprocess.run(
+        ("git", "-C", candidate_source, "rev-parse", "HEAD"),
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    versions_path = run_root / "Versions.toml"
+    versions_path.write_text(
+        versions_path.read_text().replace(str(pinned_source), str(candidate_source))
+    )
+    bundle = materialize_arm(
+        run_root,
+        "codex",
+        "A2",
+        source_overrides={"Studio Harness": (candidate_source, candidate_commit)},
+        native_cli=False,
+    )
+    cell = RunCell(
+        label="codex-A2-candidate",
+        provider="codex",
+        arm="A2",
+        role="candidate",
+        model="gpt-5.6-terra",
+        effort="high",
+        harness_commit=candidate_commit,
+        bundle_digest=bundle.digest,
+    )
+
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="api",
+        cells=(cell,),
+        task_ids=("task-one",),
+        max_sessions=1,
+        max_budget_usd=Decimal("100"),
+    )
+
+    assert manifest.cells[0].bundle_digest == bundle.digest
 
 
 def _benchmark_plugins(arm: str) -> list[str]:

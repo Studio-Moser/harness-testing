@@ -275,6 +275,86 @@ def test_materialization_rejects_a_dirty_candidate_source(
         )
 
 
+def test_materialization_records_version_from_candidate_commit(
+    tmp_path: Path, source_repositories: dict[str, tuple[Path, str]]
+):
+    source, candidate_commit = source_repositories["Studio Harness"]
+    (tmp_path / "Versions.toml").write_text(
+        '[[sources]]\nname = "Studio Harness"\nversion = "0.8.6"\n'
+    )
+
+    bundle = materialize_arm(
+        tmp_path,
+        "claude",
+        "A2",
+        source_overrides={"Studio Harness": (source, candidate_commit)},
+        native_cli=False,
+    )
+
+    provenance = json.loads((bundle.path / "Provenance.json").read_text())
+    assert provenance["sources"][0]["version"] == "0.8.7"
+
+
+def test_materialization_rejects_unsafe_candidate_version(
+    tmp_path: Path, source_repositories: dict[str, tuple[Path, str]]
+):
+    source, _ = source_repositories["Studio Harness"]
+    manifest_path = source / "plugins/harness/.claude-plugin/plugin.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["version"] = "../0.8.8"
+    manifest_path.write_text(json.dumps(manifest))
+    subprocess.run(("git", "-C", source, "add", "."), check=True)
+    subprocess.run(
+        ("git", "-C", source, "commit", "--quiet", "-m", "unsafe version"),
+        check=True,
+    )
+    candidate_commit = subprocess.run(
+        ("git", "-C", source, "rev-parse", "HEAD"),
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+    with pytest.raises(ValueError, match="invalid plugin version"):
+        materialize_arm(
+            tmp_path,
+            "codex",
+            "A2",
+            source_overrides={"Studio Harness": (source, candidate_commit)},
+            native_cli=False,
+        )
+
+
+def test_materialization_rejects_mismatched_superpowers_versions(
+    tmp_path: Path, source_repositories: dict[str, tuple[Path, str]]
+):
+    source, _ = source_repositories["Superpowers"]
+    manifest_path = source / ".codex-plugin/plugin.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["version"] = "6.4.0"
+    manifest_path.write_text(json.dumps(manifest))
+    subprocess.run(("git", "-C", source, "add", "."), check=True)
+    subprocess.run(
+        ("git", "-C", source, "commit", "--quiet", "-m", "mismatch"),
+        check=True,
+    )
+    candidate_commit = subprocess.run(
+        ("git", "-C", source, "rev-parse", "HEAD"),
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+    with pytest.raises(ValueError, match="plugin versions do not match"):
+        materialize_arm(
+            tmp_path,
+            "codex",
+            "A1",
+            source_overrides={"Superpowers": (source, candidate_commit)},
+            native_cli=False,
+        )
+
+
 def test_materialization_is_content_addressed_and_repeatable(tmp_path: Path):
     first = materialize_arm(tmp_path, "codex", "A0", native_cli=False)
     second = materialize_arm(tmp_path, "codex", "A0", native_cli=False)

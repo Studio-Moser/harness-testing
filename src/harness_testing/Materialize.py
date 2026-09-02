@@ -52,6 +52,7 @@ _ARM_LAYERS = {
 }
 _EXACT_COMMIT = re.compile(r"^[0-9a-f]{40}$")
 _SAFE_PLUGIN_NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+_SAFE_PLUGIN_VERSION = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
 _SAFE_IMAGE_USER = re.compile(r"^[A-Za-z0-9_.:-]+$")
 _SAFE_PLATFORM = re.compile(r"^[a-z0-9]+/[a-z0-9_]+$")
 _SHA256_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -464,6 +465,36 @@ def _validate_local_repository(repository: Path, commit: str) -> None:
         raise ValueError(f"candidate source is dirty: {repository}")
 
 
+def _candidate_version(layer: str, source_tree: Path) -> str:
+    plugin = "superpowers" if layer == "Superpowers" else "harness"
+    manifest_paths = (
+        (
+            source_tree / ".claude-plugin" / "plugin.json",
+            source_tree / ".codex-plugin" / "plugin.json",
+        )
+        if layer == "Superpowers"
+        else (
+            source_tree
+            / "plugins"
+            / "harness"
+            / ".claude-plugin"
+            / "plugin.json",
+        )
+    )
+    versions: set[str] = set()
+    for manifest_path in manifest_paths:
+        manifest = _read_json(manifest_path, f"{layer} plugin manifest")
+        if manifest.get("name") != plugin:
+            raise ValueError(f"plugin name does not match {layer}")
+        version = manifest.get("version")
+        if not isinstance(version, str) or not _SAFE_PLUGIN_VERSION.fullmatch(version):
+            raise ValueError(f"invalid plugin version for {layer}")
+        versions.add(version)
+    if len(versions) != 1:
+        raise ValueError(f"{layer} plugin versions do not match")
+    return versions.pop()
+
+
 def _archive_repository(root: Path, source: str | Path, commit: str) -> tuple[Path, str]:
     _require_exact_commit(commit)
     repository = _local_repository(source)
@@ -527,7 +558,11 @@ def _resolve_source_trees(
             _SourceTree(
                 name=layer,
                 url=source_url if layer in source_overrides else str(pin["url"]),
-                version=str(pin.get("version", "fixture")),
+                version=(
+                    _candidate_version(layer, path)
+                    if layer in source_overrides
+                    else str(pin.get("version", "fixture"))
+                ),
                 commit=commit,
                 path=path,
                 digest=_tree_digest(path),

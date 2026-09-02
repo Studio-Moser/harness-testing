@@ -673,27 +673,21 @@ def _canonical_delivery_path(
     provider: str,
     layer: str,
     target: Path,
+    version: str,
 ) -> str:
     plugin = _LAYER_PLUGIN_NAMES[layer]
     manifest = _plugin_manifest(target, provider)
     target_plugin = target.name if provider == "claude" else target.parent.name
-    if target_plugin != plugin or manifest.get("name") != plugin:
+    if (
+        target_plugin != plugin
+        or manifest.get("name") != plugin
+        or manifest.get("version") != version
+    ):
         raise ValueError(f"delivery target is not canonical for layer {layer}")
     if provider == "claude":
         return f"/harness-arm/claude/plugins/{plugin}"
 
-    root = bundle.parents[4]
-    source_versions = {
-        str(source["name"]): str(source["version"])
-        for source in load_versions(root / "Versions.toml").get("sources", [])
-        if isinstance(source, dict)
-        and isinstance(source.get("name"), str)
-        and isinstance(source.get("version"), str)
-    }
     marketplace = _CODEX_LAYER_MARKETPLACES[layer]
-    version = source_versions.get(layer)
-    if version is None:
-        raise ValueError(f"canonical source version is missing for layer {layer}")
     cache_root = bundle / "codex" / "provider-home" / "plugins" / "cache"
     try:
         actual_marketplace, plugin_name, actual_version = target.relative_to(cache_root).parts
@@ -703,8 +697,6 @@ def _canonical_delivery_path(
         actual_marketplace != marketplace
         or plugin_name != plugin
         or actual_version != version
-        or not isinstance(manifest.get("version"), str)
-        or manifest["version"] != version
     ):
         raise ValueError(f"delivery target is not canonical for layer {layer}")
     return (
@@ -847,6 +839,19 @@ def _validated_delivery_surfaces(
     layers = provenance.get("layers")
     if not isinstance(layers, list) or tuple(layers) != expected_layers:
         raise ValueError(f"delivery layers do not match arm {arm}")
+    sources = provenance.get("sources")
+    if not isinstance(sources, list) or len(sources) != len(expected_layers):
+        raise ValueError(f"delivery sources do not match arm {arm}")
+    source_versions: dict[str, str] = {}
+    for layer, source in zip(expected_layers, sources, strict=True):
+        if (
+            not isinstance(source, dict)
+            or source.get("name") != layer
+            or not isinstance(source.get("version"), str)
+            or not source["version"]
+        ):
+            raise ValueError(f"delivery source does not match layer {layer}")
+        source_versions[layer] = source["version"]
     surfaces = provenance.get("delivery_surfaces")
     if not isinstance(surfaces, list) or len(surfaces) != len(expected_layers):
         raise ValueError(f"delivery surfaces do not match arm {arm}")
@@ -865,7 +870,9 @@ def _validated_delivery_surfaces(
             raise ValueError(f"duplicate delivery target for layer {layer}")
         if provider == "claude" and target.parent != (bundle / "claude" / "plugins").resolve():
             raise ValueError("Claude plugin delivery target must be a direct child")
-        canonical_path = _canonical_delivery_path(bundle, provider, layer, target)
+        canonical_path = _canonical_delivery_path(
+            bundle, provider, layer, target, source_versions[layer]
+        )
         if surface.get("path") != canonical_path:
             raise ValueError(f"delivery path is not canonical for layer {layer}")
         if surface.get("capabilities") != _observed_capabilities(target, provider):
