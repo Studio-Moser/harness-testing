@@ -222,7 +222,7 @@ def source_repositories(tmp_path: Path) -> dict[str, tuple[Path, str]]:
         "plugins": [
             {
                 "name": "harness",
-                "version": "0.8.3",
+                "version": "0.8.4",
                 "source": "./plugins/harness",
             }
         ],
@@ -232,13 +232,15 @@ def source_repositories(tmp_path: Path) -> dict[str, tuple[Path, str]]:
         {
             ".claude-plugin/marketplace.json": json.dumps(harness_marketplace),
             "plugins/harness/.claude-plugin/plugin.json": json.dumps(
-                {"name": "harness", "version": "0.8.3"}
+                {"name": "harness", "version": "0.8.4"}
             ),
+            "plugins/harness/hooks/hooks.json": '{"hooks": {}}\n',
             "plugins/harness/skills/execute/SKILL.md": "# Execute\n",
             "plugins/harness/templates/AGENTS_Baseline.md": "# Benchmark baseline\n",
             "plugins/harness/references/harness-contract.md": "# Contract\n",
             "plugins/harness/references/house-rules.md": "# House rules\n",
             "plugins/harness/scripts/resolve-route.py": "#!/usr/bin/env python3\n",
+            "plugins/harness/scripts/activate-execute-skill.py": "#!/usr/bin/env python3\n",
         },
     )
     return {"Superpowers": superpowers, "Studio Harness": harness}
@@ -328,7 +330,7 @@ def test_codex_harness_materialization_preserves_plugin_companions(
         / "cache"
         / "studio-moser"
         / "harness"
-        / "0.8.3"
+        / "0.8.4"
     )
     assert (plugin / ".codex-plugin" / "plugin.json").is_file()
     assert (plugin / "skills" / "execute" / "SKILL.md").is_file()
@@ -359,7 +361,7 @@ def test_codex_harness_materialization_preserves_plugin_companions(
             "surface": "codex-plugin",
             "path": (
                 "/harness-arm/codex/provider-home/plugins/cache/"
-                "studio-moser/harness/0.8.3"
+                "studio-moser/harness/0.8.4"
             ),
             "capabilities": ["skills"],
         }
@@ -383,7 +385,7 @@ def test_codex_native_installer_creates_its_config_home(
         layer="Studio Harness",
         marketplace="studio-moser",
         plugin="harness",
-        version="0.8.3",
+        version="0.8.4",
         path=marketplace,
         plugin_path=plugin,
     )
@@ -415,9 +417,11 @@ def test_claude_materialization_copies_complete_plugin_directories_in_layer_orde
     assert (superpowers / "skills" / "using-superpowers" / "SKILL.md").is_file()
     assert (superpowers / "hooks" / "hooks.json").is_file()
     assert (harness / ".claude-plugin" / "plugin.json").is_file()
+    assert (harness / "hooks" / "hooks.json").is_file()
     assert (harness / "skills" / "execute" / "SKILL.md").is_file()
     assert (harness / "references" / "harness-contract.md").is_file()
     assert (harness / "scripts" / "resolve-route.py").is_file()
+    assert (harness / "scripts" / "activate-execute-skill.py").is_file()
     assert not (claude.path / "claude" / "plugin-seed").exists()
     assert not (claude.path / "claude" / "known_marketplaces.json").exists()
     assert not (claude.path / "claude" / "settings.json").exists()
@@ -433,7 +437,7 @@ def test_claude_materialization_copies_complete_plugin_directories_in_layer_orde
             "layer": "Studio Harness",
             "surface": "claude-plugin-dir",
             "path": "/harness-arm/claude/plugins/harness",
-            "capabilities": ["skills"],
+            "capabilities": ["skills", "hooks"],
         },
     ]
     assert any(
@@ -502,7 +506,7 @@ def test_claude_plugin_validation_is_network_isolated_and_read_only(
             layer="Studio Harness",
             marketplace="studio-moser",
             plugin="harness",
-            version="0.8.3",
+            version="0.8.4",
             path=tmp_path / "harness-marketplace",
             plugin_path=tmp_path / "harness",
         ),

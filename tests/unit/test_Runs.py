@@ -164,21 +164,23 @@ def source_repositories(
                     "plugins": [
                         {
                             "name": "harness",
-                            "version": "0.8.3",
+                            "version": "0.8.4",
                             "source": "./plugins/harness",
                         }
                     ],
                 }
             ),
             "plugins/harness/.claude-plugin/plugin.json": json.dumps(
-                {"name": "harness", "version": "0.8.3"}
+                {"name": "harness", "version": "0.8.4"}
             ),
+            "plugins/harness/hooks/hooks.json": '{"hooks": {}}\n',
             "plugins/harness/skills/execute/SKILL.md": "# Execute\n",
             "plugins/harness/templates/AGENTS_Baseline.md": (
                 "# Benchmark baseline\n"
             ),
             "plugins/harness/references/harness-contract.md": "# Contract\n",
             "plugins/harness/scripts/resolve-route.py": "#!/usr/bin/env python3\n",
+            "plugins/harness/scripts/activate-execute-skill.py": "#!/usr/bin/env python3\n",
         },
     )
     return {"Superpowers": superpowers, "Studio Harness": harness}
@@ -210,13 +212,13 @@ commit = "{superpowers_commit}"
         """[[sources]]
 name = "Studio Harness"
 url = "https://github.com/Studio-Moser/skills-n-stuff.git"
-version = "0.8.3"
-commit = "5a6bfd811fa1e9cf004be0af9d860ba17f1c8aca"
+version = "0.8.4"
+commit = "8ae043c4676eb121bab711ce84649c8d2485eac2"
 """,
         f"""[[sources]]
 name = "Studio Harness"
 url = {json.dumps(str(harness))}
-version = "0.8.3"
+version = "0.8.4"
 commit = "{harness_commit}"
 """,
     )
@@ -291,7 +293,7 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
     ]
     delivery_surfaces = []
     for layer in layers:
-        plugin_version = "6.3.0" if layer == "Superpowers" else "0.8.3"
+        plugin_version = "6.3.0" if layer == "Superpowers" else "0.8.4"
         if cell.provider == "claude":
             plugin = "superpowers" if layer == "Superpowers" else "harness"
             relative = Path("claude") / "plugins" / plugin
@@ -327,7 +329,7 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
                 json.dumps({"name": plugin, "version": plugin_version})
                 + "\n"
             )
-            if layer == "Superpowers":
+            if layer in ("Superpowers", "Studio Harness"):
                 (path / relative / "hooks").mkdir(exist_ok=True)
         if layer == "Studio Harness":
             template = path / relative / "templates" / "AGENTS_Baseline.md"
@@ -351,7 +353,8 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
                 "path": provider_path,
                 "capabilities": (
                     ["skills", "hooks"]
-                    if cell.provider == "claude" and layer == "Superpowers"
+                    if cell.provider == "claude"
+                    and layer in ("Superpowers", "Studio Harness")
                     else ["skills"]
                 ),
             }
@@ -500,7 +503,7 @@ def _benchmark_skills(arm: str) -> list[str]:
 
 def _codex_inventory_record(plugin: str) -> dict[str, object]:
     marketplace = "superpowers-dev" if plugin == "superpowers" else "studio-moser"
-    version = "6.3.0" if plugin == "superpowers" else "0.8.3"
+    version = "6.3.0" if plugin == "superpowers" else "0.8.4"
     return {
         "name": plugin,
         "pluginId": f"{plugin}@{marketplace}",
