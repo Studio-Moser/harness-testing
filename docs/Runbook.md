@@ -116,7 +116,14 @@ The first selected task runs as the delivery canary across every selected cell. 
 Subscription mode forbids API fallback.
 
 - Codex: unset `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `OPENAI_API_BASE`. The default credential is `~/.codex/auth.json`, or set `CODEX_AUTH_JSON_PATH` to another local ChatGPT-auth JSON file.
-- Claude: unset `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL`; provide `CLAUDE_CODE_OAUTH_TOKEN`.
+- Claude: unset `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL`. For local macOS runs, create a subscription token once and store it in Keychain:
+
+  ```bash
+  claude setup-token
+  uv run harness-test auth claude
+  ```
+
+  CI and non-macOS runs use `CLAUDE_CODE_OAUTH_TOKEN`. Neither the Keychain nor environment path authorizes API billing.
 
 The execution preflight rejects missing or wrong-mode credentials before Harbor starts. Subscription mode requires `--max-budget-usd 0`; the report still shows an API-equivalent usage estimate because subscription quota is not a dollar hard stop.
 

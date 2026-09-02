@@ -23,6 +23,7 @@ from harbor.models.job.config import JobConfig
 
 import harness_testing.Materialize as Materialize
 from harness_testing.Config import load_job, load_versions
+from harness_testing.Credentials import load_claude_subscription_token
 from harness_testing.Harbor_CLI import harbor_command
 from harness_testing.Materialize import (
     _ARM_LAYERS,
@@ -2138,7 +2139,11 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     for name, _ in _SUBSCRIPTION_SELECTORS.values():
         execution_environment.pop(name, None)
     if manifest.billing_mode == "subscription":
-        _verify_subscription_auth(manifest.cells, os.environ, Path.home())
+        if any(cell.provider == "claude" for cell in manifest.cells):
+            token = load_claude_subscription_token(os.environ)
+            if token:
+                execution_environment["CLAUDE_CODE_OAUTH_TOKEN"] = token
+        _verify_subscription_auth(manifest.cells, execution_environment, Path.home())
         for selector in _subscription_selectors(manifest.cells).values():
             execution_environment[selector["name"]] = selector["value"]
     profile = _load_profile(root, manifest.profile)

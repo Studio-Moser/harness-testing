@@ -80,6 +80,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     sanitize_parser.add_argument("--job", type=Path, required=True)
     sanitize_parser.add_argument("--output", type=Path, required=True)
 
+    auth_parser = subparsers.add_parser("auth", help="store local subscription credentials")
+    auth_subparsers = auth_parser.add_subparsers(dest="auth_command")
+    auth_subparsers.add_parser("claude", help="store the Claude subscription token")
+
     run_parser = subparsers.add_parser("run", help="plan or execute guarded Harbor runs")
     run_subparsers = run_parser.add_subparsers(dest="run_command")
     plan_parser = run_subparsers.add_parser("plan", help="compile a dry-run manifest")
@@ -217,6 +221,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
         print(f"Sanitized result: {result['result_id']}")
         print(arguments.output)
+    elif arguments.command == "auth" and arguments.auth_command == "claude":
+        from harness_testing.Credentials import store_claude_subscription_token
+
+        print("Enter the Claude subscription token in the Keychain prompt.")
+        try:
+            store_claude_subscription_token()
+        except ValueError:
+            print("Claude subscription token could not be stored.", file=sys.stderr)
+            return 1
+        print("Claude subscription token stored in Keychain.")
     elif arguments.command == "run" and arguments.run_command == "plan":
         from harness_testing.Runs import format_plan, plan_run
         from harness_testing.Skill_Evaluation import SkillEvaluation

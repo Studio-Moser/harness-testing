@@ -2187,6 +2187,50 @@ def test_subscription_selector_is_scoped_to_the_harbor_process(
     assert "CODEX_FORCE_AUTH_JSON" not in Runs.os.environ
 
 
+def test_keychain_token_is_scoped_to_claude_harbor_child(
+    run_root: Path, monkeypatch: pytest.MonkeyPatch
+):
+    cell = _cell("claude", "A0", "baseline", "e")
+    _add_bundle(run_root, cell)
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="subscription",
+        cells=(cell,),
+        task_ids=("task-one",),
+        max_sessions=1,
+        max_budget_usd=Decimal("0"),
+    )
+    for name in (
+        "ANTHROPIC_API_KEY",
+        "ANTHROPIC_BASE_URL",
+        "CLAUDE_CODE_OAUTH_TOKEN",
+        "CLAUDE_FORCE_OAUTH",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(
+        Runs, "load_claude_subscription_token", lambda environment: "resolved"
+    )
+    monkeypatch.setattr(Runs, "validate_repository", lambda root: ())
+    monkeypatch.setattr(Runs, "dockerfile_policy_errors", lambda root: ())
+    monkeypatch.setattr(Runs, "require_current_image", lambda root, image: None)
+    monkeypatch.setattr(Runs, "_completed_job_errors", lambda *args: ())
+    calls: list[dict[str, object]] = []
+
+    def fake_run(command, **kwargs):
+        calls.append(kwargs)
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    assert len(calls) == 1
+    child_environment = calls[0]["env"]
+    assert isinstance(child_environment, dict)
+    assert child_environment["CLAUDE_CODE_OAUTH_TOKEN"] == "resolved"
+    assert "CLAUDE_CODE_OAUTH_TOKEN" not in Runs.os.environ
+
+
 def test_subscription_and_api_budget_rules_are_distinct(run_root: Path):
     with pytest.raises(ValueError, match="subscription.*zero"):
         _compile_pair(

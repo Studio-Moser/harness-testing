@@ -160,3 +160,36 @@ def test_run_plan_forwards_mutually_exclusive_skill_evaluation(
     assert evaluation.mode == mode
     assert evaluation.name == "harness:execute"
     assert capsys.readouterr().out == "planned\n"
+
+
+def test_claude_auth_stores_token_with_redacted_success_message(monkeypatch, capsys):
+    from harness_testing.CLI import main
+
+    monkeypatch.setattr(
+        "harness_testing.Credentials.store_claude_subscription_token", lambda: None
+    )
+
+    assert main(["auth", "claude"]) == 0
+    captured = capsys.readouterr()
+    assert captured.out == (
+        "Enter the Claude subscription token in the Keychain prompt.\n"
+        "Claude subscription token stored in Keychain.\n"
+    )
+    assert captured.err == ""
+
+
+def test_claude_auth_returns_redacted_failure_without_storage_output(monkeypatch, capsys):
+    from harness_testing.CLI import main
+
+    def failing_storage():
+        raise ValueError("unexpected detail")
+
+    monkeypatch.setattr(
+        "harness_testing.Credentials.store_claude_subscription_token", failing_storage
+    )
+
+    assert main(["auth", "claude"]) == 1
+    captured = capsys.readouterr()
+    assert "unexpected detail" not in captured.out + captured.err
+    assert captured.out == "Enter the Claude subscription token in the Keychain prompt.\n"
+    assert captured.err == "Claude subscription token could not be stored.\n"
