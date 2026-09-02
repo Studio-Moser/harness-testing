@@ -22,8 +22,8 @@ commit = "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
 [[sources]]
 name = "Studio Harness"
 url = "https://github.com/Studio-Moser/skills-n-stuff.git"
-version = "0.8.1"
-commit = "ff8852e737a43a7e23f2cad423905f9361fde8ae"
+version = "0.8.2"
+commit = "f8afd61d1de1b36950f5b878c710ce32e41a8ddc"
 
 [[sources]]
 name = "DeepSWE"
