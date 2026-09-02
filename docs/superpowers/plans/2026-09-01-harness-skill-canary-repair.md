@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make Studio Harness discoverable for explicit typed pre-dispatch work, encode blocked `HarnessResult` values deterministically, and avoid loading unrelated references, then prove the repair with the two failed A2 provider cells only.
+**Goal:** Prove Studio Harness capability through explicit provider-native skill invocation, measure automatic discovery separately as a rate, preserve deterministic blocked-result encoding, and remove the ineffective activation hook.
 
-**Architecture:** The production Harness plugin remains the source of execution semantics. Its `execute` metadata advertises explicit routing and typed preflight blockers, `harness-contract.md` owns the provider-neutral terminal encoding, and `SKILL.md` routes supporting references only when their execution path is entered. Harness Testing continues to use the unchanged protected task and scorer while pinning one immutable Harness `0.8.2` commit.
+**Architecture:** The production Harness plugin remains the source of execution semantics while Harness Testing declares whether a run explicitly invokes or merely observes a named skill. Provider adapters translate only explicit invocation syntax, discovery uses repeated raw prompts, and public result provenance prevents either evaluation from mixing with ordinary benchmark series. `harness-contract.md` continues to own provider-neutral terminal encoding and `SKILL.md` retains progressive disclosure.
 
 **Tech Stack:** Markdown agent skills, Claude plugin manifests, Bash/Bats, Git worktrees, Python 3.12, pytest, Ruff, Harbor 0.22.0, Claude Code 2.1.236, Codex 0.150.1.
 
@@ -13,7 +13,10 @@
 ## Global constraints
 
 - Do not edit the shared Skills-n-Stuff checkout at `/Users/timmoser/Projects/Studio Moser Internal/Skills-n-Stuff`; it owns unrelated branch `fix/narrow-harness-delegation` and an untracked `.DS_Store`.
-- Do not change the `missing-rubric` task instruction, protected expectation, scorer, public result schema, dashboard, task images, or provider adapters.
+- Do not change the `missing-rubric` task instruction, protected expectation,
+  scorer, or task images. The approved 2026-09-02 continuation supersedes the
+  original freeze only for provider adapters, public result provenance, and the
+  dashboard needed to separate capability from discovery.
 - Treat run `run-38eee85f60f36d221fdb` as the model-backed RED: Claude A2 did not invoke `harness:execute`; Codex A2 read all six references and returned the wrong terminal encoding.
 - Use focused tests while editing. Run each repository's complete relevant checkpoint once after all edits settle.
 - Start no provider model until the new two-session manifest has an exact content-addressed approval.
@@ -373,4 +376,165 @@
 - [ ] Harness Testing pins the exact remote-fetchable commit and contains no stale current-pin fixture.
 - [ ] Each repository ran focused checks during editing and one final relevant checkpoint.
 - [ ] The unchanged protected task/scorer awarded `1.0` for correctness, workflow, and efficiency in both A2 cells.
-- [ ] No A0 rerun, broad release run, dashboard change, image rebuild, protected-answer leak, raw trajectory commit, or credential exposure occurred.
+- [ ] No A0 rerun, broad release run, image rebuild, protected-answer leak, raw trajectory commit, or credential exposure occurred. The original dashboard freeze is superseded by Task 8.
+
+---
+
+## 2026-09-02 architecture-correction continuation
+
+The original Tasks 1–5 record the failed automatic-discovery repair through
+Harness `0.8.6`. Continue from the approved amendment in the design; do not repeat
+those tasks or tune another activation prompt.
+
+### Task 6: Remove the Studio Harness activation hook
+
+**Files:**
+
+- Delete: `plugins/harness/hooks/hooks.json`
+- Delete: `plugins/harness/scripts/activate-execute-skill.mjs`
+- Delete: `plugins/harness/tests/execute-activation-hook.bats`
+- Modify: `plugins/harness/.claude-plugin/plugin.json`
+- Modify: `.claude-plugin/marketplace.json`
+
+**Interfaces:**
+
+- Produces Harness `0.8.7`, with Studio Harness skills still available on Claude
+  and Codex but no automatic prompt-injection hook.
+
+- [ ] **Step 1: Run the focused hook test as the historical RED evidence.**
+
+  ```bash
+  cd plugins/harness
+  bats tests/execute-activation-hook.bats tests/version-consistency.bats
+  ```
+
+  Expected: the existing hook test passes and proves exactly what is being
+  removed; the preserved model-backed `0.8.6` run proves it does not change the
+  required behavior.
+
+- [ ] **Step 2: Delete the hook, script, and hook-only test; bump the plugin to
+  `0.8.7` and marketplace metadata to `0.19.8`.**
+
+- [ ] **Step 3: Run only version and plugin validation checks while editing.**
+
+  ```bash
+  cd plugins/harness
+  bats tests/version-consistency.bats tests/skill-plugin-root.bats
+  claude plugin validate --strict .
+  ```
+
+- [ ] **Step 4: Save the full plugin suite for the repository checkpoint after
+  all Harness edits settle. Commit and push the candidate branch.**
+
+**Task done when:** the candidate is remote-fetchable, plugin validation passes,
+and no tracked Harness hook or activation script remains.
+
+### Task 7: Add content-addressed capability and discovery modes
+
+**Files:**
+
+- Create: `src/harness_testing/Skill_Evaluation.py`
+- Create: `tests/unit/test_Skill_Evaluation.py`
+- Modify: `src/harness_testing/Claude_Agent.py`
+- Modify: `src/harness_testing/Codex_Agent.py`
+- Modify: `src/harness_testing/Runs.py`
+- Modify: `src/harness_testing/CLI.py`
+- Modify: `tests/unit/test_Claude_Agent.py`
+- Modify: `tests/unit/test_Codex_Agent.py`
+- Modify: `tests/unit/test_Runs.py`
+
+**Interfaces:**
+
+- `SkillEvaluation(mode: "capability" | "discovery", name: str)` is optional
+  manifest state and participates in the manifest digest and stable run ID.
+- `--invoke-skill harness:execute` selects capability mode.
+- `--observe-skill harness:execute` selects discovery mode and requires at least
+  five attempts.
+- Provider adapters receive `skill_invocation="harness:execute"` only in
+  capability mode and preserve the original instruction as skill arguments.
+
+- [ ] **Step 1: Write failing unit tests for name validation, provider-native
+  prompt construction, absent-skill rejection, the five-attempt discovery floor,
+  manifest round trips, and generated job kwargs. Run only those tests and
+  confirm each fails for the missing behavior.**
+
+- [ ] **Step 2: Implement the smallest shared evaluation value and adapter
+  transformation, then pass it through run planning, content identity, generated
+  jobs, reload verification, and CLI parsing.**
+
+- [ ] **Step 3: Add failing trajectory fixtures for Claude `Skill` calls, Codex
+  pinned `SKILL.md` reads, and no activation. Implement exact observation and a
+  public-safe `Skill_Evaluation.json` report beside the manifest.**
+
+- [ ] **Step 4: Run only the new/changed unit tests until green.**
+
+**Task done when:** explicit invocation is deterministic and discovery produces
+a rate without changing the frozen task or interpreting task scores as discovery.
+
+### Task 8: Publish and chart skill evaluation without mixing series
+
+**Files:**
+
+- Modify: `Versions.toml`
+- Modify: `policy/Public_Result.schema.json`
+- Modify: `src/harness_testing/Results.py`
+- Modify: `tests/unit/test_Results.py`
+- Modify: `tests/Fixtures/Public_Results/Valid.json`
+- Modify: `tests/Fixtures/Run_Manifests/Repaired_Manifest.json`
+- Modify: `dashboard/src/Trends.md`
+- Modify: `dashboard/src/Comparisons.md`
+- Modify: `dashboard/src/Run_Detail.md`
+- Modify: `dashboard/test/Public_Results.test.js`
+
+**Interfaces:**
+
+- Public `skill_evaluation` contains exactly `mode`, `name`, and `invocation`.
+- The compatibility key includes only evaluation mode and name, never the
+  observed outcome.
+- Current methodology becomes `0.3.0`; old manifests are not silently mapped.
+
+- [ ] **Step 1: Write schema/sanitizer tests that reject missing, contradictory,
+  or manifest-mismatched evaluation data and prove capability/discovery produce
+  different compatibility keys. Run them RED.**
+
+- [ ] **Step 2: Add the allowlisted schema and manifest consistency checks;
+  update only current-series fixtures and the repository schema version.**
+
+- [ ] **Step 3: Add a discovery-only trend chart and skill columns to comparison
+  and run-detail tables. Test the dashboard loader/build after the Python tests
+  are green.**
+
+**Task done when:** finalized discovery results can show invocation rate over time
+without entering the same compatibility series as explicit capability scores.
+
+### Task 9: Pin, verify, and compile the capability canary
+
+**Files:**
+
+- Modify: `Versions.toml` and current Harness pin fixtures for the exact `0.8.7`
+  commit.
+- Delete: `images/Validate_Claude_Harness_Hook.mjs`
+- Modify: `src/harness_testing/Materialize.py`
+- Modify: `tests/unit/test_Materialize.py`
+- Generate ignored: materialized arms and run manifests.
+
+- [ ] **Step 1: Write failing materialization expectations that Studio Harness
+  exposes `skills` only on Claude and no hook validator is mounted. Implement the
+  removal and update the exact immutable pin.**
+
+- [ ] **Step 2: Run targeted tests while editing, then one full Python/static/
+  dashboard checkpoint and one full Harness plugin checkpoint before commits.
+  Do not rerun either suite between individual edits.**
+
+- [ ] **Step 3: Materialize Claude A2 and Codex A2, then compile exactly two
+  subscription capability sessions with `--invoke-skill harness:execute`.
+  Start no model before the user approves the resulting manifest digest exactly.**
+
+- [ ] **Step 4: After the capability canary passes, compile a separate discovery
+  manifest with `--observe-skill harness:execute --attempts 5`. Treat its output
+  as a rate with no pass threshold and obtain a separate exact approval before
+  executing it.**
+
+**Task done when:** model-free gates pass, the capability manifest is immutable
+and awaiting or has received exact approval, and no discovery sample is reported
+as a release verdict.

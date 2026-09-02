@@ -1,6 +1,6 @@
 # Harness Skill Canary Repair Design
 
-**Status:** Approved
+**Status:** Approved; architecture amended 2026-09-02
 **Date:** 2026-09-01
 **Scope:** Repair Studio Harness skill activation, terminal-result encoding, and
 reference-loading churn exposed by the repaired Harness Testing delivery canary.
@@ -155,3 +155,84 @@ expand to more tasks or a full release run.
   and no trajectory reads all six references.
 - No raw trajectory, credential, provider home, or ignored run artifact is
   committed or published.
+
+## Approved architecture correction (2026-09-02)
+
+Harness releases `0.8.3` through `0.8.6` progressively repaired hook runtime,
+delivery validation, and prompt size, but repeated Claude A2 sessions retained
+the same lifecycle failure: Claude guessed an operational call before reading
+the schema and never invoked `harness:execute`. The final `0.8.6` sample proved
+the 2,368-byte `UserPromptSubmit` context was delivered, so this is not a hook
+delivery defect. It is the wrong evaluation boundary: one stochastic automatic
+skill match was being used as a hard proxy for the skill's capability.
+
+The following decisions supersede the original discovery and canary completion
+criteria above. The terminal-result and progressive-disclosure repairs remain
+in force.
+
+### Decision 6: separate capability from discovery
+
+One immutable run manifest declares one optional skill evaluation:
+
+- `capability` explicitly invokes a named skill before the unchanged frozen task.
+  Correctness, workflow, and efficiency remain release gates.
+- `discovery` sends the unchanged task without an invocation marker, requires at
+  least five attempts, and reports the fraction whose trajectory shows the named
+  skill being selected. Discovery is diagnostic evidence, not a release gate.
+- ordinary runs declare neither mode and preserve current behavior.
+
+Capability and discovery must have different manifest and compatibility
+identities even when they use the same task, provider, model, and arm. This keeps
+explicit capability scores out of raw-discovery trends.
+
+### Decision 7: use provider-native explicit invocation
+
+Harness Testing owns the invocation boundary in its provider adapters:
+
+- Claude receives `/harness:execute <original instruction>`.
+- Codex receives `$harness:execute <original instruction>`.
+
+The manifest stores the provider-neutral name `harness:execute`; generated job
+configuration stores that same name. The adapters validate it and add only the
+provider-native marker. The frozen task tree, task digest, project instructions,
+and plugin bundle remain unchanged. Anthropic's skill argument behavior appends
+the original task when a skill body has no argument placeholder, and OpenAI's
+Codex skill surface treats `$skill-name` as explicit invocation.
+
+### Decision 8: make discovery evidence durable and public-safe
+
+After a discovery run, inspect only the retained ATIF tool-call structure:
+
+- Claude counts an exact `Skill` call for the requested name.
+- Codex counts an exact skill call when available, or a tool call that reads the
+  requested plugin skill's `SKILL.md` from its pinned cache path.
+
+Write a content-derived `Skill_Evaluation.json` beside the ignored manifest with
+one record per trial and the aggregate numerator, denominator, and rate. Never
+copy prompts, reasoning, command output, provider-home paths, or credentials.
+Sanitized public results carry only evaluation mode, skill name, and invocation
+classification (`none`, `explicit`, `implicit`, or `not-observed`). The dashboard
+plots discovery observations over time and labels capability results separately.
+
+### Decision 9: remove the ineffective production hook
+
+Harness `0.8.7` removes the `UserPromptSubmit` hook, its activation script, and
+its tests. Claude still receives the plugin's skills through `--plugin-dir`.
+Superpowers remains hook-capable in the arms that include it; only Studio Harness
+changes from `skills + hooks` to `skills` on Claude. Model-free materialization
+validates the normal plugin rather than a benchmark-specific activation hook.
+
+### Revised completion criteria
+
+- Harness `0.8.7` is a clean, remote-fetchable candidate with no activation hook.
+- Harness Testing records skill-evaluation mode in its content-addressed manifest,
+  passes the correct explicit marker to Claude and Codex, and rejects a requested
+  skill absent from any selected arm.
+- Discovery requires five or more attempts, writes the aggregate report, and
+  cannot become a release pass or failure by itself.
+- Public results and dashboard keep capability, discovery, and ordinary series
+  distinct without exposing raw trajectory content.
+- One digest-approved two-session capability canary passes correctness, workflow,
+  and efficiency for Claude A2 and Codex A2 before any broader run.
+- A discovery run is compiled separately after capability passes; its invocation
+  rate is reported as observed evidence, with no pass threshold.
