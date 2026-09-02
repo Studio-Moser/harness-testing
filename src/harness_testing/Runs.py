@@ -23,6 +23,7 @@ from harbor.models.job.config import JobConfig
 
 import harness_testing.Materialize as Materialize
 from harness_testing.Config import load_job, load_versions
+from harness_testing.Harbor_CLI import harbor_command
 from harness_testing.Materialize import (
     _ARM_LAYERS,
     DEEPSWE_TASK_IDS,
@@ -2054,7 +2055,7 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
         cell = manifest.cells[index % len(manifest.cells)]
         job_name = load_job(config_path).job_name
         subprocess.run(
-            ("harbor", "run", "-c", str(config_path)),
+            harbor_command("run", "-c", str(config_path)),
             cwd=root,
             check=True,
             env=execution_environment,

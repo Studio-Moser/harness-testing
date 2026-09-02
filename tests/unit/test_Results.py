@@ -3,6 +3,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -132,7 +133,9 @@ def test_regrade_uses_the_exact_harbor_command_and_preserves_the_source(
 
     assert calls == [
         (
-            "harbor",
+            sys.executable,
+            "-m",
+            "harbor.cli.main",
             "job",
             "regrade",
             str(source.resolve()),

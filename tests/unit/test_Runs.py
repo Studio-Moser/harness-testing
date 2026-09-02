@@ -888,7 +888,7 @@ def test_delivery_canary_stops_before_the_second_task(
     real_run = subprocess.run
 
     def fake_run(command, **kwargs):
-        if command[0] != "harbor":
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
             return real_run(command, **kwargs)
         job = load_job(Path(command[-1]))
         index = len(calls)
@@ -922,7 +922,7 @@ def test_delivery_canary_correctness_zero_runs_every_task(
     real_run = subprocess.run
 
     def fake_run(command, **kwargs):
-        if command[0] != "harbor":
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
             return real_run(command, **kwargs)
         job = load_job(Path(command[-1]))
         index = len(calls)
@@ -950,7 +950,7 @@ def test_delivery_failure_after_canary_stops_immediately(
     real_run = subprocess.run
 
     def fake_run(command, **kwargs):
-        if command[0] != "harbor":
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
             return real_run(command, **kwargs)
         job = load_job(Path(command[-1]))
         index = len(calls)

@@ -19,6 +19,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import SchemaError
 
 from harness_testing.Config import load_versions
+from harness_testing.Harbor_CLI import harbor_command
 from harness_testing.Runs import load_manifest
 
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -251,8 +252,7 @@ def regrade_job(
         raise ValueError("source job has no valid identity") from error
     _validate_regrade_artifacts(source_job)
     before_digest = _tree_digest(source_job)
-    command = (
-        "harbor",
+    command = harbor_command(
         "job",
         "regrade",
         str(source_job),

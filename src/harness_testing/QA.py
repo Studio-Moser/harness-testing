@@ -13,6 +13,7 @@ import yaml
 from harbor.models.job.config import JobConfig
 from rewardkit import discover
 
+from harness_testing.Harbor_CLI import harbor_command
 from harness_testing.Materialize import build_images, image_is_current
 
 QA_CASES = ("oracle", "nop", "near-miss", "adversarial", "source-tamper")
@@ -258,7 +259,7 @@ def run_task_qa(root: Path, task_id: str, case: str) -> dict[str, float]:
             f"{root}{os.pathsep}{current_pythonpath}" if current_pythonpath else str(root)
         )
         subprocess.run(
-            ["harbor", "run", "--config", str(config_path), "--yes"],
+            harbor_command("run", "--config", str(config_path), "--yes"),
             cwd=root,
             env=environment,
             check=True,
