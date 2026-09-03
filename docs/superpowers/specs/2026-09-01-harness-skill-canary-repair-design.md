@@ -1,6 +1,6 @@
 # Harness Skill Canary Repair Design
 
-**Status:** Approved; architecture amended 2026-09-02
+**Status:** Approved; architecture and validity gate amended 2026-09-02
 **Date:** 2026-09-01
 **Scope:** Repair Studio Harness skill activation, terminal-result encoding, and
 reference-loading churn exposed by the repaired Harness Testing delivery canary.
@@ -236,3 +236,86 @@ validates the normal plugin rather than a benchmark-specific activation hook.
   and efficiency for Claude A2 and Codex A2 before any broader run.
 - A discovery run is compiled separately after capability passes; its invocation
   rate is reported as observed evidence, with no pass threshold.
+
+## Approved validity-gate correction (2026-09-02)
+
+The final Harness `0.8.9` capability run, `run-692ad3e01e495d8bddba`, completed
+both approved sessions with the expected Studio Harness bundle, explicit
+`harness:execute` invocation, and no infrastructure or delivery error. Codex
+scored correctness/workflow/efficiency `1.0/1.0/1.0`. Claude scored
+`0.0/1.0/0.0` after making one schema-invalid lookup before the valid lookup and
+returning a mismatched `evidence.fixed_target`.
+
+That Claude outcome is valid behavioral evidence. Across nine Claude A2
+`missing-rubric` samples spanning Harness `0.8.1` through `0.8.9`, correctness
+did not converge even as the production skill, delivery surface, activation
+boundary, and public preflight guidance changed. Requiring this one frozen task
+to pass before collecting any other evidence turned the canary into a
+provider-specific prompt-tuning loop.
+
+The following decisions supersede the behavioral-pass gates in Decision 5 and
+the 2026-09-02 revised completion criteria. Capability/discovery separation and
+the `0.8.9` production guidance remain in force.
+
+### Decision 10: the delivery canary gates infrastructure validity
+
+A model-backed canary passes its gate when every selected cell:
+
+- completes without provider, authentication, rate-limit, timeout, sandbox,
+  verifier-infrastructure, or task-definition failure;
+- receives exactly the immutable arm, plugin, and skill surfaces declared by
+  the manifest; and
+- records the declared explicit or observed skill boundary when the manifest
+  includes one.
+
+Correctness, workflow, and efficiency scores are recorded as behavioral
+evidence. A zero never invalidates the run or triggers automatic prompt tuning.
+This matches the runner, README, Runbook, and Methodology behavior already
+implemented for the first task shard.
+
+### Decision 11: freeze the candidate before comparative screening
+
+Freeze Studio Harness at version `0.8.9`, commit
+`b05da8dd521fe13009bc511d97ba0862a63d4032`, for the next comparison. Do not
+change the production skill, `missing-rubric` task, or scorer to improve that
+task's Claude score. Provider disagreement is a benchmark result, not a reason
+to quarantine a task. Quarantine still requires evidence that the task itself
+is ambiguous, contaminated, nondeterministic, unfair across providers, or
+broken by its fixture.
+
+### Decision 12: screen the full factorial before paying for variance
+
+The next model-backed step is a one-attempt checkpoint screen, not the
+three-attempt calibration profile. It uses both providers and all four arms on
+the smallest task set that covers the repository's intended development
+envelopes and technology stacks:
+
+| Task | Envelope | Coverage |
+| --- | --- | --- |
+| `static-pricing-copy-polish` | polish | HTML/CSS direct proof with no package suite |
+| `rust-quoted-value-parser` | small | Rust regression plus one package check |
+| `react-grouped-ui-updates` | grouped | React/TypeScript batching before one final gate |
+| `react-saved-view-feature` | feature | React/TypeScript feature with focused checks and one checkpoint |
+
+The eight cells are Claude and Codex each on A0, A1, A2, and A3. A0 and A1 are
+baseline-role cells; A2 and A3 are candidate-role cells pinned to the frozen
+Harness commit. This produces 32 sequential subscription sessions. It omits a
+repeated contract task because the completed canary already supplies valid
+contract evidence for this candidate.
+
+After human review checks task fairness, score validity, trajectories, and
+efficiency telemetry, select only comparisons with material differences or
+unresolved variance for the three-attempt calibration profile. Do not promote a
+one-attempt screen to stable effect-size or release evidence.
+
+### Revised continuation criteria
+
+- The `0.8.9` two-session capability canary is accepted as infrastructure-valid,
+  with both providers' behavioral scores preserved unchanged.
+- No additional Skills-n-Stuff change is made for `missing-rubric` before the
+  comparative screen.
+- Model-free arm validation passes for all eight selected cells.
+- The 32-session screen is compiled into one content-addressed manifest and no
+  provider session starts before the user approves that exact digest.
+- Behavioral failures continue through the screen; infrastructure or delivery
+  failures retain the existing immediate stop boundary.

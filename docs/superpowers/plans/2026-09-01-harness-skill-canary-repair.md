@@ -538,3 +538,161 @@ without entering the same compatibility series as explicit capability scores.
 **Task done when:** model-free gates pass, the capability manifest is immutable
 and awaiting or has received exact approval, and no discovery sample is reported
 as a release verdict.
+
+---
+
+## 2026-09-02 validity-gate and calibration continuation
+
+The approved validity-gate correction in the design supersedes every earlier
+requirement that both providers score `1.0/1.0/1.0` before broader evidence can
+be collected. Do not repeat Tasks 1–9 and do not make another production change
+for `missing-rubric` unless later cross-task evidence proves a general defect.
+
+### Task 10: Close the capability canary as valid evidence
+
+**Files:**
+
+- Modify only this design and plan; leave Skills-n-Stuff and frozen task inputs
+  unchanged.
+
+**Interfaces:**
+
+- Consumes manifest
+  `sha256:e51a099c7865237227ba726b8d61018c75201c33d2dcde8a80839f8ec062e0ca`
+  and run `run-692ad3e01e495d8bddba`.
+- Freezes Studio Harness `0.8.9` at
+  `b05da8dd521fe13009bc511d97ba0862a63d4032`.
+
+- [x] **Step 1: Confirm both approved cells completed with no infrastructure or
+  delivery error and received the expected A2 candidate bundle.**
+
+- [x] **Step 2: Preserve the observed scores without reinterpretation.**
+
+  ```text
+  Claude A2: correctness 0.0, workflow 1.0, efficiency 0.0
+  Codex A2:  correctness 1.0, workflow 1.0, efficiency 1.0
+  ```
+
+- [x] **Step 3: Stop the single-task repair loop.**
+
+  Make no further Skills-n-Stuff edit, candidate release, or replacement
+  `missing-rubric` run. A behavioral zero is not an infrastructure failure.
+
+**Task done when:** the valid provider split is recorded, the candidate is
+frozen, and the next action is comparative screening rather than prompt tuning.
+
+### Task 11: Compile the representative full-factorial screen
+
+**Files:**
+
+- Generate locally/ignored: `arms/materialized/**`
+- Generate locally/ignored: `runs/generated/**`
+- Generate locally/ignored: Harbor YAML beneath the generated run directory
+
+**Interfaces:**
+
+- Produces 32 sequential subscription sessions: four frozen workflow tasks,
+  two providers, four arms, and one attempt.
+- Uses no skill-evaluation marker; these are ordinary development tasks.
+
+- [ ] **Step 1: Materialize A0 and A1 from the pinned ledger and A2 and A3 from
+  the frozen Harness candidate for both providers.**
+
+  ```bash
+  HARNESS_CANDIDATE_SHA=b05da8dd521fe13009bc511d97ba0862a63d4032
+  for provider in claude codex; do
+    uv run harness-test arm materialize --provider "$provider" --arm A0
+    uv run harness-test arm materialize --provider "$provider" --arm A1
+    uv run harness-test arm materialize --provider "$provider" --arm A2 \
+      --harness-source https://github.com/Studio-Moser/skills-n-stuff.git \
+      --harness-commit "$HARNESS_CANDIDATE_SHA"
+    uv run harness-test arm materialize --provider "$provider" --arm A3 \
+      --harness-source https://github.com/Studio-Moser/skills-n-stuff.git \
+      --harness-commit "$HARNESS_CANDIDATE_SHA"
+  done
+  ```
+
+  Inspect every `Provenance.json`: A0 has no benchmark layer; A1 has only
+  Superpowers; A2 has only Studio Harness `0.8.9`; A3 has Superpowers followed
+  by Studio Harness `0.8.9`; every declared delivery path exists.
+
+- [ ] **Step 2: Run model-free validation once after all materializations
+  settle.**
+
+  ```bash
+  uv run harness-test validate
+  ```
+
+- [ ] **Step 3: Compile one 32-session checkpoint manifest.**
+
+  ```bash
+  uv run harness-test run plan \
+    --profile checkpoint \
+    --billing-mode subscription \
+    --cell claude:A0:baseline \
+    --cell claude:A1:baseline \
+    --cell claude:A2:candidate:b05da8dd521fe13009bc511d97ba0862a63d4032 \
+    --cell claude:A3:candidate:b05da8dd521fe13009bc511d97ba0862a63d4032 \
+    --cell codex:A0:baseline \
+    --cell codex:A1:baseline \
+    --cell codex:A2:candidate:b05da8dd521fe13009bc511d97ba0862a63d4032 \
+    --cell codex:A3:candidate:b05da8dd521fe13009bc511d97ba0862a63d4032 \
+    --task static-pricing-copy-polish \
+    --task rust-quoted-value-parser \
+    --task react-grouped-ui-updates \
+    --task react-saved-view-feature \
+    --attempts 1 \
+    --concurrency 1 \
+    --agent-timeout-seconds 1800 \
+    --max-sessions 32 \
+    --max-budget-usd 0
+  ```
+
+  The first, cheapest task is the delivery-canary shard across all eight cells.
+  The task order then moves from small and grouped work to feature work.
+
+- [ ] **Step 4: Stop at the exact approval boundary.**
+
+  Report the manifest digest, manifest path, 32-session order, provider models,
+  effort, timeout, candidate SHA, zero incremental subscription cost, and the
+  API-equivalent admission estimate. Start no provider session until the user
+  approves the exact printed digest.
+
+**Task done when:** all eight arms are valid and one immutable, unexecuted
+screening manifest has been reported for approval.
+
+### Task 12: Execute, review, and choose the calibration repetitions
+
+**Files:**
+
+- Generate locally/ignored: `jobs/raw/**`
+- Do not publish or modify tracked benchmark inputs during first-pass review.
+
+- [ ] **Step 1: Execute only the approved manifest in subscription mode with no
+  API fallback.**
+
+- [ ] **Step 2: Apply the infrastructure-validity boundary.**
+
+  After the first eight sessions, stop only for infrastructure or delivery
+  failure. Continue on correctness, workflow, or efficiency zero. Apply the
+  same immediate infrastructure stop to later sessions.
+
+- [ ] **Step 3: Review representative passes, failures, efficient trials, and
+  outliers.**
+
+  Check task fairness, workspace diffs, verifier evidence, command classes,
+  premature suites, duplicate commands, plans, reviews, subagents, worktrees,
+  turns, elapsed time, and available token/cache telemetry. Keep missing
+  telemetry unavailable rather than zero.
+
+- [ ] **Step 4: Select the smallest three-attempt calibration follow-up.**
+
+  Repeat only task/cell comparisons with a material arm difference, an
+  interaction that needs confirmation, or unresolved stochastic variance. If
+  the screen exposes a benchmark defect, quarantine that task and repair it
+  deterministically before collecting replacement model evidence. Do not tune
+  a harness because one provider produced a valid behavioral failure.
+
+**Task done when:** the screen is reviewed as behavioral evidence and a bounded
+replication decision is documented; one attempt is never presented as a stable
+effect size or release verdict.
