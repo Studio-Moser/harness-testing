@@ -818,7 +818,7 @@ effect size or release verdict.
   The final independent review reported no findings. Ruff passed, pytest passed
   299 tests, and static repository validation passed in the single checkpoint.
 
-- [ ] **Step 4: Repair the production auto-routing boundary.**
+- [x] **Step 4: Repair the production auto-routing boundary.**
 
   Port the already-proven narrow-delegation intent from Skills-n-Stuff commit
   `b2ef4d3457a758735e95ec27ba62385bbfc4d4be` onto the current immutable Harness
@@ -829,7 +829,55 @@ effect size or release verdict.
   pin and run only a three-attempt Claude/Codex A2 replacement canary. Compile
   that six-session manifest and stop for its own exact digest approval.
 
+  Skills-n-Stuff commit `f5a953c30fc83408d905c64653d35c684bb0537f`
+  shipped that boundary as Harness `0.8.10` after an independent no-findings
+  review and a 214/214 plugin checkpoint. Approved manifest
+  `sha256:d7f61890f967220cf0020c5770cd42b1e12ead5a3399802a7facbaa4a42e2715`
+  completed as run `run-706f5d023ab8f95b9583`: 6/6 sequential subscription
+  sessions passed correctness, workflow, and efficiency with no provider,
+  runtime, delivery, or verifier exception. Every workspace changed only
+  `src/domain/Saved_View.ts`. Neither provider invoked `harness:execute`, ran
+  setup, wrote a plan, used a reviewer/subagent/worktree, ran a premature suite,
+  or duplicated a successful command; each ran one final `npm run gate`.
+
+  Claude used 514,708 prompt tokens, 4,304 completion tokens, 495,174 cached
+  prompt tokens, 113.442 agent seconds, and `$0.3302472` API-equivalent cost.
+  Codex used 577,214 prompt tokens, 4,539 completion tokens, 515,840 cached
+  prompt tokens, 125.765 agent seconds, and `$0.280384` API-equivalent cost.
+  The run incurred no incremental subscription charge. A post-run scan found
+  zero copies of the active Claude token across 224 raw files.
+
+- [x] **Step 5: Remove the remaining deterministic prompt-fetch trigger.**
+
+  One Codex trial still used 305,663 prompt tokens and 63.011 agent seconds,
+  versus 127,124 / 30.324 and 144,427 / 32.430 in the other two. Its trajectory
+  fetched the raw GitHub House Rules URL twice even though the injected baseline
+  already contained the rules needed for ordinary work. Replace the always-
+  visible external link with an explicit self-contained-summary boundary while
+  preserving deeper local references for workflows that require a named detail.
+
+  Skills-n-Stuff commit `4f1138ca6632184cb0a08dd7ff2ab26cf0728bf8`
+  shipped the change as Harness `0.8.11` after the focused RED/GREEN check, an
+  independent no-findings review, and a 214/214 plugin checkpoint.
+
+- [ ] **Step 6: Compile the smallest Codex-only confirmation manifest.**
+
+  Materialize only Codex A2 at exact Skills-n-Stuff commit
+  `4f1138ca6632184cb0a08dd7ff2ab26cf0728bf8`, run static validation, then compile
+  three sequential `react-saved-view-feature` sessions in subscription mode at
+  high effort with a 1,800-second timeout, zero API budget, and no fallback. Stop
+  for exact digest approval. Claude needs no repeat because its three `0.8.10`
+  trials did not exhibit the Codex web-fetch trigger.
+
+- [ ] **Step 7: Execute and inspect the approved confirmation.**
+
+  Require 3/3 correctness/workflow/efficiency, requested-file-only workspace
+  diffs, no Harness auto-routing or setup, no premature or duplicate testing,
+  and no House Rules network fetch. Compare trial-level prompt tokens and agent
+  time with the three `0.8.10` Codex trials, but do not present either small
+  sample as a stable effect-size estimate.
+
 **Task done when:** reporting is accurate, subscription secrets cannot enter
-Harbor's Docker argv through either environment path, the final repair is
-reviewed and committed, and the next model-backed action is limited to the
-corrected A2 candidate.
+Harbor's Docker argv through either environment path, ordinary work stays out of
+Harness delegation, and the bounded `0.8.11` Codex confirmation passes without
+the deterministic external-rule fetch.
