@@ -741,6 +741,95 @@ screening manifest has been reported for approval.
   starting any of the 24 sessions. Keep this one-attempt screen local and do not
   publish or treat it as an effect-size estimate.
 
+- [x] **Step 5: Execute and inspect the approved three-attempt replication.**
+
+  Manifest
+  `sha256:605d4df83533fe0521dcd2a5e9a86d236e49294fb29a644795022de3735cbd84`
+  completed as run `run-0cfdba1bd2b8ad6ba0ef`: 24/24 sequential
+  subscription sessions, no API fallback, no provider/runtime/delivery/verifier
+  exception, and no incremental usage charge. Every trial received the intended
+  arm and every passing workspace changed only `src/domain/Saved_View.ts`.
+
+  Replication outcomes below are pass counts out of three. Workflow matched
+  correctness in every cell; efficiency passed in all 24 trials.
+
+  | Provider | A0 | A1 | A2 | A3 |
+  | --- | --- | --- | --- | --- |
+  | Claude | 3/3 | 2/3 | 3/3 | 0/3 |
+  | Codex | 3/3 | 0/3 | 3/3 | 0/3 |
+
+  A3 reliably stopped autonomous implementation at Superpowers' brainstorming
+  approval gate on both providers. Codex A1 did the same in all three trials;
+  Claude A1 did so only when the model discovered the skill. The successful A2
+  cells establish that Studio Harness alone preserves task correctness across
+  both providers, but one Codex A2 trial incorrectly routed ordinary repository
+  work through `harness:execute`, attempted setup, and consumed 393,389 prompt
+  tokens / 68.8 agent seconds versus 127,197 / 30.4 and 145,169 / 32.3 in the
+  other two A2 trials.
+
+  No trial ran a premature comprehensive suite or duplicated a successful
+  command. Relative to A0, Claude A2 used 16.5% more prompt tokens and 10.0%
+  more agent time; Codex A2 used 91.4% more prompt tokens and 49.3% more time,
+  driven by that auto-routing outlier. Reasoning-token, per-test-duration,
+  generated-file, and provider-symmetric diff-line telemetry remain unavailable.
+
+  Review exposed two evaluator defects without invalidating correctness or
+  workflow scores: named scripts such as `npm run test:saved-view` were reported
+  as unknown, and Harbor 0.22.0 placed the Claude OAuth token in live Docker
+  process argv. The token was not persisted in a manifest, job, trajectory, or
+  repository file. Repair both defects before any further model-backed run; do
+  not regrade immutable trajectories for a reporting-only classification change.
+
 **Task done when:** the screen is reviewed as behavioral evidence and a bounded
 replication decision is documented; one attempt is never presented as a stable
 effect size or release verdict.
+
+### Task 13: Repair calibration validity defects
+
+**Files:**
+
+- Modify: `policy/Command_Classification.toml`
+- Modify: `src/harness_testing/Claude_Agent.py`
+- Modify: focused unit tests and credential/methodology documentation
+
+- [x] **Step 1: Classify named package test scripts surgically.**
+
+  Treat `npm`, `pnpm`, and `yarn` `run test:<name>` commands as targeted tests.
+  Preserve the higher-ranked comprehensive classification for `test:all` and
+  leave the existing one-command-record metric semantics unchanged.
+
+- [x] **Step 2: Keep the Claude subscription token out of Docker argv.**
+
+  Preserve the token only in the runner/adapter process until the Claude run,
+  remove it from both per-exec and trial-scoped Harbor environments, transfer it
+  through mode-`0600` temporary files, delete the host file after upload, delete
+  the container file before Claude starts, and run final cleanup on both success
+  and failure. Disable inherited ACP support until its pre-run bridge has the
+  same secret-safe lifecycle. Reproduce Harbor's scoped-environment precedence
+  in the unit test and inspect the composed Docker argv rather than only the
+  adapter input.
+
+- [x] **Step 3: Freeze and verify the repair once.**
+
+  Obtain one independent review of the final diff. Run focused checks while
+  addressing findings, then one Ruff/full-pytest/static-validation checkpoint.
+  Commit and push the Harness Testing branch without tracked run artifacts.
+
+  The final independent review reported no findings. Ruff passed, pytest passed
+  299 tests, and static repository validation passed in the single checkpoint.
+
+- [ ] **Step 4: Repair the production auto-routing boundary.**
+
+  Port the already-proven narrow-delegation intent from Skills-n-Stuff commit
+  `b2ef4d3457a758735e95ec27ba62385bbfc4d4be` onto the current immutable Harness
+  candidate rather than merging its stale branch. Ordinary repository work must
+  stay direct unless the user or active workflow explicitly requests Harness
+  delegation; missing routing on ordinary work must not trigger setup. After the
+  production checkpoint and remote commit, update the Harness Testing candidate
+  pin and run only a three-attempt Claude/Codex A2 replacement canary. Compile
+  that six-session manifest and stop for its own exact digest approval.
+
+**Task done when:** reporting is accurate, subscription secrets cannot enter
+Harbor's Docker argv through either environment path, the final repair is
+reviewed and committed, and the next model-backed action is limited to the
+corrected A2 candidate.
