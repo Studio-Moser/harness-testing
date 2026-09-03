@@ -42,7 +42,7 @@ _IMAGE_INPUTS = {
     ),
 }
 _IMAGE_INPUT_LABEL = "studio.moser.harness-testing.input-digest"
-_ARM_MATERIALIZER_SCHEMA = "3"
+_ARM_MATERIALIZER_SCHEMA = "4"
 
 _ARM_LAYERS = {
     "A0": (),
@@ -620,9 +620,32 @@ def _prepare_plugin_inputs(
             )
             marketplace = _read_json(marketplace_path, f"{provider} marketplace")
             marketplace_name = str(marketplace.get("name", ""))
-            plugin_path = source.path
             version = str(claude_manifest.get("version", codex_manifest.get("version", "")))
-            marketplace_root = source.path
+            if provider == "claude":
+                plugin_path = source.path
+                marketplace_root = source.path
+            else:
+                if not _SAFE_PLUGIN_NAME.fullmatch(marketplace_name):
+                    raise ValueError(f"invalid marketplace name: {marketplace_name}")
+                marketplace_root = work / "marketplaces" / marketplace_name
+                plugin_path = marketplace_root / "plugins" / "superpowers"
+                plugin_path.parent.mkdir(parents=True)
+                _copy_tree(source.path, plugin_path)
+                plugin_entry = dict(_plugin_entry(marketplace, "superpowers"))
+                plugin_entry["source"] = {
+                    "source": "local",
+                    "path": "./plugins/superpowers",
+                }
+                _write_json(
+                    marketplace_root / ".agents" / "plugins" / "marketplace.json",
+                    {
+                        "name": marketplace_name,
+                        "interface": marketplace.get(
+                            "interface", {"displayName": "Superpowers"}
+                        ),
+                        "plugins": [plugin_entry],
+                    },
+                )
         elif source.name == "Studio Harness":
             plugin_path = source.path / "plugins" / "harness"
             manifest = _read_json(

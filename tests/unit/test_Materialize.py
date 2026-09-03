@@ -432,7 +432,7 @@ def test_codex_harness_materialization_preserves_plugin_companions(
         "path": "./plugins/harness",
     }
     provenance = json.loads((bundle.path / "Provenance.json").read_text())
-    assert provenance["materializer_schema"] == "3"
+    assert provenance["materializer_schema"] == "4"
     assert provenance["delivery_surfaces"] == [
         {
             "layer": "Studio Harness",
@@ -502,7 +502,7 @@ def test_claude_materialization_copies_complete_plugin_directories_in_layer_orde
     assert not (claude.path / "claude" / "plugin-seed").exists()
     assert not (claude.path / "claude" / "known_marketplaces.json").exists()
     assert not (claude.path / "claude" / "settings.json").exists()
-    assert provenance["materializer_schema"] == "3"
+    assert provenance["materializer_schema"] == "4"
     assert provenance["delivery_surfaces"] == [
         {
             "layer": "Superpowers",
@@ -535,6 +535,7 @@ def test_provider_provenance_records_codex_superpowers_as_skills_only(
     )
 
     provenance = json.loads((codex.path / "Provenance.json").read_text())
+    assert provenance["materializer_schema"] == "4"
     assert provenance["delivery_surfaces"] == [
         {
             "layer": "Superpowers",
@@ -546,15 +547,26 @@ def test_provider_provenance_records_codex_superpowers_as_skills_only(
             "capabilities": ["skills"],
         }
     ]
-    assert (
+    marketplace_root = (
         codex.path
         / "codex"
         / "provider-home"
         / "marketplaces"
         / "superpowers-dev"
-        / ".agents"
+    )
+    marketplace = json.loads(
+        (marketplace_root / ".agents" / "plugins" / "marketplace.json").read_text()
+    )
+    assert marketplace["plugins"][0]["source"] == {
+        "source": "local",
+        "path": "./plugins/superpowers",
+    }
+    assert (
+        marketplace_root
         / "plugins"
-        / "marketplace.json"
+        / "superpowers"
+        / ".codex-plugin"
+        / "plugin.json"
     ).is_file()
 
 

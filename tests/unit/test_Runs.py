@@ -396,7 +396,7 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
         "sources": sources,
         "delivery_surfaces": delivery_surfaces,
         "generated_file_digests": _file_digests(path),
-        "materializer_schema": "3",
+        "materializer_schema": "4",
     }
     digest = _sha256_bytes(_canonical_json(provenance))
     object.__setattr__(cell, "bundle_digest", digest)
