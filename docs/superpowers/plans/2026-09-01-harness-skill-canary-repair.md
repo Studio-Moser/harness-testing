@@ -860,7 +860,7 @@ effect size or release verdict.
   shipped the change as Harness `0.8.11` after the focused RED/GREEN check, an
   independent no-findings review, and a 214/214 plugin checkpoint.
 
-- [ ] **Step 6: Compile the smallest Codex-only confirmation manifest.**
+- [x] **Step 6: Compile the smallest Codex-only confirmation manifest.**
 
   Materialize only Codex A2 at exact Skills-n-Stuff commit
   `4f1138ca6632184cb0a08dd7ff2ab26cf0728bf8`, run static validation, then compile
@@ -869,13 +869,47 @@ effect size or release verdict.
   for exact digest approval. Claude needs no repeat because its three `0.8.10`
   trials did not exhibit the Codex web-fetch trigger.
 
-- [ ] **Step 7: Execute and inspect the approved confirmation.**
+  Codex A2 materialized as bundle
+  `sha256:7b4f28274faa0ab95dd6aba1a69fd834f99a32f87a272b80921fe09642e762b5`;
+  its provenance contains only Studio Harness `0.8.11` at the exact candidate
+  commit and the `codex-plugin` delivery surface. Static validation passed.
+  Manifest
+  `sha256:42a26e6a196a2e9e798655fa9ee2c458e89adb7fd7b087347e7296b149593425`
+  authorized exactly three sequential Codex A2 subscription sessions, and no
+  model session started before its exact approval.
+
+- [x] **Step 7: Execute and inspect the approved confirmation.**
 
   Require 3/3 correctness/workflow/efficiency, requested-file-only workspace
   diffs, no Harness auto-routing or setup, no premature or duplicate testing,
   and no House Rules network fetch. Compare trial-level prompt tokens and agent
   time with the three `0.8.10` Codex trials, but do not present either small
   sample as a stable effect-size estimate.
+
+  Approved run `run-98b4e3fbe4747d8a7361` completed 3/3 with no exception and
+  correctness/workflow/efficiency all `1.0`. Every workspace differed from its
+  frozen fixture only at `src/domain/Saved_View.ts`. Every trajectory used the
+  focused saved-view and view-filter checks followed by exactly one final
+  `npm run gate`; one trial first reproduced the saved-view failure, so its
+  later successful rerun was not a duplicate successful command. No trajectory
+  invoked Harness, setup, planning, review, subagents, worktrees, a web tool, or
+  the removed House Rules URL.
+
+  Trial prompt-token / agent-second pairs were 150,737 / 46.453, 123,084 /
+  38.718, and 123,032 / 40.030. Totals were 396,853 prompt tokens, 336,384
+  cached prompt tokens, 3,356 completion tokens, 125.201 agent seconds, and
+  `$0.2284868` API-equivalent cost, with no incremental subscription charge.
+  Against the `0.8.10` Codex sample, total prompt tokens fell 31.2%, estimated
+  cost fell 18.5%, and the maximum trial prompt count fell 50.7%; aggregate
+  agent time was effectively flat. This confirms removal of the deterministic
+  fetch outlier, not a stable general effect size.
+
+  Separate inspection found every new Codex trial spent one failed startup
+  command on `git status` because the frozen workflow fixture is not a Git
+  worktree. The same failure appears in 28 retained Codex workflow trials. It
+  does not change this within-provider Harness conclusion, but it is a
+  provider-specific benchmark churn source that must be repaired before release
+  evidence is collected.
 
 **Task done when:** reporting is accurate, subscription secrets cannot enter
 Harbor's Docker argv through either environment path, ordinary work stays out of
