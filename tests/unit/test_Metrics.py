@@ -158,3 +158,68 @@ def test_missing_provider_telemetry_stays_null(grouped_policy):
     assert report.metrics["verifier_seconds"] is None
     assert report.classifier_schema == "1"
     assert report.task_policy_digest.startswith("sha256:")
+
+
+def test_counts_superpowers_plan_written_through_generic_file_tool(grouped_policy):
+    trajectory = load_trajectory(FIXTURES / "Valid_Claude.json")
+    write_call = trajectory.steps[1].tool_calls[2]
+    write_call.arguments["file_path"] = (
+        "/app/docs/superpowers/plans/2026-09-03-saved-dashboard-view.md"
+    )
+
+    report = trajectory_metrics(trajectory, grouped_policy)
+
+    assert report.metrics["plans"] == 1
+
+
+def test_counts_superpowers_plan_written_through_codex_patch(grouped_policy):
+    trajectory = load_trajectory(FIXTURES / "Valid_Codex.json")
+    patch_call = trajectory.steps[1].tool_calls[1]
+    patch_call.arguments["patch"] = """*** Begin Patch
+*** Add File: /app/docs/superpowers/plans/2026-09-03-saved-dashboard-view.md
++# Saved Dashboard View Plan
+*** End Patch"""
+
+    report = trajectory_metrics(trajectory, grouped_policy)
+
+    assert report.metrics["plans"] == 1
+
+
+def test_does_not_count_reading_an_existing_plan(grouped_policy):
+    trajectory = load_trajectory(FIXTURES / "Valid_Claude.json")
+    read_call = trajectory.steps[1].tool_calls[2]
+    read_call.function_name = "Read"
+    read_call.arguments = {
+        "file_path": "/app/docs/superpowers/plans/existing-plan.md"
+    }
+
+    report = trajectory_metrics(trajectory, grouped_policy)
+
+    assert report.metrics["plans"] == 0
+
+
+def test_does_not_count_failed_plan_write(grouped_policy):
+    trajectory = load_trajectory(FIXTURES / "Valid_Claude.json")
+    write_call = trajectory.steps[1].tool_calls[2]
+    write_call.arguments["file_path"] = "/app/docs/superpowers/plans/failed-plan.md"
+    write_result = trajectory.steps[1].observation.results[2]
+    write_result.content = "[error] tool reported failure"
+
+    report = trajectory_metrics(trajectory, grouped_policy)
+
+    assert report.metrics["plans"] == 0
+
+
+def test_does_not_count_failed_codex_plan_patch(grouped_policy):
+    trajectory = load_trajectory(FIXTURES / "Valid_Codex.json")
+    patch_call = trajectory.steps[1].tool_calls[1]
+    patch_call.arguments["patch"] = """*** Begin Patch
+*** Add File: /app/docs/superpowers/plans/failed-plan.md
++# Failed Plan
+*** End Patch"""
+    patch_result = trajectory.steps[1].observation.results[1]
+    patch_result.extra = {"codex_native": {"status": "failed"}}
+
+    report = trajectory_metrics(trajectory, grouped_policy)
+
+    assert report.metrics["plans"] == 0

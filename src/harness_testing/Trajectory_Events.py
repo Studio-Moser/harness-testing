@@ -86,6 +86,12 @@ def _walk_metadata(value: object, *, depth: int = 0) -> tuple[list[int], list[bo
             exit_codes.append(child)
         elif key in {"is_error", "tool_result_is_error"} and isinstance(child, bool):
             error_flags.append(child)
+        elif key == "codex_native" and isinstance(child, Mapping):
+            status = child.get("status")
+            if status == "failed":
+                error_flags.append(True)
+            elif status == "completed":
+                error_flags.append(False)
         if isinstance(child, Mapping):
             child_codes, child_flags = _walk_metadata(child, depth=depth + 1)
             exit_codes.extend(child_codes)

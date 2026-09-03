@@ -24,6 +24,11 @@ from harness_testing.Trajectory_Events import (
     split_shell,
 )
 
+_PLAN_PATH = re.compile(
+    r"(?:^|/)docs/(?:superpowers/)?plans/[^/]+\.md$",
+    re.IGNORECASE,
+)
+
 
 @dataclass(frozen=True)
 class _ClassRule:
@@ -492,7 +497,15 @@ def trajectory_metrics(
                 )
 
             name = tool_call.function_name.lower()
-            if "plan" in name:
+            wrote_plan = (
+                tool_call.function_name in policy.mutation_tools
+                and success is not False
+                and any(
+                    _PLAN_PATH.search(path.replace("\\", "/"))
+                    for path in _tool_paths(tool_call, policy)
+                )
+            )
+            if "plan" in name or wrote_plan:
                 plan_count += 1
             if "review" in name:
                 review_count += 1
