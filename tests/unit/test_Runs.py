@@ -751,6 +751,7 @@ def test_completed_job_delivery_accepts_expected_plugins_and_skill_directories(
         cell,
         "valid-delivery",
         frozenset({"superpowers:using-superpowers", "harness:execute"}),
+        expected_attempts=1,
     ) == ()
 
 
@@ -779,6 +780,7 @@ def test_completed_job_delivery_accepts_repeated_equivalent_claude_init(
         cell,
         "repeated-init",
         frozenset({"harness:execute"}),
+        expected_attempts=1,
     ) == ()
 
 
@@ -808,6 +810,7 @@ def test_completed_job_delivery_rejects_repeated_claude_init_across_sessions(
         cell,
         "cross-session-init",
         frozenset({"harness:execute"}),
+        expected_attempts=1,
     )
 
     assert any("multiple primary sessions" in error for error in errors)
@@ -839,6 +842,7 @@ def test_completed_job_delivery_rejects_conflicting_repeated_claude_init(
         cell,
         "conflicting-init",
         frozenset({"harness:execute"}),
+        expected_attempts=1,
     )
 
     assert any("conflicting repeated startup evidence" in error for error in errors)
@@ -860,6 +864,7 @@ def test_completed_job_delivery_rejects_a0_benchmark_contamination(run_root: Pat
         cell,
         "contaminated-delivery",
         frozenset({"superpowers:using-superpowers", "harness:execute"}),
+        expected_attempts=1,
     )
 
     assert any("plugin" in error and "superpowers" in error for error in errors)
@@ -876,6 +881,7 @@ def test_completed_job_delivery_rejects_missing_expected_a2_plugin(run_root: Pat
         cell,
         "missing-delivery",
         frozenset({"harness:execute"}),
+        expected_attempts=1,
     )
 
     assert any("plugin" in error and "harness" in error for error in errors)
@@ -905,6 +911,7 @@ def test_completed_job_delivery_rejects_unselected_benchmark_skill_namespace(
         baseline,
         "unselected-skill-delivery",
         benchmark_skill_names,
+        expected_attempts=1,
     )
 
     assert any(
@@ -931,6 +938,7 @@ def test_completed_job_delivery_rejects_blank_benchmark_plugin_marketplace(
         cell,
         "blank-marketplace-delivery",
         benchmark_skill_names,
+        expected_attempts=1,
     )
 
     assert any("malformed benchmark plugin" in error for error in errors)
@@ -953,6 +961,7 @@ def test_completed_job_delivery_rejects_codex_a0_benchmark_contamination(
         cell,
         "codex-contaminated-delivery",
         frozenset(),
+        expected_attempts=1,
     )
 
     assert any("plugin" in error and "harness" in error for error in errors)
@@ -968,6 +977,7 @@ def test_completed_job_correctness_zero_passes_infrastructure(run_root: Path):
         cell,
         "correctness-zero",
         frozenset(),
+        expected_attempts=1,
     ) == ()
 
 
@@ -981,6 +991,7 @@ def test_completed_job_delivery_accepts_one_trial_per_attempt(run_root: Path):
         cell,
         "two-attempts",
         frozenset(),
+        expected_attempts=2,
     ) == ()
 
 
@@ -999,6 +1010,7 @@ def test_completed_job_delivery_rejects_trial_exception(run_root: Path):
         cell,
         "exception-delivery",
         frozenset(),
+        expected_attempts=1,
     )
 
     assert any("trial exception" in error for error in errors)
@@ -1019,6 +1031,7 @@ def test_completed_job_delivery_rejects_missing_exception_evidence(run_root: Pat
         cell,
         "missing-exception-evidence",
         Runs._benchmark_skill_names(run_root, (cell,)),
+        expected_attempts=1,
     )
 
     assert any("exception" in error and "missing" in error for error in errors)
@@ -1042,6 +1055,7 @@ def test_completed_job_delivery_rejects_malformed_benchmark_evidence_with_a_cap(
         cell,
         "malformed-delivery",
         frozenset({"superpowers:using-superpowers"}),
+        expected_attempts=1,
     )
 
     assert errors == tuple(
@@ -1068,6 +1082,7 @@ def test_completed_job_delivery_rejects_ambiguous_benchmark_evidence(
         cell,
         "ambiguous-delivery",
         frozenset({"superpowers:using-superpowers"}),
+        expected_attempts=1,
     )
 
     assert any("ambiguous benchmark plugin superpowers" in error for error in errors)
@@ -1177,6 +1192,40 @@ def test_execution_reuses_valid_completed_jobs_and_runs_only_remaining_work(
     Runs.execute_run(run_root, manifest.path, manifest.digest)
 
     assert calls == jobs[3:]
+
+
+def test_execution_rejects_incomplete_multi_attempt_job_before_running_more_work(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    manifest = _compile_pair(run_root, attempts=2, max_sessions=8)
+    _stub_execution_preflight(monkeypatch)
+    first_job = load_job(
+        manifest.path.parent / manifest.harbor_config_paths[0]
+    ).job_name
+    _write_completed_job(
+        run_root,
+        manifest.cells[0],
+        first_job,
+        attempts=1,
+    )
+    calls: list[object] = []
+    real_run = subprocess.run
+
+    def fake_run(command, **kwargs):
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
+            return real_run(command, **kwargs)
+        calls.append(command)
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    with pytest.raises(
+        ValueError,
+        match="existing job is not resumable.*expected 2, observed 1",
+    ):
+        Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    assert calls == []
 
 
 def test_execution_refuses_to_rerun_an_invalid_existing_job(
@@ -2403,7 +2452,7 @@ def test_subscription_selector_is_scoped_to_the_harbor_process(
     monkeypatch.setattr(Runs, "validate_repository", lambda root: ())
     monkeypatch.setattr(Runs, "dockerfile_policy_errors", lambda root: ())
     monkeypatch.setattr(Runs, "require_current_image", lambda root, image: None)
-    monkeypatch.setattr(Runs, "_completed_job_errors", lambda *args: ())
+    monkeypatch.setattr(Runs, "_completed_job_errors", lambda *args, **kwargs: ())
     calls: list[dict[str, object]] = []
 
     def fake_run(command, **kwargs):
@@ -2447,7 +2496,7 @@ def test_keychain_token_is_scoped_to_claude_harbor_child(
     monkeypatch.setattr(Runs, "validate_repository", lambda root: ())
     monkeypatch.setattr(Runs, "dockerfile_policy_errors", lambda root: ())
     monkeypatch.setattr(Runs, "require_current_image", lambda root, image: None)
-    monkeypatch.setattr(Runs, "_completed_job_errors", lambda *args: ())
+    monkeypatch.setattr(Runs, "_completed_job_errors", lambda *args, **kwargs: ())
     calls: list[dict[str, object]] = []
 
     def fake_run(command, **kwargs):

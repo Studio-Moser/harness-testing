@@ -2025,6 +2025,8 @@ def _completed_job_errors(
     cell: RunCell,
     job_name: str,
     benchmark_skill_names: frozenset[str],
+    *,
+    expected_attempts: int,
 ) -> tuple[str, ...]:
     errors: list[str] = []
     job_dir = root / "jobs" / "raw" / job_name
@@ -2033,11 +2035,13 @@ def _completed_job_errors(
         return (f"{job_name}: Harbor job result is unreadable",)
     stats = job_result.get("stats")
     n_total_trials = job_result.get("n_total_trials")
-    if type(n_total_trials) is not int or n_total_trials < 1:
-        errors.append(f"{job_name}: Harbor job trial count is invalid")
-        n_total_trials = 0
+    if type(n_total_trials) is not int or n_total_trials != expected_attempts:
+        errors.append(
+            f"{job_name}: Harbor job trial count is invalid: "
+            f"expected {expected_attempts}, observed {n_total_trials!r}"
+        )
     expected_counts = {
-        "n_completed_trials": n_total_trials,
+        "n_completed_trials": expected_attempts,
         "n_errored_trials": 0,
         "n_running_trials": 0,
         "n_pending_trials": 0,
@@ -2060,7 +2064,7 @@ def _completed_job_errors(
         if job_dir.is_dir()
         else []
     )
-    if len(trial_dirs) != n_total_trials:
+    if len(trial_dirs) != expected_attempts:
         errors.append(f"{job_name}: Harbor job has {len(trial_dirs)} trial results")
         return tuple(errors[:_MAX_DELIVERY_ERRORS])
 
@@ -2071,7 +2075,7 @@ def _completed_job_errors(
         return tuple(errors[:_MAX_DELIVERY_ERRORS])
     expected_plugins = frozenset(expected_plugin_records)
     for trial_dir in trial_dirs:
-        label = job_name if n_total_trials == 1 else f"{job_name}/{trial_dir.name}"
+        label = job_name if expected_attempts == 1 else f"{job_name}/{trial_dir.name}"
         trial_result = _read_json_object(trial_dir / "result.json")
         if trial_result is None:
             errors.append(f"{label}: Harbor trial result is unreadable")
@@ -2184,6 +2188,7 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
                 cell,
                 job_name,
                 benchmark_skill_names,
+                expected_attempts=manifest.attempts,
             )
             if existing_errors:
                 raise ValueError(
@@ -2208,6 +2213,7 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
                         canary_cell,
                         canary_job_name,
                         benchmark_skill_names,
+                        expected_attempts=manifest.attempts,
                     )
                 ][:_MAX_DELIVERY_ERRORS]
                 if errors:
@@ -2218,6 +2224,7 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
             cell,
             job_name,
             benchmark_skill_names,
+            expected_attempts=manifest.attempts,
         )
         if errors:
             raise ValueError("job delivery failed: " + "; ".join(errors))
