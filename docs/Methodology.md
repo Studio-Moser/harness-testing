@@ -60,7 +60,7 @@ Workflow criteria evaluate task-specific sequence requirements, such as grouping
 
 ### Efficiency policy
 
-ATIF commands are normalized and classified as direct checks, targeted tests, package tests, comprehensive tests, lint, typecheck, build, browser, or format. The verification envelope decides whether a final comprehensive gate is required and flags comprehensive suites run before the final mutation. Duplicate successful commands and unnecessary lifecycle events remain visible.
+ATIF commands are normalized and classified as direct checks, targeted tests, package tests, comprehensive tests, lint, typecheck, build, browser, or format. Named package scripts such as `npm run test:saved-view` are targeted tests, while `test:all` and `gate` remain comprehensive. The verification envelope decides whether a final comprehensive gate is required and flags comprehensive suites run before the final mutation. Duplicate successful commands and unnecessary lifecycle events remain visible.
 
 Efficiency never overrides correctness. Reports show the three dimensions separately and expose nullable counters for agent/verifier time, input/output/cache tokens, cost, turns, tool calls, commands, check/test classes, test time, premature suites, duplicate commands, plans, reviews, subagents, worktrees, context events, changed/generated files, diff lines, retries, timeouts, and infrastructure errors. Missing telemetry is **unavailable**, never zero.
 

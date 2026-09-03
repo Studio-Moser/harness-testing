@@ -22,6 +22,9 @@ def grouped_policy():
     [
         ("npm run check:accent", "direct_check"),
         ("npx vitest run src/App.test.tsx", "targeted_test"),
+        ("npm run test:saved-view", "targeted_test"),
+        ("pnpm run test:view-filter", "targeted_test"),
+        ("yarn run test:all", "comprehensive_test"),
         ("npm --workspace dashboard test", "package_test"),
         ("npm test", "comprehensive_test"),
         ("npm run gate", "comprehensive_test"),

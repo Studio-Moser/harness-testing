@@ -33,6 +33,7 @@ patterns = [
   '(?:^|\s)(?:npx\s+)?(?:vitest|jest)\s+(?:run\s+)?\S+\.(?:test|spec)\.[jt]sx?',
   '(?:^|\s)pytest\s+(?:\S+\s+)*?(?:\S*test_\S+\.py|\S+::\S+)',
   '^(?:npm test|npm run test|pnpm test|yarn test)\s+--\s+\S+',
+  '^(?:npm|pnpm|yarn) run test:[a-z0-9_-]+$',
   '^cargo test\s+(?!--workspace|-p\s)\S+',
 ]
 
