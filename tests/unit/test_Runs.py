@@ -754,6 +754,96 @@ def test_completed_job_delivery_accepts_expected_plugins_and_skill_directories(
     ) == ()
 
 
+def test_completed_job_delivery_accepts_repeated_equivalent_claude_init(
+    run_root: Path,
+):
+    cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
+    _add_bundle(run_root, cell)
+    _write_completed_job(run_root, cell, "repeated-init")
+    evidence = (
+        run_root
+        / "jobs"
+        / "raw"
+        / "repeated-init"
+        / "trial-1"
+        / "agent"
+        / "claude-code.txt"
+    )
+    event = json.loads(evidence.read_text())
+    event["session_id"] = "primary-session"
+    line = json.dumps(event) + "\n"
+    evidence.write_text(line + line)
+
+    assert Runs._completed_job_errors(
+        run_root,
+        cell,
+        "repeated-init",
+        frozenset({"harness:execute"}),
+    ) == ()
+
+
+def test_completed_job_delivery_rejects_repeated_claude_init_across_sessions(
+    run_root: Path,
+):
+    cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
+    _add_bundle(run_root, cell)
+    _write_completed_job(run_root, cell, "cross-session-init")
+    evidence = (
+        run_root
+        / "jobs"
+        / "raw"
+        / "cross-session-init"
+        / "trial-1"
+        / "agent"
+        / "claude-code.txt"
+    )
+    first = json.loads(evidence.read_text())
+    first["session_id"] = "primary-session"
+    second = dict(first)
+    second["session_id"] = "other-session"
+    evidence.write_text(json.dumps(first) + "\n" + json.dumps(second) + "\n")
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        cell,
+        "cross-session-init",
+        frozenset({"harness:execute"}),
+    )
+
+    assert any("multiple primary sessions" in error for error in errors)
+
+
+def test_completed_job_delivery_rejects_conflicting_repeated_claude_init(
+    run_root: Path,
+):
+    cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
+    _add_bundle(run_root, cell)
+    _write_completed_job(run_root, cell, "conflicting-init")
+    evidence = (
+        run_root
+        / "jobs"
+        / "raw"
+        / "conflicting-init"
+        / "trial-1"
+        / "agent"
+        / "claude-code.txt"
+    )
+    first = json.loads(evidence.read_text())
+    first["session_id"] = "primary-session"
+    second = dict(first)
+    second["skills"] = []
+    evidence.write_text(json.dumps(first) + "\n" + json.dumps(second) + "\n")
+
+    errors = Runs._completed_job_errors(
+        run_root,
+        cell,
+        "conflicting-init",
+        frozenset({"harness:execute"}),
+    )
+
+    assert any("conflicting repeated startup evidence" in error for error in errors)
+
+
 def test_completed_job_delivery_rejects_a0_benchmark_contamination(run_root: Path):
     cell = _cell("claude", "A0", "baseline", "a")
     _add_bundle(run_root, cell)
@@ -1049,6 +1139,75 @@ def test_delivery_canary_correctness_zero_runs_every_task(
         load_job(manifest.path.parent / path).job_name
         for path in manifest.harbor_config_paths
     ]
+
+
+def test_execution_reuses_valid_completed_jobs_and_runs_only_remaining_work(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    manifest = _compile_pair(run_root)
+    _stub_execution_preflight(monkeypatch)
+    jobs = [
+        load_job(manifest.path.parent / path).job_name
+        for path in manifest.harbor_config_paths
+    ]
+    for index, job_name in enumerate(jobs[:3]):
+        _write_completed_job(
+            run_root,
+            manifest.cells[index % len(manifest.cells)],
+            job_name,
+        )
+    calls: list[str] = []
+    real_run = subprocess.run
+
+    def fake_run(command, **kwargs):
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
+            return real_run(command, **kwargs)
+        job = load_job(Path(command[-1]))
+        calls.append(job.job_name)
+        index = jobs.index(job.job_name)
+        _write_completed_job(
+            run_root,
+            manifest.cells[index % len(manifest.cells)],
+            job.job_name,
+        )
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    assert calls == jobs[3:]
+
+
+def test_execution_refuses_to_rerun_an_invalid_existing_job(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    manifest = _compile_pair(run_root)
+    _stub_execution_preflight(monkeypatch)
+    first_job = load_job(
+        manifest.path.parent / manifest.harbor_config_paths[0]
+    ).job_name
+    _write_completed_job(
+        run_root,
+        manifest.cells[0],
+        first_job,
+        plugins=[],
+    )
+    calls: list[object] = []
+    real_run = subprocess.run
+
+    def fake_run(command, **kwargs):
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
+            return real_run(command, **kwargs)
+        calls.append(command)
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    with pytest.raises(ValueError, match="existing job is not resumable"):
+        Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    assert calls == []
 
 
 def test_delivery_failure_after_canary_stops_immediately(

@@ -1828,11 +1828,26 @@ def _claude_delivery_errors(
             and event.get("subtype") == "init"
         ):
             init_events.append(event)
-    if len(init_events) != 1:
-        errors.append(f"Claude startup evidence has {len(init_events)} primary init events")
+    if not init_events:
+        errors.append("Claude startup evidence has 0 primary init events")
         return errors
 
     event = init_events[0]
+    if len(init_events) > 1:
+        session_id = event.get("session_id")
+        if not isinstance(session_id, str) or not session_id or any(
+            repeated.get("session_id") != session_id for repeated in init_events[1:]
+        ):
+            errors.append("Claude startup evidence has multiple primary sessions")
+            return errors
+        if any(
+            repeated.get("plugins") != event.get("plugins")
+            or repeated.get("skills") != event.get("skills")
+            for repeated in init_events[1:]
+        ):
+            errors.append("Claude startup evidence has conflicting repeated startup evidence")
+            return errors
+
     raw_plugins = event.get("plugins")
     observed_plugins: set[str] = set()
     seen_plugins: set[str] = set()
@@ -2162,12 +2177,26 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
         config_path = manifest.path.parent / relative_path
         cell = manifest.cells[index % len(manifest.cells)]
         job_name = load_job(config_path).job_name
-        subprocess.run(
-            harbor_command("run", "-c", str(config_path)),
-            cwd=root,
-            check=True,
-            env=execution_environment,
-        )
+        job_dir = root / "jobs" / "raw" / job_name
+        if job_dir.exists():
+            existing_errors = _completed_job_errors(
+                root,
+                cell,
+                job_name,
+                benchmark_skill_names,
+            )
+            if existing_errors:
+                raise ValueError(
+                    "existing job is not resumable: " + "; ".join(existing_errors)
+                )
+            print(f"Reusing completed job: {job_name}")
+        else:
+            subprocess.run(
+                harbor_command("run", "-c", str(config_path)),
+                cwd=root,
+                check=True,
+                env=execution_environment,
+            )
         if index < len(manifest.cells):
             canary_jobs.append((cell, job_name))
             if index + 1 == len(manifest.cells):
