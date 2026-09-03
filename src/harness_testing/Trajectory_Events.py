@@ -13,6 +13,38 @@ _NON_MUTATING_REDIRECTION = re.compile(
 )
 
 
+def _strip_non_mutating_redirection(command: str) -> str:
+    """Remove shell redirection syntax without changing quoted arguments."""
+
+    chunks: list[str] = []
+    outside_start = 0
+    quote_start = 0
+    quote: str | None = None
+    ansi_c_quote = False
+    index = 0
+    while index < len(command):
+        character = command[index]
+        if character == "\\" and (quote != "'" or ansi_c_quote):
+            index += 2
+            continue
+        if quote is None and character in {"'", '"'}:
+            chunks.append(_NON_MUTATING_REDIRECTION.sub("", command[outside_start:index]))
+            quote = character
+            ansi_c_quote = character == "'" and command[index - 1 : index] == "$"
+            quote_start = index
+        elif quote is not None and character == quote:
+            chunks.append(command[quote_start : index + 1])
+            quote = None
+            ansi_c_quote = False
+            outside_start = index + 1
+        index += 1
+    if quote is None:
+        chunks.append(_NON_MUTATING_REDIRECTION.sub("", command[outside_start:]))
+    else:
+        chunks.append(command[quote_start:])
+    return "".join(chunks)
+
+
 @dataclass(frozen=True)
 class ShellComponent:
     command: str
@@ -42,23 +74,23 @@ def _metadata(value: object, call_id: str | None) -> tuple[Mapping[str, Any], ..
     return tuple(values)
 
 
-def _walk_metadata(value: object, *, depth: int = 0) -> tuple[list[int], bool]:
+def _walk_metadata(value: object, *, depth: int = 0) -> tuple[list[int], list[bool]]:
     if depth > 8 or not isinstance(value, Mapping):
-        return [], False
+        return [], []
     exit_codes: list[int] = []
-    is_error = False
+    error_flags: list[bool] = []
     for key, child in value.items():
         if key in {"exit_code", "exitCode"} and isinstance(child, int) and not isinstance(
             child, bool
         ):
             exit_codes.append(child)
-        elif key in {"is_error", "tool_result_is_error"} and child is True:
-            is_error = True
+        elif key in {"is_error", "tool_result_is_error"} and isinstance(child, bool):
+            error_flags.append(child)
         if isinstance(child, Mapping):
-            child_codes, child_error = _walk_metadata(child, depth=depth + 1)
+            child_codes, child_flags = _walk_metadata(child, depth=depth + 1)
             exit_codes.extend(child_codes)
-            is_error = is_error or child_error
-    return exit_codes, is_error
+            error_flags.extend(child_flags)
+    return exit_codes, error_flags
 
 
 def _content_text(value: object) -> str:
@@ -86,17 +118,17 @@ def result_success(
     if result is None:
         return None
     codes: list[int] = []
-    is_error = False
+    error_flags: list[bool] = []
     for source in (*_metadata(result, call_id), *_metadata({"extra": step_extra}, call_id)):
-        source_codes, source_error = _walk_metadata(source)
+        source_codes, source_flags = _walk_metadata(source)
         codes.extend(source_codes)
-        is_error = is_error or source_error
+        error_flags.extend(source_flags)
     if codes:
         outcomes = {code == 0 for code in codes}
         if len(outcomes) == 1:
-            return outcomes.pop() and not is_error
+            return outcomes.pop() and not any(error_flags)
         return None
-    if is_error:
+    if any(error_flags):
         return False
 
     text = _content_text(result)
@@ -110,6 +142,8 @@ def result_success(
         return int(match[1]) == 0
     if re.search(r"\[error\]\s*tool reported failure", text, re.IGNORECASE):
         return False
+    if error_flags:
+        return True
     return None
 
 
@@ -198,6 +232,7 @@ def normalize_command(
     ignored_flags: Collection[str],
     removable_prefixes: Sequence[Sequence[str]],
 ) -> str:
+    command = _strip_non_mutating_redirection(command)
     try:
         tokens = shlex.split(command)
     except ValueError:

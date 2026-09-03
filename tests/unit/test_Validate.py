@@ -225,6 +225,45 @@ def test_affected_validation_keeps_docs_static_and_groups_policy_tests():
     }
 
 
+def test_affected_validation_routes_shared_trajectory_decoder_checks():
+    commands = affected_validation_commands(
+        REPOSITORY_ROOT,
+        [Path("src/harness_testing/Trajectory_Events.py")],
+    )
+
+    assert commands == (
+        (
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "src/harness_testing/Trajectory_Events.py",
+        ),
+        (
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/unit/test_Codex_Agent.py",
+            "tests/unit/test_Metrics.py",
+            "tests/unit/test_Sentinel_Criteria.py",
+            "tests/unit/test_Trajectory_Events.py",
+            "tests/unit/test_Workflow_Criteria.py",
+        ),
+        ("uv", "run", "harness-test", "images", "build", "--verifier"),
+        (
+            "uv",
+            "run",
+            "harness-test",
+            "task",
+            "qa",
+            "--pack",
+            "workflow",
+            "--all-cases",
+        ),
+    )
+
+
 def test_affected_validation_runs_only_oracle_and_nop_for_one_changed_task():
     commands = affected_validation_commands(
         REPOSITORY_ROOT,

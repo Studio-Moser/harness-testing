@@ -2,6 +2,7 @@ from harbor.models.trajectories.observation_result import ObservationResult
 
 from harness_testing.Trajectory_Events import (
     component_successes,
+    normalize_command,
     result_success,
     shell_mutation,
     split_shell,
@@ -30,6 +31,36 @@ def test_result_success_reads_pinned_claude_metadata_and_bracketed_failures():
 
     assert result_success(success) is True
     assert result_success(failure) is False
+
+
+def test_result_success_reads_current_claude_explicit_non_error_result():
+    success = ObservationResult(
+        source_call_id="claude-success",
+        content="[stdout]\nall checks passed\n[metadata] {}",
+        extra={
+            "tool_result_is_error": False,
+            "tool_result_metadata": {
+                "raw_tool_result": {
+                    "type": "tool_result",
+                    "is_error": False,
+                },
+                "tool_use_result": {
+                    "stdout": "all checks passed",
+                    "stderr": "",
+                    "interrupted": False,
+                },
+            },
+        },
+    )
+
+    assert result_success(success) is True
+    assert result_success(
+        ObservationResult(
+            source_call_id="claude-contradiction",
+            content="[exit_code] 1",
+            extra={"tool_result_is_error": False},
+        )
+    ) is False
 
 
 def test_result_success_reads_codex_tool_metadata_from_the_step():
@@ -84,6 +115,45 @@ def test_compound_shell_order_and_provable_success_are_preserved():
     ]
     assert [component.operator_before for component in components] == [None, "&&", "&&"]
     assert component_successes(components, True) == (True, True, True)
+
+
+def test_normalize_command_removes_non_mutating_shell_redirection():
+    assert normalize_command(
+        "npm run gate 2>&1",
+        ignored_flags=frozenset(),
+        removable_prefixes=(),
+    ) == "npm run gate"
+
+
+def test_normalize_command_preserves_quoted_redirection_text():
+    quoted = normalize_command(
+        'echo "left 2>&1 right"',
+        ignored_flags=frozenset(),
+        removable_prefixes=(),
+    )
+
+    assert quoted == "echo left 2>&1 right"
+    assert quoted != normalize_command(
+        'echo "left  right"',
+        ignored_flags=frozenset(),
+        removable_prefixes=(),
+    )
+
+
+def test_normalize_command_preserves_ansi_c_quoted_redirection_text():
+    with_redirection_text = normalize_command(
+        r"printf %s $'left\' 2>&1 right'",
+        ignored_flags=frozenset(),
+        removable_prefixes=(),
+    )
+    without_redirection_text = normalize_command(
+        r"printf %s $'left\' right'",
+        ignored_flags=frozenset(),
+        removable_prefixes=(),
+    )
+
+    assert "2>&1" in with_redirection_text
+    assert with_redirection_text != without_redirection_text
 
 
 def test_declared_shell_mutations_detect_redirection_tee_and_relevant_directories():

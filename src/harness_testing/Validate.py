@@ -48,6 +48,13 @@ _HARNESS_RESULT_SCHEMA_TESTS = {
     "tests/unit/test_Materialize.py",
     "tests/unit/test_Validate.py",
 }
+_TRAJECTORY_DECODER_TESTS = {
+    "tests/unit/test_Codex_Agent.py",
+    "tests/unit/test_Metrics.py",
+    "tests/unit/test_Sentinel_Criteria.py",
+    "tests/unit/test_Trajectory_Events.py",
+    "tests/unit/test_Workflow_Criteria.py",
+}
 _FULL_DETERMINISTIC_COMMANDS = (
     ("uv", "run", "ruff", "check", "src", "tests"),
     ("uv", "run", "pytest", "tests/unit", "-q"),
@@ -818,6 +825,7 @@ def affected_validation_commands(
     images: set[str] = set()
     dashboard = False
     full_unit = bool(names & {"pyproject.toml", "uv.lock"})
+    workflow_pack = False
 
     for name in names:
         path = Path(name)
@@ -866,6 +874,10 @@ def affected_validation_commands(
         if name == "src/harness_testing/Harness_Result.schema.json":
             unit_tests.update(_HARNESS_RESULT_SCHEMA_TESTS)
             images.add("verifier")
+        if name == "src/harness_testing/Trajectory_Events.py":
+            unit_tests.update(_TRAJECTORY_DECODER_TESTS)
+            images.add("verifier")
+            workflow_pack = True
 
         if name in _POLICY_PATHS or name.startswith("policy/"):
             unit_tests.update(
@@ -923,6 +935,19 @@ def affected_validation_commands(
                     case,
                 )
             )
+    if workflow_pack:
+        commands.append(
+            (
+                "uv",
+                "run",
+                "harness-test",
+                "task",
+                "qa",
+                "--pack",
+                "workflow",
+                "--all-cases",
+            )
+        )
     if dashboard:
         commands.extend(
             (
