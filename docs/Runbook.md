@@ -125,6 +125,15 @@ Subscription mode forbids API fallback.
 
   CI and non-macOS runs use `CLAUDE_CODE_OAUTH_TOKEN`. Neither the Keychain nor environment path authorizes API billing.
 
+  The runner passes the resolved value only in Harbor's child environment. The
+  Claude adapter then uses mode-`0600` temporary files rather than Harbor's
+  per-exec environment interface, because that interface expands values into
+  Docker argv. The adapter also removes the token from Harbor's trial-scoped
+  agent environment. It deletes the host copy immediately after upload and the
+  container copy before Claude starts, with final cleanup on failures. This
+  adapter supports direct Claude trials only; ACP remains disabled until its
+  pre-run bridge can use the same secret-safe handoff.
+
 The execution preflight rejects missing or wrong-mode credentials before Harbor starts. Subscription mode requires `--max-budget-usd 0`; the report still shows an API-equivalent usage estimate because subscription quota is not a dollar hard stop.
 
 API mode requires a positive maximum. That maximum is an admission guard based on the conservative estimate, not a provider-enforced mid-session cutoff.

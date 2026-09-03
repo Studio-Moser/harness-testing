@@ -32,11 +32,22 @@ credential in this order:
 2. The named Keychain item on macOS.
 3. The existing fail-closed "Claude subscription credential is missing" error.
 
-The resolved token exists only in the runner's in-memory child environment sent
-to Harbor. It is never written into the approved manifest, generated job YAML,
-public results, documentation, or logs. API-key variables remain forbidden in
-subscription mode. Non-macOS systems keep the environment-variable path and do
-not gain a new credential store.
+The resolved token enters only Harbor's in-memory child environment. Harbor
+0.22.0 expands per-command and trial-scoped agent environment values into
+`docker compose exec` argv, so the Harness Claude adapter must not forward the
+token through either interface.
+Instead, it copies the value through a mode-`0600` host temporary file into a
+mode-`0600` container temporary file. The host file is deleted immediately
+after upload; the launch shell reads and deletes the container file before
+starting Claude. A final cleanup runs on both success and failure. Harness
+Testing uses direct Claude trials; the adapter disables inherited ACP support
+until ACP's pre-run bridge gains the same secret-safe handoff.
+
+The token is never written into the repository, approved manifest, generated
+job YAML, raw job output, public results, documentation, or process argv.
+API-key variables remain forbidden in subscription mode. Non-macOS systems keep
+the environment-variable input path and use the same adapter handoff without
+gaining a new credential store.
 
 ## Error handling
 
@@ -48,6 +59,7 @@ before Harbor starts if no credential resolves.
 ## Verification
 
 Focused tests will cover environment precedence, Keychain fallback, failure
-closure, prompt-only storage, CLI redaction, and propagation into only the
-Harbor child environment. The full Python suite and Ruff run once at the commit
-checkpoint. No provider model session is part of this change.
+closure, prompt-only storage, CLI redaction, propagation into only the Harbor
+child environment, mode-`0600` temporary transfer, argv redaction, and cleanup
+on agent success or failure. The full Python suite and Ruff run once at the
+commit checkpoint. No provider model session is part of this repair.

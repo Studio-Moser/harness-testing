@@ -13,6 +13,9 @@
 ## Global Constraints
 
 - Never place a token in argv, repository files, generated inputs, logs, errors, or test output.
+- Harbor 0.22.0 expands per-exec environment values into Docker argv; bridge the
+  token through mode-`0600` temporary files and delete the container copy before
+  Claude starts.
 - Preserve `CLAUDE_CODE_OAUTH_TOKEN` as the first-precedence portable override.
 - Query Keychain only for subscription manifests containing a Claude cell and only on macOS.
 - Preserve the existing API-key rejection and exact manifest approval gates.
@@ -89,6 +92,11 @@
   Add the `auth claude` parser/dispatch. In `execute_run()`, resolve the token
   only when subscription mode selects Claude, add a non-empty result only to
   `execution_environment`, and validate that child environment before Harbor.
+  In `HarnessClaude`, remove the token from every per-exec and trial-scoped
+  agent environment, transfer it through mode-`0600` temporary files, and delete
+  the container file before the model command starts and again in a final
+  cleanup. Disable inherited ACP support until its pre-run bridge has the same
+  secret-safe lifecycle.
 
 - [ ] **Step 8: Document one-time setup and portable fallback.**
 
