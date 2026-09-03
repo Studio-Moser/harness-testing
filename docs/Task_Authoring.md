@@ -35,6 +35,7 @@ The task configuration must preserve these boundaries:
 
 - The project and separate verifier have no network.
 - The agent uses an empty task-level allowlist; the run layer adds only the selected provider host.
+- Workflow projects start as clean Git worktrees with one deterministic baseline commit. Repository metadata ignores arm-injected `AGENTS.md` and `CLAUDE.md` plus dependency and build-output directories.
 - `/app` and `/logs/agent/trajectory.json` are explicit artifacts.
 - The workspace artifact excludes `.git`, `node_modules`, and `target`.
 - Toolchains, packages, base images, and upstream inputs are immutable and recorded in `Versions.toml`.

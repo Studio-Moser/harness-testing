@@ -14,7 +14,7 @@ The repository schema versions manifests and public methodology. The separate
 image version keeps unchanged local runtime images pinned when only reporting or
 run-control semantics advance.
 
-Tasks use no live product repositories or private project data. The environment and separate verifier have no network. The agent receives only the provider hosts required by the selected billing route. `/app` and `/logs/agent/trajectory.json` are retained as local Harbor artifacts for verification and regrading.
+Tasks use no live product repositories or private project data. Workflow projects begin as clean Git worktrees with deterministic baseline commits; arm-injected instruction files, dependencies, and build output remain outside that baseline. The environment and separate verifier have no network. The agent receives only the provider hosts required by the selected billing route. `/app` and `/logs/agent/trajectory.json` are retained as local Harbor artifacts for verification and regrading, while `.git` remains excluded.
 
 The research profile uses a separately materialized six-task DeepSWE cohort. The pinned upstream tree has no license file, so the fetched tasks and derived images remain in ignored local storage and are never redistributed. See [Capability Pack](Capability_Pack.md).
 

@@ -18,7 +18,7 @@ category = "workflow"
 tags = ["react", "typescript", "polish", "testing-churn"]
 change_class = "polish"
 verification_envelope = "polish"
-fixture_digest = "sha256:879e80db3d89b69b4c94c1907ca1545672710ff351f0a9a8e87113626459050d"
+fixture_digest = "sha256:7d414f0629b2f310caa50d564e0ff6da5fb70f88a6d868ad6c4841f4a6234579"
 
 [agent]
 timeout_sec = 900.0

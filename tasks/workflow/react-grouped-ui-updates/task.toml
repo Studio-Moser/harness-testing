@@ -18,7 +18,7 @@ category = "workflow"
 tags = ["react", "typescript", "grouped", "testing-churn"]
 change_class = "grouped"
 verification_envelope = "grouped"
-fixture_digest = "sha256:31897b9f8ef05ca1754803d231ce3c7ac91cdc77937e77e4ced455dd21467ec3"
+fixture_digest = "sha256:f171f0a89d35d8e7d8692fc432173746ea7e56a4af745576730d0b1e56c66cc8"
 
 [agent]
 timeout_sec = 900.0

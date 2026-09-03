@@ -18,7 +18,7 @@ category = "workflow"
 tags = ["rust", "workspace", "feature", "testing-churn"]
 change_class = "feature"
 verification_envelope = "feature"
-fixture_digest = "sha256:f5c3f43dda77181d7e4508c5b0f397d520acf1ee1edf7605ddf7db942f7a9996"
+fixture_digest = "sha256:4997d1397cac3572f529a11c94168d0427dddb3d8a0cd36bb2bb5e7d71979273"
 
 [agent]
 timeout_sec = 900.0

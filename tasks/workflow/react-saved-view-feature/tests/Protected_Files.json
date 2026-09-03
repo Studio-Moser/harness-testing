@@ -1,7 +1,7 @@
 {
   "files": {
     ".dockerignore": "sha256:c8015948b6eaefde5eaa3862f2fe5ce0245fcde4d6e66f7441dcdcbbed46e652",
-    "Dockerfile": "sha256:9c1341faf1c096f43cb6d46c0efb2913ddd09bdddb7896349cd389636b4e3d1f",
+    "Dockerfile": "sha256:889b1bc5c21b7eb0adb1f3698a42f1067a3a7c2955086c7bee6617d8f6665a51",
     "eslint.config.js": "sha256:3b1cc0ea6caecc8e9fbc6108de65e5ba1f0772a9cb9dbd09cfa0a867ad76c03e",
     "index.html": "sha256:76dc675d22a69c487e022dd619847679b2a6e23f430f72c36615efac6031b887",
     "package-lock.json": "sha256:daab9072ee1d774961b4d016a09528ce2ee198cbed6f1b442dc4dc6387d1337d",

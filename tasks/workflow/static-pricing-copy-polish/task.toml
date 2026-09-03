@@ -18,7 +18,7 @@ category = "workflow"
 tags = ["html", "css", "polish", "testing-churn"]
 change_class = "polish"
 verification_envelope = "polish"
-fixture_digest = "sha256:907e0d2d593f17e6a11e4d0095fe080a8eb0fb03df6041d9ad5b1c2e91ac9c63"
+fixture_digest = "sha256:08bf91889c7219cb0447e4441f0766f3742c1d1f1ed57fef39d14662a12b16a6"
 
 [agent]
 timeout_sec = 900.0

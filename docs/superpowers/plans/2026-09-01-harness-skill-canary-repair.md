@@ -915,3 +915,60 @@ effect size or release verdict.
 Harbor's Docker argv through either environment path, ordinary work stays out of
 Harness delegation, and the bounded `0.8.11` Codex confirmation passes without
 the deterministic external-rule fetch.
+
+### Task 14: Give workflow fixtures deterministic Git baselines
+
+**Files:**
+
+- Modify: `src/harness_testing/Validate.py` and its focused unit test
+- Modify: the nine `tasks/workflow/*/environment/Dockerfile` files and their
+  frozen digest records
+- Modify: `docs/Task_Authoring.md` and `docs/Methodology.md`
+
+- [x] **Step 1: Establish the root cause and scope.**
+
+  All three Harness `0.8.11` Codex trials ran `git status` before discovery,
+  received `fatal: not a git repository`, and spent another model turn repeating
+  discovery. The same failure appears in 28 retained Codex workflow trials. The
+  workflow Dockerfiles copy frozen projects into `/app` but do not initialize a
+  repository; the fixed-target contract task is the existing working pattern.
+
+- [x] **Step 2: Enforce and create deterministic workflow repositories.**
+
+  Add a static task-policy failure before changing the fixtures. Then initialize
+  one `main` repository and deterministic baseline commit in every workflow
+  image. Keep arm-injected `AGENTS.md` and `CLAUDE.md`, dependencies, and build
+  output ignored in repository metadata. Continue tracking fixture source such
+  as `.dockerignore` and excluding `.git` from retained artifacts. Refresh only
+  the affected environment and protected-file digests.
+
+- [x] **Step 3: Prove the runtime behavior on both stacks.**
+
+  Build one representative Node image and one representative Rust image. Mount
+  read-only `AGENTS.md` and `CLAUDE.md` files at their runtime paths, then require
+  `main`, fixed author/committer timestamps, a tracked `.dockerignore`, no tracked
+  injected/dependency/build paths, and empty `git status --porcelain`. Both
+  containers reported only `## main`. The Rust fixture was rebuilt after its
+  tracked `.dockerignore` was made explicit, and both temporary image tags were
+  removed.
+
+- [x] **Step 4: Review and run one deterministic checkpoint.**
+
+  Obtain one independent review of the frozen diff. Address only proven
+  findings with focused checks. Then run Ruff, the complete Python unit suite,
+  static validation, and the workflow pack's five-case QA once. Do not start a
+  model session for this deterministic fixture repair.
+
+  The independent reviewer found and then cleared four enforcement gaps: the
+  canonical exclude-file redirect and staging command now have negative
+  regressions, every image asserts a clean status at build time, both Rust
+  manifests protect `.dockerignore`, and the grouped React manifest protects
+  both `.dockerignore` and `Dockerfile`. Final review of frozen diff
+  `b97f4e2654fdf2ee182b892c091d1abe23e3e07918a2af02356d423eacd52547`
+  returned no findings. The one checkpoint passed Ruff, 302 Python unit tests,
+  static validation, and all 45 workflow QA cases with expected outcomes and
+  zero exceptions. No model session ran.
+
+**Task done when:** every workflow fixture starts as a clean deterministic Git
+worktree, static validation protects the invariant, Node and Rust runtime proof
+passes with injected instruction files, and the single checkpoint is green.

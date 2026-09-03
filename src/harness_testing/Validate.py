@@ -55,6 +55,22 @@ _TRAJECTORY_DECODER_TESTS = {
     "tests/unit/test_Trajectory_Events.py",
     "tests/unit/test_Workflow_Criteria.py",
 }
+_WORKFLOW_GIT_BASELINE_FRAGMENTS = (
+    "git init --quiet --initial-branch=main",
+    'git config user.name "Benchmark Author"',
+    'git config user.email "benchmark@example.invalid"',
+    'AGENTS.md',
+    'CLAUDE.md',
+    'node_modules/',
+    'target/',
+    'dist/',
+    '> .git/info/exclude',
+    'git add --all',
+    'GIT_AUTHOR_DATE="2025-01-01T00:00:00Z"',
+    'GIT_COMMITTER_DATE="2025-01-01T00:00:00Z"',
+    'git commit --quiet -m "Frozen workflow fixture"',
+    'test -z "$(git status --porcelain)"',
+)
 _FULL_DETERMINISTIC_COMMANDS = (
     ("uv", "run", "ruff", "check", "src", "tests"),
     ("uv", "run", "pytest", "tests/unit", "-q"),
@@ -174,6 +190,19 @@ def _validate_benchmark_task_assets(
             )
     if failures:
         return failures
+
+    if not is_contract:
+        dockerfile_path = environment_directory / "Dockerfile"
+        dockerfile = dockerfile_path.read_text()
+        if not all(
+            fragment in dockerfile for fragment in _WORKFLOW_GIT_BASELINE_FRAGMENTS
+        ):
+            failures.append(
+                _failure(
+                    dockerfile_path,
+                    "workflow fixture must create a deterministic Git baseline",
+                )
+            )
 
     test_script = (task_root / "tests" / "test.sh").read_text()
     if re.search(r"\b(?:uvx|pip\s+install|npm\s+install)\b", test_script):

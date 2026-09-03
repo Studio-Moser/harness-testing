@@ -18,7 +18,7 @@ category = "workflow"
 tags = ["react", "typescript", "local-storage", "testing-churn"]
 change_class = "feature"
 verification_envelope = "feature"
-fixture_digest = "sha256:b6ba7b92ace22a4f203830b8f6bd876dc665c3b365b424a47da711a973baecac"
+fixture_digest = "sha256:16efb4216404cf624e48c66982c0732a9334916a00c1af3c4d897e60e33f0e85"
 
 [agent]
 timeout_sec = 900.0

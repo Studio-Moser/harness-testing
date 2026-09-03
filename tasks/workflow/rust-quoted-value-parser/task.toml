@@ -18,7 +18,7 @@ category = "workflow"
 tags = ["rust", "parser", "bugfix", "testing-churn"]
 change_class = "small"
 verification_envelope = "small"
-fixture_digest = "sha256:179f4dd62402cfc7dd997567d92a508e9545bcafba5960116b94866a70ec0c68"
+fixture_digest = "sha256:bba00aa4cc230295ede2dbda99f4989332258aef29bad8aa44bf61b86930092a"
 
 [agent]
 timeout_sec = 900.0

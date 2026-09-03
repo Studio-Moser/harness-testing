@@ -2,7 +2,7 @@
   "schema_version": "1",
   "files": {
     ".dockerignore": "sha256:16d30e4462189fb14dd611bdb708c510630c576a1f35b9383e89a4352da36c97",
-    "Dockerfile": "sha256:9c1341faf1c096f43cb6d46c0efb2913ddd09bdddb7896349cd389636b4e3d1f",
+    "Dockerfile": "sha256:889b1bc5c21b7eb0adb1f3698a42f1067a3a7c2955086c7bee6617d8f6665a51",
     "package-lock.json": "sha256:862bec7659ef30e4efe57bb6aaefff8bbef54a4713a7be5f86eb2561d2b774a0",
     "package.json": "sha256:6df9bfcb8500b38971bc062da56affc6acd0405944fbf5baafd5f4cf61815b4d",
     "scripts/Check_Pricing_Card.mjs": "sha256:e4354f247d60b9628c9cb9ccc5777e2dc736b351d17e154830509959dd34b5c7",

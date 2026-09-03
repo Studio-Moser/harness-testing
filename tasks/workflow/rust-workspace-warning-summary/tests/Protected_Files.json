@@ -1,6 +1,7 @@
 {
   "schema_version": "1",
   "files": {
+    ".dockerignore": "sha256:c97ecfda4d205190b973232dcfdb0c29748521c2534dd866bcc782f30b086738",
     "Cargo.lock": "sha256:713ecf5bd48dbe73ca5dd92590634870d08feadc14e99678f23bf2b2afe32902",
     "Cargo.toml": "sha256:90efafe01e8cbfb775ee08b434f80b060de5e2659d9d0ea76fb1e7cbde08bac3",
     "crates/event_model/Cargo.toml": "sha256:e6e34c504f5221852035984fe5488eaa514743fcd281cbe37389b17b4aa23c1f",

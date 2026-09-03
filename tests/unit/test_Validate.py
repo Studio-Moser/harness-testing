@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -95,6 +96,105 @@ def test_repository_static_validation_is_deterministic(capsys):
 
     assert main(["validate", "--static-only"]) == 0
     assert capsys.readouterr().out == "Static validation passed.\n"
+
+
+def test_workflow_fixture_requires_a_deterministic_git_baseline(tmp_path):
+    source = REPOSITORY_ROOT / "tasks/workflow/react-saved-view-feature"
+    task_root = tmp_path / source.name
+    shutil.copytree(source, task_root)
+    dockerfile_path = task_root / "environment/Dockerfile"
+    dockerfile_path.write_text(
+        dockerfile_path.read_text().replace(
+            "git init --quiet --initial-branch=main",
+            "true",
+        )
+    )
+    task_path = task_root / "task.toml"
+    fixture_digest = Validate._fixture_digest(task_root / "environment")
+    task_path.write_text(
+        re.sub(
+            r'fixture_digest = "sha256:[0-9a-f]{64}"',
+            f'fixture_digest = "{fixture_digest}"',
+            task_path.read_text(),
+            count=1,
+        )
+    )
+
+    failures = Validate._validate_benchmark_task_assets(
+        task_path,
+        Validate.load_task(task_path, expected_schema="1.4"),
+    )
+
+    assert any(
+        failure.message == "workflow fixture must create a deterministic Git baseline"
+        for failure in failures
+    )
+
+
+def test_workflow_fixture_requires_git_excludes_at_the_canonical_path(tmp_path):
+    source = REPOSITORY_ROOT / "tasks/workflow/react-saved-view-feature"
+    task_root = tmp_path / source.name
+    shutil.copytree(source, task_root)
+    dockerfile_path = task_root / "environment/Dockerfile"
+    dockerfile_path.write_text(
+        dockerfile_path.read_text().replace(
+            "> .git/info/exclude",
+            "> /tmp/fixture-exclude",
+        )
+    )
+    task_path = task_root / "task.toml"
+    fixture_digest = Validate._fixture_digest(task_root / "environment")
+    task_path.write_text(
+        re.sub(
+            r'fixture_digest = "sha256:[0-9a-f]{64}"',
+            f'fixture_digest = "{fixture_digest}"',
+            task_path.read_text(),
+            count=1,
+        )
+    )
+
+    failures = Validate._validate_benchmark_task_assets(
+        task_path,
+        Validate.load_task(task_path, expected_schema="1.4"),
+    )
+
+    assert any(
+        failure.message == "workflow fixture must create a deterministic Git baseline"
+        for failure in failures
+    )
+
+
+def test_workflow_fixture_requires_all_source_to_be_staged(tmp_path):
+    source = REPOSITORY_ROOT / "tasks/workflow/react-saved-view-feature"
+    task_root = tmp_path / source.name
+    shutil.copytree(source, task_root)
+    dockerfile_path = task_root / "environment/Dockerfile"
+    dockerfile_path.write_text(
+        dockerfile_path.read_text().replace(
+            "git add --all",
+            "git add package.json",
+        )
+    )
+    task_path = task_root / "task.toml"
+    fixture_digest = Validate._fixture_digest(task_root / "environment")
+    task_path.write_text(
+        re.sub(
+            r'fixture_digest = "sha256:[0-9a-f]{64}"',
+            f'fixture_digest = "{fixture_digest}"',
+            task_path.read_text(),
+            count=1,
+        )
+    )
+
+    failures = Validate._validate_benchmark_task_assets(
+        task_path,
+        Validate.load_task(task_path, expected_schema="1.4"),
+    )
+
+    assert any(
+        failure.message == "workflow fixture must create a deterministic Git baseline"
+        for failure in failures
+    )
 
 
 def test_contract_expectation_validation_reports_public_schema_errors(tmp_path):
