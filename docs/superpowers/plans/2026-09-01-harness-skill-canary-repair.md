@@ -595,7 +595,7 @@ frozen, and the next action is comparative screening rather than prompt tuning.
   two providers, four arms, and one attempt.
 - Uses no skill-evaluation marker; these are ordinary development tasks.
 
-- [ ] **Step 1: Materialize A0 and A1 from the pinned ledger and A2 and A3 from
+- [x] **Step 1: Materialize A0 and A1 from the pinned ledger and A2 and A3 from
   the frozen Harness candidate for both providers.**
 
   ```bash
@@ -616,14 +616,14 @@ frozen, and the next action is comparative screening rather than prompt tuning.
   Superpowers; A2 has only Studio Harness `0.8.9`; A3 has Superpowers followed
   by Studio Harness `0.8.9`; every declared delivery path exists.
 
-- [ ] **Step 2: Run model-free validation once after all materializations
+- [x] **Step 2: Run model-free validation once after all materializations
   settle.**
 
   ```bash
   uv run harness-test validate
   ```
 
-- [ ] **Step 3: Compile one 32-session, one-attempt calibration-profile
+- [x] **Step 3: Compile one 32-session, one-attempt calibration-profile
   manifest.**
 
   ```bash
@@ -652,7 +652,7 @@ frozen, and the next action is comparative screening rather than prompt tuning.
   The first, cheapest task is the delivery-canary shard across all eight cells.
   The task order then moves from small and grouped work to feature work.
 
-- [ ] **Step 4: Stop at the exact approval boundary.**
+- [x] **Step 4: Stop at the exact approval boundary.**
 
   Report the manifest digest, manifest path, 32-session order, provider models,
   effort, timeout, candidate SHA, zero incremental subscription cost, and the
@@ -669,16 +669,16 @@ screening manifest has been reported for approval.
 - Generate locally/ignored: `jobs/raw/**`
 - Do not publish or modify tracked benchmark inputs during first-pass review.
 
-- [ ] **Step 1: Execute only the approved manifest in subscription mode with no
+- [x] **Step 1: Execute only the approved manifest in subscription mode with no
   API fallback.**
 
-- [ ] **Step 2: Apply the infrastructure-validity boundary.**
+- [x] **Step 2: Apply the infrastructure-validity boundary.**
 
   After the first eight sessions, stop only for infrastructure or delivery
   failure. Continue on correctness, workflow, or efficiency zero. Apply the
   same immediate infrastructure stop to later sessions.
 
-- [ ] **Step 3: Review representative passes, failures, efficient trials, and
+- [x] **Step 3: Review representative passes, failures, efficient trials, and
   outliers.**
 
   Check task fairness, workspace diffs, verifier evidence, command classes,
@@ -686,13 +686,60 @@ screening manifest has been reported for approval.
   turns, elapsed time, and available token/cache telemetry. Keep missing
   telemetry unavailable rather than zero.
 
-- [ ] **Step 4: Select the smallest three-attempt calibration follow-up.**
+  Manifest
+  `sha256:cd6afe33bccb9c283ad4007da4bcf9ec646a651d1d4a1ef8cea66733f51ec284`
+  completed all 32 approved sessions with no provider, runtime, delivery, or
+  verifier exception. Two verifier-only regrade generations preserved all 32
+  source-tree digests; the final generation under Harness Testing `e1d1b44`
+  completed 32/32 with no score drift from the repaired generation.
+
+  Cells below are correctness/workflow/efficiency:
+
+  | Task | Claude A0 | Claude A1 | Claude A2 | Claude A3 | Codex A0 | Codex A1 | Codex A2 | Codex A3 |
+  | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+  | Static pricing polish | 1/1/1 | 1/1/1 | 1/1/1 | 1/1/1 | 1/1/1 | 0/0/1 | 1/1/1 | 0/0/1 |
+  | Rust quoted parser | 1/1/1 | 1/1/1 | 1/1/1 | 1/1/1 | 1/1/1 | 1/1/1 | 0/0/1 | 0/0/1 |
+  | Grouped React updates | 1/1/1 | 1/1/1 | 1/1/1 | 1/1/1 | 1/1/1 | 1/1/1 | 1/1/1 | 0/0/1 |
+  | Saved-view feature | 1/1/1 | 1/1/1 | 1/1/1 | 0/0/1 | 1/1/1 | 0/0/1 | 1/1/1 | 0/0/1 |
+
+  Human review found no task ambiguity or protected-input mutation. Successful
+  workspaces changed only requested source files, except Claude A1 saved-view
+  also generated one 67-line implementation plan. Behavioral failures made no
+  source edit: Superpowers approval gates stopped Codex A1 on polish and
+  saved-view, every Codex A3 task, and Claude A3 saved-view; Codex A2 Rust
+  stopped at the frozen Harness missing-rubric setup boundary. The Rust image's
+  absent Dockerfile and `.dockerignore` are build-only fixture behavior shared
+  by every arm, not agent deletion.
+
+  No cell ran a premature comprehensive suite or duplicated a successful test.
+  No trial used a reviewer, subagent, worktree, or context-compaction event.
+  Superpowers' cost appeared instead as planning and approval churn. Across the
+  four tasks, Claude A1 used 58% more input tokens and 66% more agent time than
+  Claude A0; Codex A1 used 66% more input tokens and 30% more time while passing
+  only two of four tasks. Claude A1 saved-view was the largest outlier at
+  409,658 input tokens and 90.2 agent seconds, versus 175,952 and 38.7 for A0
+  and 179,175 and 36.0 for A2. Reasoning-token, per-test-duration, generated-file,
+  and provider-symmetric diff-line telemetry remain unavailable rather than
+  zero.
+
+- [x] **Step 4: Select the smallest three-attempt calibration follow-up.**
 
   Repeat only task/cell comparisons with a material arm difference, an
   interaction that needs confirmation, or unresolved stochastic variance. If
   the screen exposes a benchmark defect, quarantine that task and repair it
   deterministically before collecting replacement model evidence. Do not tune
   a harness because one provider produced a valid behavioral failure.
+
+  Repeat only `react-saved-view-feature` across Claude and Codex A0-A3 at three
+  attempts: 24 sequential subscription sessions. It is the smallest same-window
+  full factorial that contains the observed Claude A3 and Codex A1/A3 execution
+  failures, the A1 planning outlier, and fresh A0/A2 comparisons. Do not repeat
+  static or grouped tasks because their approval-gate interaction is contained
+  by saved-view. Do not repeat Rust because its Codex A2 result is the already
+  frozen missing-rubric contract boundary rather than unresolved task variance.
+  Compile a new immutable manifest and obtain digest-specific approval before
+  starting any of the 24 sessions. Keep this one-attempt screen local and do not
+  publish or treat it as an effect-size estimate.
 
 **Task done when:** the screen is reviewed as behavioral evidence and a bounded
 replication decision is documented; one attempt is never presented as a stable
