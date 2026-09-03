@@ -623,11 +623,12 @@ frozen, and the next action is comparative screening rather than prompt tuning.
   uv run harness-test validate
   ```
 
-- [ ] **Step 3: Compile one 32-session checkpoint manifest.**
+- [ ] **Step 3: Compile one 32-session, one-attempt calibration-profile
+  manifest.**
 
   ```bash
   uv run harness-test run plan \
-    --profile checkpoint \
+    --profile calibration \
     --billing-mode subscription \
     --cell claude:A0:baseline \
     --cell claude:A1:baseline \

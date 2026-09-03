@@ -285,10 +285,11 @@ broken by its fixture.
 
 ### Decision 12: screen the full factorial before paying for variance
 
-The next model-backed step is a one-attempt checkpoint screen, not the
-three-attempt calibration profile. It uses both providers and all four arms on
-the smallest task set that covers the repository's intended development
-envelopes and technology stacks:
+The next model-backed step is a one-attempt screening use of the calibration
+profile, not its default three-attempt calibration run. The calibration profile
+is required by the runner for any full A0-A3 matrix. The screen uses both
+providers and all four arms on the smallest task set that covers the
+repository's intended development envelopes and technology stacks:
 
 | Task | Envelope | Coverage |
 | --- | --- | --- |
