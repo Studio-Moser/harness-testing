@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://studio-moser.github.io/harness-testing/Run_Report.schema.json",
+  "title": "Harness Testing Local Run Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "manifest_digest",
+    "run_id",
+    "profile",
+    "status",
+    "started_at",
+    "updated_at",
+    "finished_at",
+    "expected_jobs",
+    "completed_jobs",
+    "failed_jobs",
+    "pending_jobs",
+    "expected_trials",
+    "completed_trials",
+    "failed_trials",
+    "api_equivalent_cost_usd",
+    "jobs"
+  ],
+  "properties": {
+    "schema_version": {"const": "1"},
+    "manifest_digest": {"$ref": "#/$defs/digest"},
+    "run_id": {"type": "string", "pattern": "^run-[0-9a-f]{20}$"},
+    "profile": {
+      "enum": ["smoke", "checkpoint", "release", "calibration", "research"]
+    },
+    "status": {"enum": ["running", "completed", "failed"]},
+    "started_at": {"$ref": "#/$defs/timestamp"},
+    "updated_at": {"$ref": "#/$defs/timestamp"},
+    "finished_at": {"$ref": "#/$defs/nullableTimestamp"},
+    "expected_jobs": {"type": "integer", "minimum": 1},
+    "completed_jobs": {"type": "integer", "minimum": 0},
+    "failed_jobs": {"type": "integer", "minimum": 0},
+    "pending_jobs": {"type": "integer", "minimum": 0},
+    "expected_trials": {"type": "integer", "minimum": 1},
+    "completed_trials": {"type": "integer", "minimum": 0},
+    "failed_trials": {"type": "integer", "minimum": 0},
+    "api_equivalent_cost_usd": {"type": "number", "minimum": 0},
+    "jobs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/job"}
+    }
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "nullableTimestamp": {
+      "anyOf": [{"$ref": "#/$defs/timestamp"}, {"type": "null"}]
+    },
+    "nullableNumber": {
+      "anyOf": [{"type": "number", "minimum": 0}, {"type": "null"}]
+    },
+    "nullableInteger": {
+      "anyOf": [{"type": "integer", "minimum": 0}, {"type": "null"}]
+    },
+    "nullableScore": {
+      "anyOf": [
+        {"type": "number", "minimum": 0, "maximum": 1},
+        {"type": "null"}
+      ]
+    },
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "provider",
+        "arm",
+        "role",
+        "model",
+        "effort",
+        "harness_commit",
+        "task",
+        "status",
+        "started_at",
+        "finished_at",
+        "runtime_seconds",
+        "expected_trials",
+        "completed_trials",
+        "errored_trials",
+        "cancelled_trials",
+        "dimensions",
+        "efficiency"
+      ],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 256},
+        "provider": {"enum": ["claude", "codex"]},
+        "arm": {"enum": ["A0", "A1", "A2", "A3"]},
+        "role": {"enum": ["baseline", "candidate", "calibration"]},
+        "model": {"type": "string", "minLength": 1, "maxLength": 128},
+        "effort": {"type": "string", "minLength": 1, "maxLength": 32},
+        "harness_commit": {
+          "anyOf": [{"$ref": "#/$defs/commit"}, {"type": "null"}]
+        },
+        "task": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "status": {
+          "enum": ["pending", "running", "completed", "failed", "incomplete"]
+        },
+        "started_at": {"$ref": "#/$defs/nullableTimestamp"},
+        "finished_at": {"$ref": "#/$defs/nullableTimestamp"},
+        "runtime_seconds": {"$ref": "#/$defs/nullableNumber"},
+        "expected_trials": {"type": "integer", "minimum": 1},
+        "completed_trials": {"type": "integer", "minimum": 0},
+        "errored_trials": {"type": "integer", "minimum": 0},
+        "cancelled_trials": {"type": "integer", "minimum": 0},
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["correctness", "workflow", "efficiency_policy"],
+          "properties": {
+            "correctness": {"$ref": "#/$defs/nullableScore"},
+            "workflow": {"$ref": "#/$defs/nullableScore"},
+            "efficiency_policy": {"$ref": "#/$defs/nullableScore"}
+          }
+        },
+        "efficiency": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "prompt_tokens",
+            "cached_tokens",
+            "completion_tokens",
+            "api_equivalent_cost_usd"
+          ],
+          "properties": {
+            "prompt_tokens": {"$ref": "#/$defs/nullableInteger"},
+            "cached_tokens": {"$ref": "#/$defs/nullableInteger"},
+            "completion_tokens": {"$ref": "#/$defs/nullableInteger"},
+            "api_equivalent_cost_usd": {"$ref": "#/$defs/nullableNumber"}
+          }
+        }
+      }
+    }
+  }
+}

@@ -19,7 +19,7 @@ import {
   totalTokens
 } from "./components/Results.js";
 
-const report = FileAttachment("./data/Public_Results.json").json();
+const report = await FileAttachment("./data/Public_Results.json").json();
 const rows = report.results.map((result) => ({
   task: result.task.id,
   pack: result.task.pack,

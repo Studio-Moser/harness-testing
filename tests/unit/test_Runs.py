@@ -11,6 +11,7 @@ import pytest
 import yaml
 from harbor.skills import resolve_skills
 
+import harness_testing.Run_Reports as Run_Reports
 import harness_testing.Runs as Runs
 from harness_testing.Config import load_job, load_versions
 from harness_testing.Materialize import (
@@ -240,6 +241,7 @@ commit = "{harness_commit}"
     for relative in (
         "images/Node_Agent.Dockerfile",
         "images/Verifier.Dockerfile",
+        "policy/Run_Report.schema.json",
         "src/harness_testing/Claude_Agent.py",
         "src/harness_testing/Codex_Agent.py",
         "src/harness_testing/__init__.py",
@@ -606,6 +608,8 @@ def _write_completed_job(
     (job / "result.json").write_text(
         json.dumps(
             {
+                "started_at": "2026-09-03T20:00:00Z",
+                "finished_at": "2026-09-03T20:01:00Z",
                 "n_total_trials": attempts,
                 "stats": {
                     "n_completed_trials": attempts,
@@ -613,6 +617,22 @@ def _write_completed_job(
                     "n_running_trials": 0,
                     "n_pending_trials": 0,
                     "n_cancelled_trials": 0,
+                    "n_input_tokens": 100 * attempts,
+                    "n_cache_tokens": 40 * attempts,
+                    "n_output_tokens": 20 * attempts,
+                    "cost_usd": 0.01 * attempts,
+                    "evals": {
+                        f"{cell.provider}__{cell.model}__workflow": {
+                            "metrics": [
+                                {
+                                    "efficiency": reward,
+                                    "reward": reward,
+                                    "workflow": reward,
+                                }
+                                for _ in range(attempts)
+                            ]
+                        }
+                    },
                 }
             }
         )
@@ -1092,6 +1112,125 @@ def _stub_execution_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(Runs, "validate_repository", lambda root: ())
     monkeypatch.setattr(Runs, "dockerfile_policy_errors", lambda root: ())
     monkeypatch.setattr(Runs, "require_current_image", lambda root, image: None)
+
+
+def test_execution_updates_local_dashboard_after_completed_run(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    manifest = _compile_pair(run_root)
+    _stub_execution_preflight(monkeypatch)
+    refreshes: list[Path] = []
+    monkeypatch.setattr(
+        Runs,
+        "refresh_local_dashboard",
+        lambda root: refreshes.append(root),
+        raising=False,
+    )
+    real_run = subprocess.run
+
+    def fake_run(command, **kwargs):
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
+            return real_run(command, **kwargs)
+        job = load_job(Path(command[-1]))
+        index = list(manifest.harbor_config_paths).index(
+            Path(command[-1]).relative_to(manifest.path.parent).as_posix()
+        )
+        _write_completed_job(
+            run_root,
+            manifest.cells[index % len(manifest.cells)],
+            job.job_name,
+        )
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    report_path = manifest.path.parent / "Run_Report.json"
+    assert report_path.is_file()
+    report = json.loads(report_path.read_text())
+    assert report["status"] == "completed"
+    assert report["expected_jobs"] == 4
+    assert report["completed_jobs"] == 4
+    assert report["expected_trials"] == 4
+    assert report["completed_trials"] == 4
+    assert report["jobs"][0]["dimensions"] == {
+        "correctness": 1.0,
+        "workflow": 1.0,
+        "efficiency_policy": 1.0,
+    }
+    assert report["jobs"][0]["efficiency"] == {
+        "prompt_tokens": 100,
+        "cached_tokens": 40,
+        "completion_tokens": 20,
+        "api_equivalent_cost_usd": 0.01,
+    }
+    assert refreshes == [run_root]
+
+
+def test_dashboard_refresh_invalidates_the_observable_data_loader_cache(
+    tmp_path: Path,
+):
+    dashboard = tmp_path / "dashboard"
+    cache = dashboard / "src" / ".observablehq" / "cache" / "data"
+    cache.mkdir(parents=True)
+    (dashboard / "package.json").write_text("{}\n")
+    cached_report = cache / "Public_Results.json"
+    cached_report.write_text('{"local_runs": []}\n')
+    calls: list[tuple[tuple[str, ...], Path, bool]] = []
+
+    def fake_runner(command, *, cwd, check):
+        assert not cached_report.exists()
+        calls.append((command, cwd, check))
+        return subprocess.CompletedProcess(command, 0)
+
+    output = Run_Reports.refresh_local_dashboard(tmp_path, runner=fake_runner)
+
+    assert output == dashboard / "dist" / "index.html"
+    assert calls == [
+        (("npm", "--prefix", "dashboard", "run", "build"), tmp_path, True)
+    ]
+
+
+def test_execution_updates_local_dashboard_after_delivery_failure(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    manifest = _compile_pair(run_root)
+    _stub_execution_preflight(monkeypatch)
+    refreshes: list[Path] = []
+    monkeypatch.setattr(
+        Runs,
+        "refresh_local_dashboard",
+        lambda root: refreshes.append(root),
+        raising=False,
+    )
+    calls: list[str] = []
+    real_run = subprocess.run
+
+    def fake_run(command, **kwargs):
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
+            return real_run(command, **kwargs)
+        job = load_job(Path(command[-1]))
+        index = len(calls)
+        calls.append(job.job_name)
+        _write_completed_job(
+            run_root,
+            manifest.cells[index % len(manifest.cells)],
+            job.job_name,
+            plugins=[] if index == 1 else None,
+        )
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+
+    with pytest.raises(ValueError, match="delivery canary failed"):
+        Runs.execute_run(run_root, manifest.path, manifest.digest)
+
+    report = json.loads((manifest.path.parent / "Run_Report.json").read_text())
+    assert report["status"] == "failed"
+    assert report["completed_jobs"] == 2
+    assert report["pending_jobs"] == 2
+    assert refreshes == [run_root]
 
 
 def test_delivery_canary_stops_before_the_second_task(

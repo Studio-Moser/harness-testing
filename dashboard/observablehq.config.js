@@ -11,5 +11,5 @@ export default {
     {name: "Run detail", path: "/Run_Detail"},
     {name: "Quality versus efficiency", path: "/Quality_Versus_Efficiency"}
   ],
-  footer: "Studio Moser Harness Testing · sanitized public results only"
+  footer: "Studio Moser Harness Testing · sanitized summaries only"
 };

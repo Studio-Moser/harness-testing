@@ -12,7 +12,7 @@ Trend lines never cross compatibility keys unless a reviewed mapping explicitly 
 import * as Plot from "@observablehq/plot";
 import {totalRuntime, totalTokens} from "./components/Results.js";
 
-const report = FileAttachment("./data/Public_Results.json").json();
+const report = await FileAttachment("./data/Public_Results.json").json();
 const results = report.results;
 const keys = report.compatibility_series.map((series) => series.key);
 const selectedKey = view(

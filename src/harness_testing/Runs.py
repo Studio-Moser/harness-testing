@@ -37,6 +37,7 @@ from harness_testing.Materialize import (
     materialize_arm,
     require_current_image,
 )
+from harness_testing.Run_Reports import refresh_local_dashboard, write_run_report
 from harness_testing.Skill_Evaluation import SkillEvaluation, write_skill_evaluation_report
 from harness_testing.Validate import find_sensitive_keys, validate_repository
 
@@ -2175,70 +2176,85 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     profile = _load_profile(root, manifest.profile)
     for image in _required_images(profile, manifest.task_ids):
         require_current_image(root, image)
-    benchmark_skill_names = _benchmark_skill_names(root, manifest.cells)
-    canary_jobs: list[tuple[RunCell, str]] = []
-    for index, relative_path in enumerate(manifest.harbor_config_paths):
-        config_path = manifest.path.parent / relative_path
-        cell = manifest.cells[index % len(manifest.cells)]
-        job_name = load_job(config_path).job_name
-        job_dir = root / "jobs" / "raw" / job_name
-        if job_dir.exists():
-            existing_errors = _completed_job_errors(
+    write_run_report(root, manifest, "running")
+    try:
+        benchmark_skill_names = _benchmark_skill_names(root, manifest.cells)
+        canary_jobs: list[tuple[RunCell, str]] = []
+        for index, relative_path in enumerate(manifest.harbor_config_paths):
+            config_path = manifest.path.parent / relative_path
+            cell = manifest.cells[index % len(manifest.cells)]
+            job_name = load_job(config_path).job_name
+            job_dir = root / "jobs" / "raw" / job_name
+            if job_dir.exists():
+                existing_errors = _completed_job_errors(
+                    root,
+                    cell,
+                    job_name,
+                    benchmark_skill_names,
+                    expected_attempts=manifest.attempts,
+                )
+                if existing_errors:
+                    raise ValueError(
+                        "existing job is not resumable: " + "; ".join(existing_errors)
+                    )
+                print(f"Reusing completed job: {job_name}")
+            else:
+                subprocess.run(
+                    harbor_command("run", "-c", str(config_path)),
+                    cwd=root,
+                    check=True,
+                    env=execution_environment,
+                )
+            write_run_report(root, manifest, "running")
+            if index < len(manifest.cells):
+                canary_jobs.append((cell, job_name))
+                if index + 1 == len(manifest.cells):
+                    errors = [
+                        error
+                        for canary_cell, canary_job_name in canary_jobs
+                        for error in _completed_job_errors(
+                            root,
+                            canary_cell,
+                            canary_job_name,
+                            benchmark_skill_names,
+                            expected_attempts=manifest.attempts,
+                        )
+                    ][:_MAX_DELIVERY_ERRORS]
+                    if errors:
+                        raise ValueError("delivery canary failed: " + "; ".join(errors))
+                continue
+            errors = _completed_job_errors(
                 root,
                 cell,
                 job_name,
                 benchmark_skill_names,
                 expected_attempts=manifest.attempts,
             )
-            if existing_errors:
-                raise ValueError(
-                    "existing job is not resumable: " + "; ".join(existing_errors)
+            if errors:
+                raise ValueError("job delivery failed: " + "; ".join(errors))
+        if manifest.skill_evaluation is not None:
+            report = write_skill_evaluation_report(
+                manifest.path.parent / "Skill_Evaluation.json",
+                manifest_digest=manifest.digest,
+                evaluation=manifest.skill_evaluation,
+                trials=_skill_evaluation_trials(root, manifest),
+            )
+            aggregate = report["aggregate"]
+            if isinstance(aggregate, dict):
+                print(
+                    "Skill invocation: "
+                    f"{aggregate['numerator']}/{aggregate['denominator']} "
+                    f"({aggregate['rate']:.0%})"
                 )
-            print(f"Reusing completed job: {job_name}")
-        else:
-            subprocess.run(
-                harbor_command("run", "-c", str(config_path)),
-                cwd=root,
-                check=True,
-                env=execution_environment,
-            )
-        if index < len(manifest.cells):
-            canary_jobs.append((cell, job_name))
-            if index + 1 == len(manifest.cells):
-                errors = [
-                    error
-                    for canary_cell, canary_job_name in canary_jobs
-                    for error in _completed_job_errors(
-                        root,
-                        canary_cell,
-                        canary_job_name,
-                        benchmark_skill_names,
-                        expected_attempts=manifest.attempts,
-                    )
-                ][:_MAX_DELIVERY_ERRORS]
-                if errors:
-                    raise ValueError("delivery canary failed: " + "; ".join(errors))
-            continue
-        errors = _completed_job_errors(
-            root,
-            cell,
-            job_name,
-            benchmark_skill_names,
-            expected_attempts=manifest.attempts,
-        )
-        if errors:
-            raise ValueError("job delivery failed: " + "; ".join(errors))
-    if manifest.skill_evaluation is not None:
-        report = write_skill_evaluation_report(
-            manifest.path.parent / "Skill_Evaluation.json",
-            manifest_digest=manifest.digest,
-            evaluation=manifest.skill_evaluation,
-            trials=_skill_evaluation_trials(root, manifest),
-        )
-        aggregate = report["aggregate"]
-        if isinstance(aggregate, dict):
-            print(
-                "Skill invocation: "
-                f"{aggregate['numerator']}/{aggregate['denominator']} "
-                f"({aggregate['rate']:.0%})"
-            )
+    except BaseException as error:
+        try:
+            write_run_report(root, manifest, "failed")
+            refresh_local_dashboard(root)
+        except Exception as report_error:
+            error.add_note(f"Local dashboard refresh also failed: {report_error}")
+        raise
+    report_path = write_run_report(root, manifest, "completed")
+    dashboard_path = refresh_local_dashboard(root)
+    print(f"Local run report: {report_path}")
+    if dashboard_path is not None:
+        print(f"Local dashboard: {dashboard_path}")

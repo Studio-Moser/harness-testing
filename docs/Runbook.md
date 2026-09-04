@@ -109,6 +109,11 @@ uv run harness-test run execute \
   --approve sha256:EXACT_APPROVED_DIGEST
 ```
 
+Execution writes `Run_Report.json` beside the approved manifest, updates it after each
+job, and rebuilds the ignored local dashboard once when the run completes or stops.
+This report contains only allowlisted status, scores, timestamps, token totals, and
+cost telemetry; it never copies raw prompts, trajectories, commands, or host paths.
+
 The first selected task runs as the delivery canary across every selected cell. A correctness zero is valid task evidence and continues the run. Any infrastructure or delivery failure stops execution before the second task; later delivery failures also stop immediately.
 
 ### Subscription authentication
@@ -178,7 +183,7 @@ npm --prefix dashboard test
 npm --prefix dashboard run build
 ```
 
-The build emits ignored `dashboard/dist/`. GitHub Pages publishes only that directory and only when tracked `results/` or `dashboard/` inputs change.
+The build emits ignored `dashboard/dist/`. A model-backed execution invalidates the local result-loader cache and performs this build once at the end. GitHub Pages publishes only reviewed `results/` data because ignored local reports are absent in CI; it deploys only when tracked `results/` or `dashboard/` inputs change.
 
 ## DeepSWE research lane
 

@@ -20,7 +20,7 @@ import {
   totalTokens
 } from "./components/Results.js";
 
-const report = FileAttachment("./data/Public_Results.json").json();
+const report = await FileAttachment("./data/Public_Results.json").json();
 const latest = latestResults(report.results);
 const scores = latest.flatMap((result) => [
   {

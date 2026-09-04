@@ -35,6 +35,22 @@ async function resultEntries(directory) {
   }
 }
 
+async function localRunReportEntries(directory) {
+  try {
+    const entries = await readdir(directory, {withFileTypes: true});
+    return entries
+      .filter((entry) => entry.isDirectory())
+      .sort((left, right) => compareText(left.name, right.name))
+      .map((entry) => ({
+        directory: entry.name,
+        path: resolve(directory, entry.name, "Run_Report.json")
+      }));
+  } catch (error) {
+    if (error?.code === "ENOENT") return [];
+    throw error;
+  }
+}
+
 function compileSchema(schema) {
   const ajv = new Ajv2020({allErrors: true, strict: true});
   addFormats(ajv);
@@ -50,10 +66,14 @@ function schemaFailure(name, validator) {
 
 export async function loadPublicResults({
   resultsDirectory = resolve(repositoryRoot, "results"),
-  schemaPath = resolve(repositoryRoot, "policy", "Public_Result.schema.json")
+  schemaPath = resolve(repositoryRoot, "policy", "Public_Result.schema.json"),
+  runsDirectory = resolve(repositoryRoot, "runs", "generated"),
+  runReportSchemaPath = resolve(repositoryRoot, "policy", "Run_Report.schema.json")
 } = {}) {
   const schema = JSON.parse(await readFile(schemaPath, "utf8"));
   const validate = compileSchema(schema);
+  const runReportSchema = JSON.parse(await readFile(runReportSchemaPath, "utf8"));
+  const validateRunReport = compileSchema(runReportSchema);
   const finalized = [];
 
   for (const entry of await resultEntries(resultsDirectory)) {
@@ -65,6 +85,31 @@ export async function loadPublicResults({
     }
     if (!validate(result)) throw schemaFailure(entry.name, validate);
     if (result.run.finalized === true) finalized.push(result);
+  }
+
+  const localRuns = [];
+  for (const entry of await localRunReportEntries(runsDirectory)) {
+    let report;
+    try {
+      report = JSON.parse(await readFile(entry.path, "utf8"));
+    } catch (error) {
+      if (error?.code === "ENOENT") continue;
+      throw new Error(`${entry.directory}/Run_Report.json: invalid local run report JSON`, {
+        cause: error
+      });
+    }
+    if (!validateRunReport(report)) {
+      const details = (validateRunReport.errors ?? [])
+        .map((error) => `${error.instancePath || "$"} ${error.message}`)
+        .join("; ");
+      throw new Error(
+        `${entry.directory}/Run_Report.json: local run report schema validation failed: ${details}`
+      );
+    }
+    if (entry.directory !== report.manifest_digest.slice("sha256:".length)) {
+      throw new Error(`${entry.directory}/Run_Report.json: manifest directory mismatch`);
+    }
+    localRuns.push(report);
   }
 
   finalized.sort((left, right) =>
@@ -81,6 +126,12 @@ export async function loadPublicResults({
   return {
     schema_version: "1",
     results: finalized,
+    local_runs: localRuns.sort((left, right) =>
+      compareText(
+        `${left.updated_at}\0${left.run_id}`,
+        `${right.updated_at}\0${right.run_id}`
+      )
+    ),
     compatibility_series: [...grouped]
       .sort(([left], [right]) => compareText(left, right))
       .map(([key, result_ids]) => ({key, result_ids}))
