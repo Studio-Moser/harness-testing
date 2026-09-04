@@ -1,0 +1,73 @@
+{
+  "admission_estimate_usd": 4.5,
+  "completed_jobs": 0,
+  "completed_trials": 1,
+  "evidence": {
+    "limitations": [
+      "partial-run",
+      "failed-run",
+      "infrastructure-failure",
+      "missing-provenance",
+      "obsolete-methodology"
+    ],
+    "review_state": "quarantined"
+  },
+  "expected_jobs": 1,
+  "expected_trials": 1,
+  "failed_jobs": 1,
+  "failed_trials": 1,
+  "finished_at": "2026-08-31T12:57:57.156292Z",
+  "jobs": [
+    {
+      "agent": "claude-code",
+      "agent_version": "2.1.236",
+      "arm": "A0",
+      "cancelled_trials": 0,
+      "comparability": "diagnostic-only",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 3.9763718999999993,
+        "cached_tokens": 7668003,
+        "completion_tokens": 82552,
+        "prompt_tokens": 7784743
+      },
+      "effort": "high",
+      "errored_trials": 1,
+      "expected_trials": 1,
+      "finished_at": "2026-08-31T12:57:57.156292Z",
+      "harness_commit": null,
+      "model": "claude-sonnet-4-6",
+      "name": "run-11429ed6dfb82b8b46ad-claude-A0-baseline-product-pulse-fanout-synthesis",
+      "provider": "claude",
+      "role": "baseline",
+      "runtime_seconds": 1836.604804,
+      "series_key": null,
+      "series_key_unavailable_reason": "missing-provenance",
+      "started_at": "2026-08-31T12:27:20.551488Z",
+      "status": "failed",
+      "task": "product-pulse-fanout-synthesis",
+      "task_digest": "sha256:4237db4f5d42c5a9f8db96b1231ecbf22b6a16b98cf6d2aafa9f878cb7b20969",
+      "task_pack": "contract"
+    }
+  ],
+  "manifest_digest": "sha256:6be05cf6cbe575800c50cab07425f939975b9f243ac83b2df9b0561d0d1449f0",
+  "manifest_schema_version": "0.1.0",
+  "observed_api_equivalent_cost_usd": 3.9763718999999993,
+  "pending_jobs": 0,
+  "profile": "release",
+  "report_id": "sha256:2dd6d5eede81af04328b34395a7114d3589444da3cb30be39ee81c420e62198e",
+  "run_id": "run-11429ed6dfb82b8b46ad",
+  "schema_version": "2",
+  "source": {
+    "kind": "identified-historical",
+    "label": null
+  },
+  "started_at": "2026-08-31T12:27:20.551488Z",
+  "status": "failed",
+  "updated_at": "2026-08-31T12:57:57.156292Z"
+}

@@ -1,0 +1,139 @@
+{
+  "admission_estimate_usd": 9.6,
+  "completed_jobs": 3,
+  "completed_trials": 3,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 3,
+  "expected_trials": 3,
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-03T20:39:29.874041Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.150.1",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.1285904,
+        "cached_tokens": 134912,
+        "completion_tokens": 1125,
+        "prompt_tokens": 178966
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-03T20:37:28.967195Z",
+      "harness_commit": "c319557c681bf35c35fa348fdf38d45d12091cef",
+      "model": "gpt-5.6-terra",
+      "name": "run-ba05867eab926cd91f6c-codex-A2-candidate-react-grouped-ui-updates",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 156.523246,
+      "series_key": "sha256:5bf7f3ca0bb3c055bc3772400a47e25fd670244ff6f2b4e04828bedddbf22ed1",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-03T20:34:52.443949Z",
+      "status": "completed",
+      "task": "react-grouped-ui-updates",
+      "task_digest": "sha256:97670226629a8315612e775b3dcfdbb2163fb924345534d61d72e4db9ebb032f",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.150.1",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.0513136,
+        "cached_tokens": 86528,
+        "completion_tokens": 583,
+        "prompt_tokens": 100034
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-03T20:38:23.773909Z",
+      "harness_commit": "c319557c681bf35c35fa348fdf38d45d12091cef",
+      "model": "gpt-5.6-terra",
+      "name": "run-ba05867eab926cd91f6c-codex-A2-candidate-rust-quoted-value-parser",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 53.788459,
+      "series_key": "sha256:ead0fcf2b1ad18e1411411136277dd9fb4eda11a2af7efd240b183833d62c109",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-03T20:37:29.985450Z",
+      "status": "completed",
+      "task": "rust-quoted-value-parser",
+      "task_digest": "sha256:b51111dc9a442ecbad860e73aa3eee48a948c61668c214cb979ae5902a2dfa21",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.150.1",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.0734276,
+        "cached_tokens": 130048,
+        "completion_tokens": 1054,
+        "prompt_tokens": 147433
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-03T20:39:29.874041Z",
+      "harness_commit": "c319557c681bf35c35fa348fdf38d45d12091cef",
+      "model": "gpt-5.6-terra",
+      "name": "run-ba05867eab926cd91f6c-codex-A2-candidate-react-saved-view-feature",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 65.08426,
+      "series_key": "sha256:4a0d7f633ba5ecf6d78fd1c2c884b7e8a3c688628dddc19649cb4f432ab6107b",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-03T20:38:24.789781Z",
+      "status": "completed",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:9b27f4c1813410671595e7516c50bf16bef3166a82cf52eefe2fcd8bd26e22c6",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:089ea9be4380804ae3686b2d381e36a695f176e6fba6b0bd281b7a3b15bc9944",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 0.2533316,
+  "pending_jobs": 0,
+  "profile": "smoke",
+  "report_id": "sha256:5256a5f6553aaa380a6e8b54c4646f06c08df5b8b65d34cae03cfc73f05d0705",
+  "run_id": "run-ba05867eab926cd91f6c",
+  "schema_version": "2",
+  "source": {
+    "kind": "identified-historical",
+    "label": null
+  },
+  "started_at": "2026-09-03T20:34:52.443949Z",
+  "status": "completed",
+  "updated_at": "2026-09-03T20:39:29.874041Z"
+}

@@ -1,0 +1,107 @@
+{
+  "admission_estimate_usd": 6.4,
+  "completed_jobs": 2,
+  "completed_trials": 2,
+  "evidence": {
+    "limitations": [
+      "obsolete-methodology",
+      "legacy-run-identity",
+      "missing-provenance"
+    ],
+    "review_state": "quarantined"
+  },
+  "expected_jobs": 2,
+  "expected_trials": 2,
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-08-28T21:45:26.471306Z",
+  "jobs": [
+    {
+      "agent": "codex",
+      "agent_version": "0.150.1",
+      "arm": "A0",
+      "cancelled_trials": 0,
+      "comparability": "diagnostic-only",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.054480799999999996,
+        "cached_tokens": 127744,
+        "completion_tokens": 764,
+        "prompt_tokens": 137626
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-08-28T21:44:22.672097Z",
+      "harness_commit": null,
+      "model": "gpt-5.6-terra",
+      "name": "codex-A0-baseline-react-grouped-ui-updates",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 60.633256,
+      "series_key": null,
+      "series_key_unavailable_reason": "missing-provenance",
+      "started_at": "2026-08-28T21:43:22.038841Z",
+      "status": "completed",
+      "task": "react-grouped-ui-updates",
+      "task_digest": "sha256:ecddd61922c4617a5caf1cd64e02c3a4f41b217d2b8fa169b31263e4716b9c78",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "codex",
+      "agent_version": "0.150.1",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "diagnostic-only",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.0771264,
+        "cached_tokens": 174592,
+        "completion_tokens": 1057,
+        "prompt_tokens": 189354
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-08-28T21:45:26.471306Z",
+      "harness_commit": "ff8852e737a43a7e23f2cad423905f9361fde8ae",
+      "model": "gpt-5.6-terra",
+      "name": "codex-A2-candidate-react-grouped-ui-updates",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 62.740659,
+      "series_key": null,
+      "series_key_unavailable_reason": "missing-provenance",
+      "started_at": "2026-08-28T21:44:23.730647Z",
+      "status": "completed",
+      "task": "react-grouped-ui-updates",
+      "task_digest": "sha256:ecddd61922c4617a5caf1cd64e02c3a4f41b217d2b8fa169b31263e4716b9c78",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:8a5439fddef1e8c677a6a0330a18ccb987232e8d81427eacf029c93a798e96ac",
+  "manifest_schema_version": "0.1.0",
+  "observed_api_equivalent_cost_usd": 0.13160719999999998,
+  "pending_jobs": 0,
+  "profile": "smoke",
+  "report_id": "sha256:7327386a8678e53eef6b1bea8bee58966ce0dd01b8c51fe6fac842057a50a36b",
+  "run_id": "run-5f3e6de1a3e5f2bc9301",
+  "schema_version": "2",
+  "source": {
+    "kind": "legacy-historical",
+    "label": "archived-smoke-2026-08-28"
+  },
+  "started_at": "2026-08-28T21:43:22.038841Z",
+  "status": "completed",
+  "updated_at": "2026-08-28T21:45:26.471306Z"
+}

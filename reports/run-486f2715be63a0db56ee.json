@@ -1,0 +1,70 @@
+{
+  "admission_estimate_usd": 4.5,
+  "completed_jobs": 1,
+  "completed_trials": 1,
+  "evidence": {
+    "limitations": [
+      "missing-provenance",
+      "obsolete-methodology"
+    ],
+    "review_state": "quarantined"
+  },
+  "expected_jobs": 1,
+  "expected_trials": 1,
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-02T08:49:04.002965Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.236",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "diagnostic-only",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.1413075,
+        "cached_tokens": 175345,
+        "completion_tokens": 1100,
+        "prompt_tokens": 187383
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-02T08:49:04.002965Z",
+      "harness_commit": "ac01331761cd4d2b8349e35d4cbc2442efcf50de",
+      "model": "claude-sonnet-4-6",
+      "name": "run-486f2715be63a0db56ee-claude-A2-candidate-missing-rubric",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 63.601222,
+      "series_key": null,
+      "series_key_unavailable_reason": "missing-provenance",
+      "started_at": "2026-09-02T08:48:00.401743Z",
+      "status": "completed",
+      "task": "missing-rubric",
+      "task_digest": "sha256:7f269e7bbf20109e56b5d381f02de805f50f2c0c86dac7e314b060576b8b1cdb",
+      "task_pack": "contract"
+    }
+  ],
+  "manifest_digest": "sha256:34ad1b31cd35b073121a2d0fa54ad516510e7ad9df3ddbfc1347aeedb772d073",
+  "manifest_schema_version": "0.2.0",
+  "observed_api_equivalent_cost_usd": 0.1413075,
+  "pending_jobs": 0,
+  "profile": "smoke",
+  "report_id": "sha256:fb6ddd77e8be006fa08af47c75f75ee836636a50d2077b7ae3983a58f3563e4f",
+  "run_id": "run-486f2715be63a0db56ee",
+  "schema_version": "2",
+  "source": {
+    "kind": "identified-historical",
+    "label": null
+  },
+  "started_at": "2026-09-02T08:48:00.401743Z",
+  "status": "completed",
+  "updated_at": "2026-09-02T08:49:04.002965Z"
+}

@@ -1,0 +1,103 @@
+{
+  "admission_estimate_usd": 7.7,
+  "completed_jobs": 2,
+  "completed_trials": 2,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 2,
+  "expected_trials": 2,
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-02T14:29:41.578021Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.236",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.18909389999999998,
+        "cached_tokens": 159643,
+        "completion_tokens": 2909,
+        "prompt_tokens": 175908
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-02T14:28:19.053390Z",
+      "harness_commit": "a0fec5021b442c4db2a8889b3a722d838f66e117",
+      "model": "claude-sonnet-4-6",
+      "name": "run-72cc16c4351c50ecc6ec-claude-A2-candidate-missing-rubric",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 87.010819,
+      "series_key": "sha256:d088518a15b156ad4d456a63668c4d2814450f4ea04437484d85c2ed9af5c0cb",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-02T14:26:52.042571Z",
+      "status": "completed",
+      "task": "missing-rubric",
+      "task_digest": "sha256:7f269e7bbf20109e56b5d381f02de805f50f2c0c86dac7e314b060576b8b1cdb",
+      "task_pack": "contract"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.150.1",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.08378640000000001,
+        "cached_tokens": 83712,
+        "completion_tokens": 1855,
+        "prompt_tokens": 106104
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-02T14:29:41.578021Z",
+      "harness_commit": "a0fec5021b442c4db2a8889b3a722d838f66e117",
+      "model": "gpt-5.6-terra",
+      "name": "run-72cc16c4351c50ecc6ec-codex-A2-candidate-missing-rubric",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 79.666768,
+      "series_key": "sha256:3825b1f0529758336a60d7fff25ddf13147c1d58249addfb9c3f62c2af505e26",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-02T14:28:21.911253Z",
+      "status": "completed",
+      "task": "missing-rubric",
+      "task_digest": "sha256:7f269e7bbf20109e56b5d381f02de805f50f2c0c86dac7e314b060576b8b1cdb",
+      "task_pack": "contract"
+    }
+  ],
+  "manifest_digest": "sha256:f581a2c6a51ecc95019e058e424bf742dc155a6d8730826620d699eb198ad6f5",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 0.27288029999999996,
+  "pending_jobs": 0,
+  "profile": "smoke",
+  "report_id": "sha256:19ae33901d297149414d643f32f468ac5392babf023c569fe35bb4bcb3b5bace",
+  "run_id": "run-72cc16c4351c50ecc6ec",
+  "schema_version": "2",
+  "source": {
+    "kind": "identified-historical",
+    "label": null
+  },
+  "started_at": "2026-09-02T14:26:52.042571Z",
+  "status": "completed",
+  "updated_at": "2026-09-02T14:29:41.578021Z"
+}

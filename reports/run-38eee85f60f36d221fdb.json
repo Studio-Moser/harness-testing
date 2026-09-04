@@ -1,0 +1,178 @@
+{
+  "admission_estimate_usd": 15.4,
+  "completed_jobs": 4,
+  "completed_trials": 4,
+  "evidence": {
+    "limitations": [
+      "missing-provenance",
+      "obsolete-methodology"
+    ],
+    "review_state": "quarantined"
+  },
+  "expected_jobs": 4,
+  "expected_trials": 4,
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-01T18:04:32.783317Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.236",
+      "arm": "A0",
+      "cancelled_trials": 0,
+      "comparability": "diagnostic-only",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.1136055,
+        "cached_tokens": 153565,
+        "completion_tokens": 1094,
+        "prompt_tokens": 162090
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-01T18:00:17.460691Z",
+      "harness_commit": null,
+      "model": "claude-sonnet-4-6",
+      "name": "run-38eee85f60f36d221fdb-claude-A0-baseline-missing-rubric",
+      "provider": "claude",
+      "role": "baseline",
+      "runtime_seconds": 63.68951,
+      "series_key": null,
+      "series_key_unavailable_reason": "missing-provenance",
+      "started_at": "2026-09-01T17:59:13.771181Z",
+      "status": "completed",
+      "task": "missing-rubric",
+      "task_digest": "sha256:7f269e7bbf20109e56b5d381f02de805f50f2c0c86dac7e314b060576b8b1cdb",
+      "task_pack": "contract"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.236",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "diagnostic-only",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.1006161,
+        "cached_tokens": 141337,
+        "completion_tokens": 1424,
+        "prompt_tokens": 147483
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-01T18:01:54.596849Z",
+      "harness_commit": "ff8852e737a43a7e23f2cad423905f9361fde8ae",
+      "model": "claude-sonnet-4-6",
+      "name": "run-38eee85f60f36d221fdb-claude-A2-candidate-missing-rubric",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 64.387672,
+      "series_key": null,
+      "series_key_unavailable_reason": "missing-provenance",
+      "started_at": "2026-09-01T18:00:50.209177Z",
+      "status": "completed",
+      "task": "missing-rubric",
+      "task_digest": "sha256:7f269e7bbf20109e56b5d381f02de805f50f2c0c86dac7e314b060576b8b1cdb",
+      "task_pack": "contract"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.150.1",
+      "arm": "A0",
+      "cancelled_trials": 0,
+      "comparability": "diagnostic-only",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.051152,
+        "cached_tokens": 65280,
+        "completion_tokens": 1247,
+        "prompt_tokens": 76846
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-01T18:03:09.159861Z",
+      "harness_commit": null,
+      "model": "gpt-5.6-terra",
+      "name": "run-38eee85f60f36d221fdb-codex-A0-baseline-missing-rubric",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 72.16247,
+      "series_key": null,
+      "series_key_unavailable_reason": "missing-provenance",
+      "started_at": "2026-09-01T18:01:56.997391Z",
+      "status": "completed",
+      "task": "missing-rubric",
+      "task_digest": "sha256:7f269e7bbf20109e56b5d381f02de805f50f2c0c86dac7e314b060576b8b1cdb",
+      "task_pack": "contract"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.150.1",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "diagnostic-only",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": 1.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.09865879999999999,
+        "cached_tokens": 100864,
+        "completion_tokens": 1627,
+        "prompt_tokens": 130345
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-01T18:04:32.783317Z",
+      "harness_commit": "ff8852e737a43a7e23f2cad423905f9361fde8ae",
+      "model": "gpt-5.6-terra",
+      "name": "run-38eee85f60f36d221fdb-codex-A2-candidate-missing-rubric",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 82.640126,
+      "series_key": null,
+      "series_key_unavailable_reason": "missing-provenance",
+      "started_at": "2026-09-01T18:03:10.143191Z",
+      "status": "completed",
+      "task": "missing-rubric",
+      "task_digest": "sha256:7f269e7bbf20109e56b5d381f02de805f50f2c0c86dac7e314b060576b8b1cdb",
+      "task_pack": "contract"
+    }
+  ],
+  "manifest_digest": "sha256:0921965fb29cdc4a3c507cb5589a30e4c497a8dbd39b39b6554a86b3cc033d48",
+  "manifest_schema_version": "0.2.0",
+  "observed_api_equivalent_cost_usd": 0.3640324,
+  "pending_jobs": 0,
+  "profile": "smoke",
+  "report_id": "sha256:cda2c6b04e57b587b5c0c40557ad12c807d38eeb66da7203fac8ffb9289f9e11",
+  "run_id": "run-38eee85f60f36d221fdb",
+  "schema_version": "2",
+  "source": {
+    "kind": "identified-historical",
+    "label": null
+  },
+  "started_at": "2026-09-01T17:59:13.771181Z",
+  "status": "completed",
+  "updated_at": "2026-09-01T18:04:32.783317Z"
+}

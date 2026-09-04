@@ -1,0 +1,67 @@
+{
+  "admission_estimate_usd": 9.6,
+  "completed_jobs": 1,
+  "completed_trials": 3,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 1,
+  "expected_trials": 3,
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-03T13:49:33.980358Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.150.1",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 3,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.22848679999999996,
+        "cached_tokens": 336384,
+        "completion_tokens": 3356,
+        "prompt_tokens": 396853
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 3,
+      "finished_at": "2026-09-03T13:49:33.980358Z",
+      "harness_commit": "4f1138ca6632184cb0a08dd7ff2ab26cf0728bf8",
+      "model": "gpt-5.6-terra",
+      "name": "run-98b4e3fbe4747d8a7361-codex-A2-candidate-react-saved-view-feature",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 190.019901,
+      "series_key": "sha256:131e032aed6010de4bfe09f384af06ca64bba17904e081af6a12ad66c66eb330",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-03T13:46:23.960457Z",
+      "status": "completed",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:2cb281da1b480aa5e52dd1fdc4ca0e73cb57ab13341c0497fae842a97a719579",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:42a26e6a196a2e9e798655fa9ee2c458e89adb7fd7b087347e7296b149593425",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 0.22848679999999996,
+  "pending_jobs": 0,
+  "profile": "calibration",
+  "report_id": "sha256:146165a7599ae2b0aeca47158f08e78c2c1c118c803e1b3aad41ee4672a7e95d",
+  "run_id": "run-98b4e3fbe4747d8a7361",
+  "schema_version": "2",
+  "source": {
+    "kind": "identified-historical",
+    "label": null
+  },
+  "started_at": "2026-09-03T13:46:23.960457Z",
+  "status": "completed",
+  "updated_at": "2026-09-03T13:49:33.980358Z"
+}
