@@ -6,73 +6,81 @@ toc: false
 
 # Quality versus efficiency
 
-Only correct trials appear here. Runtime, tokens, cost, and workflow remain separate signals; there is intentionally no composite ranking.
+All correct development-history observations remain in view. Runtime, tokens, observed API-equivalent cost, comparability, and evidence state stay separate; there is no composite ranking.
 
 ```js
 import * as Plot from "@observablehq/plot";
 import {
-  deliveryLabel,
-  formatCost,
-  formatScore,
-  formatSeconds,
-  totalRuntime,
-  totalTokens
-} from "./components/Results.js";
+  evidenceLabel,
+  formatObservedCost,
+  observationTokens,
+  runObservations,
+  seriesLabel
+} from "./components/Run_History.js";
+import {formatScore, formatSeconds, formatTimestamp} from "./components/Results.js";
 
 const report = await FileAttachment("./data/Public_Results.json").json();
-const correct = report.results.filter((result) => result.dimensions.correctness === 1);
-const comparable = correct.map((result) => ({
-  runtime: totalRuntime(result),
-  tokens: totalTokens(result),
-  cost: result.efficiency.cost_usd,
-  workflow: result.dimensions.workflow === 1 ? "Workflow pass" : "Workflow violation",
-  provider: result.provider.agent,
-  arm: result.arm.id,
-  task: result.task.id
-})).filter((point) => point.runtime != null && point.tokens != null);
+const observations = runObservations(report.run_reports, report.results);
+const correct = observations.filter((item) => item.dimensions.correctness === 1);
+const plotted = correct.map((item) => ({
+  ...item,
+  tokens: observationTokens(item),
+  evidence: evidenceLabel(item),
+  comparison: item.comparability === "comparable" ? "Comparable" : "Diagnostic only"
+})).filter((item) => item.runtimeSeconds != null && item.tokens != null);
 ```
 
 ```js
-comparable.length
+plotted.length
   ? resize((width) => Plot.plot({
       width,
-      height: 440,
+      height: 460,
+      marginLeft: 72,
       grid: true,
-      x: {label: "Total runtime (seconds)"},
+      x: {label: "Runtime (seconds)"},
       y: {label: "Prompt plus completion tokens"},
       color: {legend: true},
       symbol: {legend: true},
       marks: [
-        Plot.dot(comparable, {
-          x: "runtime",
+        Plot.dot(plotted, {
+          x: "runtimeSeconds",
           y: "tokens",
-          fill: "workflow",
-          symbol: "provider",
+          fill: "evidence",
+          symbol: "comparison",
+          opacity: (item) => item.reviewState === "reviewed" ? 1 : 0.7,
           r: 7,
           tip: true,
-          title: (point) => `${point.task}\n${point.provider} ${point.arm}\nCost: ${point.cost == null ? "Unavailable" : `$${point.cost.toFixed(4)}`}`
+          title: (item) => `${item.task}\n${item.provider} ${item.arm}\n${item.comparison}\nEvidence: ${item.evidence}\nCost: ${formatObservedCost(item.observedCost)}`
         })
       ]
     }))
-  : html`<div class="note">No correct trials with both runtime and token telemetry are available.</div>`
+  : html`<div class="note">No correct observations with both runtime and token telemetry are available.</div>`
 ```
 
-## Correct-trial details
+Symbol identifies comparable versus diagnostic-only evidence; color and tooltip text identify review state. Lower opacity marks evidence that has not been reviewed. These cues never turn a diagnostic point into a formal comparison.
+
+## Correct-observation details
 
 ```js
 correct.length
-  ? Inputs.table(
-      correct.map((result) => ({
-        task: result.task.id,
-        delivery: deliveryLabel(result),
-        workflow: formatScore(result.dimensions.workflow),
-        efficiency_policy: formatScore(result.dimensions.efficiency_policy),
-        runtime: formatSeconds(totalRuntime(result)),
-        tokens: totalTokens(result)?.toLocaleString("en-US") ?? "Unavailable",
-        cost: formatCost(result.efficiency.cost_usd),
-        comprehensive_tests: result.efficiency.comprehensive_tests ?? "Unavailable",
-        premature_suites: result.efficiency.premature_comprehensive_tests ?? "Unavailable"
-      }))
-    )
-  : html`<div class="note">No correct finalized trials are available.</div>`
+  ? Inputs.table(correct.map((item) => ({
+      finished: formatTimestamp(item.finishedAt ?? item.runFinishedAt),
+      run: item.runId,
+      task: item.task,
+      provider: item.provider,
+      arm: item.arm,
+      role: item.role,
+      evidence: evidenceLabel(item),
+      comparison: seriesLabel(item),
+      workflow: formatScore(item.dimensions.workflow),
+      efficiency_policy: formatScore(item.dimensions.efficiency_policy),
+      runtime: formatSeconds(item.runtimeSeconds),
+      tokens: observationTokens(item)?.toLocaleString("en-US") ?? "Unavailable",
+      observed_cost: formatObservedCost(item.observedCost),
+      comprehensive_tests: item.efficiency.comprehensive_tests ?? "Unavailable",
+      premature_suites: item.efficiency.premature_comprehensive_tests ?? "Unavailable"
+    })))
+  : html`<div class="note">No correct public-safe observations are available.</div>`
 ```
+
+Observed cost is API-equivalent telemetry. Incremental subscription spend is not captured.

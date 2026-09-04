@@ -146,6 +146,7 @@ test("dashboard pages await the generated result attachment before reading it", 
   ]) {
     const source = await readFile(resolve(repositoryRoot, "dashboard", "src", name), "utf8");
     assert.match(source, /const report = await FileAttachment\([^\n]+\)\.json\(\);/, name);
+    assert.match(source, /runObservations\(report\.run_reports, report\.results\)/, name);
   }
 });
 
