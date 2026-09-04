@@ -176,7 +176,10 @@ def run_report_id(document: Mapping[str, object]) -> str:
     unsigned = dict(document)
     unsigned.pop("report_id", None)
     payload = json.dumps(
-        unsigned, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        _identity_value(unsigned),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
     ).encode()
     return f"sha256:{hashlib.sha256(payload).hexdigest()}"
 
@@ -196,6 +199,11 @@ def validate_run_report(
             errors.append("run report identity does not match its content")
     return tuple(dict.fromkeys(errors))
 ```
+
+`_identity_value` recursively sorts objects and converts each finite JSON
+number to a 17-significant-digit IEEE-754 exponential string with a normalized
+exponent. Implement the same transformation in the Node loader so `60.0` and
+`60` hash identically across runtimes.
 
 `load_run_report` reads one JSON object and raises one `ValueError` containing the joined validation errors.
 

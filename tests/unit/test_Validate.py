@@ -576,3 +576,38 @@ def test_validate_workflow_cancels_superseded_runs():
         "group": "${{ github.workflow }}-${{ github.ref }}",
         "cancel-in-progress": True,
     }
+
+
+def test_pages_workflow_joins_main_code_with_the_data_branch():
+    workflow_path = REPOSITORY_ROOT / ".github" / "workflows" / "Publish_Pages.yml"
+    workflow = yaml.safe_load(workflow_path.read_text())
+    triggers = workflow[True]
+    steps = workflow["jobs"]["publish"]["steps"]
+    checkouts = [step for step in steps if step.get("uses", "").startswith("actions/checkout@")]
+    build = next(step for step in steps if step.get("name") == "Build sanitized static site")
+    upload = next(step for step in steps if step.get("name") == "Upload static site")
+
+    assert "workflow_dispatch" in triggers
+    assert len(checkouts) == 2
+    assert all(
+        step["uses"]
+        == "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803"
+        for step in checkouts
+    )
+    assert checkouts[0]["with"] == {
+        "ref": "main",
+        "path": "source",
+        "persist-credentials": False,
+    }
+    assert checkouts[1]["with"] == {
+        "ref": "dashboard-data",
+        "path": "dashboard-data",
+        "sparse-checkout": "reports",
+        "persist-credentials": False,
+    }
+    assert build["working-directory"] == "source"
+    assert build["env"]["HARNESS_PUBLISHED_REPORTS_DIRECTORY"] == (
+        "${{ github.workspace }}/dashboard-data/reports"
+    )
+    assert upload["with"]["path"] == "source/dashboard/dist"
+    assert "harness-test run execute" not in workflow_path.read_text()

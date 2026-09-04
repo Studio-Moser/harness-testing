@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import subprocess
 from collections.abc import Callable, Mapping
@@ -37,12 +38,28 @@ def run_report_id(document: Mapping[str, object]) -> str:
     unsigned = dict(document)
     unsigned.pop("report_id", None)
     payload = json.dumps(
-        unsigned,
+        _identity_value(unsigned),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
     ).encode()
     return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
+def _identity_value(value: object) -> object:
+    if isinstance(value, Mapping):
+        return {str(key): _identity_value(child) for key, child in value.items()}
+    if isinstance(value, list):
+        return [_identity_value(child) for child in value]
+    if isinstance(value, bool) or value is None or isinstance(value, str):
+        return value
+    if isinstance(value, int | float):
+        number = float(value)
+        if not math.isfinite(number):
+            raise ValueError("run report identity requires finite numbers")
+        mantissa, exponent = format(number, ".16e").split("e")
+        return f"{mantissa}e{int(exponent):+d}"
+    return value
 
 
 def _run_report_schema(root: Path) -> dict[str, object]:

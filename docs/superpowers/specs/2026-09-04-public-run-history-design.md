@@ -88,9 +88,14 @@ and cache totals remain. Unknown fields are rejected. Version 2 separates the
 manifest's conservative admission estimate from observed API-equivalent usage:
 `admission_estimate_usd` records the former, while nullable
 `observed_api_equivalent_cost_usd` sums only measured job telemetry. The UI must
-never present the estimate as incurred usage. Published reports must be version
-2. The local loader may normalize a version 1 report long enough to regenerate
-it; it may not publish version 1.
+never present the estimate as incurred usage. Published reports must be
+version 2. The local loader may normalize a version 1 report long enough to
+regenerate it; it may not publish version 1.
+
+The content identity uses recursively key-sorted compact JSON after converting
+every finite JSON number to a 17-significant-digit IEEE-754 exponential string
+with a normalized exponent. This makes the Python publisher and Node Pages
+loader agree on values such as `60.0` without weakening the content hash.
 
 A series key is derived only from known compatibility inputs: task/dataset
 identity, environment and scoring identity, provider-agent contract, model and

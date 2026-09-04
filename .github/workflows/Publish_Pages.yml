@@ -6,6 +6,8 @@ on:
     paths:
       - results/**
       - dashboard/**
+      - policy/Run_Report.schema.json
+      - .github/workflows/Publish_Pages.yml
   workflow_dispatch:
 
 permissions:
@@ -24,21 +26,37 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Check out source
+      - name: Check out dashboard code
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: main
+          path: source
+          persist-credentials: false
+
+      - name: Check out published run reports
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: dashboard-data
+          path: dashboard-data
+          sparse-checkout: reports
+          persist-credentials: false
 
       - name: Set up Node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
-          node-version-file: dashboard/.node-version
+          node-version-file: source/dashboard/.node-version
           cache: npm
-          cache-dependency-path: dashboard/package-lock.json
+          cache-dependency-path: source/dashboard/package-lock.json
 
       - name: Install dashboard dependencies
         run: npm ci --prefix dashboard --ignore-scripts
+        working-directory: source
 
       - name: Build sanitized static site
         run: npm --prefix dashboard run build
+        working-directory: source
+        env:
+          HARNESS_PUBLISHED_REPORTS_DIRECTORY: ${{ github.workspace }}/dashboard-data/reports
 
       - name: Configure Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
@@ -46,7 +64,7 @@ jobs:
       - name: Upload static site
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
         with:
-          path: dashboard/dist
+          path: source/dashboard/dist
 
       - name: Deploy Pages
         id: deployment
