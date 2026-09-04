@@ -20,33 +20,10 @@ from jsonschema.exceptions import SchemaError
 
 from harness_testing.Config import load_versions
 from harness_testing.Harbor_CLI import harbor_command
+from harness_testing.Public_Safety import public_safety_errors
 from harness_testing.Runs import load_manifest
 
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
-_SENSITIVE_KEY = re.compile(
-    r"(?:^|_)(?:api_key|access_token|refresh_token|auth_token|authorization|password|"
-    r"secret|credential)(?:$|_)",
-    re.IGNORECASE,
-)
-_PRIVATE_FIELDS = {
-    "command_output",
-    "env",
-    "environment",
-    "environment_variables",
-    "extra",
-    "prompt",
-    "prompts",
-    "reasoning",
-    "reasoning_content",
-    "tool_output",
-    "trajectory",
-    "trajectories",
-}
-_LOCAL_PATH = re.compile(r"(?:file://|/Users/|/home/|[A-Za-z]:\\Users\\)")
-_SECRET_VALUE = re.compile(
-    r"(?i)(?:api[_-]?key|access[_-]?token|refresh[_-]?token|authorization|password|"
-    r"secret)\s*[:=]|\bBearer\s+\S+|\bsk-[A-Za-z0-9_-]{8,}"
-)
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
 _REQUIRED_REGRADE_ARTIFACTS = ("/app", "/logs/agent/trajectory.json")
 
@@ -305,25 +282,6 @@ def regrade_job(
     )
 
 
-def _sensitive_errors(value: object, path: str = "$") -> list[str]:
-    errors: list[str] = []
-    if isinstance(value, dict):
-        for key, child in value.items():
-            normalized = re.sub(r"[^a-zA-Z0-9]+", "_", str(key)).strip("_").lower()
-            child_path = f"{path}.{key}"
-            if normalized in _PRIVATE_FIELDS or _SENSITIVE_KEY.search(normalized):
-                errors.append(f"forbidden public field: {child_path}")
-            errors.extend(_sensitive_errors(child, child_path))
-    elif isinstance(value, list):
-        for index, child in enumerate(value):
-            errors.extend(_sensitive_errors(child, f"{path}[{index}]"))
-    elif isinstance(value, str) and (
-        _LOCAL_PATH.search(value) or _SECRET_VALUE.search(value)
-    ):
-        errors.append(f"sensitive or local-only string: {path}")
-    return errors
-
-
 def _schema(root: Path) -> dict[str, object]:
     schema = _read_object(
         root / "policy" / "Public_Result.schema.json",
@@ -379,7 +337,7 @@ def _schema_errors(root: Path, document: object) -> list[str]:
 
 
 def validate_public_result(root: Path, document: object) -> tuple[str, ...]:
-    errors = _sensitive_errors(document)
+    errors = list(public_safety_errors(document))
     errors.extend(_schema_errors(root, document))
     if not isinstance(document, Mapping):
         return tuple(errors)

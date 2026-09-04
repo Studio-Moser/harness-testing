@@ -435,10 +435,73 @@ def test_affected_validation_routes_dashboard_images_and_core_schema_changes():
             "check",
             "src/harness_testing/Run_Reports.py",
         ),
-        ("uv", "run", "pytest", "-q", "tests/unit/test_Runs.py", "tests/unit/test_Validate.py"),
+        (
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/unit/test_Report_Publication.py",
+            "tests/unit/test_Runs.py",
+            "tests/unit/test_Validate.py",
+        ),
         ("npm", "ci", "--prefix", "dashboard", "--ignore-scripts"),
         ("npm", "--prefix", "dashboard", "test"),
         ("npm", "--prefix", "dashboard", "run", "build"),
+    )
+
+    publication = affected_validation_commands(
+        REPOSITORY_ROOT,
+        [
+            Path("src/harness_testing/Report_Publication.py"),
+            Path("policy/Dashboard_Publication.toml"),
+        ],
+    )
+    assert publication == (
+        (
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "src/harness_testing/Report_Publication.py",
+        ),
+        (
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/unit/test_Report_Publication.py",
+            "tests/unit/test_Runs.py",
+            "tests/unit/test_Validate.py",
+        ),
+        ("npm", "ci", "--prefix", "dashboard", "--ignore-scripts"),
+        ("npm", "--prefix", "dashboard", "test"),
+        ("npm", "--prefix", "dashboard", "run", "build"),
+    )
+
+    history = affected_validation_commands(
+        REPOSITORY_ROOT,
+        [
+            Path("src/harness_testing/Run_History.py"),
+            Path("runs/Historical_Backfill.toml"),
+            Path("tests/Fixtures/Run_History/Identified_Result.json"),
+        ],
+    )
+    assert history == (
+        (
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "src/harness_testing/Run_History.py",
+        ),
+        (
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/unit/test_Run_History.py",
+            "tests/unit/test_Validate.py",
+        ),
     )
 
     result_schema = affected_validation_commands(
@@ -513,3 +576,38 @@ def test_validate_workflow_cancels_superseded_runs():
         "group": "${{ github.workflow }}-${{ github.ref }}",
         "cancel-in-progress": True,
     }
+
+
+def test_pages_workflow_joins_main_code_with_the_data_branch():
+    workflow_path = REPOSITORY_ROOT / ".github" / "workflows" / "Publish_Pages.yml"
+    workflow = yaml.safe_load(workflow_path.read_text())
+    triggers = workflow[True]
+    steps = workflow["jobs"]["publish"]["steps"]
+    checkouts = [step for step in steps if step.get("uses", "").startswith("actions/checkout@")]
+    build = next(step for step in steps if step.get("name") == "Build sanitized static site")
+    upload = next(step for step in steps if step.get("name") == "Upload static site")
+
+    assert "workflow_dispatch" in triggers
+    assert len(checkouts) == 2
+    assert all(
+        step["uses"]
+        == "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803"
+        for step in checkouts
+    )
+    assert checkouts[0]["with"] == {
+        "ref": "main",
+        "path": "source",
+        "persist-credentials": False,
+    }
+    assert checkouts[1]["with"] == {
+        "ref": "dashboard-data",
+        "path": "dashboard-data",
+        "sparse-checkout": "reports",
+        "persist-credentials": False,
+    }
+    assert build["working-directory"] == "source"
+    assert build["env"]["HARNESS_PUBLISHED_REPORTS_DIRECTORY"] == (
+        "${{ github.workspace }}/dashboard-data/reports"
+    )
+    assert upload["with"]["path"] == "source/dashboard/dist"
+    assert "harness-test run execute" not in workflow_path.read_text()

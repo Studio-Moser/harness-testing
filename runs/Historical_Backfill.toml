@@ -1,0 +1,15 @@
+[[legacy]]
+label = "archived-smoke-2026-08-28"
+manifest_digest = "sha256:8a5439fddef1e8c677a6a0330a18ccb987232e8d81427eacf029c93a798e96ac"
+jobs_subdirectory = "Archived_Smoke-2026-08-28"
+expected_jobs = 2
+review_state = "quarantined"
+limitations = ["obsolete-methodology", "legacy-run-identity"]
+
+[[legacy]]
+label = "pre-run-id-release-2026-08-29"
+manifest_digest = "sha256:0bd5b98a55200465b9d7bd77bee10e00bf4b3dd18775e1d95e2c5820179cc714"
+jobs_subdirectory = "."
+expected_jobs = 34
+review_state = "quarantined"
+limitations = ["obsolete-methodology", "legacy-run-identity"]

@@ -27,6 +27,7 @@ async function testRoot() {
   temporaries.push(root);
   await mkdir(resolve(root, "policy"));
   await mkdir(resolve(root, "results"));
+  await mkdir(resolve(root, "published"));
   await mkdir(resolve(root, "runs", "generated"), {recursive: true});
   await cp(
     resolve(repositoryRoot, "policy", "Public_Result.schema.json"),
@@ -38,6 +39,7 @@ async function testRoot() {
 async function loadFrom(root) {
   return loadPublicResults({
     resultsDirectory: resolve(root, "results"),
+    publishedReportsDirectory: resolve(root, "published"),
     schemaPath: resolve(root, "policy", "Public_Result.schema.json"),
     runsDirectory: resolve(root, "runs", "generated"),
     runReportSchemaPath: resolve(repositoryRoot, "policy", "Run_Report.schema.json")
@@ -96,7 +98,32 @@ test("loads safe local run reports separately from finalized public results", as
   assert.equal(report.local_runs[0].status, "completed");
   assert.equal(report.local_runs[0].jobs[0].dimensions.correctness, 1);
   assert.equal(report.local_runs[0].jobs[0].efficiency.api_equivalent_cost_usd, 0.01);
+  assert.equal(report.run_reports.length, 1);
   assert.deepEqual(report.results, []);
+});
+
+test("loads data-branch reports and deduplicates local copies", async () => {
+  const root = await testRoot();
+  const digest = "d73dda59bad84372f94499627e52325aa49bb01d8141d8eccfbba0cc2375f05a";
+  const reportDirectory = resolve(root, "runs", "generated", digest);
+  await mkdir(reportDirectory);
+  await cp(resolve(runFixtureRoot, "Valid.json"), resolve(root, "published", "run-a.json"));
+  await cp(
+    resolve(runFixtureRoot, "Valid.json"),
+    resolve(reportDirectory, "Run_Report.json")
+  );
+
+  const report = await loadFrom(root);
+
+  assert.equal(report.run_reports.length, 1);
+  assert.equal(report.local_runs.length, 1);
+});
+
+test("rejects malformed published reports", async () => {
+  const root = await testRoot();
+  await writeFile(resolve(root, "published", "Bad.json"), "{}\n");
+
+  await assert.rejects(loadFrom(root), /published run report schema validation failed/);
 });
 
 test("rejects malformed local run reports instead of silently omitting them", async () => {
@@ -119,6 +146,7 @@ test("dashboard pages await the generated result attachment before reading it", 
   ]) {
     const source = await readFile(resolve(repositoryRoot, "dashboard", "src", name), "utf8");
     assert.match(source, /const report = await FileAttachment\([^\n]+\)\.json\(\);/, name);
+    assert.match(source, /runObservations\(report\.run_reports, report\.results\)/, name);
   }
 });
 

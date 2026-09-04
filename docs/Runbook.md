@@ -114,6 +114,14 @@ job, and rebuilds the ignored local dashboard once when the run completes or sto
 This report contains only allowlisted status, scores, timestamps, token totals, and
 cost telemetry; it never copies raw prompts, trajectories, commands, or host paths.
 
+After normal completion or a handled failure, execution makes one best-effort batch
+publication attempt for every pending report. Publication failure does not erase or
+mislabel the run; it leaves the reports pending and prints this retry:
+
+```bash
+uv run harness-test report sync
+```
+
 The first selected task runs as the delivery canary across every selected cell. A correctness zero is valid task evidence and continues the run. Any infrastructure or delivery failure stops execution before the second task; later delivery failures also stop immediately.
 
 ### Subscription authentication
@@ -177,13 +185,57 @@ Old hidden-contract and plugin-seed cohorts stay local and quarantined. Do not r
 
 ## Dashboard
 
+The dashboard has two evidence lanes:
+
+- Development history is every schema-valid, public-safe run report, including
+  incomplete, failed, unreviewed, quarantined, and historical reports. It is useful
+  for diagnosing progress but is not automatically decision-grade.
+- Decision-grade results are still created only by the strict, unchanged
+  `harness-test result sanitize` path described above.
+
+Reconstruct historical reports without opening raw job artifacts or starting a
+model session:
+
+```bash
+uv run harness-test report backfill \
+  --source-root "$HARNESS_HISTORY_ARCHIVE_ROOT" \
+  --source-root "$PWD" \
+  --mapping runs/Historical_Backfill.toml \
+  --output runs/history
+```
+
+The output and its publication receipts are ignored local files. Backfill accepts
+only manifest/config/top-level result summaries, fails closed on ambiguous matches,
+and labels legacy, partial, failed, or missing-provenance evidence explicitly.
+
+Publish every pending live or historical report in one batch:
+
+```bash
+uv run harness-test report sync
+```
+
+The publisher validates the complete batch, uses a temporary checkout of the fixed
+`dashboard-data` branch, makes at most one data commit, and dispatches
+`Publish_Pages.yml` once. It never switches the caller's worktree, never
+force-pushes, and retries once only after a non-fast-forward rejection. A local
+receipt beside each report records the report ID and data commit, so an unchanged
+report is not republished. Run the sync command again after any other failure.
+
+Dashboard code and reviewed results stay on `main`; `dashboard-data` contains only
+its README and `reports/*.json`. Charts retain unavailable measurements as null,
+and cross-run deltas require exactly equal, non-null series keys.
+
 ```bash
 npm ci --prefix dashboard --ignore-scripts
 npm --prefix dashboard test
 npm --prefix dashboard run build
 ```
 
-The build emits ignored `dashboard/dist/`. A model-backed execution invalidates the local result-loader cache and performs this build once at the end. GitHub Pages publishes only reviewed `results/` data because ignored local reports are absent in CI; it deploys only when tracked `results/` or `dashboard/` inputs change.
+The build emits ignored `dashboard/dist/`. A model-backed execution invalidates the
+local result-loader cache and performs this build once at the end. GitHub Pages
+checks out dashboard code and reviewed results from `main`, reads run reports from
+`dashboard-data`, validates both inputs, and deploys the combined static site. A
+report sync dispatches that workflow even though it does not mutate `main`.
 
 ## DeepSWE research lane
 

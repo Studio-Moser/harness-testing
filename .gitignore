@@ -18,6 +18,7 @@ provider-homes/
 # Generated benchmark inputs
 arms/materialized/
 runs/generated/
+runs/history/
 
 # Dashboard dependencies and output
 dashboard/node_modules/

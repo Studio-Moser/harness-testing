@@ -25,6 +25,11 @@ from harness_testing.Materialize import (
     _tree_digest,
     materialize_arm,
 )
+from harness_testing.Run_Reports import (
+    load_run_report,
+    run_report_id,
+    validate_run_report,
+)
 from harness_testing.Runs import (
     RunCell,
     _verify_generated_inputs,
@@ -34,6 +39,7 @@ from harness_testing.Runs import (
 from harness_testing.Skill_Evaluation import SkillEvaluation
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
+RUN_REPORT_FIXTURES = REPOSITORY_ROOT / "tests" / "Fixtures" / "Run_Reports"
 PROFILE_TEXT = """\
 schema_version = "1"
 
@@ -68,6 +74,45 @@ estimated_output_tokens_per_session = 200000
 
 def _digest(character: str) -> str:
     return f"sha256:{character * 64}"
+
+
+def test_published_run_report_requires_v2_and_content_identity(run_root: Path):
+    report = json.loads((RUN_REPORT_FIXTURES / "Valid.json").read_text())
+    assert validate_run_report(run_root, report, published=True) == ()
+    report["report_id"] = f"sha256:{'0' * 64}"
+    assert "identity does not match" in "; ".join(
+        validate_run_report(run_root, report, published=True)
+    )
+
+
+def test_v1_run_report_is_local_only(run_root: Path):
+    path = RUN_REPORT_FIXTURES / "Legacy_V1.json"
+    report = json.loads(path.read_text())
+    assert any(
+        "version 1" in error
+        for error in validate_run_report(run_root, report, published=True)
+    )
+    assert load_run_report(run_root, path)["schema_version"] == "1"
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("prompt", "private", "forbidden public field"),
+        ("unexpected", "summary", "run report schema"),
+        ("note", "/Users/example/private", "sensitive or local-only string"),
+        ("note", "Authorization: Bearer private-token", "sensitive or local-only string"),
+    ],
+)
+def test_run_report_rejects_non_public_content(
+    run_root: Path,
+    field: str,
+    value: str,
+    message: str,
+):
+    report = json.loads((RUN_REPORT_FIXTURES / "Valid.json").read_text())
+    report[field] = value
+    assert message in "; ".join(validate_run_report(run_root, report, published=True))
 
 
 def _cell(
@@ -241,6 +286,7 @@ commit = "{harness_commit}"
     for relative in (
         "images/Node_Agent.Dockerfile",
         "images/Verifier.Dockerfile",
+        "policy/Dashboard_Publication.toml",
         "policy/Run_Report.schema.json",
         "src/harness_testing/Claude_Agent.py",
         "src/harness_testing/Codex_Agent.py",
@@ -481,9 +527,55 @@ def _compile_pair(root: Path, **overrides):
         "max_sessions": 4,
         "max_budget_usd": Decimal("100"),
         "billing_mode": "api",
+        "publish_report": False,
     }
     arguments.update(overrides)
     return compile_run(**arguments)
+
+
+def test_new_manifest_binds_public_report_destination(run_root: Path):
+    manifest = _compile_pair(run_root, publish_report=True)
+
+    assert manifest.provenance["report_publication"] == {
+        "mode": "public",
+        "repository": "Studio-Moser/harness-testing",
+        "data_branch": "dashboard-data",
+        "workflow": "Publish_Pages.yml",
+        "code_ref": "main",
+    }
+    assert "Public run report: Studio-Moser/harness-testing" in Runs.format_plan(
+        manifest
+    )
+
+
+def test_local_only_manifest_is_explicit_and_content_addressed(run_root: Path):
+    public = _compile_pair(run_root, publish_report=True)
+    local = _compile_pair(run_root)
+
+    assert local.provenance["report_publication"] == {"mode": "local-only"}
+    assert local.digest != public.digest
+    assert local.provenance["run_id"] != public.provenance["run_id"]
+
+
+def test_v2_report_separates_estimate_from_observed_cost(run_root: Path):
+    manifest = _compile_pair(run_root)
+    for index, relative_path in enumerate(manifest.harbor_config_paths):
+        job = load_job(manifest.path.parent / relative_path)
+        _write_completed_job(
+            run_root,
+            manifest.cells[index % len(manifest.cells)],
+            job.job_name,
+        )
+
+    report_path = Run_Reports.write_run_report(run_root, manifest, "completed")
+    report = json.loads(report_path.read_text())
+
+    assert report["schema_version"] == "2"
+    assert report["admission_estimate_usd"] == float(
+        manifest.api_equivalent_cost_usd
+    )
+    assert report["observed_api_equivalent_cost_usd"] == 0.04
+    assert report["report_id"] == run_report_id(report)
 
 
 def test_codex_candidate_version_can_differ_from_ledger_version(
@@ -1118,14 +1210,22 @@ def test_execution_updates_local_dashboard_after_completed_run(
     run_root: Path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    manifest = _compile_pair(run_root)
+    manifest = _compile_pair(run_root, publish_report=True)
     _stub_execution_preflight(monkeypatch)
     refreshes: list[Path] = []
+    publications: list[tuple[Path, str]] = []
     monkeypatch.setattr(
         Runs,
         "refresh_local_dashboard",
         lambda root: refreshes.append(root),
         raising=False,
+    )
+    monkeypatch.setattr(
+        Runs,
+        "sync_pending_reports",
+        lambda root, target: (
+            publications.append((root, target.repository)) or (object(),)
+        ),
     )
     real_run = subprocess.run
 
@@ -1166,6 +1266,7 @@ def test_execution_updates_local_dashboard_after_completed_run(
         "api_equivalent_cost_usd": 0.01,
     }
     assert refreshes == [run_root]
+    assert publications == [(run_root, "Studio-Moser/harness-testing")]
 
 
 def test_dashboard_refresh_invalidates_the_observable_data_loader_cache(
@@ -1192,18 +1293,43 @@ def test_dashboard_refresh_invalidates_the_observable_data_loader_cache(
     ]
 
 
+def test_terminal_publication_failure_remains_retryable(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    manifest = _compile_pair(run_root, publish_report=True)
+
+    def fail_sync(*args: object, **kwargs: object):
+        raise ValueError("could not publish run reports during push reports")
+
+    monkeypatch.setattr(Runs, "sync_pending_reports", fail_sync)
+
+    Runs._publish_terminal_reports(run_root, manifest)
+
+    assert "harness-test report sync" in capsys.readouterr().err
+
+
 def test_execution_updates_local_dashboard_after_delivery_failure(
     run_root: Path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    manifest = _compile_pair(run_root)
+    manifest = _compile_pair(run_root, publish_report=True)
     _stub_execution_preflight(monkeypatch)
     refreshes: list[Path] = []
+    publications: list[tuple[Path, str]] = []
     monkeypatch.setattr(
         Runs,
         "refresh_local_dashboard",
         lambda root: refreshes.append(root),
         raising=False,
+    )
+    monkeypatch.setattr(
+        Runs,
+        "sync_pending_reports",
+        lambda root, target: (
+            publications.append((root, target.repository)) or (object(),)
+        ),
     )
     calls: list[str] = []
     real_run = subprocess.run
@@ -1231,6 +1357,7 @@ def test_execution_updates_local_dashboard_after_delivery_failure(
     assert report["completed_jobs"] == 2
     assert report["pending_jobs"] == 2
     assert refreshes == [run_root]
+    assert publications == [(run_root, "Studio-Moser/harness-testing")]
 
 
 def test_delivery_canary_stops_before_the_second_task(

@@ -80,6 +80,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     sanitize_parser.add_argument("--job", type=Path, required=True)
     sanitize_parser.add_argument("--output", type=Path, required=True)
 
+    report_parser = subparsers.add_parser(
+        "report", help="backfill or publish public-safe run reports"
+    )
+    report_subparsers = report_parser.add_subparsers(dest="report_command")
+    backfill_parser = report_subparsers.add_parser(
+        "backfill", help="reconstruct reports from model-free historical artifacts"
+    )
+    backfill_parser.add_argument(
+        "--source-root", type=Path, action="append", required=True
+    )
+    backfill_parser.add_argument("--mapping", type=Path, required=True)
+    backfill_parser.add_argument("--output", type=Path, required=True)
+    report_subparsers.add_parser(
+        "sync", help="publish all pending reports in one data-branch update"
+    )
+
     auth_parser = subparsers.add_parser("auth", help="store local subscription credentials")
     auth_subparsers = auth_parser.add_subparsers(dest="auth_command")
     auth_subparsers.add_parser("claude", help="store the Claude subscription token")
@@ -102,6 +118,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     plan_parser.add_argument("--attempts", type=int)
     plan_parser.add_argument("--concurrency", type=int)
     plan_parser.add_argument("--agent-timeout-seconds", type=int)
+    plan_parser.add_argument("--local-report-only", action="store_true")
     skill_evaluation = plan_parser.add_mutually_exclusive_group()
     skill_evaluation.add_argument("--invoke-skill")
     skill_evaluation.add_argument("--observe-skill")
@@ -221,6 +238,43 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
         print(f"Sanitized result: {result['result_id']}")
         print(arguments.output)
+    elif arguments.command == "report" and arguments.report_command == "backfill":
+        from harness_testing.Run_History import backfill_run_reports
+        from harness_testing.Run_Reports import load_run_report
+
+        try:
+            reports = backfill_run_reports(
+                _repository_root(),
+                tuple(arguments.source_root),
+                arguments.mapping,
+                arguments.output,
+            )
+            job_count = sum(
+                len(load_run_report(_repository_root(), report, published=True)["jobs"])
+                for report in reports
+            )
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        for report in reports:
+            print(f"Historical run report: {report}")
+        print(f"Backfilled {len(reports)} reports with {job_count} job summaries.")
+    elif arguments.command == "report" and arguments.report_command == "sync":
+        from harness_testing.Report_Publication import (
+            load_publication_target,
+            sync_pending_reports,
+        )
+
+        try:
+            target = load_publication_target(_repository_root())
+            receipts = sync_pending_reports(_repository_root(), target)
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        if receipts:
+            print(f"Published {len(receipts)} run report(s) to {target.repository}.")
+        else:
+            print("No public run reports are pending.")
     elif arguments.command == "auth" and arguments.auth_command == "claude":
         from harness_testing.Credentials import store_claude_subscription_token
 
@@ -255,6 +309,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             concurrency=arguments.concurrency,
             agent_timeout_seconds=arguments.agent_timeout_seconds,
             skill_evaluation=evaluation,
+            publish_report=not arguments.local_report_only,
         )
         print(format_plan(manifest))
     elif arguments.command == "run" and arguments.run_command == "execute":

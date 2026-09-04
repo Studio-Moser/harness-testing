@@ -1,53 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://studio-moser.github.io/harness-testing/Run_Report.schema.json",
-  "title": "Harness Testing Local Run Report",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema_version",
-    "manifest_digest",
-    "run_id",
-    "profile",
-    "status",
-    "started_at",
-    "updated_at",
-    "finished_at",
-    "expected_jobs",
-    "completed_jobs",
-    "failed_jobs",
-    "pending_jobs",
-    "expected_trials",
-    "completed_trials",
-    "failed_trials",
-    "api_equivalent_cost_usd",
-    "jobs"
+  "title": "Harness Testing Run Report",
+  "oneOf": [
+    {"$ref": "#/$defs/reportV1"},
+    {"$ref": "#/$defs/reportV2"}
   ],
-  "properties": {
-    "schema_version": {"const": "1"},
-    "manifest_digest": {"$ref": "#/$defs/digest"},
-    "run_id": {"type": "string", "pattern": "^run-[0-9a-f]{20}$"},
-    "profile": {
-      "enum": ["smoke", "checkpoint", "release", "calibration", "research"]
-    },
-    "status": {"enum": ["running", "completed", "failed"]},
-    "started_at": {"$ref": "#/$defs/timestamp"},
-    "updated_at": {"$ref": "#/$defs/timestamp"},
-    "finished_at": {"$ref": "#/$defs/nullableTimestamp"},
-    "expected_jobs": {"type": "integer", "minimum": 1},
-    "completed_jobs": {"type": "integer", "minimum": 0},
-    "failed_jobs": {"type": "integer", "minimum": 0},
-    "pending_jobs": {"type": "integer", "minimum": 0},
-    "expected_trials": {"type": "integer", "minimum": 1},
-    "completed_trials": {"type": "integer", "minimum": 0},
-    "failed_trials": {"type": "integer", "minimum": 0},
-    "api_equivalent_cost_usd": {"type": "number", "minimum": 0},
-    "jobs": {
-      "type": "array",
-      "minItems": 1,
-      "items": {"$ref": "#/$defs/job"}
-    }
-  },
   "$defs": {
     "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
@@ -67,7 +25,37 @@
         {"type": "null"}
       ]
     },
-    "job": {
+    "profile": {
+      "enum": ["smoke", "checkpoint", "release", "calibration", "research"]
+    },
+    "runStatus": {"enum": ["running", "completed", "failed"]},
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["correctness", "workflow", "efficiency_policy"],
+      "properties": {
+        "correctness": {"$ref": "#/$defs/nullableScore"},
+        "workflow": {"$ref": "#/$defs/nullableScore"},
+        "efficiency_policy": {"$ref": "#/$defs/nullableScore"}
+      }
+    },
+    "efficiency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prompt_tokens",
+        "cached_tokens",
+        "completion_tokens",
+        "api_equivalent_cost_usd"
+      ],
+      "properties": {
+        "prompt_tokens": {"$ref": "#/$defs/nullableInteger"},
+        "cached_tokens": {"$ref": "#/$defs/nullableInteger"},
+        "completion_tokens": {"$ref": "#/$defs/nullableInteger"},
+        "api_equivalent_cost_usd": {"$ref": "#/$defs/nullableNumber"}
+      }
+    },
+    "jobV1": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -111,31 +99,242 @@
         "completed_trials": {"type": "integer", "minimum": 0},
         "errored_trials": {"type": "integer", "minimum": 0},
         "cancelled_trials": {"type": "integer", "minimum": 0},
-        "dimensions": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["correctness", "workflow", "efficiency_policy"],
-          "properties": {
-            "correctness": {"$ref": "#/$defs/nullableScore"},
-            "workflow": {"$ref": "#/$defs/nullableScore"},
-            "efficiency_policy": {"$ref": "#/$defs/nullableScore"}
+        "dimensions": {"$ref": "#/$defs/dimensions"},
+        "efficiency": {"$ref": "#/$defs/efficiency"}
+      }
+    },
+    "jobV2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "provider",
+        "agent",
+        "agent_version",
+        "arm",
+        "role",
+        "model",
+        "effort",
+        "harness_commit",
+        "task",
+        "task_pack",
+        "task_digest",
+        "comparability",
+        "series_key",
+        "series_key_unavailable_reason",
+        "status",
+        "started_at",
+        "finished_at",
+        "runtime_seconds",
+        "expected_trials",
+        "completed_trials",
+        "errored_trials",
+        "cancelled_trials",
+        "dimensions",
+        "efficiency"
+      ],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 256},
+        "provider": {"enum": ["claude", "codex"]},
+        "agent": {"type": "string", "minLength": 1, "maxLength": 256},
+        "agent_version": {"type": "string", "minLength": 1, "maxLength": 128},
+        "arm": {"enum": ["A0", "A1", "A2", "A3"]},
+        "role": {"enum": ["baseline", "candidate", "calibration"]},
+        "model": {"type": "string", "minLength": 1, "maxLength": 128},
+        "effort": {"type": "string", "minLength": 1, "maxLength": 32},
+        "harness_commit": {
+          "anyOf": [{"$ref": "#/$defs/commit"}, {"type": "null"}]
+        },
+        "task": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "task_pack": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "task_digest": {"$ref": "#/$defs/digest"},
+        "comparability": {"enum": ["comparable", "diagnostic-only"]},
+        "series_key": {
+          "anyOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]
+        },
+        "series_key_unavailable_reason": {
+          "enum": ["missing-provenance", "incompatible-methodology", null]
+        },
+        "status": {
+          "enum": ["pending", "running", "completed", "failed", "incomplete"]
+        },
+        "started_at": {"$ref": "#/$defs/nullableTimestamp"},
+        "finished_at": {"$ref": "#/$defs/nullableTimestamp"},
+        "runtime_seconds": {"$ref": "#/$defs/nullableNumber"},
+        "expected_trials": {"type": "integer", "minimum": 1},
+        "completed_trials": {"type": "integer", "minimum": 0},
+        "errored_trials": {"type": "integer", "minimum": 0},
+        "cancelled_trials": {"type": "integer", "minimum": 0},
+        "dimensions": {"$ref": "#/$defs/dimensions"},
+        "efficiency": {"$ref": "#/$defs/efficiency"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"comparability": {"const": "comparable"}},
+            "required": ["comparability"]
+          },
+          "then": {
+            "properties": {
+              "series_key": {"$ref": "#/$defs/digest"},
+              "series_key_unavailable_reason": {"type": "null"}
+            }
           }
         },
-        "efficiency": {
+        {
+          "if": {
+            "properties": {"comparability": {"const": "diagnostic-only"}},
+            "required": ["comparability"]
+          },
+          "then": {
+            "properties": {
+              "series_key": {"type": "null"},
+              "series_key_unavailable_reason": {
+                "enum": ["missing-provenance", "incompatible-methodology"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "reportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "manifest_digest",
+        "run_id",
+        "profile",
+        "status",
+        "started_at",
+        "updated_at",
+        "finished_at",
+        "expected_jobs",
+        "completed_jobs",
+        "failed_jobs",
+        "pending_jobs",
+        "expected_trials",
+        "completed_trials",
+        "failed_trials",
+        "api_equivalent_cost_usd",
+        "jobs"
+      ],
+      "properties": {
+        "schema_version": {"const": "1"},
+        "manifest_digest": {"$ref": "#/$defs/digest"},
+        "run_id": {"type": "string", "pattern": "^run-[0-9a-f]{20}$"},
+        "profile": {"$ref": "#/$defs/profile"},
+        "status": {"$ref": "#/$defs/runStatus"},
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "updated_at": {"$ref": "#/$defs/timestamp"},
+        "finished_at": {"$ref": "#/$defs/nullableTimestamp"},
+        "expected_jobs": {"type": "integer", "minimum": 1},
+        "completed_jobs": {"type": "integer", "minimum": 0},
+        "failed_jobs": {"type": "integer", "minimum": 0},
+        "pending_jobs": {"type": "integer", "minimum": 0},
+        "expected_trials": {"type": "integer", "minimum": 1},
+        "completed_trials": {"type": "integer", "minimum": 0},
+        "failed_trials": {"type": "integer", "minimum": 0},
+        "api_equivalent_cost_usd": {"type": "number", "minimum": 0},
+        "jobs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/jobV1"}
+        }
+      }
+    },
+    "reportV2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "report_id",
+        "manifest_schema_version",
+        "manifest_digest",
+        "run_id",
+        "source",
+        "evidence",
+        "profile",
+        "status",
+        "started_at",
+        "updated_at",
+        "finished_at",
+        "expected_jobs",
+        "completed_jobs",
+        "failed_jobs",
+        "pending_jobs",
+        "expected_trials",
+        "completed_trials",
+        "failed_trials",
+        "admission_estimate_usd",
+        "observed_api_equivalent_cost_usd",
+        "jobs"
+      ],
+      "properties": {
+        "schema_version": {"const": "2"},
+        "report_id": {"$ref": "#/$defs/digest"},
+        "manifest_schema_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "manifest_digest": {"$ref": "#/$defs/digest"},
+        "run_id": {"type": "string", "pattern": "^run-[0-9a-f]{20}$"},
+        "source": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "prompt_tokens",
-            "cached_tokens",
-            "completion_tokens",
-            "api_equivalent_cost_usd"
-          ],
+          "required": ["kind", "label"],
           "properties": {
-            "prompt_tokens": {"$ref": "#/$defs/nullableInteger"},
-            "cached_tokens": {"$ref": "#/$defs/nullableInteger"},
-            "completion_tokens": {"$ref": "#/$defs/nullableInteger"},
-            "api_equivalent_cost_usd": {"$ref": "#/$defs/nullableNumber"}
+            "kind": {
+              "enum": ["current", "identified-historical", "legacy-historical"]
+            },
+            "label": {
+              "anyOf": [
+                {"type": "string", "minLength": 1, "maxLength": 128},
+                {"type": "null"}
+              ]
+            }
           }
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["review_state", "limitations"],
+          "properties": {
+            "review_state": {"enum": ["unreviewed", "reviewed", "quarantined"]},
+            "limitations": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "partial-run",
+                  "failed-run",
+                  "obsolete-methodology",
+                  "legacy-run-identity",
+                  "missing-provenance",
+                  "infrastructure-failure"
+                ]
+              }
+            }
+          }
+        },
+        "profile": {"$ref": "#/$defs/profile"},
+        "status": {"$ref": "#/$defs/runStatus"},
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "updated_at": {"$ref": "#/$defs/timestamp"},
+        "finished_at": {"$ref": "#/$defs/nullableTimestamp"},
+        "expected_jobs": {"type": "integer", "minimum": 1},
+        "completed_jobs": {"type": "integer", "minimum": 0},
+        "failed_jobs": {"type": "integer", "minimum": 0},
+        "pending_jobs": {"type": "integer", "minimum": 0},
+        "expected_trials": {"type": "integer", "minimum": 1},
+        "completed_trials": {"type": "integer", "minimum": 0},
+        "failed_trials": {"type": "integer", "minimum": 0},
+        "admission_estimate_usd": {"$ref": "#/$defs/nullableNumber"},
+        "observed_api_equivalent_cost_usd": {"$ref": "#/$defs/nullableNumber"},
+        "jobs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/jobV2"}
         }
       }
     }
