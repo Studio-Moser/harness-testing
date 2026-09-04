@@ -1,0 +1,7 @@
+{
+  "authority": {"allowed_paths": ["Execution_Request.json", "Harness_Result.json"], "working_directory": "/app"},
+  "model": "gpt-5.6-terra",
+  "provider": "codex",
+  "required_executor": "codex-cli",
+  "route": "default"
+}

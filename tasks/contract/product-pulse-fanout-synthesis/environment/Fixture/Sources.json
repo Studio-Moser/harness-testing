@@ -1,0 +1,10 @@
+{
+  "publication": "internal-only",
+  "quality_rule": "Use only local evidence with an explicit citation",
+  "recommendation_cap": 2,
+  "sources": [
+    {"citation": "source://alpha", "id": "alpha", "question": "What reduces verification churn?"},
+    {"citation": "source://beta", "id": "beta", "question": "What keeps reviews independent?"},
+    {"citation": "source://gamma", "id": "gamma", "question": "What claim lacks evidence?"}
+  ]
+}

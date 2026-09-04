@@ -1,0 +1,15 @@
+services:
+  main:
+    depends_on:
+      harness-stub:
+        condition: service_healthy
+
+  harness-stub:
+    build:
+      context: ./stub-server
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.create_connection(('localhost',8000),timeout=2); s.close()"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 3s

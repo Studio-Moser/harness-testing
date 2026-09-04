@@ -1,0 +1,25 @@
+schema_version = "1"
+
+[arms.A0]
+description = "Stock provider configuration only"
+layers = []
+
+[arms.A1]
+description = "Superpowers"
+layers = ["Superpowers"]
+
+[arms.A2]
+description = "Studio Harness"
+layers = ["Studio Harness"]
+
+[arms.A3]
+description = "Superpowers followed by Studio Harness"
+layers = ["Superpowers", "Studio Harness"]
+
+[providers.claude]
+project_instructions = "CLAUDE.md"
+plugin_surface = "CLAUDE_CODE_PLUGIN_SEED_DIR"
+
+[providers.codex]
+project_instructions = "AGENTS.md"
+plugin_surface = "CODEX_HOME"

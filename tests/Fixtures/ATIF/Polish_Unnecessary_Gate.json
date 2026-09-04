@@ -1,0 +1,62 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "polish-unnecessary-gate",
+  "agent": {
+    "name": "harness-qa-script",
+    "version": "1.0.0"
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "source": "user",
+      "message": "Apply one styling change."
+    },
+    {
+      "step_id": 2,
+      "source": "agent",
+      "message": "Changed the token and over-tested it.",
+      "tool_calls": [
+        {
+          "tool_call_id": "edit-1",
+          "function_name": "apply_patch",
+          "arguments": {
+            "patch": "*** Begin Patch\n*** Update File: /app/src/index.css\n*** End Patch"
+          }
+        },
+        {
+          "tool_call_id": "check-1",
+          "function_name": "shell",
+          "arguments": {
+            "cmd": "npm run check:cta"
+          }
+        },
+        {
+          "tool_call_id": "gate-1",
+          "function_name": "shell",
+          "arguments": {
+            "cmd": "npm run gate"
+          }
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "edit-1",
+            "content": "Done!"
+          },
+          {
+            "source_call_id": "check-1",
+            "content": "[exit_code] 0",
+            "extra": {"exit_code": 0}
+          },
+          {
+            "source_call_id": "gate-1",
+            "content": "[exit_code] 0",
+            "extra": {"exit_code": 0}
+          }
+        ]
+      },
+      "llm_call_count": 1
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://studio-moser.github.io/harness-testing/Harness_Result.schema.json",
+  "title": "HarnessResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "route", "artifacts", "evidence", "telemetry", "shelby", "blockers"],
+  "$defs": {
+    "nonblankString": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "nullableNonblankString": {
+      "anyOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/nonblankString"}
+      ]
+    },
+    "nonblankStringArray": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/nonblankString"}
+    }
+  },
+  "properties": {
+    "status": {"enum": ["accepted", "failed", "blocked", "abandoned"]},
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested", "actual_model", "effort", "provider", "executor", "resolution", "attempted", "fallback_reason"],
+      "properties": {
+        "requested": {"enum": ["bulk", "quick", "default", "taste", "batch", "review", "independent"]},
+        "actual_model": {"$ref": "#/$defs/nullableNonblankString"},
+        "effort": {"$ref": "#/$defs/nullableNonblankString"},
+        "provider": {"$ref": "#/$defs/nullableNonblankString"},
+        "executor": {"$ref": "#/$defs/nullableNonblankString"},
+        "resolution": {
+          "anyOf": [
+            {"type": "null"},
+            {"enum": ["primary", "fallback"]}
+          ]
+        },
+        "attempted": {"$ref": "#/$defs/nonblankStringArray"},
+        "fallback_reason": {"$ref": "#/$defs/nullableNonblankString"}
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files", "report"],
+      "properties": {
+        "files": {"$ref": "#/$defs/nonblankStringArray"},
+        "report": {"$ref": "#/$defs/nullableNonblankString"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixed_target", "checks", "outcome"],
+      "properties": {
+        "fixed_target": {"$ref": "#/$defs/nullableNonblankString"},
+        "checks": {"$ref": "#/$defs/nonblankStringArray"},
+        "outcome": {"enum": ["proven", "unproven"]}
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempts", "elapsed", "verification_failures", "token_or_quota_usage"],
+      "properties": {
+        "attempts": {"type": "integer", "minimum": 0},
+        "elapsed": {"$ref": "#/$defs/nullableNonblankString"},
+        "verification_failures": {"type": "integer", "minimum": 0},
+        "token_or_quota_usage": {"$ref": "#/$defs/nullableNonblankString"}
+      }
+    },
+    "shelby": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["project_id", "run_id", "checkpoint_ids"],
+      "properties": {
+        "project_id": {"$ref": "#/$defs/nullableNonblankString"},
+        "run_id": {"$ref": "#/$defs/nullableNonblankString"},
+        "checkpoint_ids": {"$ref": "#/$defs/nonblankStringArray"}
+      }
+    },
+    "blockers": {"$ref": "#/$defs/nonblankStringArray"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "accepted"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "evidence": {"properties": {"outcome": {"const": "proven"}}},
+          "blockers": {"maxItems": 0}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "blocked"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "evidence": {"properties": {"outcome": {"const": "unproven"}}},
+          "blockers": {"minItems": 1}
+        }
+      }
+    }
+  ]
+}

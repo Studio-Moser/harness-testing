@@ -1,0 +1,13 @@
+{
+  "authority": {
+    "allowed_paths": ["Ready_Slice.json", "Implementation.md", "Harness_Result.json"],
+    "approvals": [],
+    "tools": ["read", "write", "harness-stub"],
+    "working_directory": "/app"
+  },
+  "constraints": ["READY-17 only", "No external effects"],
+  "id": "READY-17",
+  "outcome": "Create the bounded implementation note returned by Harness.",
+  "status": "ready",
+  "verification_seam": "Implementation.md content matches the dispatched proof"
+}

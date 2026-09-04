@@ -1,0 +1,15 @@
+.git
+.cache
+.venv
+.pytest_cache
+.ruff_cache
+arms/materialized
+runs/generated
+jobs
+raw-results
+provider-homes
+tasks
+tests
+dashboard
+**/__pycache__
+**/*.pyc

@@ -1,0 +1,86 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "claude-fixture",
+  "agent": {
+    "name": "claude-code",
+    "version": "2.1.236",
+    "model_name": "claude-sonnet-4-6"
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "source": "user",
+      "message": "Change the accent token."
+    },
+    {
+      "step_id": 2,
+      "source": "agent",
+      "message": "I will verify the focused behavior.",
+      "tool_calls": [
+        {
+          "tool_call_id": "claude-call-1",
+          "function_name": "Bash",
+          "arguments": {
+            "command": "npm run check:accent"
+          }
+        },
+        {
+          "tool_call_id": "claude-call-2",
+          "function_name": "Edit",
+          "arguments": {
+            "file_path": "/app/src/App.tsx",
+            "old_string": "#2563eb",
+            "new_string": "#7c3aed"
+          }
+        },
+        {
+          "tool_call_id": "claude-call-3",
+          "function_name": "Write",
+          "arguments": {
+            "file_path": "/app/src/theme.css",
+            "content": ":root { --accent: #7c3aed; }"
+          }
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "claude-call-1",
+            "content": "[stdout]\naccent check passed",
+            "extra": {
+              "tool_result_metadata": {
+                "tool_use_result": {
+                  "stdout": "accent check passed",
+                  "stderr": "",
+                  "exitCode": 0
+                }
+              }
+            }
+          },
+          {
+            "source_call_id": "claude-call-2",
+            "content": "updated"
+          },
+          {
+            "source_call_id": "claude-call-3",
+            "content": "written"
+          }
+        ]
+      },
+      "metrics": {
+        "prompt_tokens": 120,
+        "completion_tokens": 30,
+        "cached_tokens": 20,
+        "cost_usd": 0.001
+      },
+      "llm_call_count": 1
+    }
+  ],
+  "final_metrics": {
+    "total_prompt_tokens": 120,
+    "total_completion_tokens": 30,
+    "total_cached_tokens": 20,
+    "total_cost_usd": 0.001,
+    "total_steps": 2
+  }
+}

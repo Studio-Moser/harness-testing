@@ -1,0 +1,12 @@
+:root {
+  --section-gap: 2rem;
+  color: #172033;
+  font-family: system-ui, sans-serif;
+}
+
+.page-shell {
+  display: grid;
+  gap: var(--section-gap);
+  max-width: 60rem;
+  margin-inline: auto;
+}

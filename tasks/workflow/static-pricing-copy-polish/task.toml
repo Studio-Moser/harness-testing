@@ -1,0 +1,56 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+]
+
+[task]
+name = "studio-moser/static-pricing-copy-polish"
+version = "1.0.0"
+description = "Measures whether a coding agent uses direct proof for a static-site copy and token polish change."
+authors = [{ name = "Studio Moser" }]
+keywords = ["html", "css", "polish", "testing-churn"]
+
+[metadata]
+difficulty = "easy"
+category = "workflow"
+tags = ["html", "css", "polish", "testing-churn"]
+change_class = "polish"
+verification_envelope = "polish"
+fixture_digest = "sha256:08bf91889c7219cb0447e4441f0766f3742c1d1f1ed57fef39d14662a12b16a6"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

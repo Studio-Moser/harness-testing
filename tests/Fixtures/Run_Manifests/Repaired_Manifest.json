@@ -1,0 +1,19 @@
+{
+  "agent_timeout_seconds": 900,
+  "api_equivalent_cost_usd": "0",
+  "attempts": 1,
+  "billing_mode": "subscription",
+  "cells": [],
+  "concurrency": 1,
+  "digest": "sha256:82ff55c57bfd1c924fbc9b367081797953a3237cfc2ef34bea58d6e13fc0ca01",
+  "estimated_budget_usd": "0",
+  "harbor_config_paths": [],
+  "max_budget_usd": "0",
+  "max_sessions": 1,
+  "profile": "smoke",
+  "provenance": {},
+  "schema_version": "0.3.0",
+  "session_count": 0,
+  "skill_evaluation": null,
+  "task_ids": []
+}

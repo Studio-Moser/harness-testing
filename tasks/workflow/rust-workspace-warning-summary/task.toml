@@ -1,0 +1,56 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+]
+
+[task]
+name = "studio-moser/rust-workspace-warning-summary"
+version = "1.0.0"
+description = "Measures a three-crate Rust change with focused checks and one workspace gate."
+authors = [{ name = "Studio Moser" }]
+keywords = ["rust", "workspace", "feature", "testing-churn"]
+
+[metadata]
+difficulty = "medium"
+category = "workflow"
+tags = ["rust", "workspace", "feature", "testing-churn"]
+change_class = "feature"
+verification_envelope = "feature"
+fixture_digest = "sha256:4997d1397cac3572f529a11c94168d0427dddb3d8a0cd36bb2bb5e7d71979273"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 240.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

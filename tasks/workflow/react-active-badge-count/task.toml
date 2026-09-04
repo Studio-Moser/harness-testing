@@ -1,0 +1,56 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+]
+
+[task]
+name = "studio-moser/react-active-badge-count"
+version = "1.0.0"
+description = "Measures whether a coding agent fixes one TypeScript selector with a focused regression and one final package suite."
+authors = [{ name = "Studio Moser" }]
+keywords = ["react", "typescript", "bug-fix", "testing-churn"]
+
+[metadata]
+difficulty = "easy"
+category = "workflow"
+tags = ["react", "typescript", "bug-fix", "testing-churn"]
+change_class = "small"
+verification_envelope = "small"
+fixture_digest = "sha256:9629c588f230fcbd2625a0e94f8d88dcf6143dfe42f29cc6120769c861eb07fd"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

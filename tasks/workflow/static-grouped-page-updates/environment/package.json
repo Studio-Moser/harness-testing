@@ -1,0 +1,17 @@
+{
+  "name": "static-grouped-page-updates",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "check:hero": "node scripts/Check_Page.mjs hero",
+    "check:spacing": "node scripts/Check_Page.mjs spacing",
+    "check:main": "node scripts/Check_Page.mjs main",
+    "test": "vitest run",
+    "gate": "npm test"
+  },
+  "devDependencies": {
+    "happy-dom": "20.11.13",
+    "vitest": "4.1.11"
+  }
+}

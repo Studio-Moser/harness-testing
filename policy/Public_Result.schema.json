@@ -1,0 +1,424 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://studio-moser.github.io/harness-testing/Public_Result.schema.json",
+  "title": "Harness Testing Public Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "result_id",
+    "run",
+    "review",
+    "provider",
+    "skill_evaluation",
+    "arm",
+    "task",
+    "dataset",
+    "provenance",
+    "compatibility",
+    "dimensions",
+    "efficiency",
+    "infrastructure",
+    "source_links"
+  ],
+  "properties": {
+    "schema_version": {"const": "1"},
+    "result_id": {"$ref": "#/$defs/digest"},
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "trial_id",
+        "manifest_digest",
+        "harness_testing_commit",
+        "started_at",
+        "finished_at",
+        "finalized_at",
+        "finalized",
+        "release_decision"
+      ],
+      "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "trial_id": {"type": "string", "format": "uuid"},
+        "manifest_digest": {"$ref": "#/$defs/digest"},
+        "harness_testing_commit": {"$ref": "#/$defs/commit"},
+        "started_at": {"$ref": "#/$defs/timestamp"},
+        "finished_at": {"$ref": "#/$defs/timestamp"},
+        "finalized_at": {"$ref": "#/$defs/timestamp"},
+        "finalized": {"type": "boolean"},
+        "release_decision": {
+          "enum": ["pass", "fail", "hold", "not-applicable"]
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_reviewed",
+        "infrastructure_reviewed",
+        "partial",
+        "quarantined",
+        "note"
+      ],
+      "properties": {
+        "task_reviewed": {"type": "boolean"},
+        "infrastructure_reviewed": {"type": "boolean"},
+        "partial": {"type": "boolean"},
+        "quarantined": {"type": "boolean"},
+        "note": {
+          "anyOf": [
+            {"type": "string", "minLength": 1, "maxLength": 500},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "agent",
+        "agent_version",
+        "agent_contract",
+        "model",
+        "effort"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "agent": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "agent_version": {"type": "string", "minLength": 1, "maxLength": 64},
+        "agent_contract": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._/-]*@[0-9]+$"
+        },
+        "model": {"type": "string", "minLength": 1, "maxLength": 128},
+        "effort": {"type": "string", "minLength": 1, "maxLength": 32}
+      }
+    },
+    "skill_evaluation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "name", "invocation"],
+          "properties": {
+            "mode": {"const": "none"},
+            "name": {"type": "null"},
+            "invocation": {"const": "none"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "name", "invocation"],
+          "properties": {
+            "mode": {"const": "capability"},
+            "name": {"$ref": "#/$defs/skillName"},
+            "invocation": {"const": "explicit"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "name", "invocation"],
+          "properties": {
+            "mode": {"const": "discovery"},
+            "name": {"$ref": "#/$defs/skillName"},
+            "invocation": {"enum": ["implicit", "not-observed"]}
+          }
+        }
+      ]
+    },
+    "arm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "bundle_digest", "source_commits"],
+      "properties": {
+        "id": {"enum": ["A0", "A1", "A2", "A3"]},
+        "role": {"enum": ["baseline", "candidate"]},
+        "bundle_digest": {"$ref": "#/$defs/digest"},
+        "source_commits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["studio_harness", "superpowers"],
+          "properties": {
+            "studio_harness": {"$ref": "#/$defs/nullableCommit"},
+            "superpowers": {"$ref": "#/$defs/nullableCommit"}
+          }
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "package", "pack", "digest"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "package": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._-]*$"
+        },
+        "pack": {"enum": ["workflow", "contract", "research"]},
+        "digest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "digest"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "digest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment_image_digest",
+        "scorer_digest",
+        "classifier_digest",
+        "methodology_schema",
+        "methodology_digest"
+      ],
+      "properties": {
+        "environment_image_digest": {"$ref": "#/$defs/digest"},
+        "scorer_digest": {"$ref": "#/$defs/digest"},
+        "classifier_digest": {"$ref": "#/$defs/digest"},
+        "methodology_schema": {
+          "type": "string",
+          "pattern": "^[0-9]+(?:\\.[0-9]+)*$"
+        },
+        "methodology_digest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "reviewed_mapping"],
+      "properties": {
+        "key": {"$ref": "#/$defs/digest"},
+        "reviewed_mapping": {
+          "anyOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "compatible_with",
+                "review_id",
+                "reviewed_at",
+                "rationale"
+              ],
+              "properties": {
+                "compatible_with": {"$ref": "#/$defs/digest"},
+                "review_id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9][a-z0-9._-]*$"
+                },
+                "reviewed_at": {"$ref": "#/$defs/timestamp"},
+                "rationale": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["correctness", "workflow", "efficiency_policy"],
+      "properties": {
+        "correctness": {"$ref": "#/$defs/nullableScore"},
+        "workflow": {"$ref": "#/$defs/nullableScore"},
+        "efficiency_policy": {"$ref": "#/$defs/nullableScore"}
+      }
+    },
+    "efficiency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_seconds",
+        "verifier_seconds",
+        "prompt_tokens",
+        "completion_tokens",
+        "reasoning_tokens",
+        "cached_tokens",
+        "cost_usd",
+        "turns",
+        "tool_calls",
+        "commands",
+        "direct_checks",
+        "targeted_tests",
+        "package_tests",
+        "comprehensive_tests",
+        "test_seconds",
+        "premature_comprehensive_tests",
+        "duplicate_successful_commands",
+        "plans",
+        "reviews",
+        "subagents",
+        "worktrees",
+        "context_events",
+        "files_changed",
+        "generated_files",
+        "diff_lines",
+        "retries",
+        "timeouts",
+        "infrastructure_errors"
+      ],
+      "properties": {
+        "agent_seconds": {"$ref": "#/$defs/nullableNumber"},
+        "verifier_seconds": {"$ref": "#/$defs/nullableNumber"},
+        "prompt_tokens": {"$ref": "#/$defs/nullableInteger"},
+        "completion_tokens": {"$ref": "#/$defs/nullableInteger"},
+        "reasoning_tokens": {"$ref": "#/$defs/nullableInteger"},
+        "cached_tokens": {"$ref": "#/$defs/nullableInteger"},
+        "cost_usd": {"$ref": "#/$defs/nullableNumber"},
+        "turns": {"$ref": "#/$defs/nullableInteger"},
+        "tool_calls": {"$ref": "#/$defs/nullableInteger"},
+        "commands": {"$ref": "#/$defs/nullableInteger"},
+        "direct_checks": {"$ref": "#/$defs/nullableInteger"},
+        "targeted_tests": {"$ref": "#/$defs/nullableInteger"},
+        "package_tests": {"$ref": "#/$defs/nullableInteger"},
+        "comprehensive_tests": {"$ref": "#/$defs/nullableInteger"},
+        "test_seconds": {"$ref": "#/$defs/nullableNumber"},
+        "premature_comprehensive_tests": {"$ref": "#/$defs/nullableInteger"},
+        "duplicate_successful_commands": {"$ref": "#/$defs/nullableInteger"},
+        "plans": {"$ref": "#/$defs/nullableInteger"},
+        "reviews": {"$ref": "#/$defs/nullableInteger"},
+        "subagents": {"$ref": "#/$defs/nullableInteger"},
+        "worktrees": {"$ref": "#/$defs/nullableInteger"},
+        "context_events": {"$ref": "#/$defs/nullableInteger"},
+        "files_changed": {"$ref": "#/$defs/nullableInteger"},
+        "generated_files": {"$ref": "#/$defs/nullableInteger"},
+        "diff_lines": {"$ref": "#/$defs/nullableInteger"},
+        "retries": {"$ref": "#/$defs/nullableInteger"},
+        "timeouts": {"$ref": "#/$defs/nullableInteger"},
+        "infrastructure_errors": {"$ref": "#/$defs/nullableInteger"}
+      }
+    },
+    "infrastructure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "detail"],
+      "properties": {
+        "status": {
+          "enum": [
+            "passed",
+            "agent-task-failure",
+            "verifier-failure",
+            "task-definition-failure",
+            "provider-failure",
+            "authentication-failure",
+            "rate-limited",
+            "timeout",
+            "sandbox-failure",
+            "unknown"
+          ]
+        },
+        "detail": {
+          "anyOf": [
+            {"type": "string", "minLength": 1, "maxLength": 500},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "source_links": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "url", "digest"],
+        "properties": {
+          "label": {"type": "string", "minLength": 1, "maxLength": 100},
+          "url": {"type": "string", "format": "uri", "pattern": "^https://"},
+          "digest": {"$ref": "#/$defs/nullableCommit"}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "run": {
+            "type": "object",
+            "properties": {"finalized": {"const": true}},
+            "required": ["finalized"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "review": {
+            "type": "object",
+            "properties": {
+              "task_reviewed": {"const": true},
+              "infrastructure_reviewed": {"const": true},
+              "partial": {"const": false},
+              "quarantined": {"const": false}
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "nullableCommit": {
+      "anyOf": [
+        {"$ref": "#/$defs/commit"},
+        {"type": "null"}
+      ]
+    },
+    "skillName": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*(?::[a-z0-9][a-z0-9-]*)?$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "nullableNumber": {
+      "anyOf": [
+        {"type": "number", "minimum": 0},
+        {"type": "null"}
+      ]
+    },
+    "nullableInteger": {
+      "anyOf": [
+        {"type": "integer", "minimum": 0},
+        {"type": "null"}
+      ]
+    },
+    "nullableScore": {
+      "anyOf": [
+        {"type": "number", "minimum": 0, "maximum": 1},
+        {"type": "null"}
+      ]
+    }
+  }
+}

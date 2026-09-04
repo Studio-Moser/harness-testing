@@ -1,0 +1,39 @@
+[build-system]
+requires = ["uv-build==0.11.19"]
+build-backend = "uv_build"
+
+[project]
+name = "studio-moser-harness-testing"
+version = "0.1.0"
+description = "Deterministic evaluation of coding-agent harness quality and efficiency"
+readme = "README.md"
+requires-python = "==3.12.*"
+license = "MIT"
+dependencies = [
+  "harbor==0.22.0",
+  "harbor-rewardkit==0.1.7",
+  "jsonschema==4.26.0",
+  "PyYAML==6.0.3",
+]
+
+[project.scripts]
+harness-test = "harness_testing.CLI:main"
+
+[dependency-groups]
+dev = [
+  "pytest==9.1.1",
+  "ruff==0.16.5",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv.build-backend]
+module-name = "harness_testing"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

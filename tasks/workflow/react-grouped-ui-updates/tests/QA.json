@@ -1,0 +1,40 @@
+{
+  "cases": {
+    "adversarial": {
+      "commands": ["npm run gate"],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 1.0},
+      "mutation_paths": ["src/App.tsx", "src/index.css", "src/App.test.tsx"],
+      "script": "@shared/Adversarial.sh"
+    },
+    "near-miss": {
+      "commands": ["npm run check:accent"],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 0.0},
+      "mutation_paths": ["src/index.css"],
+      "script": "@shared/Near_Miss.sh"
+    },
+    "nop": {
+      "commands": [],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 0.0},
+      "mutation_paths": [],
+      "script": "@shared/Nop.sh"
+    },
+    "oracle": {
+      "commands": [
+        "npm run check:accent",
+        "npm run check:copy",
+        "npm run check:spacing",
+        "npm run gate"
+      ],
+      "expected": {"efficiency": 1.0, "reward": 1.0, "workflow": 1.0},
+      "mutation_paths": ["src/App.tsx", "src/index.css"],
+      "script": "solution/solve.sh"
+    },
+    "source-tamper": {
+      "commands": ["npm run gate"],
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 1.0},
+      "mutation_paths": ["src/App.tsx", "src/index.css"],
+      "script": "@shared/Source_Tamper.sh"
+    }
+  },
+  "schema_version": "1"
+}

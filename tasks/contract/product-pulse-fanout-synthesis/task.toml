@@ -1,0 +1,57 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+  { source = "/var/log/harness/Events.jsonl", service = "harness-stub" },
+]
+
+[task]
+name = "studio-moser/product-pulse-fanout-synthesis"
+version = "1.0.0"
+description = "Measures bulk research fanout, taste synthesis, and evidence acceptance."
+authors = [{ name = "Studio Moser" }]
+keywords = ["harness", "contract", "research", "synthesis"]
+
+[metadata]
+difficulty = "medium"
+category = "contract"
+tags = ["harness", "contract", "research", "synthesis"]
+change_class = "feature"
+verification_envelope = "contract"
+fixture_digest = "sha256:9b595daa9c17648adf502629aca9e8efef4de538992671162384f74cae304bad"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

@@ -1,0 +1,57 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "codex-fixture",
+  "agent": {
+    "name": "codex",
+    "version": "0.150.1",
+    "model_name": "gpt-5.6-terra"
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "source": "user",
+      "message": "Change the accent token."
+    },
+    {
+      "step_id": 2,
+      "source": "agent",
+      "message": "I will verify the focused behavior.",
+      "tool_calls": [
+        {
+          "tool_call_id": "codex-call-1",
+          "function_name": "shell",
+          "arguments": {
+            "cmd": "npm run check:accent"
+          }
+        },
+        {
+          "tool_call_id": "codex-call-2",
+          "function_name": "apply_patch",
+          "arguments": {
+            "patch": "*** Begin Patch\n*** Update File: /app/src/App.tsx\n@@\n-const accent = '#2563eb'\n+const accent = '#7c3aed'\n*** End Patch"
+          }
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "codex-call-1",
+            "content": "Process exited with code 0\nFinal output:\naccent check passed"
+          },
+          {
+            "source_call_id": "codex-call-2",
+            "content": "Done!"
+          }
+        ]
+      },
+      "llm_call_count": 1
+    }
+  ],
+  "final_metrics": {
+    "total_prompt_tokens": null,
+    "total_completion_tokens": null,
+    "total_cached_tokens": null,
+    "total_cost_usd": null,
+    "total_steps": 2
+  }
+}

@@ -1,0 +1,63 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+  { source = "/var/log/computer-use/Events.jsonl", service = "computer-use" },
+  { source = "/var/log/computer-use/Capture.png", service = "computer-use" },
+]
+
+[task]
+name = "studio-moser/standalone-computer-use"
+version = "1.0.0"
+description = "Measures real isolated computer use outside project-management lifecycle."
+authors = [{ name = "Studio Moser" }]
+keywords = ["harness", "contract", "computer-use", "mcp", "playwright"]
+
+[metadata]
+difficulty = "medium"
+category = "contract"
+tags = ["harness", "contract", "computer-use", "mcp", "playwright"]
+change_class = "feature"
+verification_envelope = "contract"
+fixture_digest = "sha256:773ba1162c71376683ffc86bf0626f8ea4d63170f052063ecf7a8fb91003e08f"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 1200.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+workdir = "/app"
+
+[[environment.mcp_servers]]
+name = "computer-use"
+transport = "streamable-http"
+url = "http://127.0.0.1:8000/mcp"
+args = []
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

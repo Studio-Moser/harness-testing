@@ -1,0 +1,209 @@
+from harbor.models.trajectories.observation_result import ObservationResult
+
+from harness_testing.Trajectory_Events import (
+    component_successes,
+    normalize_command,
+    result_success,
+    shell_mutation,
+    split_shell,
+)
+
+
+def test_result_success_reads_pinned_claude_metadata_and_bracketed_failures():
+    success = ObservationResult(
+        source_call_id="claude-success",
+        content="[stdout]\nall checks passed",
+        extra={
+            "tool_result_metadata": {
+                "tool_use_result": {"stdout": "all checks passed", "exitCode": 0}
+            }
+        },
+    )
+    failure = ObservationResult(
+        source_call_id="claude-failure",
+        content="[stderr]\nfailed\n\n[exit_code] 1",
+        extra={
+            "tool_result_metadata": {
+                "tool_use_result": {"stderr": "failed", "exitCode": 1}
+            }
+        },
+    )
+
+    assert result_success(success) is True
+    assert result_success(failure) is False
+
+
+def test_result_success_reads_current_claude_explicit_non_error_result():
+    success = ObservationResult(
+        source_call_id="claude-success",
+        content="[stdout]\nall checks passed\n[metadata] {}",
+        extra={
+            "tool_result_is_error": False,
+            "tool_result_metadata": {
+                "raw_tool_result": {
+                    "type": "tool_result",
+                    "is_error": False,
+                },
+                "tool_use_result": {
+                    "stdout": "all checks passed",
+                    "stderr": "",
+                    "interrupted": False,
+                },
+            },
+        },
+    )
+
+    assert result_success(success) is True
+    assert result_success(
+        ObservationResult(
+            source_call_id="claude-contradiction",
+            content="[exit_code] 1",
+            extra={"tool_result_is_error": False},
+        )
+    ) is False
+
+
+def test_result_success_reads_codex_tool_metadata_from_the_step():
+    result = ObservationResult(
+        source_call_id="codex-success",
+        content="completed",
+    )
+    step_extra = {
+        "tool_call_details": {
+            "codex-success": {"metadata": {"exit_code": 0}}
+        }
+    }
+
+    assert result_success(result, step_extra=step_extra, call_id="codex-success") is True
+
+
+def test_result_success_isolated_to_the_selected_codex_tool_call():
+    success = ObservationResult(
+        source_call_id="codex-success",
+        content="completed",
+    )
+    failure = ObservationResult(
+        source_call_id="codex-failure",
+        content="failed",
+    )
+    step_extra = {
+        "tool_call_details": {
+            "codex-success": {"metadata": {"exit_code": 0}},
+            "codex-failure": {"metadata": {"exit_code": 1}},
+        }
+    }
+
+    assert result_success(
+        success,
+        step_extra=step_extra,
+        call_id="codex-success",
+    ) is True
+    assert result_success(
+        failure,
+        step_extra=step_extra,
+        call_id="codex-failure",
+    ) is False
+
+
+def test_compound_shell_order_and_provable_success_are_preserved():
+    components = split_shell("cd /app && npm run gate && printf x >> src/App.tsx")
+
+    assert [component.command for component in components] == [
+        "cd /app",
+        "npm run gate",
+        "printf x >> src/App.tsx",
+    ]
+    assert [component.operator_before for component in components] == [None, "&&", "&&"]
+    assert component_successes(components, True) == (True, True, True)
+
+
+def test_normalize_command_removes_non_mutating_shell_redirection():
+    assert normalize_command(
+        "npm run gate 2>&1",
+        ignored_flags=frozenset(),
+        removable_prefixes=(),
+    ) == "npm run gate"
+
+
+def test_normalize_command_preserves_quoted_redirection_text():
+    quoted = normalize_command(
+        'echo "left 2>&1 right"',
+        ignored_flags=frozenset(),
+        removable_prefixes=(),
+    )
+
+    assert quoted == "echo left 2>&1 right"
+    assert quoted != normalize_command(
+        'echo "left  right"',
+        ignored_flags=frozenset(),
+        removable_prefixes=(),
+    )
+
+
+def test_normalize_command_preserves_ansi_c_quoted_redirection_text():
+    with_redirection_text = normalize_command(
+        r"printf %s $'left\' 2>&1 right'",
+        ignored_flags=frozenset(),
+        removable_prefixes=(),
+    )
+    without_redirection_text = normalize_command(
+        r"printf %s $'left\' right'",
+        ignored_flags=frozenset(),
+        removable_prefixes=(),
+    )
+
+    assert "2>&1" in with_redirection_text
+    assert with_redirection_text != without_redirection_text
+
+
+def test_declared_shell_mutations_detect_redirection_tee_and_relevant_directories():
+    mutation_patterns = (
+        r"(^|\s)(?:sed\s+-i|perl\s+-pi|touch|mkdir|mv|cp|rm)\s",
+        r"(?:>|>>|\btee\b)\s*\S+",
+        r"^(?:python(?:3)?|node)\s+(?:-c|-e)\b.*"
+        r"(?:write_text|writeFile|writeFileSync|open\s*\(|unlink|remove|rename|mkdir)",
+    )
+    relevant_path_patterns = (
+        r"(^|/)(?:src|app|lib|tests|crates|packages)(?:/|$)",
+        r"\.(?:css|html|jsx?|json|py|rs|toml|tsx?|ya?ml)$",
+    )
+
+    assert shell_mutation(
+        "printf x >> src/App.tsx", mutation_patterns, relevant_path_patterns
+    )[0] == "relevant"
+    assert shell_mutation(
+        "tee src/index.css", mutation_patterns, relevant_path_patterns
+    )[0] == "relevant"
+    assert shell_mutation(
+        "rm -rf src", mutation_patterns, relevant_path_patterns
+    )[0] == "relevant"
+    assert shell_mutation(
+        'python -c "from pathlib import Path; '
+        "Path('src/App.tsx').write_text('changed')\"",
+        mutation_patterns,
+        relevant_path_patterns,
+    )[0] == "relevant"
+
+
+def test_diagnostic_redirections_are_not_source_mutations():
+    mutation_patterns = (r"(?:>|>>|\btee\b)\s*\S+",)
+    relevant_path_patterns = (
+        r"(^|/)(?:src|app|lib|tests|crates|packages)(?:/|$)",
+        r"\.(?:css|html|jsx?|json|py|rs|toml|tsx?|ya?ml)$",
+    )
+
+    assert shell_mutation(
+        "git -C /app status --short 2>&1",
+        mutation_patterns,
+        relevant_path_patterns,
+    )[0] == "none"
+    assert shell_mutation(
+        "rg --files /app 2>/dev/null",
+        mutation_patterns,
+        relevant_path_patterns,
+    )[0] == "none"
+    assert shell_mutation(
+        "printf x >> src/App.tsx 2>/dev/null",
+        mutation_patterns,
+        relevant_path_patterns,
+    )[0] == "relevant"

@@ -1,0 +1,57 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+  { source = "/var/log/harness/Events.jsonl", service = "harness-stub" },
+]
+
+[task]
+name = "studio-moser/non-development-execution"
+version = "1.0.0"
+description = "Measures bounded non-code execution without development lifecycle churn."
+authors = [{ name = "Studio Moser" }]
+keywords = ["harness", "contract", "non-development", "scope"]
+
+[metadata]
+difficulty = "medium"
+category = "contract"
+tags = ["harness", "contract", "non-development", "scope"]
+change_class = "feature"
+verification_envelope = "contract"
+fixture_digest = "sha256:b54c0be2eb4574cb40eaa784e5bc9da391c2cfaf06989723d1f8bb32fcec7f93"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

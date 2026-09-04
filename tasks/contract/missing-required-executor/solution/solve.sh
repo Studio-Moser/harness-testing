@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd /app
+harness-stub capability-check '{"executor":"codex-cli","working_directory":"/app"}' >/tmp/capability.json
+cat > Harness_Result.json <<'JSON'
+{"status":"blocked","route":{"requested":"default","actual_model":"gpt-5.6-terra","effort":"high","provider":"codex","executor":null,"resolution":"primary","attempted":[],"fallback_reason":"required_executor_unavailable"},"artifacts":{"files":[],"report":null},"evidence":{"fixed_target":"capability-inventory:v1","checks":["codex-cli capability: absent"],"outcome":"unproven"},"telemetry":{"attempts":0,"elapsed":null,"verification_failures":0,"token_or_quota_usage":null},"shelby":{"project_id":null,"run_id":null,"checkpoint_ids":[]},"blockers":["required_executor_unavailable: resume when codex-cli is available or revise it with user approval"]}
+JSON
