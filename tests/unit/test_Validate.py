@@ -4,6 +4,7 @@ import re
 import shutil
 from pathlib import Path
 
+import yaml
 from test_Config import VALID_TASK
 
 import harness_testing.Validate as Validate
@@ -501,3 +502,14 @@ jobs:
 
     assert any("provider credentials" in failure.message for failure in failures)
     assert any("requires a full commit" in failure.message for failure in failures)
+
+
+def test_validate_workflow_cancels_superseded_runs():
+    workflow = yaml.safe_load(
+        (REPOSITORY_ROOT / ".github" / "workflows" / "Validate.yml").read_text()
+    )
+
+    assert workflow["concurrency"] == {
+        "group": "${{ github.workflow }}-${{ github.ref }}",
+        "cancel-in-progress": True,
+    }
