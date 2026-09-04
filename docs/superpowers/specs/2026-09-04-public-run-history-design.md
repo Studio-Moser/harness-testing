@@ -1,6 +1,6 @@
 # Public Run History and Automatic Dashboard Publication Design
 
-**Status:** Approved in chat; awaiting written-spec review
+**Status:** Approved
 **Date:** 2026-09-04
 **Scope:** Publish every recoverable, public-safe benchmark run to the Harness
 Testing dashboard without weakening the separate decision-grade result gate.
@@ -84,9 +84,13 @@ copy of Harbor output. Version 2 adds the evidence needed to interpret history:
 
 The existing identity, timestamps, profile, completion counts, provider, model,
 effort, arm, role, harness commit, task, score dimensions, runtime, token totals,
-cache totals, and API-equivalent cost remain. Unknown fields are rejected.
-Published reports must be version 2. The local loader may normalize a version 1
-report long enough to regenerate it; it may not publish version 1.
+and cache totals remain. Unknown fields are rejected. Version 2 separates the
+manifest's conservative admission estimate from observed API-equivalent usage:
+`admission_estimate_usd` records the former, while nullable
+`observed_api_equivalent_cost_usd` sums only measured job telemetry. The UI must
+never present the estimate as incurred usage. Published reports must be version
+2. The local loader may normalize a version 1 report long enough to regenerate
+it; it may not publish version 1.
 
 A series key is derived only from known compatibility inputs: task/dataset
 identity, environment and scoring identity, provider-agent contract, model and
@@ -126,17 +130,20 @@ switches or dirties the developer's current worktree. One publish invocation
 creates at most one data commit, even when `harness-test report sync` batches
 multiple pending reports.
 
-Model-backed planning records the publication mode and exact public repository
-in the content-addressed run manifest. The approval summary states that the
+Model-backed planning copies the publication mode, exact public repository,
+data branch, and workflow name from a tracked policy file into manifest
+provenance and the content-derived run identity. Existing manifests without
+that provenance remain local-only. The approval summary states that the
 allowlisted report will be public. Canonical repository runs default to public
 reporting; an explicitly planned local-only run remains possible. Execution
 never infers a different destination from ambient Git state.
 
-After a successful data push, the publisher sends a narrow GitHub repository
-dispatch event. The default-branch Pages workflow handles that event, checks out
-dashboard code from `main` and reports from `dashboard-data`, validates both
-schemas, and deploys one static build. Main-branch dashboard changes use the
-same build path. Existing Pages concurrency cancels superseded builds.
+After a successful data push, the publisher invokes the existing
+default-branch `Publish_Pages.yml` through GitHub's `workflow_dispatch`
+interface. The workflow checks out dashboard code from `main` and reports from
+`dashboard-data`, validates both schemas, and deploys one static build.
+Main-branch dashboard changes use the same build path. Existing Pages
+concurrency cancels superseded builds.
 
 This branch design avoids benchmark-data commits and pull requests on `main`
 while retaining a public, auditable report history. It adds no third-party
@@ -206,7 +213,7 @@ declared inputs, not free-form values sourced from a report.
 
 - A report-generation failure preserves the original benchmark error and adds
   a reporting note, matching the current runner behavior.
-- A publication or dispatch failure preserves the local outbox and prints a
+- A publication or workflow-dispatch failure preserves the local outbox and prints a
   retry command; it does not alter scores or infrastructure classification.
 - A data-branch conflict triggers one fresh fetch and normal non-force retry.
 - An older snapshot cannot overwrite a newer remote report.
@@ -225,7 +232,7 @@ Implementation follows targeted TDD:
    missing-provenance fixtures without touching trajectory files.
 3. Publisher tests use temporary repositories and a fake GitHub runner to prove
    one batched commit, monotonic updates, no force push, clean caller worktree,
-   pending-outbox retention, and one dispatch.
+   pending-outbox retention, and one workflow dispatch.
 4. Pages workflow and loader tests prove `main` code combines with
    `dashboard-data` reports and fails closed on invalid input.
 5. Dashboard tests prove every view handles all evidence classes and never
@@ -246,7 +253,7 @@ Start no provider model session for this work.
    full deterministic checkpoint.
 4. Merge code to `main` through a pull request.
 5. Initialize `dashboard-data`, publish the validated backfill in one commit,
-   and dispatch one Pages deployment.
+   and dispatch one Pages deployment through the default-branch workflow.
 6. Verify the public dashboard contains 21 cohorts and 182 job summaries and
    that incompatible evidence is visibly separated.
 7. Execute no new model run merely to test publication; future approved runs
