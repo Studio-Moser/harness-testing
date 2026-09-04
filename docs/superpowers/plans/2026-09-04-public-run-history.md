@@ -1141,7 +1141,7 @@ git commit -m "docs: explain public run history"
   tests; six production pages with 2 validated links; 45 workflow QA cases; and
   40 contract QA cases. No provider model session was started.
 
-- [ ] **Step 7: Push the feature branch, open a pull request, and require CI.**
+- [x] **Step 7: Push the feature branch, open a pull request, and require CI.**
 
 ```bash
 git push -u origin feature/public-run-history
@@ -1157,7 +1157,7 @@ Prepare the PR body in a temporary file outside the repository. Include the
 privacy boundary, and no-model-session statement. Wait for required checks and
 merge without bypassing a failed check.
 
-- [ ] **Step 8: Initialize the data branch without touching the code worktree.**
+- [x] **Step 8: Initialize the data branch without touching the code worktree.**
 
 After required checks pass and before merging if the new Pages workflow would
 otherwise race a missing branch, create one orphan branch in a temporary clone:
@@ -1175,7 +1175,7 @@ files, commit with the fixed publication identity, and push
 `dashboard-data`. Never force-push. Remove the temporary directory only after
 the push is verified.
 
-- [ ] **Step 9: Merge code, sync local main, and publish one backfill commit.**
+- [x] **Step 9: Merge code, sync local main, and publish one backfill commit.**
 
 Merge the PR, fast-forward the dedicated local `main`, delete only this merged
 topic branch, and run:
@@ -1187,7 +1187,7 @@ uv run harness-test report sync
 Expected: one `dashboard-data` commit containing 21 JSON reports, 21 local
 publication receipts, and one `Publish_Pages.yml` workflow dispatch.
 
-- [ ] **Step 10: Verify the live dashboard.**
+- [x] **Step 10: Verify the live dashboard.**
 
 Wait for the dispatched Pages workflow, then verify
 `https://studio-moser.github.io/harness-testing/` in the collaborative browser:
@@ -1201,3 +1201,29 @@ Wait for the dispatched Pages workflow, then verify
 - the public JSON contains no raw prompt, trajectory, command output, credential, or local path.
 
 Record the data commit, Pages run, deployed URL, and final test counts in this plan.
+
+#### Deployment evidence (2026-09-04)
+
+- [PR #4](https://github.com/Studio-Moser/harness-testing/pull/4) passed its
+  affected-validation check and merged as `b06b50c` without bypassing CI.
+- The orphan `dashboard-data` branch began at `fab6bc3` with only `README.md`.
+  The isolated temporary clone was moved to Trash after the remote push was
+  verified.
+- `harness-test report sync` published exactly one data commit, `eabc0d2`, with
+  21 JSON reports, wrote 21 matching local receipts, and issued one Pages
+  workflow dispatch.
+- [Pages run 33906145993](https://github.com/Studio-Moser/harness-testing/actions/runs/33906145993)
+  deployed successfully in 26 seconds to
+  <https://studio-moser.github.io/harness-testing/>.
+- Live data contains 21 run cohorts and 182 jobs. The latest
+  `run-ba05867eab926cd91f6c` smoke is 3/3 and 100% on correctness, workflow, and
+  efficiency policy. The Aug 28 archived smoke and Aug 29 pre-run-ID release
+  appear as quarantined legacy evidence; failed and partial runs expose their
+  limitations.
+- All six pages rendered without a live console or network error. Each of the
+  six Trends filters changed the 182-observation set independently and reset to
+  182. The nine displayed cross-run changes all matched an equal, non-null
+  series key. Landing and Trends had no horizontal overflow at 390 pixels.
+- A recursive scan of the deployed JSON using the production public-safety key
+  and value rules returned zero violations for private fields, secret-shaped
+  strings, credentials, or local paths.
