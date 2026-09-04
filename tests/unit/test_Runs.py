@@ -25,7 +25,11 @@ from harness_testing.Materialize import (
     _tree_digest,
     materialize_arm,
 )
-from harness_testing.Run_Reports import load_run_report, validate_run_report
+from harness_testing.Run_Reports import (
+    load_run_report,
+    run_report_id,
+    validate_run_report,
+)
 from harness_testing.Runs import (
     RunCell,
     _verify_generated_inputs,
@@ -282,6 +286,7 @@ commit = "{harness_commit}"
     for relative in (
         "images/Node_Agent.Dockerfile",
         "images/Verifier.Dockerfile",
+        "policy/Dashboard_Publication.toml",
         "policy/Run_Report.schema.json",
         "src/harness_testing/Claude_Agent.py",
         "src/harness_testing/Codex_Agent.py",
@@ -525,6 +530,51 @@ def _compile_pair(root: Path, **overrides):
     }
     arguments.update(overrides)
     return compile_run(**arguments)
+
+
+def test_new_manifest_binds_public_report_destination(run_root: Path):
+    manifest = _compile_pair(run_root)
+
+    assert manifest.provenance["report_publication"] == {
+        "mode": "public",
+        "repository": "Studio-Moser/harness-testing",
+        "data_branch": "dashboard-data",
+        "workflow": "Publish_Pages.yml",
+        "code_ref": "main",
+    }
+    assert "Public run report: Studio-Moser/harness-testing" in Runs.format_plan(
+        manifest
+    )
+
+
+def test_local_only_manifest_is_explicit_and_content_addressed(run_root: Path):
+    public = _compile_pair(run_root)
+    local = _compile_pair(run_root, publish_report=False)
+
+    assert local.provenance["report_publication"] == {"mode": "local-only"}
+    assert local.digest != public.digest
+    assert local.provenance["run_id"] != public.provenance["run_id"]
+
+
+def test_v2_report_separates_estimate_from_observed_cost(run_root: Path):
+    manifest = _compile_pair(run_root)
+    for index, relative_path in enumerate(manifest.harbor_config_paths):
+        job = load_job(manifest.path.parent / relative_path)
+        _write_completed_job(
+            run_root,
+            manifest.cells[index % len(manifest.cells)],
+            job.job_name,
+        )
+
+    report_path = Run_Reports.write_run_report(run_root, manifest, "completed")
+    report = json.loads(report_path.read_text())
+
+    assert report["schema_version"] == "2"
+    assert report["admission_estimate_usd"] == float(
+        manifest.api_equivalent_cost_usd
+    )
+    assert report["observed_api_equivalent_cost_usd"] == 0.04
+    assert report["report_id"] == run_report_id(report)
 
 
 def test_codex_candidate_version_can_differ_from_ledger_version(

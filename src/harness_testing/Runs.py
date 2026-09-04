@@ -37,6 +37,10 @@ from harness_testing.Materialize import (
     materialize_arm,
     require_current_image,
 )
+from harness_testing.Report_Publication import (
+    load_publication_target,
+    publication_manifest_record,
+)
 from harness_testing.Run_Reports import refresh_local_dashboard, write_run_report
 from harness_testing.Skill_Evaluation import SkillEvaluation, write_skill_evaluation_report
 from harness_testing.Validate import find_sensitive_keys, validate_repository
@@ -1220,6 +1224,7 @@ def compile_run(
     concurrency: int | None = None,
     agent_timeout_seconds: int | None = None,
     skill_evaluation: SkillEvaluation | None = None,
+    publish_report: bool = True,
 ) -> RunManifest:
     """Compile immutable one-cell task shards and write a dry-run manifest."""
 
@@ -1315,6 +1320,11 @@ def compile_run(
     agent_adapter_digests = _agent_adapter_digests(root)
     versions_digest = _sha256((root / "Versions.toml").read_bytes())
     profiles_digest = _sha256((root / "runs" / "Profiles.toml").read_bytes())
+    report_publication = (
+        publication_manifest_record(load_publication_target(root))
+        if publish_report
+        else {"mode": "local-only"}
+    )
 
     def build_job_documents(run_id: str) -> dict[str, tuple[dict[str, object], str]]:
         documents = {}
@@ -1365,6 +1375,7 @@ def compile_run(
         "task_digests": task_digests,
         "image_input_digests": image_input_digests,
         "agent_adapter_digests": agent_adapter_digests,
+        "report_publication": report_publication,
         "harbor_configs": {
             path: {
                 key: value
@@ -1394,6 +1405,7 @@ def compile_run(
         "task_digests": task_digests,
         "image_input_digests": image_input_digests,
         "agent_adapter_digests": agent_adapter_digests,
+        "report_publication": report_publication,
         "budget_enforcement": (
             "subscription-only-no-api-fallback"
             if billing_mode == "subscription"
@@ -1502,6 +1514,7 @@ def plan_run(
     concurrency: int | None = None,
     agent_timeout_seconds: int | None = None,
     skill_evaluation: SkillEvaluation | None = None,
+    publish_report: bool = True,
 ) -> RunManifest:
     if not cell_specifications:
         raise ValueError("at least one explicit --cell is required; no matrix is implicit")
@@ -1518,6 +1531,7 @@ def plan_run(
         concurrency=concurrency,
         agent_timeout_seconds=agent_timeout_seconds,
         skill_evaluation=skill_evaluation,
+        publish_report=publish_report,
     )
 
 
@@ -1554,6 +1568,7 @@ def format_plan(manifest: RunManifest) -> str:
             else "Budget enforcement: admission estimate only; no consistent provider "
             "hard stop"
         ),
+        _format_publication(manifest),
         "Cells:",
     ]
     for cell in manifest.cells:
@@ -1575,6 +1590,16 @@ def format_plan(manifest: RunManifest) -> str:
     lines.append(f"Manifest path: {manifest.path}")
     lines.append("No model session started.")
     return "\n".join(lines)
+
+
+def _format_publication(manifest: RunManifest) -> str:
+    publication = manifest.provenance.get("report_publication")
+    if not isinstance(publication, Mapping) or publication.get("mode") != "public":
+        return "Public run report: local-only"
+    return (
+        f"Public run report: {publication['repository']} "
+        f"({publication['data_branch']}; {publication['workflow']})"
+    )
 
 
 def load_manifest(path: Path) -> RunManifest:
@@ -1611,6 +1636,15 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     )
     if manifest.provenance.get("subscription_selectors") != expected_selectors:
         raise ValueError("manifest subscription selectors do not match its billing route")
+    report_publication = manifest.provenance.get("report_publication")
+    if report_publication is not None and report_publication != {"mode": "local-only"}:
+        expected_publication = publication_manifest_record(
+            load_publication_target(root)
+        )
+        if report_publication != expected_publication:
+            raise ValueError(
+                "manifest report publication does not match the tracked destination"
+            )
     versions = load_versions(root / "Versions.toml")
     for cell in manifest.cells:
         _validate_cell(root, cell, versions)

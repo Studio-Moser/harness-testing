@@ -859,9 +859,26 @@ def affected_validation_commands(
     for name in names:
         path = Path(name)
         parts = path.parts
-        if name == "src/harness_testing/Run_Reports.py":
-            unit_tests.add("tests/unit/test_Runs.py")
+        if name in {
+            "src/harness_testing/Report_Publication.py",
+            "src/harness_testing/Run_Reports.py",
+        }:
+            unit_tests.update(
+                {
+                    "tests/unit/test_Report_Publication.py",
+                    "tests/unit/test_Runs.py",
+                    "tests/unit/test_Validate.py",
+                }
+            )
             dashboard = True
+        elif name == "src/harness_testing/Public_Safety.py":
+            unit_tests.update(
+                {
+                    "tests/unit/test_Public_Safety.py",
+                    "tests/unit/test_Results.py",
+                    "tests/unit/test_Runs.py",
+                }
+            )
         elif name.startswith("src/harness_testing/") and name.endswith(".py"):
             candidate = root / "tests" / "unit" / f"test_{path.stem}.py"
             if candidate.is_file():
@@ -916,9 +933,16 @@ def affected_validation_commands(
             images.add("verifier")
             workflow_pack = True
 
-        if name == "policy/Run_Report.schema.json":
+        if name in {
+            "policy/Dashboard_Publication.toml",
+            "policy/Run_Report.schema.json",
+        }:
             unit_tests.update(
-                {"tests/unit/test_Runs.py", "tests/unit/test_Validate.py"}
+                {
+                    "tests/unit/test_Report_Publication.py",
+                    "tests/unit/test_Runs.py",
+                    "tests/unit/test_Validate.py",
+                }
             )
             dashboard = True
         elif name in _POLICY_PATHS or name.startswith("policy/"):

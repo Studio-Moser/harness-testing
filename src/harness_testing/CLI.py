@@ -102,6 +102,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     plan_parser.add_argument("--attempts", type=int)
     plan_parser.add_argument("--concurrency", type=int)
     plan_parser.add_argument("--agent-timeout-seconds", type=int)
+    plan_parser.add_argument("--local-report-only", action="store_true")
     skill_evaluation = plan_parser.add_mutually_exclusive_group()
     skill_evaluation.add_argument("--invoke-skill")
     skill_evaluation.add_argument("--observe-skill")
@@ -255,6 +256,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             concurrency=arguments.concurrency,
             agent_timeout_seconds=arguments.agent_timeout_seconds,
             skill_evaluation=evaluation,
+            publish_report=not arguments.local_report_only,
         )
         print(format_plan(manifest))
     elif arguments.command == "run" and arguments.run_command == "execute":

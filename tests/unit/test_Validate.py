@@ -435,7 +435,44 @@ def test_affected_validation_routes_dashboard_images_and_core_schema_changes():
             "check",
             "src/harness_testing/Run_Reports.py",
         ),
-        ("uv", "run", "pytest", "-q", "tests/unit/test_Runs.py", "tests/unit/test_Validate.py"),
+        (
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/unit/test_Report_Publication.py",
+            "tests/unit/test_Runs.py",
+            "tests/unit/test_Validate.py",
+        ),
+        ("npm", "ci", "--prefix", "dashboard", "--ignore-scripts"),
+        ("npm", "--prefix", "dashboard", "test"),
+        ("npm", "--prefix", "dashboard", "run", "build"),
+    )
+
+    publication = affected_validation_commands(
+        REPOSITORY_ROOT,
+        [
+            Path("src/harness_testing/Report_Publication.py"),
+            Path("policy/Dashboard_Publication.toml"),
+        ],
+    )
+    assert publication == (
+        (
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "src/harness_testing/Report_Publication.py",
+        ),
+        (
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/unit/test_Report_Publication.py",
+            "tests/unit/test_Runs.py",
+            "tests/unit/test_Validate.py",
+        ),
         ("npm", "ci", "--prefix", "dashboard", "--ignore-scripts"),
         ("npm", "--prefix", "dashboard", "test"),
         ("npm", "--prefix", "dashboard", "run", "build"),

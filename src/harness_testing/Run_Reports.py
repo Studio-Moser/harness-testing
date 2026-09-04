@@ -152,6 +152,69 @@ def _score(stats: Mapping[str, object], name: str) -> float | None:
     return sum(values) / len(values) if values else None
 
 
+def _content_digest(value: object) -> str:
+    payload = json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode()
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
+def _task_identity(manifest: RunManifest, task: str) -> tuple[str, str]:
+    task_digests = manifest.provenance.get("task_digests")
+    if not isinstance(task_digests, Mapping):
+        raise ValueError("run manifest has no task digests")
+    matches = [
+        (str(name).partition("/")[0], digest)
+        for name, digest in task_digests.items()
+        if str(name).partition("/")[2] == task
+    ]
+    if len(matches) != 1 or not isinstance(matches[0][1], str):
+        raise ValueError(f"run manifest has no unique task digest for {task}")
+    return matches[0][0], matches[0][1]
+
+
+def _series_key(
+    manifest: RunManifest,
+    cell: RunCell,
+    task_digest: str,
+    agent: str,
+    agent_version: str,
+) -> str:
+    adapter_digests = manifest.provenance.get("agent_adapter_digests")
+    image_input_digests = manifest.provenance.get("image_input_digests")
+    if not isinstance(adapter_digests, Mapping) or not isinstance(
+        image_input_digests, Mapping
+    ):
+        raise ValueError("run manifest has incomplete series provenance")
+    adapter_digest = adapter_digests.get(cell.provider)
+    if not isinstance(adapter_digest, str):
+        raise ValueError(f"run manifest has no adapter digest for {cell.provider}")
+    return _content_digest(
+        {
+            "manifest_schema_version": manifest.schema_version,
+            "provider": cell.provider,
+            "agent": agent,
+            "agent_version": agent_version,
+            "model": cell.model,
+            "effort": cell.effort,
+            "arm": cell.arm,
+            "role": cell.role,
+            "skill_evaluation": (
+                manifest.skill_evaluation.to_dict()
+                if manifest.skill_evaluation is not None
+                else None
+            ),
+            "task_digest": task_digest,
+            "image_input_digests": dict(image_input_digests),
+            "agent_adapter_digest": adapter_digest,
+            "dataset_digest": manifest.provenance.get("deepswe_dataset_digest"),
+        }
+    )
+
+
 def _job_status(
     result: Mapping[str, object] | None,
     *,
@@ -208,7 +271,13 @@ def _job_report(
 ) -> dict[str, object]:
     cell: RunCell = manifest.cells[index % len(manifest.cells)]
     task = manifest.task_ids[index // len(manifest.cells)]
-    job_name = load_job(manifest.path.parent / relative_path).job_name
+    job_config = load_job(manifest.path.parent / relative_path)
+    job_name = job_config.job_name
+    agent_config = job_config.agents[0]
+    agent_version = agent_config.kwargs.get("version")
+    if not isinstance(agent_version, str) or not agent_version:
+        raise ValueError(f"Harbor job has no agent version: {relative_path}")
+    task_pack, task_digest = _task_identity(manifest, task)
     result = _read_object(root / "jobs" / "raw" / job_name / "result.json")
     status, counts = _job_status(result, expected_trials=manifest.attempts)
     stats = result.get("stats") if isinstance(result, Mapping) else None
@@ -223,12 +292,25 @@ def _job_report(
     return {
         "name": job_name,
         "provider": cell.provider,
+        "agent": agent_config.import_path,
+        "agent_version": agent_version,
         "arm": cell.arm,
         "role": cell.role,
         "model": cell.model,
         "effort": cell.effort,
         "harness_commit": cell.harness_commit,
         "task": task,
+        "task_pack": task_pack,
+        "task_digest": task_digest,
+        "comparability": "comparable",
+        "series_key": _series_key(
+            manifest,
+            cell,
+            task_digest,
+            agent_config.import_path,
+            agent_version,
+        ),
+        "series_key_unavailable_reason": None,
         "status": status,
         "started_at": started_at,
         "finished_at": finished_at,
@@ -281,10 +363,39 @@ def write_run_report(
         else updated_at
     )
     job_finishes = [job["finished_at"] for job in jobs if job["finished_at"] is not None]
+    completed_jobs = sum(job["status"] == "completed" for job in jobs)
+    failed_jobs = sum(job["status"] in {"failed", "incomplete"} for job in jobs)
+    pending_jobs = sum(job["status"] in {"pending", "running"} for job in jobs)
+    completed_trials = sum(int(job["completed_trials"]) for job in jobs)
+    failed_trials = sum(
+        int(job["errored_trials"]) + int(job["cancelled_trials"])
+        for job in jobs
+    )
+    limitations: list[str] = []
+    if completed_jobs != len(jobs) or completed_trials != manifest.session_count:
+        limitations.append("partial-run")
+    if status == "failed" or failed_jobs or failed_trials:
+        limitations.append("failed-run")
+    if failed_trials:
+        limitations.append("infrastructure-failure")
+    observed_costs = [
+        cost
+        for job in jobs
+        if isinstance(job.get("efficiency"), Mapping)
+        for cost in [job["efficiency"].get("api_equivalent_cost_usd")]
+        if isinstance(cost, int | float) and not isinstance(cost, bool)
+    ]
     report: dict[str, object] = {
-        "schema_version": "1",
+        "schema_version": "2",
+        "report_id": "",
+        "manifest_schema_version": manifest.schema_version,
         "manifest_digest": manifest.digest,
         "run_id": manifest.provenance["run_id"],
+        "source": {"kind": "current", "label": None},
+        "evidence": {
+            "review_state": "unreviewed",
+            "limitations": limitations,
+        },
         "profile": manifest.profile,
         "status": status,
         "started_at": started_at,
@@ -293,30 +404,22 @@ def write_run_report(
             max(job_finishes) if job_finishes else updated_at
         ) if status != "running" else None,
         "expected_jobs": len(jobs),
-        "completed_jobs": sum(job["status"] == "completed" for job in jobs),
-        "failed_jobs": sum(job["status"] in {"failed", "incomplete"} for job in jobs),
-        "pending_jobs": sum(job["status"] in {"pending", "running"} for job in jobs),
+        "completed_jobs": completed_jobs,
+        "failed_jobs": failed_jobs,
+        "pending_jobs": pending_jobs,
         "expected_trials": manifest.session_count,
-        "completed_trials": sum(int(job["completed_trials"]) for job in jobs),
-        "failed_trials": sum(
-            int(job["errored_trials"]) + int(job["cancelled_trials"])
-            for job in jobs
+        "completed_trials": completed_trials,
+        "failed_trials": failed_trials,
+        "admission_estimate_usd": float(manifest.api_equivalent_cost_usd),
+        "observed_api_equivalent_cost_usd": (
+            sum(observed_costs) if observed_costs else None
         ),
-        "api_equivalent_cost_usd": float(manifest.api_equivalent_cost_usd),
         "jobs": jobs,
     }
-    schema = _read_object(root / "policy" / "Run_Report.schema.json")
-    if schema is None:
-        raise ValueError("local run report schema is unreadable")
-    validator = Draft202012Validator(schema, format_checker=FormatChecker())
-    errors = sorted(validator.iter_errors(report), key=lambda error: list(error.path))
+    report["report_id"] = run_report_id(report)
+    errors = validate_run_report(root, report)
     if errors:
-        detail = "; ".join(
-            ("$." + ".".join(map(str, error.path)) if error.path else "$")
-            + f": {error.message}"
-            for error in errors
-        )
-        raise ValueError(f"local run report is invalid: {detail}")
+        raise ValueError("local run report is invalid: " + "; ".join(errors))
     contents = json.dumps(report, indent=2, sort_keys=True) + "\n"
     temporary = report_path.with_name(".Run_Report.json.tmp")
     temporary.write_text(contents)
