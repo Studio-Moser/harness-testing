@@ -25,6 +25,7 @@ from harness_testing.Materialize import (
     _tree_digest,
     materialize_arm,
 )
+from harness_testing.Run_Reports import load_run_report, validate_run_report
 from harness_testing.Runs import (
     RunCell,
     _verify_generated_inputs,
@@ -34,6 +35,7 @@ from harness_testing.Runs import (
 from harness_testing.Skill_Evaluation import SkillEvaluation
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
+RUN_REPORT_FIXTURES = REPOSITORY_ROOT / "tests" / "Fixtures" / "Run_Reports"
 PROFILE_TEXT = """\
 schema_version = "1"
 
@@ -68,6 +70,45 @@ estimated_output_tokens_per_session = 200000
 
 def _digest(character: str) -> str:
     return f"sha256:{character * 64}"
+
+
+def test_published_run_report_requires_v2_and_content_identity(run_root: Path):
+    report = json.loads((RUN_REPORT_FIXTURES / "Valid.json").read_text())
+    assert validate_run_report(run_root, report, published=True) == ()
+    report["report_id"] = f"sha256:{'0' * 64}"
+    assert "identity does not match" in "; ".join(
+        validate_run_report(run_root, report, published=True)
+    )
+
+
+def test_v1_run_report_is_local_only(run_root: Path):
+    path = RUN_REPORT_FIXTURES / "Legacy_V1.json"
+    report = json.loads(path.read_text())
+    assert any(
+        "version 1" in error
+        for error in validate_run_report(run_root, report, published=True)
+    )
+    assert load_run_report(run_root, path)["schema_version"] == "1"
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("prompt", "private", "forbidden public field"),
+        ("unexpected", "summary", "run report schema"),
+        ("note", "/Users/example/private", "sensitive or local-only string"),
+        ("note", "Authorization: Bearer private-token", "sensitive or local-only string"),
+    ],
+)
+def test_run_report_rejects_non_public_content(
+    run_root: Path,
+    field: str,
+    value: str,
+    message: str,
+):
+    report = json.loads((RUN_REPORT_FIXTURES / "Valid.json").read_text())
+    report[field] = value
+    assert message in "; ".join(validate_run_report(run_root, report, published=True))
 
 
 def _cell(

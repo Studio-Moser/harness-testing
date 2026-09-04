@@ -1,17 +1,7 @@
 {
-  "schema_version": "2",
-  "report_id": "sha256:bd3ece40d907d7f41c10455e6da59779f727a4d9b9afc417a0d636501d808317",
-  "manifest_schema_version": "0.3.0",
+  "schema_version": "1",
   "manifest_digest": "sha256:d73dda59bad84372f94499627e52325aa49bb01d8141d8eccfbba0cc2375f05a",
   "run_id": "run-d73dda59bad84372f944",
-  "source": {
-    "kind": "current",
-    "label": null
-  },
-  "evidence": {
-    "review_state": "unreviewed",
-    "limitations": []
-  },
   "profile": "smoke",
   "status": "completed",
   "started_at": "2026-09-03T20:00:00Z",
@@ -24,25 +14,17 @@
   "expected_trials": 1,
   "completed_trials": 1,
   "failed_trials": 0,
-  "admission_estimate_usd": 1.25,
-  "observed_api_equivalent_cost_usd": 0.01,
+  "api_equivalent_cost_usd": 1.25,
   "jobs": [
     {
       "name": "run-d73dda59bad84372f944-codex-A2-candidate-react-saved-view-feature",
       "provider": "codex",
-      "agent": "harness_testing.Codex_Agent:HarnessCodex",
-      "agent_version": "0.150.1",
       "arm": "A2",
       "role": "candidate",
       "model": "gpt-5.6-terra",
       "effort": "high",
       "harness_commit": "c319557c681bf35c35fa348fdf38d45d12091cef",
       "task": "react-saved-view-feature",
-      "task_pack": "workflow",
-      "task_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
-      "comparability": "comparable",
-      "series_key": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
-      "series_key_unavailable_reason": null,
       "status": "completed",
       "started_at": "2026-09-03T20:00:00Z",
       "finished_at": "2026-09-03T20:01:00Z",

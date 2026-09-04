@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -11,8 +12,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema.exceptions import SchemaError
 
 from harness_testing.Config import load_job
+from harness_testing.Public_Safety import public_safety_errors
 
 if TYPE_CHECKING:
     from harness_testing.Runs import RunCell, RunManifest
@@ -26,6 +29,90 @@ def _read_object(path: Path) -> dict[str, Any] | None:
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return None
     return value if isinstance(value, dict) else None
+
+
+def run_report_id(document: Mapping[str, object]) -> str:
+    """Return the content identity of a public-safe run report."""
+
+    unsigned = dict(document)
+    unsigned.pop("report_id", None)
+    payload = json.dumps(
+        unsigned,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode()
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
+def _run_report_schema(root: Path) -> dict[str, object]:
+    schema = _read_object(root / "policy" / "Run_Report.schema.json")
+    if schema is None:
+        raise ValueError("run report schema is unreadable")
+    try:
+        Draft202012Validator.check_schema(schema)
+    except SchemaError as error:
+        raise ValueError(f"invalid run report schema: {error.message}") from error
+    return schema
+
+
+def _run_report_schema_errors(root: Path, document: object) -> list[str]:
+    validator = Draft202012Validator(
+        _run_report_schema(root),
+        format_checker=FormatChecker(),
+    )
+    errors = sorted(validator.iter_errors(document), key=lambda error: list(error.path))
+    return [
+        "run report schema: "
+        + ("$." + ".".join(map(str, error.path)) if error.path else "$")
+        + f": {error.message}"
+        for error in errors
+    ]
+
+
+def validate_run_report(
+    root: Path,
+    document: object,
+    *,
+    published: bool = False,
+) -> tuple[str, ...]:
+    """Validate one local or publishable allowlisted run report."""
+
+    errors = list(public_safety_errors(document))
+    errors.extend(_run_report_schema_errors(root, document))
+    if not isinstance(document, Mapping):
+        return tuple(dict.fromkeys(errors))
+    if published and document.get("schema_version") != "2":
+        errors.append(
+            f"run report schema version {document.get('schema_version')} is local-only; "
+            "published reports require version 2"
+        )
+    if (
+        document.get("schema_version") == "2"
+        and document.get("report_id") != run_report_id(document)
+    ):
+        errors.append("run report identity does not match its content")
+    return tuple(dict.fromkeys(errors))
+
+
+def load_run_report(
+    root: Path,
+    path: Path,
+    *,
+    published: bool = False,
+) -> dict[str, object]:
+    """Load one schema-valid run report from disk."""
+
+    try:
+        document = json.loads(path.read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError(f"invalid run report: {error}") from error
+    errors = validate_run_report(root, document, published=published)
+    if errors:
+        raise ValueError("invalid run report: " + "; ".join(errors))
+    if not isinstance(document, dict):
+        raise ValueError("invalid run report: expected a JSON object")
+    return document
 
 
 def _integer(value: object) -> int | None:
