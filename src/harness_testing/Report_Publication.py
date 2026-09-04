@@ -105,6 +105,29 @@ def _read_json_object(file_path: Path) -> dict[str, object] | None:
     return document if isinstance(document, dict) else None
 
 
+def _live_manifest_digest(
+    root: Path,
+    report_path: Path,
+    target: PublicationTarget,
+) -> str | None:
+    manifest_path = report_path.with_name("Manifest.json")
+    if not manifest_path.is_file():
+        return None
+    manifest = _read_json_object(manifest_path)
+    if manifest is None:
+        raise ValueError("live run report manifest is unreadable")
+    from harness_testing.Runs import verify_manifest_document
+
+    digest = verify_manifest_document(manifest)
+    provenance = manifest.get("provenance")
+    publication = (
+        provenance.get("report_publication")
+        if isinstance(provenance, dict)
+        else None
+    )
+    return digest if publication == publication_manifest_record(target) else None
+
+
 def _receipt_matches(
     report_path: Path,
     report_id: object,
@@ -129,7 +152,12 @@ def pending_run_reports(root: Path) -> tuple[Path, ...]:
 
     root = root.resolve()
     target = load_publication_target(root)
-    candidates = tuple((root / "runs" / "generated").glob("*/Run_Report.json")) + tuple(
+    live_candidates = tuple(
+        path
+        for path in (root / "runs" / "generated").glob("*/Run_Report.json")
+        if _live_manifest_digest(root, path, target) is not None
+    )
+    candidates = live_candidates + tuple(
         path
         for path in (root / "runs" / "history").glob("*.json")
         if not path.name.endswith(".Publication.json")
@@ -191,6 +219,7 @@ def _timestamp(value: object) -> datetime:
 def _validated_reports(
     root: Path,
     report_paths: tuple[Path, ...],
+    target: PublicationTarget,
 ) -> tuple[tuple[Path, dict[str, object]], ...]:
     validated: list[tuple[Path, dict[str, object]]] = []
     run_ids: set[str] = set()
@@ -214,6 +243,14 @@ def _validated_reports(
         if not is_live and not is_history:
             raise ValueError("run report to publish must use the local report outbox")
         report = load_run_report(root, resolved, published=True)
+        if is_live:
+            manifest_digest = _live_manifest_digest(root, resolved, target)
+            if manifest_digest is None:
+                raise ValueError(
+                    "live run report has no exact public publication binding"
+                )
+            if report.get("manifest_digest") != manifest_digest:
+                raise ValueError("live run report manifest digest does not match")
         run_id = report["run_id"]
         if not isinstance(run_id, str) or run_id in run_ids:
             raise ValueError("run report batch contains a duplicate or invalid run ID")
@@ -369,7 +406,7 @@ def publish_run_reports(
         raise ValueError("publication target does not match the tracked policy")
     if len(set(path.resolve() for path in report_paths)) != len(report_paths):
         raise ValueError("run report batch contains duplicate paths")
-    reports = _validated_reports(root, report_paths)
+    reports = _validated_reports(root, report_paths, target)
     if not reports:
         return ()
     try:
@@ -400,17 +437,22 @@ def publish_run_reports(
             cwd=root,
             stage="dispatch Pages workflow",
         )
+        receipts = tuple(
+            _write_receipt(
+                report_path,
+                str(report["report_id"]),
+                target,
+                commit,
+            )
+            for report_path, report in reports
+        )
     except _PublicationCommandError as error:
         raise ValueError(f"could not publish run reports during {error.stage}") from error
-    return tuple(
-        _write_receipt(
-            report_path,
-            str(report["report_id"]),
-            target,
-            commit,
-        )
-        for report_path, report in reports
-    )
+    except OSError as error:
+        raise ValueError(
+            "could not publish run reports during local filesystem access"
+        ) from error
+    return receipts
 
 
 def sync_pending_reports(

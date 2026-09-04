@@ -1070,8 +1070,8 @@ current worktree as sources:
 
 ```bash
 uv run harness-test report backfill \
-  --source-root "/Users/timmoser/Projects/Studio Moser Internal/Harness Testing" \
-  --source-root "/Users/timmoser/Projects/Studio Moser Internal/Harness Testing/.worktrees/harness-testing-current-main" \
+  --source-root "$HARNESS_HISTORY_ARCHIVE_ROOT" \
+  --source-root "$PWD" \
   --mapping runs/Historical_Backfill.toml \
   --output runs/history
 ```

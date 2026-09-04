@@ -7,8 +7,8 @@ function providerKey(provider) {
   return provider;
 }
 
-function matchKey(manifestDigest, provider, arm, task) {
-  return [manifestDigest, providerKey(provider), arm, task].join("\0");
+function matchKey(manifestDigest, provider, arm, role, task) {
+  return [manifestDigest, providerKey(provider), arm, role, task].join("\0");
 }
 
 function resultSortKey(result) {
@@ -158,6 +158,7 @@ export function runObservations(runReports, finalizedResults) {
       result.run.manifest_digest,
       result.provider.agent,
       result.arm.id,
+      result.arm.role,
       result.task.id
     );
     const matches = finalizedByJob.get(key) ?? [];
@@ -173,7 +174,7 @@ export function runObservations(runReports, finalizedResults) {
   for (const report of runReports) {
     for (const job of report.jobs) {
       const matches = finalizedByJob.get(
-        matchKey(report.manifest_digest, job.provider, job.arm, job.task)
+        matchKey(report.manifest_digest, job.provider, job.arm, job.role, job.task)
       ) ?? [];
       matches.forEach((result) => matchedResultIds.add(result.result_id));
       observations.push(reportObservation(report, job, matches));
@@ -216,21 +217,25 @@ export function pairedArmComparisons(observations) {
   for (const observation of observations) {
     if (observation.arm !== "A0" && observation.arm !== "A2") continue;
     const key = [observation.runId, observation.provider, observation.task].join("\0");
-    const group = groups.get(key) ?? {};
-    group[observation.arm] = observation;
+    const group = groups.get(key) ?? {A0: [], A2: []};
+    group[observation.arm].push(observation);
     groups.set(key, group);
   }
   return [...groups.entries()]
-    .filter(([, group]) => group.A0 != null && group.A2 != null)
-    .map(([key, group]) => ({
-      comparisonId: key,
-      runId: group.A0.runId,
-      provider: group.A0.provider,
-      task: group.A0.task,
-      baseline: group.A0,
-      candidate: group.A2,
-      ...observationDelta(group.A0, group.A2)
-    }))
+    .filter(([, group]) => group.A0.length === 1 && group.A2.length === 1)
+    .map(([key, group]) => {
+      const baseline = group.A0[0];
+      const candidate = group.A2[0];
+      return {
+        comparisonId: key,
+        runId: baseline.runId,
+        provider: baseline.provider,
+        task: baseline.task,
+        baseline,
+        candidate,
+        ...observationDelta(baseline, candidate)
+      };
+    })
     .sort((left, right) => compareText(left.comparisonId, right.comparisonId));
 }
 

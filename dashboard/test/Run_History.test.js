@@ -126,6 +126,48 @@ test("pairs A0 and A2 only within the same run provider and task", () => {
   assert.equal(pairs[0].candidate.observationId, candidate.observationId);
 });
 
+test("does not pair a group containing duplicate arms", () => {
+  const baseline = observation();
+  const duplicateBaseline = observation({
+    observationId: "run-a\0job-duplicate",
+    role: "calibration"
+  });
+  const candidate = observation({
+    observationId: "run-a\0job-b",
+    arm: "A2",
+    role: "candidate"
+  });
+
+  assert.deepEqual(
+    pairedArmComparisons([baseline, duplicateBaseline, candidate]),
+    []
+  );
+});
+
+test("matches finalized evidence to the exact cell role", async () => {
+  const report = await fixture("tests/Fixtures/Run_Reports/Valid.json");
+  const otherRole = structuredClone(report.jobs[0]);
+  otherRole.name = `${otherRole.name}-calibration`;
+  otherRole.role = "calibration";
+  report.jobs.push(otherRole);
+  report.expected_jobs = 2;
+  report.completed_jobs = 2;
+  report.expected_trials = 2;
+  report.completed_trials = 2;
+
+  const finalized = await fixture("tests/Fixtures/Public_Results/Valid.json");
+  finalized.run.manifest_digest = report.manifest_digest;
+  finalized.provider.agent = "codex";
+  finalized.arm.id = report.jobs[0].arm;
+  finalized.arm.role = report.jobs[0].role;
+  finalized.task.id = report.jobs[0].task;
+
+  const observations = runObservations([report], [finalized]);
+
+  assert.equal(observations[0].resultId, finalized.result_id);
+  assert.equal(observations[1].resultId, null);
+});
+
 test("counts partial and failed run coverage as overlapping states", () => {
   const run = {
     status: "failed",

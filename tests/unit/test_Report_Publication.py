@@ -1,3 +1,4 @@
+import hashlib
 import json
 import shutil
 import subprocess
@@ -6,6 +7,7 @@ from pathlib import Path
 import pytest
 
 import harness_testing.CLI as CLI
+import harness_testing.Report_Publication as Report_Publication
 from harness_testing.Report_Publication import (
     PublicationTarget,
     load_publication_target,
@@ -95,6 +97,33 @@ def _write_report(
     document["report_id"] = run_report_id(document)
     output = caller / "runs" / "history" / f"report-{index}.json"
     output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(document) + "\n")
+    return output
+
+
+def _write_live_report(
+    caller: Path,
+    index: int,
+    publication: dict[str, str] | None,
+) -> Path:
+    run_id = f"run-{index:020x}"
+    provenance: dict[str, object] = {"run_id": run_id}
+    if publication is not None:
+        provenance["report_publication"] = publication
+    manifest: dict[str, object] = {"provenance": provenance}
+    manifest["digest"] = "sha256:" + hashlib.sha256(
+        json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+    output = caller / "runs" / "generated" / f"live-{index}" / "Run_Report.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    (output.parent / "Manifest.json").write_text(json.dumps(manifest) + "\n")
+
+    document = json.loads(RUN_REPORT_FIXTURE.read_text())
+    document["run_id"] = run_id
+    document["manifest_digest"] = manifest["digest"]
+    document["jobs"][0]["name"] = f"live-job-{index}"
+    document["report_id"] = run_report_id(document)
     output.write_text(json.dumps(document) + "\n")
     return output
 
@@ -270,6 +299,55 @@ def test_failed_publish_leaves_report_pending(tmp_path: Path):
         )
 
     assert pending_run_reports(caller) == (report_path,)
+    assert dispatches == []
+
+
+def test_pending_reports_include_only_live_runs_bound_to_publication_target(
+    tmp_path: Path,
+):
+    caller, _ = _initialized_repositories(tmp_path)
+    public = _write_live_report(caller, 1, publication_manifest_record(TEST_TARGET))
+    _write_live_report(caller, 2, {"mode": "local-only"})
+    _write_live_report(caller, 3, None)
+
+    assert pending_run_reports(caller) == (public,)
+
+
+@pytest.mark.parametrize("publication", [None, {"mode": "local-only"}])
+def test_publish_rejects_live_report_without_exact_publication_binding(
+    tmp_path: Path,
+    publication: dict[str, str] | None,
+):
+    caller, _ = _initialized_repositories(tmp_path)
+    report = _write_live_report(caller, 1, publication)
+
+    with pytest.raises(ValueError, match="publication binding"):
+        publish_run_reports(caller, (report,), TEST_TARGET)
+
+
+def test_filesystem_failure_is_reported_as_retryable_publication_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    caller, remote = _initialized_repositories(tmp_path)
+    report = _write_report(caller, 1)
+    calls: list[tuple[str, ...]] = []
+    dispatches: list[tuple[str, str]] = []
+
+    def fail_checkout(*args: object, **kwargs: object):
+        raise OSError("filesystem unavailable")
+
+    monkeypatch.setattr(Report_Publication, "_publish_once", fail_checkout)
+
+    with pytest.raises(ValueError, match="local filesystem"):
+        publish_run_reports(
+            caller,
+            (report,),
+            TEST_TARGET,
+            runner=_recording_runner(remote, calls, dispatches),
+        )
+
+    assert pending_run_reports(caller) == (report,)
     assert dispatches == []
 
 
