@@ -102,4 +102,4 @@ deltas.length
   : html`<div class="note">No two runs currently share a non-null compatibility series. Cross-run deltas are unavailable; the history remains visible elsewhere without a false comparison.</div>`
 ```
 
-Observed cost deltas compare API-equivalent telemetry only. They do not measure incremental subscription spend. Current observed values remain available on the [latest run](./) and [task matrix](./Task_Matrix) views.
+Observed cost deltas compare API-equivalent telemetry only. They do not measure incremental subscription spend. Current observed values remain available on the [latest run](./) and <a href="./Task_Matrix.html">task matrix</a> views.
