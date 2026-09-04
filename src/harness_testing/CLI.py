@@ -80,6 +80,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     sanitize_parser.add_argument("--job", type=Path, required=True)
     sanitize_parser.add_argument("--output", type=Path, required=True)
 
+    report_parser = subparsers.add_parser(
+        "report", help="backfill or publish public-safe run reports"
+    )
+    report_subparsers = report_parser.add_subparsers(dest="report_command")
+    backfill_parser = report_subparsers.add_parser(
+        "backfill", help="reconstruct reports from model-free historical artifacts"
+    )
+    backfill_parser.add_argument(
+        "--source-root", type=Path, action="append", required=True
+    )
+    backfill_parser.add_argument("--mapping", type=Path, required=True)
+    backfill_parser.add_argument("--output", type=Path, required=True)
+
     auth_parser = subparsers.add_parser("auth", help="store local subscription credentials")
     auth_subparsers = auth_parser.add_subparsers(dest="auth_command")
     auth_subparsers.add_parser("claude", help="store the Claude subscription token")
@@ -222,6 +235,27 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
         print(f"Sanitized result: {result['result_id']}")
         print(arguments.output)
+    elif arguments.command == "report" and arguments.report_command == "backfill":
+        from harness_testing.Run_History import backfill_run_reports
+        from harness_testing.Run_Reports import load_run_report
+
+        try:
+            reports = backfill_run_reports(
+                _repository_root(),
+                tuple(arguments.source_root),
+                arguments.mapping,
+                arguments.output,
+            )
+            job_count = sum(
+                len(load_run_report(_repository_root(), report, published=True)["jobs"])
+                for report in reports
+            )
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        for report in reports:
+            print(f"Historical run report: {report}")
+        print(f"Backfilled {len(reports)} reports with {job_count} job summaries.")
     elif arguments.command == "auth" and arguments.auth_command == "claude":
         from harness_testing.Credentials import store_claude_subscription_token
 

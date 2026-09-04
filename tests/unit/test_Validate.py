@@ -478,6 +478,32 @@ def test_affected_validation_routes_dashboard_images_and_core_schema_changes():
         ("npm", "--prefix", "dashboard", "run", "build"),
     )
 
+    history = affected_validation_commands(
+        REPOSITORY_ROOT,
+        [
+            Path("src/harness_testing/Run_History.py"),
+            Path("runs/Historical_Backfill.toml"),
+            Path("tests/Fixtures/Run_History/Identified_Result.json"),
+        ],
+    )
+    assert history == (
+        (
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "src/harness_testing/Run_History.py",
+        ),
+        (
+            "uv",
+            "run",
+            "pytest",
+            "-q",
+            "tests/unit/test_Run_History.py",
+            "tests/unit/test_Validate.py",
+        ),
+    )
+
     result_schema = affected_validation_commands(
         REPOSITORY_ROOT,
         [Path("src/harness_testing/Harness_Result.schema.json")],

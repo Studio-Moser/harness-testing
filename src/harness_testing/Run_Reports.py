@@ -263,22 +263,28 @@ def _job_status(
     return "incomplete", counts
 
 
-def _job_report(
-    root: Path,
+def build_job_report(
     manifest: RunManifest,
     index: int,
     relative_path: str,
+    result: Mapping[str, object] | None,
+    *,
+    series_key_unavailable_reason: str | None = None,
 ) -> dict[str, object]:
+    """Build one allowlisted job summary from manifest and top-level result data."""
+
     cell: RunCell = manifest.cells[index % len(manifest.cells)]
     task = manifest.task_ids[index // len(manifest.cells)]
     job_config = load_job(manifest.path.parent / relative_path)
     job_name = job_config.job_name
     agent_config = job_config.agents[0]
+    agent = agent_config.import_path or agent_config.name
+    if not isinstance(agent, str) or not agent:
+        raise ValueError(f"Harbor job has no agent identity: {relative_path}")
     agent_version = agent_config.kwargs.get("version")
     if not isinstance(agent_version, str) or not agent_version:
         raise ValueError(f"Harbor job has no agent version: {relative_path}")
     task_pack, task_digest = _task_identity(manifest, task)
-    result = _read_object(root / "jobs" / "raw" / job_name / "result.json")
     status, counts = _job_status(result, expected_trials=manifest.attempts)
     stats = result.get("stats") if isinstance(result, Mapping) else None
     stats = stats if isinstance(stats, Mapping) else {}
@@ -289,10 +295,25 @@ def _job_report(
         if started is not None and finished is not None
         else None
     )
+    unavailable_reason = series_key_unavailable_reason
+    if agent_config.import_path is None:
+        unavailable_reason = "missing-provenance"
+    series_key = None
+    if unavailable_reason is None:
+        try:
+            series_key = _series_key(
+                manifest,
+                cell,
+                task_digest,
+                agent,
+                agent_version,
+            )
+        except ValueError:
+            unavailable_reason = "missing-provenance"
     return {
         "name": job_name,
         "provider": cell.provider,
-        "agent": agent_config.import_path,
+        "agent": agent,
         "agent_version": agent_version,
         "arm": cell.arm,
         "role": cell.role,
@@ -302,15 +323,11 @@ def _job_report(
         "task": task,
         "task_pack": task_pack,
         "task_digest": task_digest,
-        "comparability": "comparable",
-        "series_key": _series_key(
-            manifest,
-            cell,
-            task_digest,
-            agent_config.import_path,
-            agent_version,
+        "comparability": (
+            "comparable" if unavailable_reason is None else "diagnostic-only"
         ),
-        "series_key_unavailable_reason": None,
+        "series_key": series_key,
+        "series_key_unavailable_reason": unavailable_reason,
         "status": status,
         "started_at": started_at,
         "finished_at": finished_at,
@@ -331,6 +348,17 @@ def _job_report(
             "api_equivalent_cost_usd": _number(stats.get("cost_usd")),
         },
     }
+
+
+def _job_report(
+    root: Path,
+    manifest: RunManifest,
+    index: int,
+    relative_path: str,
+) -> dict[str, object]:
+    job_name = load_job(manifest.path.parent / relative_path).job_name
+    result = _read_object(root / "jobs" / "raw" / job_name / "result.json")
+    return build_job_report(manifest, index, relative_path, result)
 
 
 def _now() -> str:

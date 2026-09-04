@@ -871,6 +871,13 @@ def affected_validation_commands(
                 }
             )
             dashboard = True
+        elif name == "src/harness_testing/Run_History.py":
+            unit_tests.update(
+                {
+                    "tests/unit/test_Run_History.py",
+                    "tests/unit/test_Validate.py",
+                }
+            )
         elif name == "src/harness_testing/Public_Safety.py":
             unit_tests.update(
                 {
@@ -905,6 +912,13 @@ def affected_validation_commands(
                 {"tests/unit/test_Runs.py", "tests/unit/test_Validate.py"}
             )
             dashboard = True
+        elif name.startswith("tests/Fixtures/Run_History/"):
+            unit_tests.update(
+                {
+                    "tests/unit/test_Run_History.py",
+                    "tests/unit/test_Validate.py",
+                }
+            )
         elif name.startswith("tests/Support/"):
             full_unit = True
 
@@ -945,6 +959,13 @@ def affected_validation_commands(
                 }
             )
             dashboard = True
+        elif name == "runs/Historical_Backfill.toml":
+            unit_tests.update(
+                {
+                    "tests/unit/test_Run_History.py",
+                    "tests/unit/test_Validate.py",
+                }
+            )
         elif name in _POLICY_PATHS or name.startswith("policy/"):
             unit_tests.update(
                 {

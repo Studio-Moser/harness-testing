@@ -1,0 +1,7 @@
+[[legacy]]
+label = "legacy-fixture"
+manifest_digest = "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+jobs_subdirectory = "Legacy"
+expected_jobs = 2
+review_state = "quarantined"
+limitations = ["obsolete-methodology", "legacy-run-identity"]
