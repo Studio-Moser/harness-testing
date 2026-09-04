@@ -9,6 +9,7 @@ import os
 import re
 import stat
 import subprocess
+import sys
 import tarfile
 import tempfile
 import tomllib
@@ -40,6 +41,7 @@ from harness_testing.Materialize import (
 from harness_testing.Report_Publication import (
     load_publication_target,
     publication_manifest_record,
+    sync_pending_reports,
 )
 from harness_testing.Run_Reports import refresh_local_dashboard, write_run_report
 from harness_testing.Skill_Evaluation import SkillEvaluation, write_skill_evaluation_report
@@ -1774,6 +1776,24 @@ def _verify_subscription_auth(
             raise ValueError("Claude subscription credential is missing")
 
 
+def _publish_terminal_reports(root: Path, manifest: RunManifest) -> None:
+    publication = manifest.provenance.get("report_publication")
+    if not isinstance(publication, Mapping) or publication.get("mode") != "public":
+        return
+    try:
+        target = load_publication_target(root)
+        receipts = sync_pending_reports(root, target)
+    except ValueError as error:
+        print(
+            "Public dashboard update pending; retry with "
+            f"`uv run harness-test report sync`: {error}",
+            file=sys.stderr,
+        )
+        return
+    if receipts:
+        print(f"Published {len(receipts)} run report(s) to {target.repository}")
+
+
 def _expected_runtime_delivery(
     root: Path,
     cell: RunCell,
@@ -2283,11 +2303,13 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     except BaseException as error:
         try:
             write_run_report(root, manifest, "failed")
+            _publish_terminal_reports(root, manifest)
             refresh_local_dashboard(root)
         except Exception as report_error:
             error.add_note(f"Local dashboard refresh also failed: {report_error}")
         raise
     report_path = write_run_report(root, manifest, "completed")
+    _publish_terminal_reports(root, manifest)
     dashboard_path = refresh_local_dashboard(root)
     print(f"Local run report: {report_path}")
     if dashboard_path is not None:

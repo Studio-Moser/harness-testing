@@ -92,6 +92,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     backfill_parser.add_argument("--mapping", type=Path, required=True)
     backfill_parser.add_argument("--output", type=Path, required=True)
+    report_subparsers.add_parser(
+        "sync", help="publish all pending reports in one data-branch update"
+    )
 
     auth_parser = subparsers.add_parser("auth", help="store local subscription credentials")
     auth_subparsers = auth_parser.add_subparsers(dest="auth_command")
@@ -256,6 +259,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         for report in reports:
             print(f"Historical run report: {report}")
         print(f"Backfilled {len(reports)} reports with {job_count} job summaries.")
+    elif arguments.command == "report" and arguments.report_command == "sync":
+        from harness_testing.Report_Publication import (
+            load_publication_target,
+            sync_pending_reports,
+        )
+
+        try:
+            target = load_publication_target(_repository_root())
+            receipts = sync_pending_reports(_repository_root(), target)
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        if receipts:
+            print(f"Published {len(receipts)} run report(s) to {target.repository}.")
+        else:
+            print("No public run reports are pending.")
     elif arguments.command == "auth" and arguments.auth_command == "claude":
         from harness_testing.Credentials import store_claude_subscription_token
 

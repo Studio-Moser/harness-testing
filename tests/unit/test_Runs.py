@@ -527,13 +527,14 @@ def _compile_pair(root: Path, **overrides):
         "max_sessions": 4,
         "max_budget_usd": Decimal("100"),
         "billing_mode": "api",
+        "publish_report": False,
     }
     arguments.update(overrides)
     return compile_run(**arguments)
 
 
 def test_new_manifest_binds_public_report_destination(run_root: Path):
-    manifest = _compile_pair(run_root)
+    manifest = _compile_pair(run_root, publish_report=True)
 
     assert manifest.provenance["report_publication"] == {
         "mode": "public",
@@ -548,8 +549,8 @@ def test_new_manifest_binds_public_report_destination(run_root: Path):
 
 
 def test_local_only_manifest_is_explicit_and_content_addressed(run_root: Path):
-    public = _compile_pair(run_root)
-    local = _compile_pair(run_root, publish_report=False)
+    public = _compile_pair(run_root, publish_report=True)
+    local = _compile_pair(run_root)
 
     assert local.provenance["report_publication"] == {"mode": "local-only"}
     assert local.digest != public.digest
@@ -1209,14 +1210,22 @@ def test_execution_updates_local_dashboard_after_completed_run(
     run_root: Path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    manifest = _compile_pair(run_root)
+    manifest = _compile_pair(run_root, publish_report=True)
     _stub_execution_preflight(monkeypatch)
     refreshes: list[Path] = []
+    publications: list[tuple[Path, str]] = []
     monkeypatch.setattr(
         Runs,
         "refresh_local_dashboard",
         lambda root: refreshes.append(root),
         raising=False,
+    )
+    monkeypatch.setattr(
+        Runs,
+        "sync_pending_reports",
+        lambda root, target: (
+            publications.append((root, target.repository)) or (object(),)
+        ),
     )
     real_run = subprocess.run
 
@@ -1257,6 +1266,7 @@ def test_execution_updates_local_dashboard_after_completed_run(
         "api_equivalent_cost_usd": 0.01,
     }
     assert refreshes == [run_root]
+    assert publications == [(run_root, "Studio-Moser/harness-testing")]
 
 
 def test_dashboard_refresh_invalidates_the_observable_data_loader_cache(
@@ -1283,18 +1293,43 @@ def test_dashboard_refresh_invalidates_the_observable_data_loader_cache(
     ]
 
 
+def test_terminal_publication_failure_remains_retryable(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    manifest = _compile_pair(run_root, publish_report=True)
+
+    def fail_sync(*args: object, **kwargs: object):
+        raise ValueError("could not publish run reports during push reports")
+
+    monkeypatch.setattr(Runs, "sync_pending_reports", fail_sync)
+
+    Runs._publish_terminal_reports(run_root, manifest)
+
+    assert "harness-test report sync" in capsys.readouterr().err
+
+
 def test_execution_updates_local_dashboard_after_delivery_failure(
     run_root: Path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    manifest = _compile_pair(run_root)
+    manifest = _compile_pair(run_root, publish_report=True)
     _stub_execution_preflight(monkeypatch)
     refreshes: list[Path] = []
+    publications: list[tuple[Path, str]] = []
     monkeypatch.setattr(
         Runs,
         "refresh_local_dashboard",
         lambda root: refreshes.append(root),
         raising=False,
+    )
+    monkeypatch.setattr(
+        Runs,
+        "sync_pending_reports",
+        lambda root, target: (
+            publications.append((root, target.repository)) or (object(),)
+        ),
     )
     calls: list[str] = []
     real_run = subprocess.run
@@ -1322,6 +1357,7 @@ def test_execution_updates_local_dashboard_after_delivery_failure(
     assert report["completed_jobs"] == 2
     assert report["pending_jobs"] == 2
     assert refreshes == [run_root]
+    assert publications == [(run_root, "Studio-Moser/harness-testing")]
 
 
 def test_delivery_canary_stops_before_the_second_task(
