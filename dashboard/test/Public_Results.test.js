@@ -15,6 +15,7 @@ import {
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const fixtureRoot = resolve(repositoryRoot, "tests", "Fixtures", "Public_Results");
+const runFixtureRoot = resolve(repositoryRoot, "tests", "Fixtures", "Run_Reports");
 const temporaries = [];
 
 afterEach(async () => {
@@ -26,6 +27,7 @@ async function testRoot() {
   temporaries.push(root);
   await mkdir(resolve(root, "policy"));
   await mkdir(resolve(root, "results"));
+  await mkdir(resolve(root, "runs", "generated"), {recursive: true});
   await cp(
     resolve(repositoryRoot, "policy", "Public_Result.schema.json"),
     resolve(root, "policy", "Public_Result.schema.json")
@@ -36,7 +38,9 @@ async function testRoot() {
 async function loadFrom(root) {
   return loadPublicResults({
     resultsDirectory: resolve(root, "results"),
-    schemaPath: resolve(root, "policy", "Public_Result.schema.json")
+    schemaPath: resolve(root, "policy", "Public_Result.schema.json"),
+    runsDirectory: resolve(root, "runs", "generated"),
+    runReportSchemaPath: resolve(repositoryRoot, "policy", "Run_Report.schema.json")
   });
 }
 
@@ -70,6 +74,52 @@ test("loads only finalized public results, preserves nulls, and groups compatibi
       result_ids: [valid.result_id]
     }
   ]);
+});
+
+test("loads safe local run reports separately from finalized public results", async () => {
+  const root = await testRoot();
+  const reportDirectory = resolve(
+    root,
+    "runs",
+    "generated",
+    "d73dda59bad84372f94499627e52325aa49bb01d8141d8eccfbba0cc2375f05a"
+  );
+  await mkdir(reportDirectory);
+  await cp(
+    resolve(runFixtureRoot, "Valid.json"),
+    resolve(reportDirectory, "Run_Report.json")
+  );
+
+  const report = await loadFrom(root);
+
+  assert.equal(report.local_runs.length, 1);
+  assert.equal(report.local_runs[0].status, "completed");
+  assert.equal(report.local_runs[0].jobs[0].dimensions.correctness, 1);
+  assert.equal(report.local_runs[0].jobs[0].efficiency.api_equivalent_cost_usd, 0.01);
+  assert.deepEqual(report.results, []);
+});
+
+test("rejects malformed local run reports instead of silently omitting them", async () => {
+  const root = await testRoot();
+  const reportDirectory = resolve(root, "runs", "generated", "broken");
+  await mkdir(reportDirectory);
+  await writeFile(resolve(reportDirectory, "Run_Report.json"), "{}\n");
+
+  await assert.rejects(loadFrom(root), /local run report schema validation failed/);
+});
+
+test("dashboard pages await the generated result attachment before reading it", async () => {
+  for (const name of [
+    "index.md",
+    "Comparisons.md",
+    "Quality_Versus_Efficiency.md",
+    "Run_Detail.md",
+    "Task_Matrix.md",
+    "Trends.md"
+  ]) {
+    const source = await readFile(resolve(repositoryRoot, "dashboard", "src", name), "utf8");
+    assert.match(source, /const report = await FileAttachment\([^\n]+\)\.json\(\);/, name);
+  }
 });
 
 test("rejects raw Harbor and secret-path fixtures instead of filtering them", async (context) => {

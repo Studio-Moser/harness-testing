@@ -6,7 +6,7 @@ toc: false
 
 # Harness Testing
 
-Latest reviewed results from frozen test repositories. This site contains sanitized summaries only; raw Harbor jobs, prompts, tool output, reasoning, trajectories, and host paths are never published.
+Latest results from frozen test repositories. Local builds also show sanitized, unreviewed run status; public builds contain reviewed results only. Raw Harbor jobs, prompts, tool output, reasoning, trajectories, and host paths are never included.
 
 ```js
 import {
@@ -20,13 +20,67 @@ import {
   totalTokens
 } from "./components/Results.js";
 
-const report = FileAttachment("./data/Public_Results.json").json();
+const report = await FileAttachment("./data/Public_Results.json").json();
 const results = report.results;
+const localRuns = report.local_runs;
+const currentRun = localRuns.at(-1) ?? null;
+const currentJobs = currentRun?.jobs ?? [];
+const currentFinalized = currentRun == null
+  ? 0
+  : results.filter((result) => result.run.manifest_digest === currentRun.manifest_digest).length;
 const latest = latestResults(results);
 const latestFinishedAt = results.at(-1)?.run.finished_at ?? null;
 const passing = latest.filter((result) => result.run.release_decision === "pass").length;
 const held = latest.filter((result) => result.run.release_decision === "hold").length;
 const infrastructureFailures = latest.filter((result) => result.infrastructure.status !== "passed").length;
+```
+
+## Current local run
+
+```js
+currentRun
+  ? html`<div>
+      <div class="grid grid-cols-4">
+        <div class="card"><h2>Status</h2><span class="big">${currentRun.status}</span></div>
+        <div class="card"><h2>Completed jobs</h2><span class="big">${currentRun.completed_jobs} / ${currentRun.expected_jobs}</span></div>
+        <div class="card"><h2>Completed trials</h2><span class="big">${currentRun.completed_trials} / ${currentRun.expected_trials}</span></div>
+        <div class="card"><h2>Finalized results</h2><span class="big">${currentFinalized} / ${currentRun.expected_trials}</span></div>
+      </div>
+      <p class="note">Dollar amounts are API-equivalent telemetry; they do not represent incremental subscription charges.</p>
+      ${Inputs.table(
+        currentJobs.map((job) => ({
+          provider: job.provider,
+          arm: job.arm,
+          role: job.role,
+          task: job.task,
+          status: job.status,
+          correctness: formatScore(job.dimensions.correctness),
+          workflow: formatScore(job.dimensions.workflow),
+          efficiency_policy: formatScore(job.dimensions.efficiency_policy),
+          runtime: formatSeconds(job.runtime_seconds),
+          tokens: job.efficiency.prompt_tokens == null || job.efficiency.completion_tokens == null
+            ? "Unavailable"
+            : (job.efficiency.prompt_tokens + job.efficiency.completion_tokens).toLocaleString("en-US"),
+          api_equivalent_cost: formatCost(job.efficiency.api_equivalent_cost_usd)
+        })),
+        {
+          columns: [
+            "provider",
+            "arm",
+            "role",
+            "task",
+            "status",
+            "correctness",
+            "workflow",
+            "efficiency_policy",
+            "runtime",
+            "tokens",
+            "api_equivalent_cost"
+          ]
+        }
+      )}
+    </div>`
+  : html`<div class="note">No local execution report exists yet. The next run will create one automatically.</div>`
 ```
 
 <div class="grid grid-cols-4">

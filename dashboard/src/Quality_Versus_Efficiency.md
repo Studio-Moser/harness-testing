@@ -19,7 +19,7 @@ import {
   totalTokens
 } from "./components/Results.js";
 
-const report = FileAttachment("./data/Public_Results.json").json();
+const report = await FileAttachment("./data/Public_Results.json").json();
 const correct = report.results.filter((result) => result.dimensions.correctness === 1);
 const comparable = correct.map((result) => ({
   runtime: totalRuntime(result),

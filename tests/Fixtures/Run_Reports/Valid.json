@@ -1,0 +1,49 @@
+{
+  "schema_version": "1",
+  "manifest_digest": "sha256:d73dda59bad84372f94499627e52325aa49bb01d8141d8eccfbba0cc2375f05a",
+  "run_id": "run-d73dda59bad84372f944",
+  "profile": "smoke",
+  "status": "completed",
+  "started_at": "2026-09-03T20:00:00Z",
+  "updated_at": "2026-09-03T20:01:00Z",
+  "finished_at": "2026-09-03T20:01:00Z",
+  "expected_jobs": 1,
+  "completed_jobs": 1,
+  "failed_jobs": 0,
+  "pending_jobs": 0,
+  "expected_trials": 1,
+  "completed_trials": 1,
+  "failed_trials": 0,
+  "api_equivalent_cost_usd": 1.25,
+  "jobs": [
+    {
+      "name": "run-d73dda59bad84372f944-codex-A2-candidate-react-saved-view-feature",
+      "provider": "codex",
+      "arm": "A2",
+      "role": "candidate",
+      "model": "gpt-5.6-terra",
+      "effort": "high",
+      "harness_commit": "c319557c681bf35c35fa348fdf38d45d12091cef",
+      "task": "react-saved-view-feature",
+      "status": "completed",
+      "started_at": "2026-09-03T20:00:00Z",
+      "finished_at": "2026-09-03T20:01:00Z",
+      "runtime_seconds": 60.0,
+      "expected_trials": 1,
+      "completed_trials": 1,
+      "errored_trials": 0,
+      "cancelled_trials": 0,
+      "dimensions": {
+        "correctness": 1.0,
+        "workflow": 1.0,
+        "efficiency_policy": 1.0
+      },
+      "efficiency": {
+        "prompt_tokens": 100,
+        "cached_tokens": 40,
+        "completion_tokens": 20,
+        "api_equivalent_cost_usd": 0.01
+      }
+    }
+  ]
+}

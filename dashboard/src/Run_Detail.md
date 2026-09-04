@@ -20,7 +20,7 @@ import {
   totalTokens
 } from "./components/Results.js";
 
-const report = FileAttachment("./data/Public_Results.json").json();
+const report = await FileAttachment("./data/Public_Results.json").json();
 const results = report.results;
 const byId = new Map(results.map((result) => [result.result_id, result]));
 const selectedId = view(

@@ -418,6 +418,28 @@ def test_affected_validation_routes_dashboard_images_and_core_schema_changes():
     assert any(command[-2:] == ("workflow", "--all-cases") for command in core)
     assert any(command[-2:] == ("contract", "--all-cases") for command in core)
 
+    run_report = affected_validation_commands(
+        REPOSITORY_ROOT,
+        [
+            Path("src/harness_testing/Run_Reports.py"),
+            Path("policy/Run_Report.schema.json"),
+            Path("tests/Fixtures/Run_Reports/Valid.json"),
+        ],
+    )
+    assert run_report == (
+        (
+            "uv",
+            "run",
+            "ruff",
+            "check",
+            "src/harness_testing/Run_Reports.py",
+        ),
+        ("uv", "run", "pytest", "-q", "tests/unit/test_Runs.py", "tests/unit/test_Validate.py"),
+        ("npm", "ci", "--prefix", "dashboard", "--ignore-scripts"),
+        ("npm", "--prefix", "dashboard", "test"),
+        ("npm", "--prefix", "dashboard", "run", "build"),
+    )
+
     result_schema = affected_validation_commands(
         REPOSITORY_ROOT,
         [Path("src/harness_testing/Harness_Result.schema.json")],

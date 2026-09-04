@@ -1,0 +1,271 @@
+"""Build safe local run summaries and refresh the ignored dashboard output."""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+from collections.abc import Callable, Mapping
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+from jsonschema import Draft202012Validator, FormatChecker
+
+from harness_testing.Config import load_job
+
+if TYPE_CHECKING:
+    from harness_testing.Runs import RunCell, RunManifest
+
+_REPORT_STATUSES = {"running", "completed", "failed"}
+
+
+def _read_object(path: Path) -> dict[str, Any] | None:
+    try:
+        value = json.loads(path.read_text())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _integer(value: object) -> int | None:
+    return value if type(value) is int and value >= 0 else None
+
+
+def _number(value: object) -> int | float | None:
+    return value if not isinstance(value, bool) and isinstance(value, int | float) else None
+
+
+def _timestamp(value: object) -> tuple[str | None, datetime | None]:
+    if not isinstance(value, str):
+        return None, None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None, None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    parsed = parsed.astimezone(UTC)
+    return parsed.isoformat().replace("+00:00", "Z"), parsed
+
+
+def _score(stats: Mapping[str, object], name: str) -> float | None:
+    evals = stats.get("evals")
+    if not isinstance(evals, Mapping):
+        return None
+    values: list[float] = []
+    for evaluation in evals.values():
+        metrics = evaluation.get("metrics") if isinstance(evaluation, Mapping) else None
+        if not isinstance(metrics, list):
+            continue
+        for metric in metrics:
+            value = metric.get(name) if isinstance(metric, Mapping) else None
+            if not isinstance(value, bool) and isinstance(value, int | float):
+                values.append(float(value))
+    return sum(values) / len(values) if values else None
+
+
+def _job_status(
+    result: Mapping[str, object] | None,
+    *,
+    expected_trials: int,
+) -> tuple[str, dict[str, int]]:
+    if result is None:
+        return "pending", {
+            "completed": 0,
+            "errored": 0,
+            "running": 0,
+            "pending": expected_trials,
+            "cancelled": 0,
+        }
+    stats = result.get("stats")
+    if not isinstance(stats, Mapping):
+        return "incomplete", {
+            "completed": 0,
+            "errored": 0,
+            "running": 0,
+            "pending": expected_trials,
+            "cancelled": 0,
+        }
+    names = {
+        "completed": "n_completed_trials",
+        "errored": "n_errored_trials",
+        "running": "n_running_trials",
+        "pending": "n_pending_trials",
+        "cancelled": "n_cancelled_trials",
+    }
+    raw_counts = {name: _integer(stats.get(field)) for name, field in names.items()}
+    if any(value is None for value in raw_counts.values()):
+        return "incomplete", {
+            name: value if value is not None else 0 for name, value in raw_counts.items()
+        }
+    counts = {name: int(value) for name, value in raw_counts.items()}
+    if counts["errored"] or counts["cancelled"]:
+        return "failed", counts
+    if counts["running"]:
+        return "running", counts
+    if (
+        counts["completed"] == expected_trials
+        and counts["pending"] == 0
+        and sum(counts.values()) == expected_trials
+    ):
+        return "completed", counts
+    return "incomplete", counts
+
+
+def _job_report(
+    root: Path,
+    manifest: RunManifest,
+    index: int,
+    relative_path: str,
+) -> dict[str, object]:
+    cell: RunCell = manifest.cells[index % len(manifest.cells)]
+    task = manifest.task_ids[index // len(manifest.cells)]
+    job_name = load_job(manifest.path.parent / relative_path).job_name
+    result = _read_object(root / "jobs" / "raw" / job_name / "result.json")
+    status, counts = _job_status(result, expected_trials=manifest.attempts)
+    stats = result.get("stats") if isinstance(result, Mapping) else None
+    stats = stats if isinstance(stats, Mapping) else {}
+    started_at, started = _timestamp(result.get("started_at") if result else None)
+    finished_at, finished = _timestamp(result.get("finished_at") if result else None)
+    runtime = (
+        max(0.0, (finished - started).total_seconds())
+        if started is not None and finished is not None
+        else None
+    )
+    return {
+        "name": job_name,
+        "provider": cell.provider,
+        "arm": cell.arm,
+        "role": cell.role,
+        "model": cell.model,
+        "effort": cell.effort,
+        "harness_commit": cell.harness_commit,
+        "task": task,
+        "status": status,
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "runtime_seconds": runtime,
+        "expected_trials": manifest.attempts,
+        "completed_trials": counts["completed"],
+        "errored_trials": counts["errored"],
+        "cancelled_trials": counts["cancelled"],
+        "dimensions": {
+            "correctness": _score(stats, "reward"),
+            "workflow": _score(stats, "workflow"),
+            "efficiency_policy": _score(stats, "efficiency"),
+        },
+        "efficiency": {
+            "prompt_tokens": _integer(stats.get("n_input_tokens")),
+            "cached_tokens": _integer(stats.get("n_cache_tokens")),
+            "completion_tokens": _integer(stats.get("n_output_tokens")),
+            "api_equivalent_cost_usd": _number(stats.get("cost_usd")),
+        },
+    }
+
+
+def _now() -> str:
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
+
+
+def write_run_report(
+    root: Path,
+    manifest: RunManifest,
+    status: str,
+) -> Path:
+    """Atomically record allowlisted progress for one approved manifest."""
+
+    if status not in _REPORT_STATUSES:
+        raise ValueError(f"unsupported local run status: {status}")
+    root = root.resolve()
+    report_path = manifest.path.parent / "Run_Report.json"
+    previous = _read_object(report_path)
+    jobs = [
+        _job_report(root, manifest, index, relative_path)
+        for index, relative_path in enumerate(manifest.harbor_config_paths)
+    ]
+    job_starts = [job["started_at"] for job in jobs if job["started_at"] is not None]
+    updated_at = _now()
+    started_at = (
+        previous.get("started_at")
+        if isinstance(previous, Mapping) and isinstance(previous.get("started_at"), str)
+        else min(job_starts)
+        if job_starts
+        else updated_at
+    )
+    job_finishes = [job["finished_at"] for job in jobs if job["finished_at"] is not None]
+    report: dict[str, object] = {
+        "schema_version": "1",
+        "manifest_digest": manifest.digest,
+        "run_id": manifest.provenance["run_id"],
+        "profile": manifest.profile,
+        "status": status,
+        "started_at": started_at,
+        "updated_at": updated_at,
+        "finished_at": (
+            max(job_finishes) if job_finishes else updated_at
+        ) if status != "running" else None,
+        "expected_jobs": len(jobs),
+        "completed_jobs": sum(job["status"] == "completed" for job in jobs),
+        "failed_jobs": sum(job["status"] in {"failed", "incomplete"} for job in jobs),
+        "pending_jobs": sum(job["status"] in {"pending", "running"} for job in jobs),
+        "expected_trials": manifest.session_count,
+        "completed_trials": sum(int(job["completed_trials"]) for job in jobs),
+        "failed_trials": sum(
+            int(job["errored_trials"]) + int(job["cancelled_trials"])
+            for job in jobs
+        ),
+        "api_equivalent_cost_usd": float(manifest.api_equivalent_cost_usd),
+        "jobs": jobs,
+    }
+    schema = _read_object(root / "policy" / "Run_Report.schema.json")
+    if schema is None:
+        raise ValueError("local run report schema is unreadable")
+    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    errors = sorted(validator.iter_errors(report), key=lambda error: list(error.path))
+    if errors:
+        detail = "; ".join(
+            ("$." + ".".join(map(str, error.path)) if error.path else "$")
+            + f": {error.message}"
+            for error in errors
+        )
+        raise ValueError(f"local run report is invalid: {detail}")
+    contents = json.dumps(report, indent=2, sort_keys=True) + "\n"
+    temporary = report_path.with_name(".Run_Report.json.tmp")
+    temporary.write_text(contents)
+    os.replace(temporary, report_path)
+    return report_path
+
+
+def refresh_local_dashboard(
+    root: Path,
+    *,
+    runner: Callable[..., subprocess.CompletedProcess[object]] = subprocess.run,
+) -> Path | None:
+    """Rebuild the ignored dashboard once after a local run finishes."""
+
+    root = root.resolve()
+    if not (root / "dashboard" / "package.json").is_file():
+        return None
+    (
+        root
+        / "dashboard"
+        / "src"
+        / ".observablehq"
+        / "cache"
+        / "data"
+        / "Public_Results.json"
+    ).unlink(missing_ok=True)
+    try:
+        runner(
+            ("npm", "--prefix", "dashboard", "run", "build"),
+            cwd=root,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as error:
+        raise ValueError(
+            "local run report was saved, but the dashboard build failed; "
+            "install its locked dependencies and rerun "
+            "`npm --prefix dashboard run build`"
+        ) from error
+    return root / "dashboard" / "dist" / "index.html"
