@@ -53,7 +53,7 @@
 - Produces: `load_run_report(root: Path, path: Path, *, published: bool = False) -> dict[str, object]`.
 - Consumed by: live report generation, historical backfill, publisher, and dashboard fixtures.
 
-- [ ] **Step 1: Add failing shared-safety and v2 identity tests.**
+- [x] **Step 1: Add failing shared-safety and v2 identity tests.**
 
 Add tests that prove public results retain their current sensitive-value rejection and that reports reject private keys, local paths, secret-shaped values, unknown fields, a mismatched content identity, and schema version 1 when `published=True`:
 
@@ -83,7 +83,7 @@ def test_v1_run_report_is_local_only(run_root: Path):
     ))
 ```
 
-- [ ] **Step 2: Run only those tests and verify RED.**
+- [x] **Step 2: Run only those tests and verify RED.**
 
 Run:
 
@@ -97,7 +97,7 @@ uv run pytest -q \
 
 Expected: collection or assertion failures because the shared module and v2 validation do not exist.
 
-- [ ] **Step 3: Extract the existing public-value scanner without changing public-result behavior.**
+- [x] **Step 3: Extract the existing public-value scanner without changing public-result behavior.**
 
 Move the sensitive-key, private-field, local-path, and secret-value patterns from `Results.py` into `Public_Safety.py` and expose an immutable tuple:
 
@@ -123,7 +123,7 @@ def public_safety_errors(value: object, path: str = "$") -> tuple[str, ...]:
 
 Replace `Results._sensitive_errors(document)` with `list(public_safety_errors(document))`. Keep all existing message text stable.
 
-- [ ] **Step 4: Replace the run-report fixture and schema with exact v2 semantics.**
+- [x] **Step 4: Replace the run-report fixture and schema with exact v2 semantics.**
 
 Retain the existing job measurements and add these required report fields:
 
@@ -167,7 +167,7 @@ Each job requires `agent`, `agent_version`, `task_pack`, `task_digest`,
 `series_key_unavailable_reason`. Make both top-level cost fields nullable
 non-negative numbers. Keep `additionalProperties: false` at every object.
 
-- [ ] **Step 5: Implement report identity and validation.**
+- [x] **Step 5: Implement report identity and validation.**
 
 Use canonical compact JSON and validate safety, schema, and identity in that order:
 
@@ -207,7 +207,7 @@ exponent. Implement the same transformation in the Node loader so `60.0` and
 
 `load_run_report` reads one JSON object and raises one `ValueError` containing the joined validation errors.
 
-- [ ] **Step 6: Run focused tests and commit.**
+- [x] **Step 6: Run focused tests and commit.**
 
 Run:
 
@@ -265,7 +265,7 @@ git commit -m "feat: define public run report history"
 - Changes: `write_run_report` writes schema version 2 and returns its path.
 - Consumed by: publisher and execution in Task 4.
 
-- [ ] **Step 1: Add failing publication-policy and manifest tests.**
+- [x] **Step 1: Add failing publication-policy and manifest tests.**
 
 ```python
 def test_new_manifest_binds_public_report_destination(run_root: Path):
@@ -297,7 +297,7 @@ def test_v2_report_separates_estimate_from_observed_cost(run_root: Path):
     assert report["report_id"] == run_report_id(report)
 ```
 
-- [ ] **Step 2: Run the selected tests and verify RED.**
+- [x] **Step 2: Run the selected tests and verify RED.**
 
 ```bash
 uv run pytest -q tests/unit/test_Runs.py tests/unit/test_Report_Publication.py \
@@ -306,7 +306,7 @@ uv run pytest -q tests/unit/test_Runs.py tests/unit/test_Report_Publication.py \
 
 Expected: FAIL because the tracked policy, manifest record, local-only option, and v2 generator do not exist.
 
-- [ ] **Step 3: Add and parse the fixed publication policy.**
+- [x] **Step 3: Add and parse the fixed publication policy.**
 
 Create:
 
@@ -320,7 +320,7 @@ code_ref = "main"
 
 `load_publication_target` must reject missing keys, extra keys, an invalid `OWNER/REPO`, branch names containing whitespace or `..`, a workflow name outside `.github/workflows`, and a code ref other than `main`. Do not read a destination from `origin` or environment variables.
 
-- [ ] **Step 4: Add publication mode to run identity and provenance.**
+- [x] **Step 4: Add publication mode to run identity and provenance.**
 
 In `compile_run`, select one exact record before constructing `run_identity`:
 
@@ -336,7 +336,7 @@ provenance["report_publication"] = publication
 
 In `_verify_generated_inputs`, accept old manifests with no publication record as local-only. For new records, require exact equality with the tracked policy. Add `--local-report-only` to `harness-test run plan`, pass `publish_report=not arguments.local_report_only`, and print the exact destination or `local-only` in `format_plan`.
 
-- [ ] **Step 5: Generate complete v2 report metadata.**
+- [x] **Step 5: Generate complete v2 report metadata.**
 
 Build the per-job development series input from known manifest data and exclude the tested Harness commit because it is the independent variable:
 
@@ -363,11 +363,11 @@ series_inputs = {
 
 Hash canonical `series_inputs` for a non-null job `series_key`. Set current reports to `source.kind=current`, `review_state=unreviewed`, and derive `partial-run`, `failed-run`, or `infrastructure-failure` only from observed completion/error counts. Sum measured per-job cost into `observed_api_equivalent_cost_usd`; use `null` when every job lacks cost telemetry.
 
-- [ ] **Step 6: Route the new files to focused validation.**
+- [x] **Step 6: Route the new files to focused validation.**
 
 Update `affected_validation_commands` so changes to `Report_Publication.py`, `Dashboard_Publication.toml`, run-report fixtures, or the run-report schema run only Ruff for changed Python, `test_Runs.py`, `test_Report_Publication.py`, `test_Validate.py`, and dashboard test/build. Do not route these files to image builds or task QA.
 
-- [ ] **Step 7: Run focused checks and commit.**
+- [x] **Step 7: Run focused checks and commit.**
 
 ```bash
 uv run ruff check \
@@ -424,7 +424,7 @@ git commit -m "feat: bind run report publication"
 - Produces CLI: repeatable `harness-test report backfill --source-root PATH --mapping PATH --output PATH`.
 - Consumed by: report sync and the one-time rollout.
 
-- [ ] **Step 1: Add failing identified and legacy backfill tests.**
+- [x] **Step 1: Add failing identified and legacy backfill tests.**
 
 ```python
 def test_backfill_groups_identified_jobs_without_reading_trials(history_root: Path):
@@ -465,7 +465,7 @@ def test_backfill_never_opens_trial_artifacts(history_root: Path, monkeypatch):
     )
 ```
 
-- [ ] **Step 2: Run the new module and verify RED.**
+- [x] **Step 2: Run the new module and verify RED.**
 
 ```bash
 uv run pytest -q tests/unit/test_Run_History.py
@@ -473,7 +473,7 @@ uv run pytest -q tests/unit/test_Run_History.py
 
 Expected: collection failure because `Run_History.py` does not exist.
 
-- [ ] **Step 3: Implement fail-closed manifest/job matching.**
+- [x] **Step 3: Implement fail-closed manifest/job matching.**
 
 For identified runs:
 
@@ -500,7 +500,7 @@ legacy_run_id = "run-" + hashlib.sha256(
 
 Use the same allowlisted job builder and series-key builder as live reports. Unknown old agent or provenance fields yield `diagnostic-only` with `missing-provenance`; they are never guessed.
 
-- [ ] **Step 4: Add the two explicit historical mappings.**
+- [x] **Step 4: Add the two explicit historical mappings.**
 
 ```toml
 [[legacy]]
@@ -522,7 +522,7 @@ limitations = ["obsolete-methodology", "legacy-run-identity"]
 
 Ignore generated `runs/history/` while keeping `runs/Historical_Backfill.toml` tracked.
 
-- [ ] **Step 5: Add the report CLI and focused validation route.**
+- [x] **Step 5: Add the report CLI and focused validation route.**
 
 Add `report` subcommands without overloading `result`:
 
@@ -534,7 +534,7 @@ harness-test report backfill --source-root PATH [--source-root SECOND_PATH]
 
 Reject duplicate source roots and an output path outside the current repository's ignored `runs/history/` directory. Print one line per report plus final report/job counts.
 
-- [ ] **Step 6: Run focused checks and commit.**
+- [x] **Step 6: Run focused checks and commit.**
 
 ```bash
 uv run ruff check \
@@ -582,7 +582,7 @@ git commit -m "feat: backfill historical run reports"
 - Produces CLI: `harness-test report sync`.
 - Consumed by: `execute_run` after completion and handled failure.
 
-- [ ] **Step 1: Add failing publisher tests with a temporary remote.**
+- [x] **Step 1: Add failing publisher tests with a temporary remote.**
 
 ```python
 def test_publish_batches_reports_without_dirtying_caller(tmp_path: Path):
@@ -626,7 +626,7 @@ def test_failed_publish_leaves_report_pending(tmp_path: Path):
     assert pending_run_reports(caller) == (expected_report_path,)
 ```
 
-- [ ] **Step 2: Run publication tests and verify RED.**
+- [x] **Step 2: Run publication tests and verify RED.**
 
 ```bash
 uv run pytest -q tests/unit/test_Report_Publication.py -k 'publish or pending'
@@ -634,7 +634,7 @@ uv run pytest -q tests/unit/test_Report_Publication.py -k 'publish or pending'
 
 Expected: FAIL because publication and receipt handling are absent.
 
-- [ ] **Step 3: Implement one temporary-checkout batch.**
+- [x] **Step 3: Implement one temporary-checkout batch.**
 
 The publisher must execute this logical sequence with tuple arguments and no shell:
 
@@ -672,7 +672,7 @@ clone the data branch once more, repeat validation and monotonic timestamp
 checks, and retry one ordinary push. A second conflict fails locally; never use
 `--force` or `--force-with-lease`.
 
-- [ ] **Step 4: Record local receipts and implement pending detection.**
+- [x] **Step 4: Record local receipts and implement pending detection.**
 
 Write ignored `Run_Report.Publication.json` beside each source report only after
 push succeeds. It contains exactly:
@@ -691,7 +691,7 @@ A missing receipt, mismatched report ID, or mismatched destination makes the
 report pending. Scan both `runs/generated/*/Run_Report.json` and
 `runs/history/*.json`, sort deterministically, and batch all pending paths.
 
-- [ ] **Step 5: Integrate best-effort terminal publication.**
+- [x] **Step 5: Integrate best-effort terminal publication.**
 
 After calling `write_run_report` with status `completed` or `failed`, inspect
 the approved manifest publication
@@ -714,7 +714,7 @@ else:
 Do not replace, suppress, or reclassify the original execution exception. Add
 `harness-test report sync` to CLI and make it load only the tracked target.
 
-- [ ] **Step 6: Run focused checks and commit.**
+- [x] **Step 6: Run focused checks and commit.**
 
 ```bash
 uv run ruff check \
@@ -756,7 +756,7 @@ git commit -m "feat: publish run reports once"
 - Preserves local `runs/generated/*/Run_Report.json` discovery for local builds.
 - Consumed by: all dashboard pages and `Run_History.js` in Task 6.
 
-- [ ] **Step 1: Add failing published-report loader tests.**
+- [x] **Step 1: Add failing published-report loader tests.**
 
 ```javascript
 test("loads data-branch reports and deduplicates local copies", async () => {
@@ -775,7 +775,7 @@ test("rejects malformed published reports", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the dashboard loader test and verify RED.**
+- [x] **Step 2: Run the dashboard loader test and verify RED.**
 
 ```bash
 npm --prefix dashboard test -- --test-name-pattern='data-branch|published reports'
@@ -783,7 +783,7 @@ npm --prefix dashboard test -- --test-name-pattern='data-branch|published report
 
 Expected: FAIL because the loader has no published report directory or `run_reports` output.
 
-- [ ] **Step 3: Implement published/local report loading and deterministic dedupe.**
+- [x] **Step 3: Implement published/local report loading and deterministic dedupe.**
 
 Extend `loadPublicResults` with:
 
@@ -802,7 +802,7 @@ Keep `local_runs` as local-only UI state. Return all published reports plus any
 newer local report in `run_reports`, so a local dashboard sees the latest run
 without losing published history.
 
-- [ ] **Step 4: Update Pages to check out main plus dashboard data.**
+- [x] **Step 4: Update Pages to check out main plus dashboard data.**
 
 Keep the existing pinned action SHAs. Change the first checkout to `path: source`
 and add a second checkout of the same repository:
@@ -835,7 +835,7 @@ Upload `source/dashboard/dist`. Retain `workflow_dispatch`, Pages permissions,
 the `github-pages` environment, and `concurrency: pages`. Add the run-report
 schema and workflow itself to main-push paths.
 
-- [ ] **Step 5: Add static workflow assertions and run focused checks.**
+- [x] **Step 5: Add static workflow assertions and run focused checks.**
 
 Assert the parsed workflow has `workflow_dispatch`, two pinned checkout steps,
 the exact data ref/path, the report-directory environment variable, and no
@@ -849,7 +849,7 @@ uv run harness-test validate --static-only
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit.**
+- [x] **Step 6: Commit.**
 
 ```bash
 git add \
@@ -883,14 +883,14 @@ git commit -m "feat: load published run history"
 - Produces: formatting helpers for evidence, completion, observed cost, and series availability.
 - Consumed by: all six dashboard pages.
 
-- [ ] **Step 1: Load the Impeccable frontend instructions before editing UI.**
+- [x] **Step 1: Load the Impeccable frontend instructions before editing UI.**
 
 Read the available `impeccable` skill completely, run its project-context
 script if supplied, and apply only guidance relevant to this existing
 Observable dashboard. Record no generated design artifact and add no UI
 dependency.
 
-- [ ] **Step 2: Add failing normalization and comparison tests.**
+- [x] **Step 2: Add failing normalization and comparison tests.**
 
 ```javascript
 test("normalizes every run job without double-counting finalized evidence", () => {
@@ -911,7 +911,7 @@ test("pairs A0 and A2 only within the same run provider and task", () => {
 });
 ```
 
-- [ ] **Step 3: Run helper tests and verify RED.**
+- [x] **Step 3: Run helper tests and verify RED.**
 
 ```bash
 npm --prefix dashboard test -- --test-name-pattern='normalizes|deltas|pairs A0'
@@ -919,7 +919,7 @@ npm --prefix dashboard test -- --test-name-pattern='normalizes|deltas|pairs A0'
 
 Expected: FAIL because `Run_History.js` does not exist.
 
-- [ ] **Step 4: Implement one normalized observation shape.**
+- [x] **Step 4: Implement one normalized observation shape.**
 
 Each job becomes:
 
@@ -965,7 +965,7 @@ the aggregate observation with review/release state; do not append a duplicate.
 If a finalized result has no report observation, synthesize one so the strict
 lane remains complete.
 
-- [ ] **Step 5: Replace the empty landing state with history status.**
+- [x] **Step 5: Replace the empty landing state with history status.**
 
 The first viewport must show:
 
@@ -980,7 +980,7 @@ The first viewport must show:
 When history is empty, state exactly that no public-safe run reports have been
 published; do not claim the next local run is already present on Pages.
 
-- [ ] **Step 6: Convert all five analytical pages to run observations.**
+- [x] **Step 6: Convert all five analytical pages to run observations.**
 
 - `Trends.md`: use point marks for every observation; connect only equal
   non-null series keys; expose provider, arm, task, profile, methodology, and
@@ -998,7 +998,7 @@ published; do not claim the next local run is already present on Pages.
 All filters must retain a useful all-values default. Use text labels in addition
 to color for evidence state and preserve explicit `Unavailable` values.
 
-- [ ] **Step 7: Run dashboard tests and production build.**
+- [x] **Step 7: Run dashboard tests and production build.**
 
 ```bash
 npm --prefix dashboard test
@@ -1008,7 +1008,7 @@ npm --prefix dashboard run build
 Expected: every dashboard test passes and all six HTML pages build without an
 Observable runtime error.
 
-- [ ] **Step 8: Run one browser hardening pass and commit.**
+- [x] **Step 8: Run one browser hardening pass and commit.**
 
 Serve `dashboard/dist` locally, inspect all six pages at desktop width and the
 landing/trends pages at a narrow mobile width, exercise every filter, and check
@@ -1045,7 +1045,7 @@ git commit -m "feat: show harness progress over time"
 - Consumes all Tasks 1–6.
 - Produces the live 21-cohort/182-job public dashboard and the documented future workflow.
 
-- [ ] **Step 1: Document the two lanes and exact commands.**
+- [x] **Step 1: Document the two lanes and exact commands.**
 
 State that development history is public-safe but not automatically
 decision-grade. Document:
@@ -1063,7 +1063,7 @@ uv run harness-test report sync
 Document one publish per terminal run, retry behavior, `dashboard-data`, equal
 series-key comparisons, and the strict unchanged `result sanitize` path.
 
-- [ ] **Step 2: Generate the real model-free historical reports.**
+- [x] **Step 2: Generate the real model-free historical reports.**
 
 From the current feature worktree, run with the existing archive checkout and
 current worktree as sources:
@@ -1080,7 +1080,7 @@ Expected: exactly 21 reports and 182 job summaries. Validate every file as
 published v2, scan it for local paths and secret-shaped strings, and confirm no
 raw file is staged.
 
-- [ ] **Step 3: Run focused affected validation once after documentation settles.**
+- [x] **Step 3: Run focused affected validation once after documentation settles.**
 
 ```bash
 uv run harness-test validate --changed-from 9d16059
@@ -1089,7 +1089,7 @@ uv run harness-test validate --changed-from 9d16059
 Expected: only the affected Python unit modules plus dashboard install/test/build;
 no task image build, task QA pack, or provider session.
 
-- [ ] **Step 4: Obtain one independent review of the frozen feature diff.**
+- [x] **Step 4: Obtain one independent review of the frozen feature diff.**
 
 Freeze the target commit, use the repository's configured Harness review route,
 and ask specifically about data leakage, incorrect historical grouping,
@@ -1097,7 +1097,7 @@ comparability leakage, Git worktree mutation, unsafe pushes, and duplicate
 dashboard observations. Apply only evidenced findings with their focused test,
 then freeze and review once more only if code changed.
 
-- [ ] **Step 5: Run the one complete deterministic checkpoint.**
+- [x] **Step 5: Run the one complete deterministic checkpoint.**
 
 Run each command once after all review fixes settle:
 
@@ -1114,7 +1114,7 @@ uv run harness-test task qa --pack contract --all-cases
 Expected: all checks pass. Do not repeat successful full commands unless a later
 change affects them.
 
-- [ ] **Step 6: Commit documentation and checkpoint evidence.**
+- [x] **Step 6: Commit documentation and checkpoint evidence.**
 
 Update this plan's checkboxes and append exact focused/checkpoint outcomes. Then:
 
@@ -1123,6 +1123,23 @@ git add README.md docs/Runbook.md docs/Methodology.md \
   docs/superpowers/plans/2026-09-04-public-run-history.md
 git commit -m "docs: explain public run history"
 ```
+
+#### Implementation evidence (2026-09-04)
+
+- Model-free backfill generated and published-validated 21 reports containing 182
+  job summaries; no generated report was staged on the code branch.
+- Affected validation passed with 175 Python tests, 16 dashboard tests, and the
+  six-page production build.
+- Browser hardening covered all six pages plus a 390-pixel viewport; the landing
+  page showed 21 runs and 182 jobs, filters remained reactive, and no Observable
+  runtime error or horizontal overflow appeared.
+- Independent review of `29b2ff3` found four publication/comparison boundary
+  defects. Focused regression checks passed (16 publisher tests and 6 run-history
+  tests), and the follow-up review accepted fixed target `d7dc18b` with no open
+  findings.
+- The single final checkpoint passed: Ruff; 340 Python unit tests; 18 dashboard
+  tests; six production pages with 2 validated links; 45 workflow QA cases; and
+  40 contract QA cases. No provider model session was started.
 
 - [ ] **Step 7: Push the feature branch, open a pull request, and require CI.**
 
