@@ -86,6 +86,45 @@ The trend compatibility key binds the task digest, dataset composition, scorer, 
 
 ## Publication boundary
 
-Public results are constructed from an allowlist and validated against `policy/Public_Result.schema.json`; raw Harbor objects are never recursively copied and filtered. `finalized=true` requires task review, infrastructure review, complete coverage, and no quarantine. Publication under `results/` additionally requires the result methodology and content-valid generated run manifest to use the current repository schema, with no reviewed compatibility mapping. The content-derived result identity makes later mutation visible.
+Publication has two deliberately separate evidence lanes.
 
-Only schema-valid JSON under `results/` reaches the static dashboard. Skill results expose only mode, canonical name, and invocation classification; raw prompts and trajectories stay local. The loader fails closed on unknown fields and reads no `jobs/` path. The dashboard offers no analytics SDK, API server, database, prompt view, or trajectory view.
+Development history uses allowlisted schema-v2 run reports. A report may represent
+a complete, partial, failed, unreviewed, quarantined, current, identified-historical,
+or legacy run. Those states remain visible rather than being converted into release
+decisions. Live reports are constructed from manifest and top-level result data;
+historical backfill reads only manifests, configs, and top-level result summaries.
+Neither path opens or copies raw prompts, reasoning, tool output, command output,
+trajectories, credentials, or host paths. Report identity is content-derived, and
+the source kind, completion counts, limitations, nullable telemetry, and available
+provenance travel with every report.
+
+Decision-grade public results are constructed from a separate allowlist and
+validated against `policy/Public_Result.schema.json`; raw Harbor objects are never
+recursively copied and filtered. `finalized=true` requires task review,
+infrastructure review, complete coverage, and no quarantine. Publication under
+`results/` additionally requires the result methodology and content-valid generated
+run manifest to use the current repository schema, with no reviewed compatibility
+mapping. The strict `result sanitize` path and its content-derived identity are not
+weakened by development-history publication.
+
+The dashboard may place observations on a timeline regardless of review state, but
+it calculates cross-run deltas only inside an exactly equal, non-null series key.
+Missing provenance or any other reason a series key cannot be defended leaves the
+observation visible as diagnostic-only. Within-run A0/A2 pairing likewise requires
+the same run, provider, and task. Missing measurements remain unavailable rather
+than becoming zero.
+
+Validated run reports are copied monotonically to `reports/*.json` on the dedicated
+`dashboard-data` branch. Terminal execution batches all pending reports into one
+temporary-checkout commit and one Pages dispatch; matching local receipts prevent
+repeat publication. A non-fast-forward push is retried once from a fresh checkout,
+while every other failure leaves the local outbox intact for an explicit
+`harness-test report sync`. Dashboard code and decision-grade `results/` stay on
+`main`.
+
+Only schema-valid decision results under `results/` and validated schema-v2 reports
+from the data branch reach the static dashboard. Skill results expose only mode,
+canonical name, and invocation classification; raw prompts and trajectories stay
+local. The loader fails closed on unknown fields and reads no `jobs/` path. The
+dashboard offers no analytics SDK, API server, database, prompt view, or trajectory
+view.
