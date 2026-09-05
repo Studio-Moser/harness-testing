@@ -1,0 +1,69 @@
+{
+  "admission_estimate_usd": 3.2,
+  "completed_jobs": 0,
+  "completed_trials": 0,
+  "evidence": {
+    "limitations": [
+      "partial-run"
+    ],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 1,
+  "expected_trials": 1,
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-05T23:49:52.736986Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.150.1",
+      "arm": "A0",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "gpt-5.6-terra",
+      "name": "run-92530fedc1e545285067-codex-A0-baseline-task-one",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": null,
+      "series_key": "sha256:a9c61d0b7523504999d92312fc32a53d58e6febc3ef9314f9d87b24effa50084",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "task-one",
+      "task_digest": "sha256:07f8e51795cbfd5ce2171772787e85ad8525274f9a978c05b6e8e26e78d8a73b",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:e007d84cbb8cc9a99ad9efa40bcaed6390b6c8e73814cb9890ce7b50e2f34235",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": null,
+  "pending_jobs": 1,
+  "profile": "smoke",
+  "report_id": "sha256:abff02b401329aa0277030c5a026157c302f4d8c9b1b17ee4f5b5ca23caa82a9",
+  "run_id": "run-92530fedc1e545285067",
+  "schema_version": "2",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-05T23:49:52.603342Z",
+  "status": "completed",
+  "updated_at": "2026-09-05T23:49:52.736986Z"
+}
