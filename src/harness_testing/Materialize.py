@@ -163,8 +163,8 @@ def dockerfile_policy_errors(root: Path) -> tuple[str, ...]:
     }
     packages = _package_versions(versions)
     expected_from = {
-        "Node_Agent.Dockerfile": (containers["node"],),
-        "Rust_Agent.Dockerfile": (containers["node"], containers["rust"]),
+        "Node_Agent.Dockerfile": (containers["yq"], containers["node"]),
+        "Rust_Agent.Dockerfile": (containers["yq"], containers["node"], containers["rust"]),
         "Verifier.Dockerfile": (containers["python"],),
     }
     required_fragments = {

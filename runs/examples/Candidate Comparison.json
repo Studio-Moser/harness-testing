@@ -1,0 +1,120 @@
+{
+  "schema_version": "1",
+  "label": "Next Studio Moser version",
+  "purpose": "candidate",
+  "contenders": [
+    {
+      "family": "studio-moser",
+      "label": "Studio Moser \u2014 initial full collection",
+      "sources": [
+        {
+          "name": "Studio Moser",
+          "kind": "collection",
+          "source": "https://github.com/Studio-Moser/skills-n-stuff.git",
+          "commit": "dd318ec6f4c1c6d4e058378e306612a509efa46f"
+        },
+        {
+          "name": "Superpowers",
+          "kind": "plugin",
+          "source": "https://github.com/obra/superpowers.git",
+          "commit": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        }
+      ],
+      "rubric": {
+        "mode": "enabled",
+        "path": "runs/inputs/Model Rubric.yml"
+      },
+      "startup_paths": [],
+      "delivery_config": {}
+    }
+  ],
+  "conditions": {
+    "kickoff": {
+      "provider": "codex",
+      "runtime_version": "0.153.4",
+      "model": "gpt-6-astra",
+      "effort": "high"
+    },
+    "task_ids": [
+      "react-accent-polish",
+      "react-active-badge-count",
+      "react-grouped-ui-updates",
+      "react-saved-view-feature",
+      "rust-quoted-value-parser",
+      "rust-workspace-warning-summary",
+      "static-accessible-disclosure",
+      "static-grouped-page-updates",
+      "static-pricing-copy-polish"
+    ],
+    "task_variant": "comparison",
+    "executor_inventory": [
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-6-astra",
+        "effort": "high"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-sol",
+        "effort": "low"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-sol",
+        "effort": "medium"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-sol",
+        "effort": "high"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-terra",
+        "effort": "high"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-luna",
+        "effort": "max"
+      }
+    ],
+    "attempts": 3,
+    "concurrency": 1,
+    "timeout_seconds": 1800,
+    "retry_policy": "none",
+    "accounting_policy": "agent-tree-v1",
+    "decision_policy": "development-comparison-v1",
+    "resources": {
+      "cpus": 2,
+      "memory_mb": 4096
+    }
+  },
+  "baseline_result_ids": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "predecessor_result_ids": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "first_version": false,
+  "change": {
+    "summary": "REPLACE with the actual source or rubric edit",
+    "hypothesis": "REPLACE with the expected effect before running",
+    "rerun_reason": null
+  },
+  "limits": {
+    "billing_mode": "subscription",
+    "max_sessions": 27,
+    "max_budget_usd": 0,
+    "interaction_limit": 12
+  },
+  "publication": {
+    "mode": "local-only"
+  }
+}
