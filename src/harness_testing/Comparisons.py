@@ -46,6 +46,14 @@ _LIMITS = [
 ]
 
 
+def _is_quill_deepswe_diagnostic(request, conditions):
+    return (
+        request.get("purpose") == "diagnostic"
+        and conditions.get("task_variant") == "deepswe"
+        and conditions.get("task_ids") == ["quill-shared-toolbar-focus"]
+    )
+
+
 def _digest(value):
     return (
         "sha256:"
@@ -440,7 +448,10 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         result.update(status="incompatible_conditions", summary="Decision policy does not match.")
         reasons.append("decision_policy_mismatch")
         return result
-    if conditions.get("task_variant") != "comparison" or not set(tasks) <= set(policy["task_ids"]):
+    neutral_tasks = conditions.get("task_variant") == "comparison" and set(tasks) <= set(
+        policy["task_ids"]
+    )
+    if not neutral_tasks and not _is_quill_deepswe_diagnostic(request, conditions):
         result.update(
             status="incompatible_conditions", summary="Neutral comparison tasks are required."
         )
@@ -591,6 +602,12 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         reasons.append("quarantined_evidence")
     if diagnostic:
         reasons.append("diagnostic_only")
+    if _is_quill_deepswe_diagnostic(request, conditions) and any(
+        trial.get("protected_state") is None
+        for key in cohort
+        for trial in datasets[key]["trials"]
+    ):
+        reasons.append("protected_state_unknown")
     if (
         enough
         and not quarantined

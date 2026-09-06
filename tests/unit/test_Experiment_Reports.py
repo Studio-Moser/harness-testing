@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 from test_Experiments import request_document
 
 from harness_testing.Experiment_Reports import attach_experiment_report
@@ -55,6 +56,33 @@ def test_new_report_fields_are_strict():
     schema = json.loads((ROOT / "policy/Run_Report.schema.json").read_text())
     assert schema["$defs"]["comparisonTrial"]["additionalProperties"] is False
     assert schema["$defs"]["comparison"]["additionalProperties"] is False
+
+
+@pytest.mark.parametrize("status", ["running", "completed"])
+def test_quill_deepswe_diagnostic_report_schema_accepts_pending_and_completed(status):
+    report = json.loads((ROOT / "tests/Fixtures/Run_Reports/Comparison.json").read_text())
+    experiment = report["experiment"]
+    experiment["purpose"] = "diagnostic"
+    experiment["conditions"].update(
+        task_ids=["quill-shared-toolbar-focus"],
+        task_variant="deepswe",
+        attempts=1,
+        task_digests={"quill-shared-toolbar-focus": "sha256:" + "b" * 64},
+        image_digests={"quill-shared-toolbar-focus:agent": "sha256:" + "b" * 64},
+    )
+    report.update(
+        profile="research",
+        status=status,
+        expected_jobs=3,
+        completed_jobs=3 if status == "completed" else 0,
+        pending_jobs=0 if status == "completed" else 3,
+        expected_trials=3,
+        completed_trials=3 if status == "completed" else 0,
+        finished_at="2026-09-03T20:01:00Z" if status == "completed" else None,
+    )
+    report["report_id"] = run_report_id(report)
+
+    assert validate_run_report(ROOT, report) == ()
 
 
 def test_infrastructure_failure_and_safe_agent_breakdown(tmp_path):

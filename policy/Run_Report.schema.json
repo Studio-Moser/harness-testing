@@ -758,7 +758,8 @@
             "comparison",
             "workflow",
             "contract",
-            "research"
+            "research",
+            "deepswe"
           ]
         },
         "executor_inventory": {

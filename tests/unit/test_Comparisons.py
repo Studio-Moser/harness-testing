@@ -75,6 +75,65 @@ def trials(reports, contender):
     return [t for t in reports[0]["experiment"]["trials"] if t["contender_id"] == contender]
 
 
+def quill_diagnostic_fixture(status="completed"):
+    request, reports = fixture(ids=("nothing", "superpowers", "studio-moser"), attempts=1)
+    conditions = request["conditions"]
+    conditions.update(
+        task_ids=["quill-shared-toolbar-focus"],
+        task_variant="deepswe",
+    )
+    request["purpose"] = "diagnostic"
+    report = reports[0]
+    report["experiment"].update(copy.deepcopy(request))
+    selected = []
+    for contender in request["contenders"]:
+        trial = next(
+            trial for trial in trials(reports, contender["id"]) if trial["attempt"] == 1
+        )
+        trial.update(
+            task_id="quill-shared-toolbar-focus",
+            status=status,
+            correctness=True if status == "completed" else None,
+            protected_state=None,
+            model_usage=[
+                {
+                    "provider": "openai",
+                    "model": "fixture",
+                    "input_tokens": 10,
+                    "cache_read_tokens": 2,
+                    "cache_write_tokens": 1,
+                    "output_tokens": 5,
+                }
+            ]
+            if status == "completed"
+            else [],
+        )
+        selected.append(trial)
+    report["experiment"]["trials"] = selected
+    return request, reports
+
+
+@pytest.mark.parametrize("status", ["pending", "completed"])
+def test_quill_diagnostic_deepswe_retains_rows_without_a_recommendation(status):
+    request, reports = quill_diagnostic_fixture(status)
+
+    result = run(request, reports)
+
+    assert result["status"] == "insufficient_evidence"
+    assert result["winner_id"] is None
+    assert "diagnostic_only" in result["reasons"]
+    assert "insufficient_repetitions" in result["reasons"]
+    assert "protected_state_unknown" in result["reasons"]
+    assert len(result["contenders"]) == 3
+    if status == "completed":
+        assert [row["total_cost_usd"] for row in result["contenders"]] == [1.0, 1.0, 1.0]
+        assert [row["total_tokens"] for row in result["contenders"]] == [18, 18, 18]
+        assert all(row["eligible"] is False for row in result["contenders"])
+        assert all(row["counts"]["missing_grading"] == 1 for row in result["contenders"])
+    else:
+        assert all(row["counts"]["pending"] == 1 for row in result["contenders"])
+
+
 def test_cheap_failure_and_contract_scores_cannot_beat_correctness():
     request, reports = fixture()
     for trial in trials(reports, "a"):
