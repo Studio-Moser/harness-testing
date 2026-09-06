@@ -205,16 +205,12 @@ def test_codex_adapter_exposes_native_code_mode_actions_and_exit_status(
         "apply_patch",
         "shell",
     ]
-    assert step.tool_calls[1].arguments["patch"].startswith(
-        "*** Update File: /app/src/App.tsx\n"
-    )
+    assert step.tool_calls[1].arguments["patch"].startswith("*** Update File: /app/src/App.tsx\n")
     assert step.tool_calls[2].arguments == {
         "cmd": "npm run gate",
         "workdir": "/app",
     }
-    results = {
-        result.source_call_id: result for result in step.observation.results
-    }
+    results = {result.source_call_id: result for result in step.observation.results}
     assert result_success(results["native-command"]) is False
     assert results["native-command"].extra == {
         "codex_native": {
@@ -223,3 +219,50 @@ def test_codex_adapter_exposes_native_code_mode_actions_and_exit_status(
             "status": "completed",
         }
     }
+
+
+@pytest.mark.parametrize("setup_failure", [False, True])
+def test_codex_native_adapter_preserves_config_and_cleans_even_setup_failure(
+    tmp_path, monkeypatch, setup_failure
+):
+    from types import SimpleNamespace
+
+    class Environment:
+        default_user = None
+
+        def __init__(self):
+            self.commands = []
+            self.config = None
+
+        async def upload_file(self, source, target):
+            if target.endswith("Trial_Config.json"):
+                self.config = json.loads(Path(source).read_text())
+
+        async def exec(self, command, **kwargs):
+            self.commands.append(command)
+            return SimpleNamespace(return_code=0, stdout="", stderr="")
+
+    async def fake_run(self, instruction, environment, context):
+        if not setup_failure:
+            await self.exec_as_agent(environment, "codex exec resume --last --model wrong")
+        raise RuntimeError("retained failure")
+
+    monkeypatch.setattr("harness_testing.Codex_Agent.Codex.run", fake_run)
+    policy = {"schema_version": "1", "interaction_limit": 3, "facts": {}, "rules": []}
+    agent = HarnessCodex(
+        logs_dir=tmp_path,
+        model_name="openai/gpt-5.6-terra",
+        version="0.150.1",
+        reasoning_effort="high",
+        conversation={"policy": policy, "timeout_seconds": 4},
+    )
+    environment = Environment()
+    with pytest.raises(RuntimeError, match="retained failure"):
+        asyncio.run(agent.run("Ordinary request", environment, object()))
+    if not setup_failure:
+        assert environment.config["model"] == "gpt-5.6-terra"
+        assert environment.config["command"][:3] == ["codex", "app-server", "--stdio"]
+        assert "--last" not in environment.config["command"]
+    assert "/tmp/codex-home" in environment.commands[-2]
+    assert "rm -rf --" in environment.commands[-2]
+    assert environment.commands[-1] == "rm -rf -- /tmp/Harness_Native_Conversation"

@@ -94,10 +94,19 @@ def _case_script(root: Path, task_id: str, case: str, spec: dict[str, object]) -
     return script.resolve()
 
 
-def build_qa_job(root: Path, task_id: str, case: str, jobs_dir: Path) -> JobConfig:
+def build_qa_job(
+    root: Path, task_id: str, case: str, jobs_dir: Path, *, variant: str = "workflow"
+) -> JobConfig:
     root = root.resolve()
     _task_root(root, task_id)
     spec = _case_spec(root, task_id, case)
+    dataset = _task_root(root, task_id).parent.resolve()
+    if variant == "comparison":
+        from harness_testing.Comparison_Tasks import materialize_comparison_tasks
+
+        dataset = materialize_comparison_tasks(root, [task_id])
+    elif variant != "workflow":
+        raise ValueError(f"unsupported QA variant: {variant}")
     script = _case_script(root, task_id, case, spec)
     oracle_script = (
         (_task_root(root, task_id) / "solution" / "solve.sh").resolve()
@@ -137,7 +146,7 @@ def build_qa_job(root: Path, task_id: str, case: str, jobs_dir: Path) -> JobConf
             ],
             "datasets": [
                 {
-                    "path": str(_task_root(root, task_id).parent.resolve()),
+                    "path": str(dataset),
                     "task_names": [task_id],
                 }
             ],
@@ -167,13 +176,10 @@ def _score_document(jobs_dir: Path) -> tuple[dict[str, float], Path]:
         ]
         details = "".join(f"\n{diagnostic}" for diagnostic in diagnostics)
         raise RuntimeError(
-            f"expected one Harbor reward.json, found {len(reward_paths)} in {jobs_dir}"
-            f"{details}"
+            f"expected one Harbor reward.json, found {len(reward_paths)} in {jobs_dir}{details}"
         )
     raw = json.loads(reward_paths[0].read_text())
-    scores = {
-        name: float(raw[name]) for name in ("reward", "workflow", "efficiency")
-    }
+    scores = {name: float(raw[name]) for name in ("reward", "workflow", "efficiency")}
     return scores, reward_paths[0]
 
 
@@ -212,14 +218,10 @@ def _assert_efficiency_audit(
         if path.is_dir() and path.parent.name == "artifacts"
     )
     if len(workspaces) != 1:
-        raise RuntimeError(
-            f"expected one transferred oracle workspace, found {len(workspaces)}"
-        )
+        raise RuntimeError(f"expected one transferred oracle workspace, found {len(workspaces)}")
     variable = "HARNESS_TEST_TRAJECTORY"
     previous = os.environ.get(variable)
-    os.environ[variable] = str(
-        root / "tests" / "Fixtures" / "ATIF" / _EFFICIENCY_AUDITS[task_id]
-    )
+    os.environ[variable] = str(root / "tests" / "Fixtures" / "ATIF" / _EFFICIENCY_AUDITS[task_id])
     try:
         rewards = discover(
             _task_root(root, task_id) / "tests",
@@ -239,7 +241,9 @@ def _assert_efficiency_audit(
         )
 
 
-def run_task_qa(root: Path, task_id: str, case: str) -> dict[str, float]:
+def run_task_qa(
+    root: Path, task_id: str, case: str, *, variant: str = "workflow"
+) -> dict[str, float]:
     root = root.resolve()
     if case not in QA_CASES:
         raise ValueError(f"unknown QA case: {case}")
@@ -248,7 +252,7 @@ def run_task_qa(root: Path, task_id: str, case: str) -> dict[str, float]:
     with tempfile.TemporaryDirectory(prefix="harness-task-qa-") as temporary:
         temporary_root = Path(temporary)
         jobs_dir = temporary_root / "jobs"
-        job = build_qa_job(root, task_id, case, jobs_dir)
+        job = build_qa_job(root, task_id, case, jobs_dir, variant=variant)
         config_path = temporary_root / "Job.yaml"
         config_path.write_text(
             yaml.safe_dump(job.model_dump(mode="json", exclude_none=True), sort_keys=False)

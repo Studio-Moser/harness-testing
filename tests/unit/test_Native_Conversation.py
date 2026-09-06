@@ -1,0 +1,459 @@
+from harness_testing.Native_Conversation import Conversation
+
+
+def config(provider):
+    return {
+        "provider": provider,
+        "model": "root-model",
+        "effort": "high",
+        "instruction": "Do the task",
+        "timeout_seconds": 5,
+        "policy": {
+            "schema_version": "1",
+            "interaction_limit": 4,
+            "facts": {"go": "Proceed"},
+            "rules": [
+                {"id": "go", "kind": "approval", "pattern": "Ready to proceed\\?", "fact": "go"}
+            ],
+        },
+    }
+
+
+def test_codex_turns_always_address_explicit_root_after_child():
+    state = Conversation(config("codex"))
+    state.root = "root"
+    state.identities["root"] = {"model": "root-model", "effort": "high"}
+    state.handle(
+        {
+            "method": "thread/started",
+            "params": {"thread": {"id": "later-child", "parentThreadId": "root"}},
+        }
+    )
+    state.handle(
+        {
+            "method": "item/completed",
+            "params": {
+                "threadId": "root",
+                "item": {"type": "agentMessage", "text": "Ready to proceed?"},
+            },
+        }
+    )
+    outbound = state.handle(
+        {
+            "method": "turn/completed",
+            "params": {"threadId": "root", "turn": {"id": "first", "status": "completed"}},
+        }
+    )
+    assert outbound[0]["method"] == "turn/start"
+    assert outbound[0]["params"]["threadId"] == "root"
+    assert outbound[0]["params"]["model"] == "root-model"
+    assert outbound[0]["params"]["effort"] == "high"
+    assert outbound[0]["params"]["input"][0]["text"] == "Proceed"
+
+
+def test_native_pending_requests_keep_request_identity_and_claude_original_input():
+    state = Conversation(config("claude"))
+    request = {
+        "type": "control_request",
+        "request_id": "request-9",
+        "request": {
+            "subtype": "can_use_tool",
+            "tool_name": "AskUserQuestion",
+            "input": {
+                "questions": [
+                    {
+                        "question": "Ready to proceed?",
+                        "options": [{"label": "Proceed", "description": "go"}],
+                    }
+                ],
+                "metadata": {"keep": True},
+            },
+        },
+    }
+    reply = state.handle(request)[0]
+    assert reply["response"]["request_id"] == "request-9"
+    updated = reply["response"]["response"]["updatedInput"]
+    assert updated["metadata"] == {"keep": True}
+    assert updated["answers"] == {"Ready to proceed?": "Proceed"}
+    state = Conversation(config("codex"))
+    reply = state.handle(
+        {
+            "id": "server-9",
+            "method": "item/tool/requestUserInput",
+            "params": {
+                "threadId": "child",
+                "questions": [{"id": "q1", "question": "Ready to proceed?"}],
+            },
+        }
+    )[0]
+    assert reply == {"id": "server-9", "result": {"answers": {"q1": {"answers": ["Proceed"]}}}}
+
+
+def test_unknown_question_and_tool_permission_fail_closed():
+    state = Conversation(config("codex"))
+    state.handle(
+        {
+            "id": 1,
+            "method": "item/tool/requestUserInput",
+            "params": {"questions": [{"id": "q", "question": "What is an unauthored fact?"}]},
+        }
+    )
+    assert state.status == "task_definition_gap"
+    state = Conversation(config("claude"))
+    reply = state.handle(
+        {
+            "type": "control_request",
+            "request_id": "permission",
+            "request": {
+                "subtype": "can_use_tool",
+                "tool_name": "Bash",
+                "input": {"command": "publish"},
+            },
+        }
+    )
+    assert reply[0]["response"]["response"]["behavior"] == "deny"
+
+
+def test_initialization_is_before_first_model_request():
+    state = Conversation(config("codex"))
+    first = state.start()
+    assert first[0]["method"] == "initialize"
+    assert not any(item.get("method") == "turn/start" for item in first)
+    state = Conversation(config("claude"))
+    first = state.start()
+    assert first[0]["request"]["subtype"] == "initialize"
+    assert first[0]["type"] == "control_request"
+
+
+def test_controller_runs_two_native_wire_turns_and_preserves_timeout_usage(tmp_path):
+    import json
+    import sys
+
+    from harness_testing.Native_Conversation import run_controller
+
+    server = tmp_path / "Fixture_Server.py"
+    server.write_text("""import json, sys, time
+turn = 0
+for line in sys.stdin:
+    request = json.loads(line)
+    method = request.get("method")
+    result = {}
+    if method == "model/list":
+        result = {"data": [{"model": "root-model",
+                            "supportedReasoningEfforts": [{"reasoningEffort": "high"}]}]}
+    elif method == "thread/start":
+        result = {"thread": {"id": "root"}, "model": "root-model", "reasoningEffort": "high"}
+    elif method == "turn/start":
+        assert request["params"]["threadId"] == "root"
+        turn += 1
+        print(json.dumps({"method": "turn/started", "params": {
+            "threadId": "root", "turn": {"id": str(turn)}}}), flush=True)
+        print(json.dumps({"method": "thread/tokenUsage/updated", "params": {
+            "threadId": "root", "turnId": str(turn), "tokenUsage": {
+                "total": {"inputTokens": turn*10, "outputTokens": turn*2}}}}), flush=True)
+        text = "Ready to proceed?" if turn == 1 else "Implemented and checked."
+        print(json.dumps({"method": "item/completed", "params": {
+            "threadId": "root", "item": {"type": "agentMessage", "text": text}}}), flush=True)
+        if "timeout" in sys.argv and turn == 2:
+            time.sleep(10)
+        print(json.dumps({"method": "turn/completed", "params": {
+            "threadId": "root", "turn": {"id": str(turn), "status": "completed"}}}), flush=True)
+    if "id" in request:
+        print(json.dumps({"id": request["id"], "result": result}), flush=True)
+""")
+    for timeout in (False, True):
+        logs = tmp_path / str(timeout)
+        settings = {
+            **config("codex"),
+            "command": [sys.executable, str(server)] + (["timeout"] if timeout else []),
+            "cwd": str(tmp_path),
+            "log_dir": str(logs),
+            "timeout_seconds": 0.4 if timeout else 5,
+        }
+        evidence = run_controller(settings)
+        assert evidence["status"] == ("timeout" if timeout else "completed")
+        assert sum(row["output_tokens"] for row in evidence["model_usage"]) == 4
+        assert evidence["usage_complete"] is not timeout
+        requests = [
+            json.loads(line) for line in (logs / "Native_Requests.jsonl").read_text().splitlines()
+        ]
+        turns = [request for request in requests if request.get("method") == "turn/start"]
+        assert len(turns) == 2
+        assert turns[1]["params"]["threadId"] == "root"
+        assert (logs / "codex.txt").read_text()
+        assert (
+            json.loads((logs / "Trial_Evidence.json").read_text())["status"] == evidence["status"]
+        )
+
+
+def test_models_are_checked_before_turn_and_explicit_resume_is_preserved():
+    state = Conversation({**config("codex"), "root_session_id": "saved-root"})
+    init = state.start()[0]
+    model_request = state.handle({"id": init["id"], "result": {}})[1]
+    request = state.handle(
+        {"id": model_request["id"], "result": {"data": [{"model": "root-model"}]}}
+    )[0]
+    assert request["method"] == "thread/resume"
+    assert request["params"]["threadId"] == "saved-root"
+    assert "path" not in request["params"]
+    assert "history" not in request["params"]
+    assert state.handle({"id": request["id"], "result": {"thread": {"id": "wrong"}}}) == []
+    assert state.reason == "root_session_identity_mismatch"
+
+
+def test_frozen_hook_trust_matches_exact_source_command_and_rechecks_hash(tmp_path, monkeypatch):
+    import hashlib
+    import json
+    from pathlib import Path
+
+    import pytest
+
+    from harness_testing.Native_Conversation import approved_hooks_from_bundle, hook_trust_edits
+
+    relative = "codex/provider-home/plugins/cache/experiment-pm/pm/1.0"
+    plugin = tmp_path / relative
+    (plugin / ".codex-plugin").mkdir(parents=True)
+    (plugin / "hooks").mkdir()
+    contents = {
+        ".codex-plugin/plugin.json": json.dumps({"name": "pm"}),
+        "hooks/hooks.json": json.dumps(
+            {
+                "hooks": {
+                    "SessionStart": [
+                        {
+                            "matcher": "",
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": "${CLAUDE_PLUGIN_ROOT}"
+                                    "/scripts/check-prereqs.sh local",
+                                }
+                            ],
+                        }
+                    ]
+                }
+            }
+        ),
+    }
+    for name, data in contents.items():
+        (plugin / name).write_text(data)
+    digests = {
+        f"{relative}/{name}": "sha256:" + hashlib.sha256(data.encode()).hexdigest()
+        for name, data in contents.items()
+    }
+    (tmp_path / "Provenance.json").write_text(
+        json.dumps(
+            {
+                "delivery_surfaces": [
+                    {"surface": "codex-plugin", "path": "/harness-arm/" + relative}
+                ],
+                "generated_file_digests": digests,
+            }
+        )
+    )
+    approved = approved_hooks_from_bundle(tmp_path)
+    assert len(approved) == 1
+    original_read = Path.read_bytes
+    monkeypatch.setattr(
+        Path,
+        "read_bytes",
+        lambda path: (
+            original_read(tmp_path / path.relative_to("/harness-arm"))
+            if path.is_relative_to("/harness-arm")
+            else original_read(path)
+        ),
+    )
+    hook = {
+        "key": "native.key",
+        "currentHash": "native-hash",
+        "source": "plugin",
+        "sourcePath": "/tmp/codex-home/plugins/cache/experiment-pm/pm/1.0/hooks/hooks.json",
+        "command": contents and "${CLAUDE_PLUGIN_ROOT}/scripts/check-prereqs.sh local",
+        "eventName": "sessionStart",
+        "matcher": None,
+        "enabled": False,
+        "trustStatus": "untrusted",
+    }
+    result = {"data": [{"hooks": [hook], "warnings": [], "errors": []}]}
+    edits = hook_trust_edits(approved, result)
+    assert edits == [
+        {
+            "keyPath": 'hooks.state."native.key"',
+            "mergeStrategy": "replace",
+            "value": {"enabled": True, "trusted_hash": "native-hash"},
+        }
+    ]
+    hook.update(enabled=True, trustStatus="trusted")
+    hook_trust_edits(approved, result, verify={"native.key": "native-hash"})
+    hook["command"] = (
+        "/tmp/codex-home/plugins/cache/experiment-pm/pm/1.0/scripts/check-prereqs.sh local"
+    )
+    hook_trust_edits(approved, result, verify={"native.key": "native-hash"})
+    hook["command"] = (
+        "/harness-arm/codex/provider-home/plugins/cache/experiment-pm/pm/1.0/"
+        "scripts/check-prereqs.sh local"
+    )
+    with pytest.raises(ValueError, match="definition_mismatch"):
+        hook_trust_edits(approved, result)
+    hook["command"] = "different command"
+    with pytest.raises(ValueError, match="definition_mismatch"):
+        hook_trust_edits(approved, result)
+    hook["source"] = "user"
+    with pytest.raises(ValueError, match="definition_mismatch"):
+        hook_trust_edits(approved, result)
+
+
+def test_inventory_does_not_hide_kickoff_and_runtime_versions_must_match():
+    import pytest
+
+    from harness_testing.Native_Conversation import validate_conversation
+
+    settings = {
+        **config("codex"),
+        "runtime_version": "0.150.1",
+        "executor_inventory": [
+            {
+                "provider": "openai",
+                "model": "child-model",
+                "effort": "low",
+                "runtime_version": "0.150.1",
+            }
+        ],
+    }
+    state = Conversation(settings)
+    assert not state.check_models([{"model": "child-model"}])
+    assert state.reason == "executor_model_unavailable:root-model"
+    settings["executor_inventory"][0]["runtime_version"] = "wrong"
+    with pytest.raises(ValueError, match="executor_runtime_version_mismatch"):
+        validate_conversation(settings, "codex")
+
+
+def test_claude_root_waits_for_background_native_terminal_notification():
+    state = Conversation(config("claude"))
+    state.root = "root"
+    state.handle(
+        {
+            "type": "assistant",
+            "message": {
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "id": "agent",
+                        "name": "Agent",
+                        "input": {"run_in_background": True},
+                    }
+                ]
+            },
+        }
+    )
+    state.handle(
+        {
+            "type": "user",
+            "message": {
+                "content": [{"type": "tool_result", "tool_use_id": "agent", "content": "launched"}]
+            },
+        }
+    )
+    state.handle({"type": "result", "subtype": "success", "result": "Completed."})
+    assert state.status == "pending"
+    state.handle(
+        {"type": "system", "subtype": "task_started", "task_id": "child", "tool_use_id": "agent"}
+    )
+    state.handle(
+        {
+            "type": "system",
+            "subtype": "task_updated",
+            "task_id": "child",
+            "patch": {"status": "completed"},
+        }
+    )
+    assert state.status == "completed"
+
+
+def test_native_child_effective_identity_enforces_frozen_pool():
+    for model, effort, mismatch in [
+        ("child-model", "low", False),
+        ("other", "low", True),
+        ("child-model", "high", True),
+        ("child-model", None, False),
+    ]:
+        settings = config("codex")
+        settings["executor_inventory"] = [
+            {"provider": "openai", "model": "child-model", "effort": "low"}
+        ]
+        state = Conversation(settings)
+        state.root = "root"
+        event = {
+            "method": "item/completed",
+            "params": {
+                "threadId": "root",
+                "item": {
+                    "type": "collabAgentToolCall",
+                    "tool": "spawnAgent",
+                    "receiverThreadIds": ["child"],
+                    "model": model,
+                    "reasoningEffort": effort,
+                },
+            },
+        }
+        assert state.handle(event) == []
+        assert (state.reason == "executor_condition_mismatch") is mismatch
+        assert state.identities["child"].get("effort") == effort
+
+    settings = config("claude")
+    settings["executor_inventory"] = [
+        {"provider": "anthropic", "model": "child-model", "effort": "low"}
+    ]
+    state = Conversation(settings)
+    state.root = "root"
+    state.handle(
+        {
+            "type": "assistant",
+            "session_id": "root",
+            "parent_tool_use_id": "tool-child",
+            "message": {"model": "unapproved", "content": []},
+        }
+    )
+    assert state.reason == "executor_condition_mismatch"
+
+
+def test_claude_controller_waits_for_background_terminal_or_times_out(tmp_path):
+    import json
+    import sys
+
+    from harness_testing.Native_Conversation import run_controller
+
+    server = tmp_path / "Background_Server.py"
+    server.write_text("""import json,sys,time
+emit=lambda event: print(json.dumps(event),flush=True)
+for line in sys.stdin:
+    request=json.loads(line)
+    if request.get("type")=="control_request":
+        emit({"type":"control_response","response":{"request_id":"initialize","subtype":"success","response":{"models":[{"model":"root-model"}]}}})
+    if request.get("type")!="user":continue
+    root=request["session_id"]
+    emit({"type":"system","subtype":"init","session_id":root,"model":"root-model"})
+    emit({"type":"assistant","session_id":root,"message":{"id":"parent","model":"root-model","usage":{"input_tokens":10,"output_tokens":2},"content":[{"type":"tool_use","id":"launch","name":"Agent","input":{"run_in_background":True}}]}})
+    emit({"type":"user","session_id":root,"message":{"content":[{"type":"tool_result","tool_use_id":"launch","content":"launched"}]}})
+    emit({"type":"system","subtype":"task_started","task_id":"child","tool_use_id":"launch"})
+    emit({"type":"result","session_id":root,"subtype":"success","result":"Completed."})
+    time.sleep(10 if "timeout" in sys.argv else 0.15)
+    emit({"type":"assistant","agentId":"child","sessionId":root,"message":{"id":"child-message","model":"child-model","usage":{"input_tokens":5,"output_tokens":3}}})
+    emit({"type":"system","subtype":"task_notification","task_id":"child","tool_use_id":"launch","status":"completed"})
+""")
+    for timeout in (False, True):
+        logs = tmp_path / str(timeout)
+        evidence = run_controller(
+            {
+                **config("claude"),
+                "command": [sys.executable, str(server)] + (["timeout"] if timeout else []),
+                "cwd": str(tmp_path),
+                "log_dir": str(logs),
+                "timeout_seconds": 0.4 if timeout else 5,
+            }
+        )
+        assert evidence["status"] == ("timeout" if timeout else "completed")
+        assert evidence["usage_complete"] is not timeout
+        assert ("missing_background_terminal" in evidence["incomplete_reasons"]) is timeout
+        assert sum(row["output_tokens"] for row in evidence["model_usage"]) == (2 if timeout else 5)
+        assert json.loads((logs / "Trial_Evidence.json").read_text()) == evidence
