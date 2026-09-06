@@ -4,7 +4,9 @@ Use this contract to turn a harness change into a reviewable, reproducible compa
 
 ## A1 — Choose the experiment
 
-Start from [Baseline Comparison.json](../runs/examples/Baseline%20Comparison.json) for the first cohort or a new kickoff model. It schedules Nothing, Superpowers and the full Skills-n-Stuff collection plus its pinned Superpowers dependency: nine neutral development tasks, three repetitions each, 81 root task trials. The startup model is `gpt-6-astra`, effort `high`; native child routing stays available.
+Check [Next Queued Experiment](Capability_Pack.md#next-queued-experiment) before choosing a run. Prefer a small representative pilot before repeating a broad cohort. The current nine-task, three-repetition recommendation policy does not require starting with 81 trials. A diagnostic subset can expose failures and measure exploratory overhead without supporting an overall winner.
+
+[Baseline Comparison.json](../runs/examples/Baseline%20Comparison.json) is the full-cohort template for first baselines or a new kickoff model. It schedules Nothing, Superpowers and the full Skills-n-Stuff collection plus its pinned Superpowers dependency: nine neutral development tasks, three repetitions each, 81 root task trials. The startup model is `gpt-6-astra`, effort `high`; native child routing stays available. Adapt a private copy for a smaller diagnostic rather than executing the full template by default. The current request compiler accepts only local workflow comparison tasks; the queued DeepSWE pilot needs the integration described in the queue before it can use this contract.
 
 Use [Candidate Comparison.json](../runs/examples/Candidate%20Comparison.json) for later Studio Moser edits: 27 root trials, with the two baselines reused. Replace both zero-filled reference IDs with exact retained `report_id` values. They may point to the same first-cohort report. Never select “latest” or silently substitute a different baseline.
 
@@ -46,11 +48,15 @@ uv run harness-test run execute --manifest 'runs/generated/DIGEST/Manifest.json'
 
 `max_sessions` limits scheduled root task trials, not a promised bound on native child calls. Timeout covers agent work and child waiting. API budget is an admission estimate; providers do not guarantee a whole-tree dollar stop. A request requiring `budget_enforcement: hard-stop` is rejected. Subscription mode uses zero incremental dollar budget while retaining API-equivalent estimates.
 
+Zero incremental dollars does not mean free compute: subscription runs consume quota and wall time. The current comparison planner uses the calibration profile's generic allowance of 1,000,000 input and 100,000 output tokens per root trial from `runs/Profiles.toml`. This is not a forecast learned from previous runs. Present observed pilot usage separately, explain task-size uncertainty, and do not describe the admission estimate as a charge or a guaranteed ceiling.
+
 Comparison `retry_policy` is `none`: Harbor's automatic transport retry deletes the failed attempt directory. Preserve that attempt and prepare a separately identified rerun instead. Internal model repairs remain part of the trial's recorded work.
 
 ## A5 — Inspect evidence and iterate
 
 Use the dashboard's conclusion, three-harness table, version history and task evidence. A winner must clear every required task's protected correctness checks; failures cannot be offset by cheap execution. Cost includes recorded failed attempts, turns and children. Missing grading, infrastructure errors, incomplete usage, incompatible conditions, quarantined evidence and insufficient repetitions remain explicit.
+
+For these comparisons, read the version-3 experiment trial/comparison evidence and the report's observed whole-tree cost. Legacy per-job `efficiency` summaries can describe a narrower scope and must not replace the native root-plus-children ledger.
 
 [Comparison Pricing](Comparison%20Pricing.md) defines standardized token estimates. Original estimates are retained; new comparisons reprice retained token evidence using one shared snapshot. Unreported child effort and missing token counts stay unavailable. Raw prompts, reasoning, traces, session IDs, credentials and local paths never enter public reports.
 
