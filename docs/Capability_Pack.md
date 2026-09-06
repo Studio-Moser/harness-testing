@@ -4,6 +4,44 @@ The optional capability pack measures longer-horizon work on six frozen DeepSWE 
 tasks. It is a manual `research` lane, not part of validation, checkpoints, releases, or
 continuous integration.
 
+## Next Queued Experiment
+
+**Q1 — Quill shared-toolbar pilot** · queued for preparation September 6, 2026.
+
+Select the existing `quill-shared-toolbar-focus` task. Implement a shared toolbar
+that follows the active editor, keeps its controls in sync, and handles disabled
+or removed editors and dynamically changed controls. This is a TypeScript feature
+in the real Quill codebase, with interacting behavior across modules, themes and
+UI. The upstream verifier runs existing toolbar/picker tests and a separate new
+browser-test suite. This makes it a more substantial pilot than the local stub
+and styling fixtures; whether harnesses help is still the question being tested.
+
+| Input | Queued selection |
+| --- | --- |
+| Task definition | [Pinned Quill task](https://github.com/datacurve-ai/deep-swe/tree/8cae5984d5dd0ee37445beff0e928dc10c331116/tasks/quill-shared-toolbar-focus) |
+| Starting repository | `slab/quill` at `539cbffd0a13b18e9c65eb84dd35e6596e403158` |
+| Harnesses | Nothing, Superpowers, full Studio Moser; retain the existing frozen source/rubric identities |
+| Kickoff | Codex 0.153.4, GPT-6 Astra, High |
+| Pilot size | One repetition per harness: three root trials, sequential |
+| Delegation | Normal native harness behavior; no forced child or diagnostic startup instructions |
+| Conclusion | Exploratory outcomes and whole-tree cost/time/tokens; no overall winner from one task |
+| Execution | Not scheduled or approved; prepare an exact manifest after readiness checks |
+
+Preparation must connect this existing research task to the versioned contender,
+native-conversation, and whole-tree reporting path. The current experiment-request
+compiler only materializes local `tasks/workflow` fixtures; the older research CLI
+alone does not establish the newer comparison contract. Preserve the upstream
+prompt, repository pin, hidden grader and image identity; verify grading/protected
+state semantics, no-op/reference behavior and artifact capture before a model run.
+
+The current download command materializes all six pinned tasks. Prepare only this
+selected task for the pilot rather than implicitly downloading/building the whole
+cohort. Keep fetched content in the ignored cache. Freeze resource/time limits and
+an estimate appropriate to this task before requesting execution approval.
+
+This pilot takes priority over the previously prepared, unapproved 81-trial local
+fixture cohort. No additional benchmark run is authorized by this queue entry.
+
 ## Frozen Source
 
 - Repository: [datacurve-ai/deep-swe](https://github.com/datacurve-ai/deep-swe)
