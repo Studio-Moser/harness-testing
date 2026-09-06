@@ -139,6 +139,8 @@ test("dashboard pages await the generated result attachment before reading it", 
   for (const name of [
     "index.md",
     "Comparisons.md",
+    "Version_History.md",
+    "Legacy_Run_Detail.md",
     "Quality_Versus_Efficiency.md",
     "Run_Detail.md",
     "Task_Matrix.md",
@@ -146,7 +148,7 @@ test("dashboard pages await the generated result attachment before reading it", 
   ]) {
     const source = await readFile(resolve(repositoryRoot, "dashboard", "src", name), "utf8");
     assert.match(source, /const report = await FileAttachment\([^\n]+\)\.json\(\);/, name);
-    assert.match(source, /runObservations\(report\.run_reports, report\.results\)/, name);
+    assert.match(source, /runObservations\(report\.run_reports, report\.results\)|render(?:Comparison|History|Evidence)\(report\.run_reports, state\)/, name);
   }
 });
 
@@ -214,4 +216,15 @@ test("report helpers keep unknown telemetry unavailable and label delivery surfa
   assert.match(deliveryLabel(claude), /Superpowers hook-capable/);
 
   assert.deepEqual(latestResults([valid, valid]), [valid]);
+});
+
+test("loads version-three comparisons without exposing local agent identities", async () => {
+  const root = await testRoot();
+  await cp(resolve(runFixtureRoot, "Comparison.json"), resolve(root, "published", "comparison.json"));
+  const loaded = await loadFrom(root);
+  const experiment = loaded.run_reports[0].experiment;
+  assert.equal(experiment.comparison.status, "recommended");
+  assert.equal(experiment.trials.length, 81);
+  assert.equal(experiment.trials[0].session_usage[0].session, "root");
+  assert.equal("root_session_id" in experiment.trials[0], false);
 });

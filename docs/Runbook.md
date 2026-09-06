@@ -1,5 +1,7 @@
 # Runbook
 
+For harness-versus-harness experiments, start with the [Agent Experiment Guide](Agent%20Experiment%20Guide.md). The legacy arm commands below remain available for earlier diagnostics.
+
 ## Prerequisites
 
 - Docker
