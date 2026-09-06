@@ -244,7 +244,7 @@ report sync dispatches that workflow even though it does not mutate `main`.
 First print the exact download/build plan:
 
 ```bash
-uv run harness-test deepswe materialize
+uv run harness-test deepswe materialize --task quill-shared-toolbar-focus
 ```
 
-Materialization requires `--confirm-download`. It fetches only the pinned six-task cohort into ignored `.cache/deepswe/` and builds separate `linux/amd64` images. Do not track or redistribute the fetched source, derived task wrappers, or images.
+Materialization requires `--confirm-download`. An explicit `--task` fetches only that pinned selection into ignored `.cache/deepswe/`; omitting it retains the full-cohort workflow. It builds separate `linux/amd64` images. Do not track or redistribute the fetched source, derived task wrappers, or images.

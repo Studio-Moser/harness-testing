@@ -11,6 +11,33 @@ from pathlib import Path
 from harness_testing.Materialize import _tree_digest
 from harness_testing.Scripted_User import validate_policy
 
+_RESEARCH_SCRIPTED_USER_POLICY = {
+    "schema_version": "1",
+    "interaction_limit": 1,
+    "facts": {
+        "implementation": "Proceed with the implementation and verification in the task workspace."
+    },
+    "rules": [
+        {
+            "id": "implementation-approval",
+            "kind": "approval",
+            "pattern": (
+                r"(?is)(?=.*\b(?:implementation|plan)\b)"
+                r"(?=.*\b(?:approve|approval|proceed|ready)\b).*"
+            ),
+            "fact": "implementation",
+        }
+    ],
+}
+
+
+def research_scripted_user_policy(task_ids: list[str]) -> dict:
+    """Return the task-agnostic, frozen approval policy for the selected research task."""
+    if task_ids != ["quill-shared-toolbar-focus"]:
+        raise ValueError("DeepSWE comparison support is limited to the queued Quill task")
+    validate_policy(_RESEARCH_SCRIPTED_USER_POLICY)
+    return json.loads(json.dumps(_RESEARCH_SCRIPTED_USER_POLICY))
+
 
 def materialize_comparison_tasks(root: Path, task_ids: list[str]) -> Path:
     """Copy selected fixtures with neutral prompts; preserve every verifier byte."""

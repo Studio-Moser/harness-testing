@@ -774,7 +774,7 @@ def test_deepswe_plan_is_manual_exact_and_has_no_side_effects(capsys):
     assert plan.task_ids == DEEPSWE_TASK_IDS
     assert plan.commit == "8cae5984d5dd0ee37445beff0e928dc10c331116"
     assert plan.platform == "linux/amd64"
-    assert "six pinned task directories" in report
+    assert "6 selected pinned task directories" in report
     assert "linux/amd64" in report
     assert "@sha256:930ec9d5" in report
     assert "No model session" in report
@@ -782,6 +782,22 @@ def test_deepswe_plan_is_manual_exact_and_has_no_side_effects(capsys):
     output = capsys.readouterr()
     assert "--confirm-download" in output.err
     assert DEEPSWE_TASK_IDS[0] in output.out
+
+
+def test_deepswe_task_selection_is_unique_pinned_and_explicit():
+    selected = ("quill-shared-toolbar-focus",)
+
+    plan = deepswe_materialization_plan(REPOSITORY_ROOT, task_ids=selected)
+
+    assert plan.task_ids == selected
+    assert "1 selected pinned task directories" in format_deepswe_plan(plan)
+    assert len(plan.original_images) == 1
+    with pytest.raises(ValueError, match="unique"):
+        deepswe_materialization_plan(
+            REPOSITORY_ROOT, task_ids=(selected[0], selected[0])
+        )
+    with pytest.raises(ValueError, match="pinned DeepSWE cohort"):
+        deepswe_materialization_plan(REPOSITORY_ROOT, task_ids=("unknown-task",))
 
 
 def test_deepswe_materialization_requires_confirmation(
@@ -917,6 +933,33 @@ def test_deepswe_cache_reuse_validates_bytes_and_does_not_rebuild(
         )
 
 
+def test_deepswe_subset_has_its_own_cache_identity_and_preserves_full_cohort(
+    deepswe_fixture: tuple[Path, Path, str, dict[str, str]],
+    monkeypatch: pytest.MonkeyPatch,
+):
+    root, source, commit, _ = deepswe_fixture
+    calls = _fake_deepswe_images(monkeypatch)
+    selected = ("quill-shared-toolbar-focus",)
+
+    subset = materialize_deepswe(
+        root,
+        confirm_download=True,
+        task_ids=selected,
+        source_override=(source, commit),
+    )
+    assert load_deepswe_dataset(root, task_ids=selected) == subset
+    full = materialize_deepswe(
+        root,
+        confirm_download=True,
+        source_override=(source, commit),
+    )
+
+    assert [task_id for task_id, *_ in calls] == [selected[0], *DEEPSWE_TASK_IDS]
+    assert set(path.name for path in subset.tasks_path.iterdir()) == set(selected)
+    assert load_deepswe_dataset(root) == full
+    assert subset.path != full.path
+
+
 def test_deepswe_rejects_a_different_commit_and_a_publishable_cache(
     deepswe_fixture: tuple[Path, Path, str, dict[str, str]],
     monkeypatch: pytest.MonkeyPatch,
@@ -963,8 +1006,30 @@ def test_deepswe_derived_dockerfile_uses_pinned_clis_without_touching_app():
     assert "npm install" not in dockerfile
     assert "/usr/local/lib/node_modules/@anthropic-ai/claude-code" in dockerfile
     assert "/usr/local/lib/node_modules/@openai/codex" in dockerfile
+    assert "COPY --from=agent-tools /usr/local/bin/yq /usr/local/bin/yq" in dockerfile
+    assert "yq --version" in dockerfile and "4.47.2" in dockerfile
     assert "git -C /app status --porcelain" in dockerfile
     assert "USER agent" in dockerfile
+
+
+def test_deepswe_tooling_schema_change_rebuilds_then_reuses(deepswe_fixture, monkeypatch):
+    root, source, commit, _ = deepswe_fixture
+    calls = _fake_deepswe_images(monkeypatch)
+    selected = ("quill-shared-toolbar-focus",)
+    monkeypatch.setattr(Materialize, "_DEEPSWE_MATERIALIZER_SCHEMA", "1", raising=False)
+    first = materialize_deepswe(
+        root, confirm_download=True, task_ids=selected, source_override=(source, commit)
+    )
+    monkeypatch.setattr(Materialize, "_DEEPSWE_MATERIALIZER_SCHEMA", "2")
+    second = materialize_deepswe(
+        root, confirm_download=True, task_ids=selected, source_override=(source, commit)
+    )
+    assert first.digest != second.digest
+    assert len(calls) == 2
+    assert materialize_deepswe(
+        root, confirm_download=True, task_ids=selected, source_override=(source, commit)
+    ) == second
+    assert len(calls) == 2
 
 
 def test_deepswe_agent_tools_build_matches_the_pinned_task_platform():

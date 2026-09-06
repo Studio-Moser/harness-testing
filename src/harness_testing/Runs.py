@@ -1031,12 +1031,14 @@ def _task_pack(root: Path, profile: _Profile, task_id: str) -> str:
     raise ValueError(f"task {task_id} does not resolve to exactly one profile pack")
 
 
-def _research_dataset(root: Path, profile: _Profile) -> MaterializedDeepSWE | None:
+def _research_dataset(
+    root: Path, profile: _Profile, task_ids: tuple[str, ...] | None = None
+) -> MaterializedDeepSWE | None:
     if profile.name != "research":
         return None
     if profile.packs != ("research",):
         raise ValueError("research profile must contain only the DeepSWE research pack")
-    return load_deepswe_dataset(root)
+    return load_deepswe_dataset(root, task_ids=task_ids)
 
 
 def _task_location(
@@ -1142,9 +1144,18 @@ def _job_document(
                 "comparison transport retries cannot preserve prior attempt evidence; "
                 "use retry_policy none and record a separate rerun"
             )
+        if conditions["task_variant"] == "comparison":
+            policy = json.loads((dataset_path / task_id / "Scripted User.json").read_text())
+        else:
+            from harness_testing.Comparison_Tasks import research_scripted_user_policy
+
+            policy = research_scripted_user_policy([task_id])
+            configuration = tomllib.loads((dataset_path / task_id / "task.toml").read_text())
+            base_commit = configuration.get("metadata", {}).get("base_commit_hash")
+            if not isinstance(base_commit, str) or not _COMMIT.fullmatch(base_commit):
+                raise ValueError("DeepSWE task has no exact base commit")
         kwargs["conversation"] = {
-            "policy": json.loads((dataset_path / task_id / "Scripted User.json").read_text())
-            | {"interaction_limit": experiment["limits"]["interaction_limit"]},
+            "policy": policy | {"interaction_limit": experiment["limits"]["interaction_limit"]},
             "timeout_seconds": timeout,
             "contender_id": cell.contender["id"],
             "executor_inventory": [
@@ -1152,6 +1163,8 @@ def _job_document(
                 for entry in conditions["executor_inventory"]
             ],
         }
+        if conditions["task_variant"] == "deepswe":
+            kwargs["conversation"]["artifact_patch_base_commit"] = base_commit
         if cell.provider == "codex":
             from harness_testing.Native_Conversation import approved_hooks_from_bundle
 
@@ -1352,9 +1365,15 @@ def compile_run(
         )
 
     schema_version = str(versions["repository"]["schema_version"])
-    research_dataset = _research_dataset(root, selected_profile)
+    research_selection = (
+        task_ids
+        if experiment is not None
+        and experiment["conditions"]["task_variant"] == "deepswe"
+        else None
+    )
+    research_dataset = _research_dataset(root, selected_profile, research_selection)
     comparison_dataset = None
-    if experiment is not None:
+    if experiment is not None and experiment["conditions"]["task_variant"] == "comparison":
         from harness_testing.Comparison_Tasks import materialize_comparison_tasks
 
         comparison_dataset = materialize_comparison_tasks(root, list(task_ids))
@@ -1694,9 +1713,19 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     if not isinstance(expected_task_digests, dict):
         raise ValueError("manifest has no task digests")
     profile = _load_profile(root, manifest.profile)
-    research_dataset = _research_dataset(root, profile)
+    experiment = manifest.provenance.get("experiment")
+    research_selection = (
+        manifest.task_ids
+        if experiment is not None
+        and experiment["conditions"]["task_variant"] == "deepswe"
+        else None
+    )
+    research_dataset = _research_dataset(root, profile, research_selection)
     comparison_dataset = None
-    if manifest.provenance.get("experiment") is not None:
+    if (
+        manifest.provenance.get("experiment") is not None
+        and manifest.provenance["experiment"]["conditions"]["task_variant"] == "comparison"
+    ):
         from harness_testing.Comparison_Tasks import materialize_comparison_tasks
 
         comparison_dataset = materialize_comparison_tasks(root, list(manifest.task_ids))
@@ -1721,12 +1750,27 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     }
     if expected_image_digests != actual_image_digests:
         raise ValueError("image input digest mismatch after manifest approval")
-    experiment = manifest.provenance.get("experiment")
     if experiment:
-        from harness_testing.Experiments import runtime_image_digests
-
         frozen_images = experiment["conditions"]["image_digests"]
-        if runtime_image_digests(root, frozen_images) != frozen_images:
+        if experiment["conditions"]["task_variant"] == "deepswe":
+            if research_dataset is None:
+                raise ValueError("DeepSWE experiment has no materialized dataset")
+            records = {
+                record["task_id"]: record
+                for record in json.loads(research_dataset.provenance_path.read_text())["tasks"]
+            }
+            actual_frozen_images = {
+                f"{task}:agent": records[task]["derived_image_digest"]
+                for task in manifest.task_ids
+            } | {
+                f"{task}:verifier": records[task]["verifier_image_digest"]
+                for task in manifest.task_ids
+            }
+        else:
+            from harness_testing.Experiments import runtime_image_digests
+
+            actual_frozen_images = runtime_image_digests(root, frozen_images)
+        if actual_frozen_images != frozen_images:
             raise ValueError("runtime image content mismatch after manifest approval")
     expected_adapter_digests = manifest.provenance.get("agent_adapter_digests")
     actual_adapter_digests = _agent_adapter_digests(root)

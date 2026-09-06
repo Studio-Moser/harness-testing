@@ -43,6 +43,7 @@ _IMAGE_INPUTS = {
 }
 _IMAGE_INPUT_LABEL = "studio.moser.harness-testing.input-digest"
 _ARM_MATERIALIZER_SCHEMA = "4"
+_DEEPSWE_MATERIALIZER_SCHEMA = "2"
 
 _ARM_LAYERS = {
     "A0": (),
@@ -1176,17 +1177,52 @@ def _deepswe_configuration(
     return versions, source, normalized, platform
 
 
-def deepswe_materialization_plan(root: Path) -> DeepSWEMaterializationPlan:
+def _selected_deepswe_task_ids(task_ids: Iterable[str] | None) -> tuple[str, ...]:
+    selected = DEEPSWE_TASK_IDS if task_ids is None else tuple(task_ids)
+    if not selected or len(set(selected)) != len(selected):
+        raise ValueError("DeepSWE task selection must be nonempty and unique")
+    if not set(selected) <= set(DEEPSWE_TASK_IDS):
+        raise ValueError("DeepSWE task selection must stay within the pinned DeepSWE cohort")
+    return tuple(task_id for task_id in DEEPSWE_TASK_IDS if task_id in selected)
+
+
+def _deepswe_selection_id(task_ids: tuple[str, ...]) -> str:
+    return hashlib.sha256("\0".join(task_ids).encode()).hexdigest()[:16]
+
+
+def _deepswe_source_cache_paths(
+    cache: Path, commit: str, task_ids: tuple[str, ...]
+) -> tuple[Path, Path]:
+    if task_ids == DEEPSWE_TASK_IDS:
+        return cache / "source-trees" / commit, cache / "source-manifests" / f"{commit}.json"
+    identity = _deepswe_selection_id(task_ids)
+    return (
+        cache / "source-trees" / f"{commit}-{identity}",
+        cache / "source-manifests" / f"{commit}-{identity}.json",
+    )
+
+
+def _deepswe_current_path(cache: Path, task_ids: tuple[str, ...]) -> Path:
+    if task_ids == DEEPSWE_TASK_IDS:
+        return cache / "Current.json"
+    return cache / f"Current-{_deepswe_selection_id(task_ids)}.json"
+
+
+def deepswe_materialization_plan(
+    root: Path, *, task_ids: Iterable[str] | None = None
+) -> DeepSWEMaterializationPlan:
     """Return the exact manual DeepSWE network/build scope without writing files."""
 
     root = root.resolve()
     _, source, tasks, platform = _deepswe_configuration(root)
+    selected_task_ids = _selected_deepswe_task_ids(task_ids)
+    selected_tasks = tuple(task for task in tasks if task["id"] in selected_task_ids)
     return DeepSWEMaterializationPlan(
         source_url=str(source["url"]),
         commit=str(source["commit"]),
-        task_ids=tuple(task["id"] for task in tasks),
-        original_images=tuple(task["image"] for task in tasks),
-        original_image_digests=tuple(task["digest"] for task in tasks),
+        task_ids=selected_task_ids,
+        original_images=tuple(task["image"] for task in selected_tasks),
+        original_image_digests=tuple(task["digest"] for task in selected_tasks),
         platform=platform,
         cache_path=root / ".cache" / "deepswe",
     )
@@ -1198,8 +1234,8 @@ def format_deepswe_plan(plan: DeepSWEMaterializationPlan) -> str:
         f"Source: {plan.source_url}",
         f"Commit: {plan.commit}",
         f"Platform: {plan.platform}",
-        "Network: fetch only the six pinned task directories, then pull their six "
-        "published v1.1 images by manifest digest.",
+        f"Network: fetch only the {len(plan.task_ids)} selected pinned task directories, "
+        f"then pull their {len(plan.task_ids)} published v1.1 images by manifest digest.",
         "Build: build or reuse one platform-matched agent-tools image, then extend "
         "each original image with the pinned Claude and Codex CLI payloads.",
         f"Ignored cache only: {plan.cache_path}",
@@ -1334,8 +1370,7 @@ def _archive_deepswe_tasks(
             raise ValueError(f"DeepSWE pinned task is missing: {task_id}")
 
     cache = root / ".cache" / "deepswe"
-    destination = cache / "source-trees" / commit
-    manifest_path = cache / "source-manifests" / f"{commit}.json"
+    destination, manifest_path = _deepswe_source_cache_paths(cache, commit, task_ids)
     if destination.is_dir():
         return destination, _validate_deepswe_source_cache(
             destination, manifest_path, commit, task_ids
@@ -1510,7 +1545,10 @@ def deepswe_derived_dockerfile(
 ) -> str:
     """Render the minimal image layer that adds pinned CLIs outside /app."""
 
-    packages = _package_versions(load_versions(root / "Versions.toml"))
+    versions = load_versions(root / "Versions.toml")
+    packages = _package_versions(versions)
+    yq_version = next(row["tag"] for row in versions["containers"] if row["name"] == "yq")
+    yq_output = shlex.quote(f"yq (https://github.com/mikefarah/yq/) version v{yq_version}")
     for name in ("@anthropic-ai/claude-code", "@openai/codex"):
         if name not in packages:
             raise ValueError(f"Versions.toml has no package pin for {name}")
@@ -1528,12 +1566,14 @@ def deepswe_derived_dockerfile(
         "/usr/local/lib/node_modules/@anthropic-ai/claude-code",
         "COPY --from=agent-tools /usr/local/lib/node_modules/@openai/codex "
         "/usr/local/lib/node_modules/@openai/codex",
+        "COPY --from=agent-tools /usr/local/bin/yq /usr/local/bin/yq",
         "RUN ln -sf ../lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe "
         "/usr/local/bin/claude \\",
         "    && ln -sf ../lib/node_modules/@openai/codex/bin/codex.js "
         "/usr/local/bin/codex \\",
         "    && claude --version \\",
         "    && codex --version \\",
+        f'    && test "$(yq --version)" = {yq_output} \\',
         '    && test -z "$(git -C /app status --porcelain)"',
     ]
     if original_user:
@@ -1820,6 +1860,8 @@ def _validate_materialized_deepswe(
         name: packages[name]
         for name in ("@anthropic-ai/claude-code", "@openai/codex")
     }
+    selected_task_ids = tuple(str(task_id) for task_id in source_manifest["task_ids"])
+    task_pins = tuple(task for task in tasks if task["id"] in selected_task_ids)
     expected_source_digest = str(source_manifest["manifest_digest"])
     expected_source = {
         "name": "DeepSWE",
@@ -1832,10 +1874,10 @@ def _validate_materialized_deepswe(
         or provenance.get("dataset_digest") != digest
         or digest != _deepswe_manifest_digest(provenance, "dataset_digest")
         or provenance.get("schema_version") != "1"
-        or provenance.get("materializer_schema") != _schema_version(root)
+        or provenance.get("materializer_schema") != _DEEPSWE_MATERIALIZER_SCHEMA
         or provenance.get("source") != expected_source
         or provenance.get("source_manifest_digest") != expected_source_digest
-        or provenance.get("task_ids") != [task["id"] for task in tasks]
+        or provenance.get("task_ids") != list(selected_task_ids)
         or provenance.get("platform") != platform
         or provenance.get("redistribution") != "forbidden"
         or provenance.get("license_at_pin") != "absent"
@@ -1844,21 +1886,19 @@ def _validate_materialized_deepswe(
     ):
         raise ValueError("materialized DeepSWE dataset does not match current provenance")
     task_records = provenance.get("tasks")
-    if not isinstance(task_records, list) or len(task_records) != len(tasks):
+    if not isinstance(task_records, list) or len(task_records) != len(task_pins):
         raise ValueError("materialized DeepSWE task provenance is incomplete")
     if [record.get("task_id") for record in task_records if isinstance(record, dict)] != [
-        task["id"] for task in tasks
+        task["id"] for task in task_pins
     ]:
         raise ValueError("materialized DeepSWE task provenance is invalid")
-    source_tree = (
-        root
-        / ".cache"
-        / "deepswe"
-        / "source-trees"
-        / str(source["commit"])
-        / "tasks"
+    source_tree, _ = _deepswe_source_cache_paths(
+        root / ".cache" / "deepswe",
+        str(source["commit"]),
+        selected_task_ids,
     )
-    for record, task_pin in zip(task_records, tasks, strict=True):
+    source_tree = source_tree / "tasks"
+    for record, task_pin in zip(task_records, task_pins, strict=True):
         if not isinstance(record, dict):
             raise ValueError("materialized DeepSWE task provenance is invalid")
         task_id = str(record.get("task_id", ""))
@@ -1892,20 +1932,23 @@ def _validate_materialized_deepswe(
     return MaterializedDeepSWE(path=path, digest=digest)
 
 
-def load_deepswe_dataset(root: Path) -> MaterializedDeepSWE:
+def load_deepswe_dataset(
+    root: Path, *, task_ids: Iterable[str] | None = None
+) -> MaterializedDeepSWE:
     """Load the current ignored DeepSWE dataset and fail closed on drift."""
 
     root = root.resolve()
-    plan = deepswe_materialization_plan(root)
+    plan = deepswe_materialization_plan(root, task_ids=task_ids)
     _require_ignored_deepswe_cache(root, plan.cache_path)
-    current = _read_json(plan.cache_path / "Current.json", "DeepSWE current pointer")
+    current = _read_json(
+        _deepswe_current_path(plan.cache_path, plan.task_ids), "DeepSWE current pointer"
+    )
     digest = str(current.get("dataset_digest", ""))
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
         raise ValueError("DeepSWE dataset is not materialized")
-    source_manifest_path = (
-        plan.cache_path / "source-manifests" / f"{plan.commit}.json"
+    source_tree, source_manifest_path = _deepswe_source_cache_paths(
+        plan.cache_path, plan.commit, plan.task_ids
     )
-    source_tree = plan.cache_path / "source-trees" / plan.commit
     source_manifest = _validate_deepswe_source_cache(
         source_tree, source_manifest_path, plan.commit, plan.task_ids
     )
@@ -1922,7 +1965,7 @@ def _current_deepswe_is_compatible(
     plan: DeepSWEMaterializationPlan,
     source_manifest: dict[str, object],
 ) -> bool:
-    current_path = plan.cache_path / "Current.json"
+    current_path = _deepswe_current_path(plan.cache_path, plan.task_ids)
     if not current_path.is_file():
         return False
     current = _read_json(current_path, "DeepSWE current pointer")
@@ -1934,7 +1977,7 @@ def _current_deepswe_is_compatible(
     versions = load_versions(root / "Versions.toml")
     packages = _package_versions(versions)
     return (
-        provenance.get("materializer_schema") == _schema_version(root)
+        provenance.get("materializer_schema") == _DEEPSWE_MATERIALIZER_SCHEMA
         and provenance.get("source_manifest_digest")
         == source_manifest.get("manifest_digest")
         and provenance.get("task_ids") == list(plan.task_ids)
@@ -1951,12 +1994,13 @@ def materialize_deepswe(
     root: Path,
     *,
     confirm_download: bool,
+    task_ids: Iterable[str] | None = None,
     source_override: tuple[str | Path, str] | None = None,
 ) -> MaterializedDeepSWE:
     """Fetch and derive the manual six-task capability lane without a model run."""
 
     root = root.resolve()
-    plan = deepswe_materialization_plan(root)
+    plan = deepswe_materialization_plan(root, task_ids=task_ids)
     if not confirm_download:
         raise ValueError("DeepSWE materialization requires explicit --confirm-download")
     _require_ignored_deepswe_cache(root, plan.cache_path)
@@ -1972,7 +2016,7 @@ def materialize_deepswe(
         root, source, commit, plan.task_ids
     )
     if _current_deepswe_is_compatible(root, plan, source_manifest):
-        return load_deepswe_dataset(root)
+        return load_deepswe_dataset(root, task_ids=plan.task_ids)
 
     versions, source_pin, task_pins, platform = _deepswe_configuration(root)
     packages = _package_versions(versions)
@@ -1983,6 +2027,8 @@ def materialize_deepswe(
         tasks_directory.mkdir(parents=True)
         records: list[dict[str, object]] = []
         for task_pin in task_pins:
+            if task_pin["id"] not in plan.task_ids:
+                continue
             task_id = task_pin["id"]
             original_task = source_tree / "tasks" / task_id
             wrapper = tasks_directory / task_id
@@ -2049,7 +2095,7 @@ def materialize_deepswe(
             records.append(record)
         provenance: dict[str, object] = {
             "schema_version": "1",
-            "materializer_schema": _schema_version(root),
+            "materializer_schema": _DEEPSWE_MATERIALIZER_SCHEMA,
             "source": {
                 "name": "DeepSWE",
                 "url": str(source_pin["url"]),
@@ -2080,7 +2126,9 @@ def materialize_deepswe(
             destination.parent.mkdir(parents=True, exist_ok=True)
             _copy_tree(dataset, destination)
             _make_read_only(destination)
-    _write_json(plan.cache_path / "Current.json", {"dataset_digest": digest})
+    _write_json(
+        _deepswe_current_path(plan.cache_path, plan.task_ids), {"dataset_digest": digest}
+    )
     return _validate_materialized_deepswe(
         root, destination, digest, source_manifest
     )

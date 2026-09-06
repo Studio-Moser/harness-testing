@@ -44,6 +44,22 @@ else:
     )
 
 _REMOTE_DIR = "/tmp/Harness_Native_Conversation"
+_COMMIT = re.compile(r"^[0-9a-f]{40}$")
+
+
+def capture_committed_patch(workspace: Path, base_commit: str, destination: Path) -> None:
+    """Write the upstream committed-only submission artifact without grading it."""
+    if not _COMMIT.fullmatch(base_commit):
+        raise ValueError("artifact_patch_base_commit_invalid")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("wb") as artifact:
+        subprocess.run(
+            ("git", "diff", "--binary", base_commit, "HEAD"),
+            cwd=workspace,
+            check=True,
+            stdout=artifact,
+            stderr=subprocess.DEVNULL,
+        )
 
 
 def validate_conversation(config: dict, provider: str) -> None:
@@ -804,6 +820,16 @@ def run_controller(config: dict) -> dict:
                 )
         if state.active_turns:
             incomplete.append("unresolved_active_turn")
+        base_commit = config.get("artifact_patch_base_commit")
+        if base_commit is not None:
+            try:
+                capture_committed_patch(
+                    Path(config.get("cwd", "/app")),
+                    str(base_commit),
+                    Path("/logs/artifacts/model.patch"),
+                )
+            except (OSError, subprocess.CalledProcessError, ValueError):
+                incomplete.append("committed_patch_capture_failed")
         evidence = collect_trial_evidence(
             state.provider,
             events,

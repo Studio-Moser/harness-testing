@@ -80,7 +80,13 @@ def comparison_pricing(root: Path) -> dict:
 
 
 def _safe_trial(
-    root: Path, task: str, contender_id: str, attempt: int, directory: Path | None
+    root: Path,
+    task: str,
+    contender_id: str,
+    attempt: int,
+    directory: Path | None,
+    *,
+    task_variant: str = "comparison",
 ) -> dict:
     result = _read(directory / "result.json") if directory else None
     native = _read(directory / "agent/Trial_Evidence.json") if directory else None
@@ -107,9 +113,9 @@ def _safe_trial(
         protected_files_intact(
             workspace, root / "tasks/workflow" / task / "tests/Protected_Files.json"
         )
-        if workspace is not None and workspace.is_dir()
+        if task_variant == "comparison" and workspace is not None and workspace.is_dir()
         else True
-        if correctness is True
+        if task_variant == "comparison" and correctness is True
         else None
     )
     model_usage = []
@@ -221,7 +227,12 @@ def attach_experiment_report(
             directory = directories[attempt - 1] if attempt <= len(directories) else None
             trials.append(
                 _safe_trial(
-                    root, task, cell.contender["id"], scheduled_attempt or attempt, directory
+                    root,
+                    task,
+                    cell.contender["id"],
+                    scheduled_attempt or attempt,
+                    directory,
+                    task_variant=request["conditions"]["task_variant"],
                 )
             )
     extension["trials"] = trials

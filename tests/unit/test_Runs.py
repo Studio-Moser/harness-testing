@@ -2852,7 +2852,13 @@ def test_research_profile_uses_only_the_materialized_deepswe_dataset(
     task.mkdir(parents=True)
     (task / "instruction.md").write_text("DeepSWE research task\n")
     materialized = MaterializedDeepSWE(path=dataset, digest=dataset_digest)
-    monkeypatch.setattr(Runs, "load_deepswe_dataset", lambda root: materialized)
+    selections = []
+
+    def load_research(root, **kwargs):
+        selections.append(kwargs.get("task_ids"))
+        return materialized
+
+    monkeypatch.setattr(Runs, "load_deepswe_dataset", load_research)
     cell = _cell("codex", "A0", "baseline", "e")
     _add_bundle(run_root, cell)
 
@@ -2873,12 +2879,39 @@ def test_research_profile_uses_only_the_materialized_deepswe_dataset(
     assert manifest.provenance["task_digests"] == {f"research/{task_id}": Runs._tree_digest(task)}
     assert manifest.provenance["deepswe_dataset_digest"] == dataset_digest
     assert manifest.provenance["image_input_digests"] == {}
+    assert selections == [None]
     _verify_generated_inputs(run_root, manifest)
+    assert selections == [None, None]
+
+    (dataset / "Provenance.json").write_text(
+        json.dumps(
+            {
+                "tasks": [
+                    {
+                        "task_id": task_id,
+                        "derived_image_digest": _digest("b"),
+                        "verifier_image_digest": _digest("c"),
+                    }
+                ]
+            }
+        )
+    )
+    manifest.provenance["experiment"] = {
+        "conditions": {
+            "task_variant": "deepswe",
+            "image_digests": {
+                f"{task_id}:agent": _digest("b"),
+                f"{task_id}:verifier": _digest("c"),
+            },
+        }
+    }
+    _verify_generated_inputs(run_root, manifest)
+    assert selections == [None, None, (task_id,)]
 
     monkeypatch.setattr(
         Runs,
         "load_deepswe_dataset",
-        lambda root: MaterializedDeepSWE(path=dataset, digest=_digest("a")),
+        lambda root, **_: MaterializedDeepSWE(path=dataset, digest=_digest("a")),
     )
     with pytest.raises(ValueError, match="DeepSWE dataset digest mismatch"):
         _verify_generated_inputs(run_root, manifest)

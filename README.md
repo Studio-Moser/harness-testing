@@ -32,7 +32,7 @@ Protected correctness comes first. Report cost, time and tokens separately, reta
 
 These are frozen benchmark projects, not task definitions connected to our live product repositories. Asking for a harder task means selecting a suitable frozen task or authoring one with a fixed starting repository, clear requirements and a protected verifier. Merely making the prompt more demanding does not establish a fair test.
 
-The current versioned request compiler resolves only local workflow fixtures. DeepSWE exists through the older research path; integrating it with versioned contenders, native conversations and whole-tree reporting is still needed for the queued pilot. Its current confirmed materialization command downloads/builds all six tasks, not just a requested task. See [Capability Pack](docs/Capability_Pack.md) before using it and [Task Authoring](docs/Task_Authoring.md) for local fixtures.
+The versioned request compiler resolves the queued Quill task through the `deepswe` diagnostic variant, using selected cached inputs, native conversations and whole-tree reports. Other DeepSWE tasks remain in the manual research lane. Select Quill explicitly when materializing it. See [Capability Pack](docs/Capability_Pack.md) before using it and [Task Authoring](docs/Task_Authoring.md) for local fixtures.
 
 ## Prepare a run, then obtain exact approval
 

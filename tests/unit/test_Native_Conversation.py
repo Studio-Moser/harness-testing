@@ -186,6 +186,39 @@ for line in sys.stdin:
         )
 
 
+def test_committed_artifact_patch_excludes_uncommitted_work(tmp_path):
+    import subprocess
+
+    from harness_testing.Native_Conversation import capture_committed_patch
+
+    subprocess.run(("git", "init", "--quiet", tmp_path), check=True)
+    subprocess.run(("git", "-C", tmp_path, "config", "user.name", "Harness Test"), check=True)
+    subprocess.run(
+        ("git", "-C", tmp_path, "config", "user.email", "harness@example.invalid"),
+        check=True,
+    )
+    tracked = tmp_path / "Tracked.txt"
+    tracked.write_text("base\n")
+    subprocess.run(("git", "-C", tmp_path, "add", "Tracked.txt"), check=True)
+    subprocess.run(("git", "-C", tmp_path, "commit", "--quiet", "-m", "base"), check=True)
+    base = subprocess.run(
+        ("git", "-C", tmp_path, "rev-parse", "HEAD"),
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    tracked.write_text("committed\n")
+    subprocess.run(("git", "-C", tmp_path, "commit", "-am", "submitted", "--quiet"), check=True)
+    (tmp_path / "Uncommitted.txt").write_text("excluded\n")
+    patch = tmp_path / "logs" / "artifacts" / "model.patch"
+
+    capture_committed_patch(tmp_path, base, patch)
+
+    contents = patch.read_text()
+    assert "Tracked.txt" in contents
+    assert "Uncommitted.txt" not in contents
+
+
 def test_models_are_checked_before_turn_and_explicit_resume_is_preserved():
     state = Conversation({**config("codex"), "root_session_id": "saved-root"})
     init = state.start()[0]

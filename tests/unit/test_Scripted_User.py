@@ -87,3 +87,24 @@ def test_all_comparison_tasks_answer_authored_questions():
             ("approval", "May I proceed with the plan?"),
         ]:
             assert select_reply({"kind": kind, "text": text}, frozen, 0)["status"] == "reply", path
+
+
+def test_research_policy_approves_routine_plans_but_denies_tool_authority():
+    from harness_testing.Comparison_Tasks import research_scripted_user_policy
+
+    policy = research_scripted_user_policy(["quill-shared-toolbar-focus"])
+
+    assert select_reply(
+        {"kind": "approval", "text": "May I proceed with the implementation plan?"},
+        policy,
+        0,
+    ) == {
+        "status": "reply",
+        "rule_id": "implementation-approval",
+        "reply": "Proceed with the implementation and verification in the task workspace.",
+    }
+    assert select_reply(
+        {"kind": "approval", "text": "May I publish the result?", "actions": ["publish"]},
+        policy,
+        0,
+    )["status"] == "authority_denied"

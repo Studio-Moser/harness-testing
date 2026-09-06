@@ -53,6 +53,13 @@ def validate_experiment_request(document: dict) -> list[str]:
     if document["first_version"] == bool(document["predecessor_result_ids"]):
         errors.append("predecessor_result_ids: supply a predecessor or declare first_version")
     conditions, limits = document["conditions"], document["limits"]
+    if conditions["task_variant"] == "deepswe" and (
+        purpose != "diagnostic"
+        or conditions["task_ids"] != ["quill-shared-toolbar-focus"]
+    ):
+        errors.append(
+            "conditions: DeepSWE support is limited to the queued Quill diagnostic task"
+        )
     if purpose != "diagnostic" and conditions["task_variant"] != "comparison":
         errors.append(
             "conditions.task_variant: primary comparison requires neutral development tasks"
@@ -211,10 +218,13 @@ def plan_experiment(
     import copy
     from decimal import Decimal
 
-    from harness_testing.Comparison_Tasks import materialize_comparison_tasks
+    from harness_testing.Comparison_Tasks import (
+        materialize_comparison_tasks,
+        research_scripted_user_policy,
+    )
     from harness_testing.Config import load_versions
     from harness_testing.Contenders import materialize_contender
-    from harness_testing.Materialize import _file_digests
+    from harness_testing.Materialize import _file_digests, load_deepswe_dataset
     from harness_testing.Runs import RunCell, _agent_adapter_digests, _tree_digest, compile_run
 
     errors = validate_experiment_request(document)
@@ -234,26 +244,53 @@ def plan_experiment(
     package = "@openai/codex" if kickoff["provider"] == "codex" else "@anthropic-ai/claude-code"
     if kickoff["runtime_version"] != packages[package]:
         raise ValueError("kickoff runtime version must match the pinned task image")
-    dataset = materialize_comparison_tasks(root, conditions["task_ids"])
-    task_digests = {task: _tree_digest(dataset / task) for task in conditions["task_ids"]}
-    scripted = {
-        task: json.loads((dataset / task / "Scripted User.json").read_text())
-        | {"interaction_limit": limits["interaction_limit"]}
-        for task in conditions["task_ids"]
-    }
-    images = {"verifier"} | {
-        "rust" if task.startswith("rust-") else "node" for task in conditions["task_ids"]
-    }
+    if conditions["task_variant"] == "comparison":
+        dataset = materialize_comparison_tasks(root, conditions["task_ids"])
+        task_digests = {task: _tree_digest(dataset / task) for task in conditions["task_ids"]}
+        scripted = {
+            task: json.loads((dataset / task / "Scripted User.json").read_text())
+            | {"interaction_limit": limits["interaction_limit"]}
+            for task in conditions["task_ids"]
+        }
+        images = {"verifier"} | {
+            "rust" if task.startswith("rust-") else "node" for task in conditions["task_ids"]
+        }
+        evaluator = {
+            task: _file_digests(dataset / task / "tests") for task in conditions["task_ids"]
+        }
+        image_digests = runtime_image_digests(root, images)
+        authority_scope = "local-development-task"
+    else:
+        dataset = load_deepswe_dataset(root, task_ids=conditions["task_ids"])
+        task_digests = {
+            task: _tree_digest(dataset.tasks_path / task) for task in conditions["task_ids"]
+        }
+        scripted = research_scripted_user_policy(conditions["task_ids"]) | {
+            "interaction_limit": limits["interaction_limit"]
+        }
+        records = {
+            record["task_id"]: record
+            for record in json.loads(dataset.provenance_path.read_text())["tasks"]
+        }
+        evaluator = {
+            task: records[task]["verifier_dockerfile_digest"] for task in conditions["task_ids"]
+        }
+        image_digests = {
+            f"{task}:agent": records[task]["derived_image_digest"]
+            for task in conditions["task_ids"]
+        } | {
+            f"{task}:verifier": records[task]["verifier_image_digest"]
+            for task in conditions["task_ids"]
+        }
+        authority_scope = "deepswe-task"
     derived = {
         "task_digests": task_digests,
-        "evaluator_digest": contender_identity(
-            {task: _file_digests(dataset / task / "tests") for task in conditions["task_ids"]}
-        ),
-        "image_digests": runtime_image_digests(root, images),
+        "evaluator_digest": contender_identity(evaluator),
+        "image_digests": image_digests,
         "scripted_user_digest": contender_identity(scripted),
         "authority_digest": contender_identity(
             {
-                "scope": "local-development-task",
+                "scope": authority_scope,
                 "executors": conditions["executor_inventory"],
                 "resources": conditions["resources"],
             }
@@ -328,7 +365,7 @@ def plan_experiment(
     request["request_id"] = contender_identity(request)
     manifest = compile_run(
         root,
-        profile="calibration",
+        profile="research" if conditions["task_variant"] == "deepswe" else "calibration",
         billing_mode=limits["billing_mode"],
         cells=tuple(cells),
         task_ids=tuple(conditions["task_ids"]),

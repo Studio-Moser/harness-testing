@@ -62,6 +62,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "materialize", help="fetch and derive the pinned six-task cohort"
     )
     deepswe_materialize_parser.add_argument("--confirm-download", action="store_true")
+    deepswe_materialize_parser.add_argument("--task", action="append", default=[])
 
     regrade_parser = subparsers.add_parser(
         "regrade", help="re-run Harbor verification without an agent phase"
@@ -186,7 +187,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             materialize_deepswe,
         )
 
-        plan = deepswe_materialization_plan(_repository_root())
+        task_ids = tuple(arguments.task) or None
+        plan = deepswe_materialization_plan(_repository_root(), task_ids=task_ids)
         print(format_deepswe_plan(plan))
         if not arguments.confirm_download:
             print(
@@ -195,7 +197,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 2
-        materialized = materialize_deepswe(_repository_root(), confirm_download=True)
+        materialized = materialize_deepswe(
+            _repository_root(), confirm_download=True, task_ids=task_ids
+        )
         print(f"Materialized dataset: {materialized.digest}")
         print(materialized.path)
     elif arguments.command == "regrade":

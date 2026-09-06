@@ -92,6 +92,26 @@ def test_infrastructure_failure_and_safe_agent_breakdown(tmp_path):
     assert result["cost_usd"] is not None  # Recorded work is retained, not counted as free.
 
 
+def test_safe_trial_keeps_research_protected_state_unknown(tmp_path: Path):
+    from harness_testing.Experiment_Reports import _safe_trial
+
+    directory = tmp_path / "trial"
+    (directory / "verifier").mkdir(parents=True)
+    (directory / "verifier" / "reward.json").write_text('{"reward": 1}\n')
+
+    trial = _safe_trial(
+        ROOT,
+        "quill-shared-toolbar-focus",
+        "sha256:" + "a" * 64,
+        1,
+        directory,
+        task_variant="research",
+    )
+
+    assert trial["correctness"] is True
+    assert trial["protected_state"] is None
+
+
 def test_comparison_pricing_reprices_at_one_complete_snapshot():
     from harness_testing.Comparisons import _cost
     from harness_testing.Experiment_Reports import comparison_pricing

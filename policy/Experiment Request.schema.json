@@ -180,7 +180,8 @@
         },
         "task_variant": {
           "enum": [
-            "comparison"
+            "comparison",
+            "deepswe"
           ]
         },
         "executor_inventory": {
