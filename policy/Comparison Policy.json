@@ -1,0 +1,21 @@
+{
+  "policy_id": "development-comparison-v1",
+  "required_task_count": 9,
+  "minimum_repetitions": 3,
+  "bootstrap_draws": 20000,
+  "family_error_rate": 0.05,
+  "advantage_ratio": 0.9,
+  "noninferiority_ratio": 1.1,
+  "pricing": null,
+  "task_ids": [
+    "react-accent-polish",
+    "react-active-badge-count",
+    "react-grouped-ui-updates",
+    "react-saved-view-feature",
+    "rust-quoted-value-parser",
+    "rust-workspace-warning-summary",
+    "static-accessible-disclosure",
+    "static-grouped-page-updates",
+    "static-pricing-copy-polish"
+  ]
+}

@@ -99,14 +99,13 @@ def validate_run_report(
     errors.extend(_run_report_schema_errors(root, document))
     if not isinstance(document, Mapping):
         return tuple(dict.fromkeys(errors))
-    if published and document.get("schema_version") != "2":
+    if published and document.get("schema_version") not in {"2", "3"}:
         errors.append(
             f"run report schema version {document.get('schema_version')} is local-only; "
-            "published reports require version 2"
+            "published reports require version 2 or 3"
         )
-    if (
-        document.get("schema_version") == "2"
-        and document.get("report_id") != run_report_id(document)
+    if document.get("schema_version") in {"2", "3"} and document.get("report_id") != run_report_id(
+        document
     ):
         errors.append("run report identity does not match its content")
     return tuple(dict.fromkeys(errors))
@@ -202,9 +201,7 @@ def _series_key(
 ) -> str:
     adapter_digests = manifest.provenance.get("agent_adapter_digests")
     image_input_digests = manifest.provenance.get("image_input_digests")
-    if not isinstance(adapter_digests, Mapping) or not isinstance(
-        image_input_digests, Mapping
-    ):
+    if not isinstance(adapter_digests, Mapping) or not isinstance(image_input_digests, Mapping):
         raise ValueError("run manifest has incomplete series provenance")
     adapter_digest = adapter_digests.get(cell.provider)
     if not isinstance(adapter_digest, str):
@@ -290,8 +287,9 @@ def build_job_report(
 ) -> dict[str, object]:
     """Build one allowlisted job summary from manifest and top-level result data."""
 
-    cell: RunCell = manifest.cells[index % len(manifest.cells)]
-    task = manifest.task_ids[index // len(manifest.cells)]
+    from harness_testing.Runs import job_slot
+
+    cell, task, _ = job_slot(manifest, index)
     job_config = load_job(manifest.path.parent / relative_path)
     job_name = job_config.job_name
     agent_config = job_config.agents[0]
@@ -302,7 +300,7 @@ def build_job_report(
     if not isinstance(agent_version, str) or not agent_version:
         raise ValueError(f"Harbor job has no agent version: {relative_path}")
     task_pack, task_digest = _task_identity(manifest, task)
-    status, counts = _job_status(result, expected_trials=manifest.attempts)
+    status, counts = _job_status(result, expected_trials=job_config.n_attempts)
     stats = result.get("stats") if isinstance(result, Mapping) else None
     stats = stats if isinstance(stats, Mapping) else {}
     started_at, started = _timestamp(result.get("started_at") if result else None)
@@ -340,16 +338,14 @@ def build_job_report(
         "task": task,
         "task_pack": task_pack,
         "task_digest": task_digest,
-        "comparability": (
-            "comparable" if unavailable_reason is None else "diagnostic-only"
-        ),
+        "comparability": ("comparable" if unavailable_reason is None else "diagnostic-only"),
         "series_key": series_key,
         "series_key_unavailable_reason": unavailable_reason,
         "status": status,
         "started_at": started_at,
         "finished_at": finished_at,
         "runtime_seconds": runtime,
-        "expected_trials": manifest.attempts,
+        "expected_trials": job_config.n_attempts,
         "completed_trials": counts["completed"],
         "errored_trials": counts["errored"],
         "cancelled_trials": counts["cancelled"],
@@ -412,10 +408,7 @@ def write_run_report(
     failed_jobs = sum(job["status"] in {"failed", "incomplete"} for job in jobs)
     pending_jobs = sum(job["status"] in {"pending", "running"} for job in jobs)
     completed_trials = sum(int(job["completed_trials"]) for job in jobs)
-    failed_trials = sum(
-        int(job["errored_trials"]) + int(job["cancelled_trials"])
-        for job in jobs
-    )
+    failed_trials = sum(int(job["errored_trials"]) + int(job["cancelled_trials"]) for job in jobs)
     limitations: list[str] = []
     if completed_jobs != len(jobs) or completed_trials != manifest.session_count:
         limitations.append("partial-run")
@@ -445,9 +438,9 @@ def write_run_report(
         "status": status,
         "started_at": started_at,
         "updated_at": updated_at,
-        "finished_at": (
-            max(job_finishes) if job_finishes else updated_at
-        ) if status != "running" else None,
+        "finished_at": (max(job_finishes) if job_finishes else updated_at)
+        if status != "running"
+        else None,
         "expected_jobs": len(jobs),
         "completed_jobs": completed_jobs,
         "failed_jobs": failed_jobs,
@@ -456,11 +449,13 @@ def write_run_report(
         "completed_trials": completed_trials,
         "failed_trials": failed_trials,
         "admission_estimate_usd": float(manifest.api_equivalent_cost_usd),
-        "observed_api_equivalent_cost_usd": (
-            sum(observed_costs) if observed_costs else None
-        ),
+        "observed_api_equivalent_cost_usd": (sum(observed_costs) if observed_costs else None),
         "jobs": jobs,
     }
+    if manifest.provenance.get("experiment") is not None:
+        from harness_testing.Experiment_Reports import attach_experiment_report
+
+        attach_experiment_report(root, manifest, report, previous)
     report["report_id"] = run_report_id(report)
     errors = validate_run_report(root, report)
     if errors:
@@ -469,6 +464,13 @@ def write_run_report(
     temporary = report_path.with_name(".Run_Report.json.tmp")
     temporary.write_text(contents)
     os.replace(temporary, report_path)
+    if report["schema_version"] == "3" and status != "running":
+        evidence_directory = root / "runs/evidence"
+        evidence_directory.mkdir(parents=True, exist_ok=True)
+        snapshot = evidence_directory / (report["report_id"].removeprefix("sha256:") + ".json")
+        if snapshot.exists() and snapshot.read_text() != contents:
+            raise ValueError("immutable report revision conflicts with its content identity")
+        snapshot.write_text(contents)
     return report_path
 
 
@@ -483,13 +485,7 @@ def refresh_local_dashboard(
     if not (root / "dashboard" / "package.json").is_file():
         return None
     (
-        root
-        / "dashboard"
-        / "src"
-        / ".observablehq"
-        / "cache"
-        / "data"
-        / "Public_Results.json"
+        root / "dashboard" / "src" / ".observablehq" / "cache" / "data" / "Public_Results.json"
     ).unlink(missing_ok=True)
     try:
         runner(

@@ -16,9 +16,7 @@ from pathlib import Path
 
 from harness_testing.Run_Reports import load_run_report
 
-_REPOSITORY = re.compile(
-    r"^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,38})/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$"
-)
+_REPOSITORY = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,38})/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$")
 _BRANCH = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*[A-Za-z0-9]$")
 _WORKFLOW = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*\.ya?ml$")
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -111,6 +109,11 @@ def _live_manifest_digest(
     target: PublicationTarget,
 ) -> str | None:
     manifest_path = report_path.with_name("Manifest.json")
+    if manifest_path.resolve() != manifest_path:
+        raise ValueError("publication manifest must use its exact retained path")
+    relative = manifest_path.relative_to(root)
+    if len(relative.parts) != 4 or relative.parts[:2] != ("runs", "generated"):
+        raise ValueError("publication manifest must stay in retained generated runs")
     if not manifest_path.is_file():
         return None
     manifest = _read_json_object(manifest_path)
@@ -120,12 +123,24 @@ def _live_manifest_digest(
 
     digest = verify_manifest_document(manifest)
     provenance = manifest.get("provenance")
-    publication = (
-        provenance.get("report_publication")
-        if isinstance(provenance, dict)
-        else None
-    )
+    publication = provenance.get("report_publication") if isinstance(provenance, dict) else None
     return digest if publication == publication_manifest_record(target) else None
+
+
+def _retained_manifest_digests(root: Path, target: PublicationTarget) -> set[str]:
+    return {
+        digest
+        for path in (root / "runs/generated").glob("*/Manifest.json")
+        if (digest := _live_manifest_digest(root, path, target)) is not None
+    }
+
+
+def _retained_report_identity(report_path: Path, report: dict) -> bool:
+    return (
+        report.get("schema_version") == "3"
+        and report.get("report_id") == "sha256:" + report_path.stem
+        and bool(re.fullmatch(r"[0-9a-f]{64}\.json", report_path.name))
+    )
 
 
 def _receipt_matches(
@@ -136,14 +151,18 @@ def _receipt_matches(
     if not isinstance(report_id, str) or not _DIGEST.fullmatch(report_id):
         return False
     receipt = _read_json_object(_receipt_path(report_path))
-    return receipt is not None and receipt == {
-        "schema_version": "1",
-        "report_id": report_id,
-        "repository": target.repository,
-        "branch": target.data_branch,
-        "commit": receipt.get("commit"),
-    } and isinstance(receipt.get("commit"), str) and bool(
-        re.fullmatch(r"[0-9a-f]{40}", receipt["commit"])
+    return (
+        receipt is not None
+        and receipt
+        == {
+            "schema_version": "1",
+            "report_id": report_id,
+            "repository": target.repository,
+            "branch": target.data_branch,
+            "commit": receipt.get("commit"),
+        }
+        and isinstance(receipt.get("commit"), str)
+        and bool(re.fullmatch(r"[0-9a-f]{40}", receipt["commit"]))
     )
 
 
@@ -157,22 +176,42 @@ def pending_run_reports(root: Path) -> tuple[Path, ...]:
         for path in (root / "runs" / "generated").glob("*/Run_Report.json")
         if _live_manifest_digest(root, path, target) is not None
     )
-    candidates = live_candidates + tuple(
+    manifest_digests = _retained_manifest_digests(root, target)
+    evidence_candidates = tuple(
         path
-        for path in (root / "runs" / "history").glob("*.json")
-        if not path.name.endswith(".Publication.json")
+        for path in (root / "runs/evidence").glob("*.json")
+        if (report := _read_json_object(path)) is not None
+        and _retained_report_identity(path, report)
+        and report.get("manifest_digest") in manifest_digests
     )
-    pending: list[Path] = []
-    for report_path in sorted(set(candidates)):
+    candidates = (
+        tuple(sorted(live_candidates))
+        + tuple(
+            sorted(
+                path
+                for path in (root / "runs" / "history").glob("*.json")
+                if not path.name.endswith(".Publication.json")
+            )
+        )
+        + tuple(sorted(evidence_candidates))
+    )
+    pending: dict[str, Path] = {}
+    published: set[str] = set()
+    invalid: list[Path] = []
+    for report_path in candidates:
         try:
             report = load_run_report(root, report_path, published=True)
         except ValueError:
-            pending.append(report_path)
+            invalid.append(report_path)
             continue
-        report_id = report.get("report_id")
-        if not _receipt_matches(report_path, report_id, target):
-            pending.append(report_path)
-    return tuple(pending)
+        report_id = report["report_id"]
+        if _receipt_matches(report_path, report_id, target):
+            published.add(report_id)
+        else:
+            pending.setdefault(report_id, report_path)
+    return tuple(
+        sorted(invalid + [path for identity, path in pending.items() if identity not in published])
+    )
 
 
 def _run(
@@ -195,9 +234,7 @@ def _run(
     except subprocess.CalledProcessError as error:
         stderr = error.stderr if isinstance(error.stderr, str) else ""
         lower = stderr.lower()
-        conflict = "non-fast-forward" in lower or (
-            "rejected" in lower and "fetch first" in lower
-        )
+        conflict = "non-fast-forward" in lower or ("rejected" in lower and "fetch first" in lower)
         raise _PublicationCommandError(
             stage,
             non_fast_forward=conflict,
@@ -240,21 +277,33 @@ def _validated_reports(
             and relative.suffix == ".json"
             and not relative.name.endswith(".Publication.json")
         )
-        if not is_live and not is_history:
+        is_evidence = (
+            len(relative.parts) == 3
+            and relative.parts[:2] == ("runs", "evidence")
+            and relative.suffix == ".json"
+            and not relative.name.endswith(".Publication.json")
+        )
+        if not is_live and not is_history and not is_evidence:
             raise ValueError("run report to publish must use the local report outbox")
         report = load_run_report(root, resolved, published=True)
         if is_live:
             manifest_digest = _live_manifest_digest(root, resolved, target)
             if manifest_digest is None:
-                raise ValueError(
-                    "live run report has no exact public publication binding"
-                )
+                raise ValueError("live run report has no exact public publication binding")
             if report.get("manifest_digest") != manifest_digest:
                 raise ValueError("live run report manifest digest does not match")
+        if is_evidence:
+            if not _retained_report_identity(resolved, report):
+                raise ValueError(
+                    "retained run report filename does not match its revision identity"
+                )
+            if report.get("manifest_digest") not in _retained_manifest_digests(root, target):
+                raise ValueError("retained run report has no exact public publication binding")
         run_id = report["run_id"]
-        if not isinstance(run_id, str) or run_id in run_ids:
+        identity = report["report_id"] if report.get("schema_version") == "3" else run_id
+        if not isinstance(run_id, str) or identity in run_ids:
             raise ValueError("run report batch contains a duplicate or invalid run ID")
-        run_ids.add(run_id)
+        run_ids.add(identity)
         validated.append((resolved, report))
     return tuple(sorted(validated, key=lambda item: str(item[1]["run_id"])))
 
@@ -269,7 +318,12 @@ def _apply_reports(
     changed = 0
     for source_path, incoming in reports:
         run_id = str(incoming["run_id"])
-        destination = reports_directory / f"{run_id}.json"
+        filename = (
+            str(incoming["report_id"]).removeprefix("sha256:")
+            if incoming.get("schema_version") == "3"
+            else run_id
+        )
+        destination = reports_directory / f"{filename}.json"
         if destination.is_file():
             published = load_run_report(root, destination, published=True)
             if published.get("run_id") != run_id:
@@ -288,6 +342,21 @@ def _apply_reports(
         shutil.copyfile(source_path, temporary)
         os.replace(temporary, destination)
         changed += 1
+    identities = {
+        load_run_report(root, path, published=True)["report_id"]
+        for path in reports_directory.glob("*.json")
+    }
+    for _, incoming in reports:
+        experiment = incoming.get("experiment")
+        if experiment:
+            references = experiment["baseline_result_ids"] + experiment["predecessor_result_ids"]
+            if experiment.get("supersedes_report_id"):
+                references.append(experiment["supersedes_report_id"])
+            if any(reference not in identities for reference in references):
+                raise ValueError(
+                    "referenced comparison evidence must be published in the same approved batch "
+                    "or already exist"
+                )
     return changed
 
 
@@ -449,9 +518,7 @@ def publish_run_reports(
     except _PublicationCommandError as error:
         raise ValueError(f"could not publish run reports during {error.stage}") from error
     except OSError as error:
-        raise ValueError(
-            "could not publish run reports during local filesystem access"
-        ) from error
+        raise ValueError("could not publish run reports during local filesystem access") from error
     return receipts
 
 
