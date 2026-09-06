@@ -8,7 +8,7 @@ import math
 import os
 import subprocess
 from collections.abc import Callable, Mapping
-from datetime import UTC, datetime
+from datetime import UTC, datetime, tzinfo
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -147,9 +147,81 @@ def _timestamp(value: object) -> tuple[str | None, datetime | None]:
     except ValueError:
         return None, None
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
+        return None, None
     parsed = parsed.astimezone(UTC)
     return parsed.isoformat().replace("+00:00", "Z"), parsed
+
+
+def record_job_timestamps(job_directory: Path, *, naive_timezone: tzinfo) -> None:
+    """Preserve explicit UTC times separately from an unchanged Harbor result.
+
+    The caller must know the execution timezone; imported evidence must never
+    infer it from the machine performing the import.
+    """
+
+    if not isinstance(naive_timezone, tzinfo):
+        raise TypeError("an explicit execution timezone is required")
+    result_path = job_directory / "result.json"
+    try:
+        contents = result_path.read_bytes()
+        result = json.loads(contents)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return
+    if not isinstance(result, dict):
+        return
+    timestamps: dict[str, object] = {
+        "result_digest": "sha256:" + hashlib.sha256(contents).hexdigest(),
+    }
+    for field in ("started_at", "updated_at", "finished_at"):
+        value = result.get(field)
+        if not isinstance(value, str):
+            continue
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=naive_timezone)
+        timestamps[field] = parsed.astimezone(UTC).isoformat().replace("+00:00", "Z")
+    path = job_directory / "Job_Timestamps.json"
+    temporary = path.with_name(".Job_Timestamps.json.tmp")
+    temporary.write_text(json.dumps(timestamps, indent=2, sort_keys=True) + "\n")
+    os.replace(temporary, path)
+
+
+def read_timed_job_result(result_path: Path) -> dict[str, Any] | None:
+    """Read Harbor data with only matching, explicitly zoned timestamp evidence."""
+
+    try:
+        contents = result_path.read_bytes()
+        result = json.loads(contents)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        result = None
+    if not isinstance(result, dict):
+        result = None
+    timestamps = _read_object(result_path.with_name("Job_Timestamps.json"))
+    if result is not None and timestamps is not None:
+        digest = "sha256:" + hashlib.sha256(contents).hexdigest()
+        if timestamps.get("result_digest") == digest:
+            for field in ("started_at", "updated_at", "finished_at"):
+                normalized, _ = _timestamp(timestamps.get(field))
+                if normalized is not None:
+                    result[field] = normalized
+    return result
+
+
+def _runtime_seconds(result: Mapping[str, object] | None) -> float | None:
+    if result is None:
+        return None
+    try:
+        start = datetime.fromisoformat(str(result.get("started_at")).replace("Z", "+00:00"))
+        finish = datetime.fromisoformat(str(result.get("finished_at")).replace("Z", "+00:00"))
+        # Harbor's same-clock naive pair still measures duration, even when its
+        # absolute timezone is unknown; mixed aware/naive values are invalid.
+        seconds = (finish - start).total_seconds()
+    except (ValueError, TypeError):
+        return None
+    return seconds if seconds >= 0 else None
 
 
 def _score(stats: Mapping[str, object], name: str) -> float | None:
@@ -303,13 +375,9 @@ def build_job_report(
     status, counts = _job_status(result, expected_trials=job_config.n_attempts)
     stats = result.get("stats") if isinstance(result, Mapping) else None
     stats = stats if isinstance(stats, Mapping) else {}
-    started_at, started = _timestamp(result.get("started_at") if result else None)
-    finished_at, finished = _timestamp(result.get("finished_at") if result else None)
-    runtime = (
-        max(0.0, (finished - started).total_seconds())
-        if started is not None and finished is not None
-        else None
-    )
+    started_at, _ = _timestamp(result.get("started_at") if result else None)
+    finished_at, _ = _timestamp(result.get("finished_at") if result else None)
+    runtime = _runtime_seconds(result)
     unavailable_reason = series_key_unavailable_reason
     if agent_config.import_path is None:
         unavailable_reason = "missing-provenance"
@@ -370,7 +438,8 @@ def _job_report(
     relative_path: str,
 ) -> dict[str, object]:
     job_name = load_job(manifest.path.parent / relative_path).job_name
-    result = _read_object(root / "jobs" / "raw" / job_name / "result.json")
+    result_path = root / "jobs" / "raw" / job_name / "result.json"
+    result = read_timed_job_result(result_path)
     return build_job_report(manifest, index, relative_path, result)
 
 

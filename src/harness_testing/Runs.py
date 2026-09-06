@@ -15,6 +15,7 @@ import tempfile
 import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
+from datetime import UTC
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -43,7 +44,11 @@ from harness_testing.Report_Publication import (
     publication_manifest_record,
     sync_pending_reports,
 )
-from harness_testing.Run_Reports import refresh_local_dashboard, write_run_report
+from harness_testing.Run_Reports import (
+    record_job_timestamps,
+    refresh_local_dashboard,
+    write_run_report,
+)
 from harness_testing.Skill_Evaluation import SkillEvaluation, write_skill_evaluation_report
 from harness_testing.Validate import find_sensitive_keys, validate_repository
 
@@ -2259,6 +2264,8 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
         raise ValueError("image policy validation failed: " + "; ".join(image_errors))
     _verify_generated_inputs(root, manifest)
     execution_environment = os.environ.copy()
+    # Harbor emits naive host times; new jobs use an explicit, recorded UTC clock.
+    execution_environment["TZ"] = "UTC"
     for name, _ in _SUBSCRIPTION_SELECTORS.values():
         execution_environment.pop(name, None)
     providers = _approved_runtime_providers(manifest)
@@ -2307,12 +2314,21 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
                     raise ValueError("existing job is not resumable: " + "; ".join(existing_errors))
                 print(f"Reusing completed job: {job_name}")
             else:
-                subprocess.run(
-                    harbor_command("run", "-c", str(config_path)),
-                    cwd=root,
-                    check=True,
-                    env=execution_environment,
-                )
+                try:
+                    subprocess.run(
+                        harbor_command("run", "-c", str(config_path)),
+                        cwd=root,
+                        check=True,
+                        env=execution_environment,
+                    )
+                except BaseException as error:
+                    try:
+                        record_job_timestamps(job_dir, naive_timezone=UTC)
+                    except Exception as timing_error:
+                        error.add_note(f"Job timestamp recording also failed: {timing_error}")
+                    raise
+                else:
+                    record_job_timestamps(job_dir, naive_timezone=UTC)
             write_run_report(root, manifest, "running")
             if index < len(manifest.cells):
                 canary_jobs.append((cell, job_name))

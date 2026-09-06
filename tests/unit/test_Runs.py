@@ -6,6 +6,7 @@ import sys
 from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 import yaml
@@ -1174,6 +1175,7 @@ def test_execution_updates_local_dashboard_after_completed_run(
     run_root: Path,
     monkeypatch: pytest.MonkeyPatch,
 ):
+    monkeypatch.setenv("TZ", "America/Los_Angeles")
     manifest = _compile_pair(run_root, publish_report=True)
     _stub_execution_preflight(monkeypatch)
     refreshes: list[Path] = []
@@ -1194,6 +1196,7 @@ def test_execution_updates_local_dashboard_after_completed_run(
     def fake_run(command, **kwargs):
         if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
             return real_run(command, **kwargs)
+        assert kwargs["env"]["TZ"] == "UTC"
         job = load_job(Path(command[-1]))
         index = list(manifest.harbor_config_paths).index(
             Path(command[-1]).relative_to(manifest.path.parent).as_posix()
@@ -1212,6 +1215,9 @@ def test_execution_updates_local_dashboard_after_completed_run(
     assert report_path.is_file()
     report = json.loads(report_path.read_text())
     assert report["status"] == "completed"
+    for job in report["jobs"]:
+        timing = run_root / "jobs/raw" / job["name"] / "Job_Timestamps.json"
+        assert json.loads(timing.read_text())["finished_at"] == "2026-09-03T20:01:00Z"
     assert report["expected_jobs"] == 4
     assert report["completed_jobs"] == 4
     assert report["expected_trials"] == 4
@@ -1229,6 +1235,50 @@ def test_execution_updates_local_dashboard_after_completed_run(
     }
     assert refreshes == [run_root]
     assert publications == [(run_root, "Studio-Moser/harness-testing")]
+    assert os.environ["TZ"] == "America/Los_Angeles"
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("2026-09-06T10:27:00", None),
+        ("2026-09-06T10:27:00-07:00", "2026-09-06T17:27:00Z"),
+        ("2026-09-06T17:27:00Z", "2026-09-06T17:27:00Z"),
+    ],
+)
+def test_report_timestamps_require_explicit_timezone(value, expected):
+    assert Run_Reports._timestamp(value)[0] == expected
+
+
+def test_job_timestamp_sidecar_preserves_raw_and_rejects_stale_source(run_root: Path):
+    manifest = _compile_pair(run_root)
+    relative_path = manifest.harbor_config_paths[0]
+    job = load_job(manifest.path.parent / relative_path)
+    _write_completed_job(run_root, manifest.cells[0], job.job_name)
+    directory = run_root / "jobs/raw" / job.job_name
+    result_path = directory / "result.json"
+    result = json.loads(result_path.read_text())
+    result.update(started_at="2026-09-06T10:22:00", finished_at="2026-09-06T10:27:00")
+    original = json.dumps(result)
+    result_path.write_text(original)
+
+    unknown = Run_Reports._job_report(run_root, manifest, 0, relative_path)
+    assert unknown["started_at"] is None
+    assert unknown["finished_at"] is None
+    assert unknown["runtime_seconds"] == 300
+
+    Run_Reports.record_job_timestamps(directory, naive_timezone=ZoneInfo("America/Los_Angeles"))
+    report = Run_Reports._job_report(run_root, manifest, 0, relative_path)
+    assert result_path.read_text() == original
+    assert report["started_at"] == "2026-09-06T17:22:00Z"
+    assert report["finished_at"] == "2026-09-06T17:27:00Z"
+    assert report["runtime_seconds"] == 300
+
+    result["finished_at"] = "2026-09-06T10:28:00"
+    result_path.write_text(json.dumps(result))
+    stale = Run_Reports._job_report(run_root, manifest, 0, relative_path)
+    assert stale["finished_at"] is None
+    assert stale["runtime_seconds"] == 360
 
 
 def test_dashboard_refresh_invalidates_the_observable_data_loader_cache(
@@ -2951,3 +3001,29 @@ def test_nothing_comparison_rejects_unexpected_nonlegacy_plugin(tmp_path, provid
             path, frozenset(), frozenset(), frozenset(), complete_inventory=True
         )
     assert errors
+
+
+def test_execution_preserves_harbor_error_when_timestamp_recording_fails(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    manifest = _compile_pair(run_root)
+    _stub_execution_preflight(monkeypatch)
+    monkeypatch.setattr(Runs, "refresh_local_dashboard", lambda root: None)
+    real_run = subprocess.run
+    failure = subprocess.CalledProcessError(17, "harbor")
+
+    def failed_run(command, **kwargs):
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
+            return real_run(command, **kwargs)
+        raise failure
+
+    def failed_record(*args, **kwargs):
+        raise OSError("timing disk failure")
+
+    monkeypatch.setattr(Runs.subprocess, "run", failed_run)
+    monkeypatch.setattr(Runs, "record_job_timestamps", failed_record)
+    with pytest.raises(subprocess.CalledProcessError) as caught:
+        Runs.execute_run(run_root, manifest.path, manifest.digest)
+    assert caught.value is failure
+    assert "timing disk failure" in " ".join(caught.value.__notes__)

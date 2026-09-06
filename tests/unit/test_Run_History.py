@@ -2,11 +2,12 @@ import hashlib
 import json
 import shutil
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 
 from harness_testing.Run_History import backfill_run_reports
-from harness_testing.Run_Reports import load_run_report
+from harness_testing.Run_Reports import load_run_report, record_job_timestamps
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
 FIXTURES = REPOSITORY_ROOT / "tests" / "Fixtures" / "Run_History"
@@ -185,3 +186,39 @@ def test_backfill_never_opens_trial_artifacts(
         history_root / "Empty_Mapping.toml",
         history_root / "runs" / "history",
     )
+
+
+def test_backfill_rejects_timezone_free_historical_results(history_root: Path):
+    result_path = next((history_root / "archive/jobs/raw").glob("run-*/result.json"))
+    result = json.loads(result_path.read_text())
+    result["started_at"] = "2026-09-06T10:22:00"
+    result_path.write_text(json.dumps(result))
+    with pytest.raises(ValueError, match="invalid started_at"):
+        backfill_run_reports(
+            history_root,
+            (history_root / "archive",),
+            history_root / "Empty_Mapping.toml",
+            history_root / "runs/history",
+        )
+
+
+def test_backfill_consumes_explicit_timezone_evidence(history_root: Path):
+    for result_path in (history_root / "archive/jobs/raw").glob("run-*/result.json"):
+        result = json.loads(result_path.read_text())
+        result.update(
+            started_at="2026-09-06T10:22:00",
+            updated_at="2026-09-06T10:27:00",
+            finished_at="2026-09-06T10:27:00",
+        )
+        result_path.write_text(json.dumps(result))
+        record_job_timestamps(result_path.parent, naive_timezone=ZoneInfo("America/Los_Angeles"))
+    paths = backfill_run_reports(
+        history_root,
+        (history_root / "archive",),
+        history_root / "Empty_Mapping.toml",
+        history_root / "runs/history",
+    )
+    report = load_run_report(history_root, paths[0], published=True)
+    assert report["started_at"] == "2026-09-06T17:22:00Z"
+    assert report["finished_at"] == "2026-09-06T17:27:00Z"
+    assert report["jobs"][0]["runtime_seconds"] == 300
