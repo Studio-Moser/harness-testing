@@ -266,3 +266,106 @@ def test_codex_native_adapter_preserves_config_and_cleans_even_setup_failure(
     assert "/tmp/codex-home" in environment.commands[-2]
     assert "rm -rf --" in environment.commands[-2]
     assert environment.commands[-1] == "rm -rf -- /tmp/Harness_Native_Conversation"
+
+
+@pytest.mark.parametrize("mounted, read_only", [(False, False), (True, False), (True, True)])
+def test_native_cleanup_preserves_only_the_read_only_plugin_mount(
+    tmp_path, monkeypatch, mounted, read_only
+):
+    import os
+    import subprocess
+    from types import SimpleNamespace
+
+    home = tmp_path / "codex-home"
+    secrets = tmp_path / "codex-secrets"
+    logs = tmp_path / "logs"
+    cache = home / "plugins/cache"
+    cache.mkdir(parents=True)
+    (cache / "SKILL.md").write_text("Frozen skill\n")
+    (home / "plugins/registry.json").write_text("Writable state\n")
+    (home / "sessions").mkdir()
+    (home / "sessions/session.jsonl").write_text("Retained transcript\n")
+    secrets.mkdir()
+    (secrets / "auth.json").write_text("dummy credential\n")
+    (home / "auth.json").symlink_to(secrets / "auth.json")
+    (home / "config.toml").write_text("Writable config\n")
+    commands = tmp_path / "commands"
+    commands.mkdir()
+    # Only the kernel mount queries are substituted; the adapter's shell cleanup
+    # runs against real files. A separate Docker check exercises an actual mount.
+    for name, success in (("mountpoint", mounted), ("findmnt", read_only)):
+        executable = commands / name
+        executable.write_text(f"#!/bin/sh\nexit {0 if success else 1}\n")
+        executable.chmod(0o755)
+
+    class Environment:
+        async def exec(self, command, **kwargs):
+            result = subprocess.run(
+                command.replace("/logs/agent", str(logs)).replace(
+                    "/tmp/Harness_Native_Conversation", str(tmp_path / "controller")
+                ),
+                shell=True,
+                capture_output=True,
+                text=True,
+                env={**os.environ, "PATH": f"{commands}:{os.environ['PATH']}"},
+            )
+            return SimpleNamespace(return_code=result.returncode)
+
+    async def native_completed(*args, **kwargs):
+        pass
+
+    monkeypatch.setattr("harness_testing.Codex_Agent.Codex.run", native_completed)
+    agent = HarnessCodex(
+        logs_dir=logs,
+        model_name="openai/gpt-6-astra",
+        version="0.153.4",
+        conversation={
+            "policy": {"schema_version": "1", "interaction_limit": 1, "facts": {}, "rules": []},
+            "timeout_seconds": 1,
+        },
+    )
+    agent._REMOTE_CODEX_HOME = home
+    agent._REMOTE_CODEX_SECRETS_DIR = secrets
+    asyncio.run(agent.run("No model call", Environment(), object()))
+
+    assert not secrets.exists()
+    assert not (home / "auth.json").is_symlink()
+    assert not (home / "config.toml").exists()
+    assert not (home / "plugins/registry.json").exists()
+    assert (logs / "sessions/session.jsonl").read_text() == "Retained transcript\n"
+    if mounted and read_only:
+        assert (cache / "SKILL.md").read_text() == "Frozen skill\n"
+        assert list(home.iterdir()) == [home / "plugins"]
+        assert list((home / "plugins").iterdir()) == [cache]
+    else:
+        assert not home.exists()
+
+
+def test_native_cleanup_still_rejects_credential_removal_failure(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    calls = []
+
+    class Environment:
+        async def exec(self, command, **kwargs):
+            calls.append(command)
+            # Credential cleanup fails; the controller can still be removed.
+            return SimpleNamespace(return_code=0 if len(calls) == 2 else 1)
+
+    async def native_completed(*args, **kwargs):
+        pass
+
+    monkeypatch.setattr("harness_testing.Codex_Agent.Codex.run", native_completed)
+    agent = HarnessCodex(
+        logs_dir=tmp_path,
+        model_name="openai/gpt-6-astra",
+        version="0.153.4",
+        conversation={
+            "policy": {"schema_version": "1", "interaction_limit": 1, "facts": {}, "rules": []},
+            "timeout_seconds": 1,
+        },
+    )
+    with pytest.raises(RuntimeError, match="Codex credential cleanup failed"):
+        asyncio.run(agent.run("No model call", Environment(), object()))
+    assert len(calls) == 2
+    assert calls[-1] == "rm -rf -- /tmp/Harness_Native_Conversation"

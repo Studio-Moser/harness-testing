@@ -1910,6 +1910,8 @@ def _claude_delivery_errors(
     expected_plugins: frozenset[str],
     expected_skills: frozenset[str],
     benchmark_skill_names: frozenset[str],
+    *,
+    complete_inventory: bool = False,
 ) -> list[str]:
     errors: list[str] = []
     try:
@@ -1969,9 +1971,12 @@ def _claude_delivery_errors(
                     len(parts) == 2 and all(part.strip() for part in parts)
                 ):
                     normalized = parts[0]
-            if normalized not in _BENCHMARK_PLUGIN_NAMES:
+            if normalized is None or (
+                not complete_inventory
+                and normalized not in _BENCHMARK_PLUGIN_NAMES | expected_plugins
+            ):
                 candidate = name if isinstance(name, str) else entry
-                if _benchmark_looking(candidate):
+                if complete_inventory or _benchmark_looking(candidate):
                     errors.append(
                         f"Claude plugin entry {index} has malformed benchmark plugin evidence"
                     )
@@ -2006,13 +2011,13 @@ def _claude_delivery_errors(
                         continue
                     seen_skills.add(entry)
                     observed_skills.add(entry)
-                elif _benchmark_looking(entry):
+                elif complete_inventory or _benchmark_looking(entry):
                     errors.append(
                         f"Claude skill entry {index} has unexpected benchmark skill {entry}"
                     )
                     if len(errors) == _MAX_DELIVERY_ERRORS:
                         break
-            elif _benchmark_looking(entry):
+            elif complete_inventory or _benchmark_looking(entry):
                 errors.append(f"Claude skill entry {index} has malformed benchmark skill evidence")
                 if len(errors) == _MAX_DELIVERY_ERRORS:
                     break
@@ -2032,6 +2037,8 @@ def _claude_delivery_errors(
 def _codex_delivery_errors(
     evidence_path: Path,
     expected_plugins: dict[str, dict[str, object]],
+    *,
+    complete_inventory: bool = False,
 ) -> list[str]:
     try:
         document = json.loads(evidence_path.read_text())
@@ -2042,9 +2049,10 @@ def _codex_delivery_errors(
 
     errors: list[str] = []
     observed: dict[str, dict[str, object]] = {}
+    benchmark_names = _BENCHMARK_PLUGIN_NAMES | expected_plugins.keys()
     for index, entry in enumerate(document["installed"]):
         if not isinstance(entry, dict):
-            if _benchmark_looking(entry):
+            if complete_inventory or _benchmark_looking(entry):
                 errors.append(
                     f"Codex installed entry {index} has malformed benchmark plugin evidence"
                 )
@@ -2055,15 +2063,15 @@ def _codex_delivery_errors(
         plugin_id = entry.get("pluginId")
         benchmark_name = (
             name
-            if isinstance(name, str) and name in _BENCHMARK_PLUGIN_NAMES
+            if isinstance(name, str) and (complete_inventory or name in benchmark_names)
             else plugin_id.split("@", 1)[0]
-            if isinstance(plugin_id, str) and plugin_id.split("@", 1)[0] in _BENCHMARK_PLUGIN_NAMES
+            if isinstance(plugin_id, str) and plugin_id.split("@", 1)[0] in benchmark_names
             else None
         )
         if benchmark_name is None:
             identity = (name, plugin_id, entry.get("marketplaceName"))
             candidate = entry if all(value is None for value in identity) else identity
-            if _benchmark_looking(candidate):
+            if complete_inventory or _benchmark_looking(candidate):
                 errors.append(
                     f"Codex installed entry {index} has malformed benchmark plugin evidence"
                 )
@@ -2081,8 +2089,9 @@ def _codex_delivery_errors(
                 "installed",
             )
         }
-        expected_marketplace = (
-            "superpowers-dev" if benchmark_name == "superpowers" else "studio-moser"
+        expected_marketplace = expected_plugins.get(benchmark_name, {}).get(
+            "marketplaceName",
+            "superpowers-dev" if benchmark_name == "superpowers" else "studio-moser",
         )
         if (
             normalized["name"] != benchmark_name
@@ -2193,11 +2202,13 @@ def _completed_job_errors(
                 expected_plugins,
                 expected_skills,
                 benchmark_skill_names,
+                complete_inventory=cell.contender is not None,
             )
         else:
             delivery_errors = _codex_delivery_errors(
                 trial_dir / "agent" / "plugin-inventory.json",
                 expected_plugin_records,
+                complete_inventory=cell.contender is not None,
             )
         errors.extend(f"{label}: {error}" for error in delivery_errors)
         if len(errors) >= _MAX_DELIVERY_ERRORS:

@@ -213,12 +213,22 @@ class HarnessCodex(Codex):
             # failures too, retaining transcripts before removing credentials.
             home = shlex.quote(self._REMOTE_CODEX_HOME.as_posix())
             secrets = shlex.quote(self._REMOTE_CODEX_SECRETS_DIR.as_posix())
+            cache = f"{home}/plugins/cache"
             try:
                 result = await environment.exec(
                     f"mkdir -p /logs/agent/sessions; "
                     f"if [ -d {home}/sessions ]; then "
                     f"cp -R {home}/sessions/. /logs/agent/sessions/; fi; "
-                    f"rm -rf -- {secrets} {home}",
+                    f"rm -rf -- {secrets} && "
+                    # The frozen cache is a read-only bind mount inside CODEX_HOME.
+                    # Keep that mount and its parents; remove all writable state.
+                    f"if mountpoint -q {cache} && "
+                    f"findmnt -rn --mountpoint {cache} -O ro >/dev/null; then "
+                    f"find {home} -mindepth 1 -maxdepth 1 ! -name plugins "
+                    f"-exec rm -rf -- {{}} + && "
+                    f"find {home}/plugins -mindepth 1 -maxdepth 1 ! -name cache "
+                    f"-exec rm -rf -- {{}} +; "
+                    f"else rm -rf -- {home}; fi",
                     user="root",
                 )
                 if result.return_code:

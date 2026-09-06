@@ -2860,3 +2860,94 @@ def test_subscription_preflight_checks_approved_secondary_credentials(tmp_path):
             tmp_path,
             providers={"claude", "codex"},
         )
+
+
+@pytest.mark.parametrize("provider", ["codex", "claude"])
+def test_full_collection_delivery_uses_frozen_plugin_names_and_marketplaces(tmp_path, provider):
+    plugins = {
+        name: {
+            "name": name,
+            "pluginId": f"{name}@experiment-{name}",
+            "marketplaceName": f"experiment-{name}",
+            "version": "1.2.3",
+            "enabled": True,
+            "installed": True,
+        }
+        for name in ("superpowers", "harness", "pm", "custom-workflow")
+    }
+    path = tmp_path / "inventory.json"
+    if provider == "codex":
+        path.write_text(json.dumps({"installed": list(plugins.values()), "available": []}))
+        errors = Runs._codex_delivery_errors(path, plugins, complete_inventory=True)
+    else:
+        skills = frozenset(f"{name}:example" for name in plugins)
+        path.write_text(
+            json.dumps(
+                {
+                    "type": "system",
+                    "subtype": "init",
+                    "plugins": list(plugins.values()),
+                    "skills": sorted(skills),
+                }
+            )
+        )
+        errors = Runs._claude_delivery_errors(
+            path, frozenset(plugins), skills, skills, complete_inventory=True
+        )
+    assert errors == []
+
+
+@pytest.mark.parametrize(
+    ("provider", "bad"),
+    [
+        (provider, bad)
+        for provider in ("codex", "claude")
+        for bad in ("extra", "malformed", "missing", "duplicate", "disabled", "identity")
+        if provider == "codex" or bad not in {"disabled", "identity"}
+    ],
+)
+def test_full_collection_delivery_rejects_inventory_drift(tmp_path, provider, bad):
+    expected = {"pm": _codex_inventory_record("pm")}
+    expected["pm"].update(pluginId="pm@experiment-pm", marketplaceName="experiment-pm")
+    entries = [dict(expected["pm"])]
+    if bad == "extra":
+        entries.append(_codex_inventory_record("unapproved-plugin"))
+    elif bad == "malformed":
+        entries.append({"unexpected": "plugin"})
+    elif bad == "missing":
+        entries = []
+    elif bad == "duplicate":
+        entries *= 2
+    elif bad == "disabled":
+        entries[0]["enabled"] = False
+    else:
+        entries[0]["pluginId"] = "pm@different-marketplace"
+    path = tmp_path / "inventory.json"
+    if provider == "codex":
+        path.write_text(json.dumps({"installed": entries}))
+        errors = Runs._codex_delivery_errors(path, expected, complete_inventory=True)
+    else:
+        path.write_text(
+            json.dumps({"type": "system", "subtype": "init", "plugins": entries, "skills": []})
+        )
+        errors = Runs._claude_delivery_errors(
+            path, frozenset(expected), frozenset(), frozenset(), complete_inventory=True
+        )
+    assert errors
+
+
+@pytest.mark.parametrize("provider", ["codex", "claude"])
+def test_nothing_comparison_rejects_unexpected_nonlegacy_plugin(tmp_path, provider):
+    path = tmp_path / "inventory.json"
+    entries = [_codex_inventory_record("unapproved-plugin")]
+    if provider == "codex":
+        path.write_text(json.dumps({"installed": entries}))
+        errors = Runs._codex_delivery_errors(path, {}, complete_inventory=True)
+    else:
+        path.write_text(
+            json.dumps({"type": "system", "subtype": "init", "plugins": entries, "skills": []})
+        )
+        errors = Runs._claude_delivery_errors(
+            path, frozenset(), frozenset(), frozenset(), complete_inventory=True
+        )
+    assert errors
