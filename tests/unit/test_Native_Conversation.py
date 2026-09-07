@@ -1,3 +1,5 @@
+import pytest
+
 from harness_testing.Native_Conversation import Conversation
 
 
@@ -112,6 +114,44 @@ def test_unknown_question_and_tool_permission_fail_closed():
         }
     )
     assert reply[0]["response"]["response"]["behavior"] == "deny"
+
+
+@pytest.mark.parametrize(
+    ("text", "interactions", "reason"),
+    [
+        ("Approve this design and I\u2019ll implement it.", 0, "task_definition_gap"),
+        ("Please approve this deployment.", 0, "authority_denied"),
+        ("Please confirm the result.", 0, "task_definition_gap"),
+        ("Please approve this plan.", 4, "interaction_limit"),
+        ("Please approve this deployment.", 4, "interaction_limit"),
+        ("Implemented the approved plan.", 0, None),
+    ],
+)
+def test_terminal_approval_requests_keep_report_status_and_reason(text, interactions, reason):
+    state = Conversation(config("codex"))
+    state.text = text
+    state.interactions = interactions
+
+    assert state.finish_turn() == []
+    assert state.status == ("completed" if reason is None else "task_definition_gap")
+    assert state.reason == reason
+
+
+def test_frozen_routine_approval_continues_the_native_root():
+    import json
+    from pathlib import Path
+
+    task = "react-saved-view-feature"
+    policy_path = Path(__file__).parents[2] / "tasks/workflow" / task / "Scripted User.json"
+    state = Conversation({**config("codex"), "policy": json.loads(policy_path.read_text())})
+    state.root = "root"
+    state.text = "Design:\n\nPlease confirm this design and I\u2019ll implement it."
+
+    outbound = state.finish_turn()
+
+    assert outbound[0]["method"] == "turn/start"
+    assert outbound[0]["params"]["threadId"] == "root"
+    assert outbound[0]["params"]["input"][0]["text"].startswith("Proceed with the original")
 
 
 def test_initialization_is_before_first_model_request():

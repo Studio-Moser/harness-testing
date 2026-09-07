@@ -329,7 +329,7 @@ function taskTypeObservation(group, report) {
     if (reviews.some(review => review.unconfirmed)) observations.push("Unconfirmed reviewer claims remain unresolved.");
   }
   if (rows.some(row => row.trials.some(trial => trial.protected_state == null))) observations.push("Protected-file verification is unknown for some trials.");
-  if (rows.some(row => row.trials.some(trial => trial.protected_state === false))) observations.push("Protected files changed in some trials.");
+  if (rows.some(row => row.trials.some(trial => trial.protected_state === false))) observations.push("Protected-state checks failed in some trials.");
   if (report.experiment.comparison?.status === "incompatible_conditions") observations.push("The recorded conditions are incompatible; efficiency cannot be compared.");
   else if (rows.length > 1) {
     const samePricing = rows.every(row => row.pricing_digest) && new Set(rows.map(row => row.pricing_digest)).size === 1;
@@ -416,7 +416,17 @@ function contenderTable(rows, trials, reportId) {
       name.scope = "row";
       name.append(link(row.label, "/Run_Detail", {comparison: reportId, version: row.id}));
       if (row.test_summary.protected_unknown) name.append(el("span", "Protected state unknown", "comparison-note"));
-      else if (!row.eligible) name.append(el("span", row.coverage_complete ? "Failed required checks" : "Incomplete evidence", "comparison-note"));
+      else if (!row.eligible) {
+        const review = summarizeCodeReview(row, trials);
+        const note = !row.coverage_complete ? "Incomplete task evidence"
+          : row.successes < row.scheduled ? "Failed task checks"
+          : review.status === "not_reviewed" ? "Code review not recorded"
+          : review.status !== "completed" ? "Code review incomplete"
+          : review.unconfirmed > 0 ? "Unresolved review claims"
+          : severities.some(severity => review.confirmed[severity] > 0) ? "Confirmed remaining defects"
+          : "Quality qualification unresolved";
+        name.append(el("span", note, "comparison-note"));
+      }
       const testCell = el("td", `${row.test_summary.passed} / ${row.test_summary.scheduled}`);
       if (!row.test_summary.evidence_complete) testCell.append(el("span", "Raw test evidence incomplete", "comparison-note"));
       node.append(name, testCell, el("td", row.total_cost_usd == null ? "Unknown" : money(row.total_cost_usd), row.total_cost_usd == null ? "comparison-missing" : null), el("td", row.mean_duration_seconds == null ? "Unknown" : seconds(row.mean_duration_seconds), row.mean_duration_seconds == null ? "comparison-missing" : null), el("td", row.total_tokens == null ? "Unknown" : tokens(row.total_tokens), row.total_tokens == null ? "comparison-missing" : null));
@@ -546,7 +556,8 @@ export function renderHistory(reports, state = {}) {
 }
 
 export function trialLabel(trial) {
-  if (trial.protected_state === false) return "Protected files changed";
+  if (trial.status !== "completed") return trial.status.replaceAll("_", " ");
+  if (trial.protected_state === false) return "Protected-state check failed";
   if (trial.correctness === false) return "Failed tests";
   if (trial.status === "completed" && trial.correctness === true && trial.protected_state === true) return "Passed";
   if (trial.status === "completed" && trial.correctness === true && trial.protected_state == null) return "Tests passed · protected state unknown";

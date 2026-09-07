@@ -39,10 +39,12 @@ test("sorts measurements numerically with nulls last in either direction", () =>
 
 test("trial labels distinguish protected failures and incomplete execution", () => {
   assert.equal(trialLabel({status:"completed", correctness:true, protected_state:true}), "Passed");
-  assert.equal(trialLabel({status:"completed", correctness:true, protected_state:false}), "Protected files changed");
+  assert.equal(trialLabel({status:"completed", correctness:true, protected_state:false}), "Protected-state check failed");
   assert.equal(trialLabel({status:"completed", correctness:true, protected_state:null}), "Tests passed · protected state unknown");
   assert.equal(trialLabel({status:"timeout", correctness:true, protected_state:true}), "timeout");
   assert.equal(trialLabel({status:"completed", correctness:null, protected_state:null}), "Ungraded");
+  assert.equal(trialLabel({status:"task_definition_gap", correctness:false, protected_state:true}), "task definition gap");
+  assert.equal(trialLabel({status:"infrastructure_failure", correctness:false, protected_state:false}), "infrastructure failure");
 });
 
 test("derives exact review coverage and keeps unknown evaluation cost distinct from zero", () => {
@@ -136,6 +138,24 @@ test("comparison table uses raw test passes, protected-state notes, and total ex
     assert.match(text, /Not reviewedUnknownUnknownUnknownUnknownUnknownUnknown/);
     assert.match(text, /Internal repair evidenceCounts describe review findings and fixes recorded during the original implementation/);
     assert.match(text, /Unknown \(0 \/ 1 trials documented\)UnknownUnknownUnknown/);
+    trial.protected_state = true;
+    const contender = current.experiment.comparison.contenders[0];
+    contender.successes = 1;
+    let updated = renderComparison([current], {comparison: "diagnostic"}).textContent;
+    assert.match(updated, /Code review not recorded1 \/ 1/);
+    assert.doesNotMatch(updated, /Failed required checks|Failed task checks/);
+    contender.code_review = {status: "completed", scheduled: 1, completed: 1, protocol_id: "review-v1", confirmed: {P0: 0, P1: 0, P2: 1, P3: 0}, unconfirmed: 0};
+    assert.match(renderComparison([current], {comparison: "diagnostic"}).textContent, /Confirmed remaining defects1 \/ 1/);
+    contender.code_review.unconfirmed = 1;
+    assert.match(renderComparison([current], {comparison: "diagnostic"}).textContent, /Unresolved review claims1 \/ 1/);
+    contender.code_review.status = "incomplete";
+    assert.match(renderComparison([current], {comparison: "diagnostic"}).textContent, /Code review incomplete1 \/ 1/);
+    contender.successes = 0;
+    trial.correctness = false;
+    assert.match(renderComparison([current], {comparison: "diagnostic"}).textContent, /Failed task checks0 \/ 1/);
+    contender.coverage_complete = false;
+    assert.match(renderComparison([current], {comparison: "diagnostic"}).textContent, /Incomplete task evidence0 \/ 1/);
+
   } finally {
     globalThis.document = previousDocument;
   }

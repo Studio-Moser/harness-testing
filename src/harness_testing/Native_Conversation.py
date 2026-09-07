@@ -24,7 +24,7 @@ from pathlib import Path
 
 if __package__:
     from .External_Codex import external_evidence, preflight_external_codex
-    from .Scripted_User import select_reply, validate_policy
+    from .Scripted_User import select_reply, terminal_approval_request, validate_policy
     from .Trial_Evidence import (
         ClaudeBackgroundTasks,
         collect_trial_evidence,
@@ -34,7 +34,7 @@ if __package__:
     )
 else:
     from External_Codex import external_evidence, preflight_external_codex
-    from Scripted_User import select_reply, validate_policy
+    from Scripted_User import select_reply, terminal_approval_request, validate_policy
     from Trial_Evidence import (
         ClaudeBackgroundTasks,
         collect_trial_evidence,
@@ -322,7 +322,10 @@ class Conversation:
             approval = select_reply(
                 {"kind": "approval", "text": text}, self.config["policy"], self.interactions
             )
-            if approval["status"] == "reply":
+            if approval["status"] == "reply" or (
+                approval["status"] == "authority_denied"
+                and terminal_approval_request(text) == "external"
+            ):
                 result = approval
         if result["status"] == "reply":
             self.interactions += 1
@@ -337,6 +340,9 @@ class Conversation:
         reply = self.reply(self.text.strip())
         if reply["status"] == "reply":
             return [self.turn(reply["reply"])]
+        request_kind = terminal_approval_request(self.text)
+        if request_kind is not None:
+            return self.fail(reply["status"], "task_definition_gap")
         if "?" in self.text or re.search(r"\b(awaiting|waiting for|need your)\b", self.text, re.I):
             return self.fail(reply["status"], "task_definition_gap")
         self.root_finished = True

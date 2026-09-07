@@ -30,6 +30,8 @@ A model alias in a config is not proof of availability. Native preflight checks 
 
 Each task has frozen facts and bounded scripted replies for recognized clarification and routine local approval gates. Unknown questions become `task_definition_gap`; they are not invented answers or harness successes. The scripted user cannot grant publication, spending or broader task authority. Fix a defective task policy, version the evaluation conditions and refresh baselines when needed.
 
+A finished model turn is not necessarily finished work: a final message may request plan or design approval. The runner must answer a recognized routine gate from the frozen task facts or retain an unanswered request as `task_definition_gap`, including requests without a question mark. After changing these rules or the conversation adapter, prepare a new manifest; do not resume an old approved manifest with changed inputs or rewrite its original result. Validate the approval round trip without model calls before a rerun.
+
 ## A4 — Plan, inspect, approve, execute
 
 ```bash

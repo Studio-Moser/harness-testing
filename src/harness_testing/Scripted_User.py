@@ -4,6 +4,35 @@ from __future__ import annotations
 
 import re
 
+_ROUTINE_APPROVAL_REQUEST = re.compile(
+    r"""(?isx)(?:^|[.!?]\s+|\n\s*\n)
+    (?:
+        (?:may|shall|should|can)\s+i\s+(?:proceed|continue)\b.*
+        |(?:please\s+)?(?:approve|confirm)\s+(?:this|that|the)\s+(?:plan|design)
+          (?:\s+(?:so\s+i\s+can|and\s+i(?:'|’)ll)\s+implement\s+it)?
+        |does\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right
+    )[?.]?\s*$"""
+)
+_EXTERNAL_APPROVAL_REQUEST = re.compile(
+    r"""(?isx)(?:^|[.!?]\s+|\n\s*\n)(?:please\s+)?(?:approve|confirm)\s+
+    (?:(?:this|that|the)\s+)?(?:external\s+)?
+    (?:deployment|publication|spending|deploy|publish|spend)\b.*?[?.]?\s*$"""
+)
+_AMBIGUOUS_APPROVAL_REQUEST = re.compile(
+    r"(?is)(?:^|[.!?]\s+|\n\s*\n)(?:please\s+)?(?:approve|confirm)\b.*?[?.]?\s*$"
+)
+
+
+def terminal_approval_request(text: str) -> str | None:
+    """Classify terminal approval requests without treating completion prose as a request."""
+    if _ROUTINE_APPROVAL_REQUEST.search(text):
+        return "routine"
+    if _EXTERNAL_APPROVAL_REQUEST.search(text):
+        return "external"
+    if _AMBIGUOUS_APPROVAL_REQUEST.search(text):
+        return "ambiguous"
+    return None
+
 
 def validate_policy(policy: dict) -> None:
     if not isinstance(policy, dict) or set(policy) != {

@@ -85,8 +85,46 @@ def test_all_comparison_tasks_answer_authored_questions():
             ("clarification", "Where should I work?"),
             ("clarification", "What are the requirements?"),
             ("approval", "May I proceed with the plan?"),
+            (
+                "approval",
+                (
+                    "This is a bounded one-line source change. "
+                    "I\u2019ll update the source value, then run the checks. "
+                    "Approve this design and I\u2019ll implement it."
+                ),
+            ),
+            ("approval", "Plan:\n\nPlease approve this plan so I can implement it."),
+            ("approval", "Design:\n\nPlease confirm this design and I\u2019ll implement it."),
+            ("approval", "Design:\n\nDoes that design look right?"),
         ]:
             assert select_reply({"kind": kind, "text": text}, frozen, 0)["status"] == "reply", path
+
+
+def test_routine_approval_rule_does_not_reply_to_completed_or_external_work():
+    import json
+    from pathlib import Path
+
+    policies = list((Path(__file__).parents[2] / "tasks/workflow").glob("*/Scripted User.json"))
+    for path in policies:
+        frozen = json.loads(path.read_text())
+        for text in (
+            "Implemented the approved plan.",
+            "I no longer need you to approve this plan.",
+            "Please approve this deployment.",
+            "Please approve this publication plan.",
+        ):
+            decision = select_reply({"kind": "approval", "text": text}, frozen, 0)
+            assert decision["status"] == "authority_denied", path
+        decision = select_reply(
+            {
+                "kind": "approval",
+                "text": "Plan: deploy the result externally.\n\nPlease approve this plan.",
+                "actions": ["deploy"],
+            },
+            frozen,
+            0,
+        )
+        assert decision["status"] == "authority_denied", path
 
 
 def test_research_policy_approves_routine_plans_but_denies_tool_authority():
@@ -103,8 +141,11 @@ def test_research_policy_approves_routine_plans_but_denies_tool_authority():
         "rule_id": "implementation-approval",
         "reply": "Proceed with the implementation and verification in the task workspace.",
     }
-    assert select_reply(
-        {"kind": "approval", "text": "May I publish the result?", "actions": ["publish"]},
-        policy,
-        0,
-    )["status"] == "authority_denied"
+    assert (
+        select_reply(
+            {"kind": "approval", "text": "May I publish the result?", "actions": ["publish"]},
+            policy,
+            0,
+        )["status"]
+        == "authority_denied"
+    )
