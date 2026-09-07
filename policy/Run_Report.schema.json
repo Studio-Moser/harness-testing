@@ -1055,6 +1055,9 @@
           "items": {
             "$ref": "#/$defs/sessionUsage"
           }
+        },
+        "code_review": {
+          "$ref": "#/$defs/codeReview"
         }
       },
       "required": [
@@ -1254,6 +1257,9 @@
             "null"
           ],
           "minimum": 0
+        },
+        "code_review": {
+          "$ref": "#/$defs/codeReviewAggregate"
         }
       },
       "required": [
@@ -1682,6 +1688,9 @@
               "type": "null"
             }
           ]
+        },
+        "code_review": {
+          "$ref": "#/$defs/codeReviewCampaign"
         }
       },
       "required": [
@@ -2115,6 +2124,368 @@
         "output_tokens",
         "session",
         "effort"
+      ]
+    },
+    "codeReviewFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "severity": {
+          "enum": [
+            "P0",
+            "P1",
+            "P2",
+            "P3"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^(?!/)(?!.*\\\\)(?!.*:)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "enum": [
+            "confirmed",
+            "unconfirmed",
+            "dismissed"
+          ]
+        },
+        "evidence_digest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "severity",
+        "category",
+        "title",
+        "file",
+        "line",
+        "status",
+        "evidence_digest"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "confirmed",
+                  "dismissed"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "evidence_digest": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "internalReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "unknown",
+            "recorded"
+          ]
+        },
+        "found": {
+          "$ref": "#/$defs/nullableInteger"
+        },
+        "fixed": {
+          "$ref": "#/$defs/nullableInteger"
+        },
+        "unresolved": {
+          "$ref": "#/$defs/nullableInteger"
+        },
+        "evidence_digest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "found",
+        "fixed",
+        "unresolved",
+        "evidence_digest"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "recorded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "found": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "fixed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unresolved": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "evidence_digest": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "found": {
+                "type": "null"
+              },
+              "fixed": {
+                "type": "null"
+              },
+              "unresolved": {
+                "type": "null"
+              },
+              "evidence_digest": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "codeReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "protocol_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "target_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "blocked",
+            "incomplete"
+          ]
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/codeReviewFinding"
+          }
+        },
+        "cost_usd": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "duration_seconds": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "usage_complete": {
+          "type": "boolean"
+        },
+        "model_usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modelUsage"
+          }
+        },
+        "internal_review": {
+          "$ref": "#/$defs/internalReview"
+        },
+        "pricing_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "required": [
+        "protocol_id",
+        "target_digest",
+        "status",
+        "findings",
+        "cost_usd",
+        "duration_seconds",
+        "usage_complete",
+        "model_usage",
+        "internal_review"
+      ]
+    },
+    "codeReviewCampaign": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "plan_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "protocol_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "source_report_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "results_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "evaluation_cost_usd": {
+          "$ref": "#/$defs/nullableNumber"
+        }
+      },
+      "required": [
+        "plan_id",
+        "protocol_id",
+        "source_report_id",
+        "results_digest",
+        "evaluation_cost_usd"
+      ]
+    },
+    "codeReviewAggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "not_reviewed",
+            "incomplete",
+            "completed",
+            "incompatible"
+          ]
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scheduled": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "protocol_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confirmed": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "P0": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "P1": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "P2": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "P3": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "P0",
+            "P1",
+            "P2",
+            "P3"
+          ]
+        },
+        "unconfirmed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evaluation_cost_usd": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "internal_review": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "recorded": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "scheduled": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "found": {
+              "$ref": "#/$defs/nullableInteger"
+            },
+            "fixed": {
+              "$ref": "#/$defs/nullableInteger"
+            },
+            "unresolved": {
+              "$ref": "#/$defs/nullableInteger"
+            }
+          },
+          "required": [
+            "recorded",
+            "scheduled",
+            "found",
+            "fixed",
+            "unresolved"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "completed",
+        "scheduled",
+        "protocol_id",
+        "confirmed",
+        "unconfirmed",
+        "evaluation_cost_usd"
       ]
     }
   }

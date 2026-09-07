@@ -15,6 +15,11 @@
 .comparison-table th:first-child {width: 32%; padding-left: 0;}
 .comparison-table th:not(:first-child), .comparison-table td {text-align: right;}
 .comparison-table button {font: inherit; color: inherit; padding: 0; background: transparent; border: 0; cursor: pointer; text-align: inherit; text-decoration: underline; text-underline-offset: 0.25em;}
+.comparison-table-region {max-width: 100%; overflow-x: auto; scrollbar-color: var(--theme-foreground-faint) var(--theme-background);}
+.review-table {min-width: 58rem;}
+.review-table th:nth-child(2), .review-table td:nth-child(2) {min-width: 14rem; text-align: start;}
+.review-table td {white-space: nowrap;}
+.internal-review-table th:nth-child(2), .internal-review-table td:nth-child(2) {text-align: start;}
 .harness-comparison a {text-underline-offset: 0.2em;}
 .harness-comparison :focus-visible {outline: 2px solid var(--theme-foreground-focus); outline-offset: 4px;}
 .harness-comparison select {max-width: 100%; padding: 0.5rem; font: inherit; color: var(--theme-foreground); background: var(--theme-background); border: 1px solid var(--theme-foreground-faint); border-radius: 4px; margin: 0.5rem 0;}
@@ -25,6 +30,12 @@
 .version-entry {padding: 0.5rem 0 1.5rem; border-bottom: 1px solid var(--theme-foreground-faintest);}
 .version-entry h3 {font-size: 1rem; margin: 1.5rem 0 0.5rem;}
 .version-entry p {max-width: 72ch;}
+.review-history {color: var(--theme-foreground-muted);}
+.trial-review {margin-block-start: 1.25rem; padding-block-start: 0.75rem; border-top: 1px solid var(--theme-foreground-faintest);}
+.trial-review h4 {margin-block: 0 0.5rem; font-size: 1rem;}
+.trial-review h5 {margin-block: 1rem 0.25rem; font-size: 0.9rem;}
+.trial-review p {margin-block: 0.35rem;}
+.trial-review li {overflow-wrap: anywhere;}
 .comparison-empty {padding: 1rem 0 3rem; max-width: 65ch;}
 .comparison-empty h2 {font-size: 2rem; line-height: 1.25;}
 @media (max-width: 600px) {
@@ -33,6 +44,7 @@
   .comparison-table th:first-child {width: 26%;}
   .comparison-table td {white-space: nowrap;}
   .comparison-table td.comparison-missing {white-space: normal;}
+  .review-table {font-size: 0.8rem;}
   .comparison-note {font-size: 0.75rem;}
   .harness-comparison label {display: block;}
   .harness-comparison select {display: block; width: 100%; box-sizing: border-box;}

@@ -43,6 +43,8 @@ _LIMITS = [
     "Historical time comparisons are observational; they do not establish causality.",
     "The 10% advantage and noninferiority thresholds are product defaults, not research findings.",
     "No clear change does not establish equivalence.",
+    "A completed code review records confirmed remaining defects; finding none does not prove "
+    "the code is defect-free. Evaluation cost is separate from harness execution cost.",
 ]
 
 
@@ -99,6 +101,46 @@ def _success(trial):
     )
 
 
+def code_review_summary(trials, scheduled):
+    """Summarize review evidence without treating missing reviews as clean code."""
+    reviews = [t["code_review"] for t in trials if t.get("code_review")]
+    protocols = {r["protocol_id"] for r in reviews}
+    completed = sum(r["status"] == "completed" for r in reviews)
+    findings = [finding for review in reviews for finding in review["findings"]]
+    costs = [r.get("cost_usd") for r in reviews]
+    internal = [r["internal_review"] for r in reviews
+                if r.get("internal_review", {}).get("status") == "recorded"]
+    return {
+        "status": "not_reviewed" if not reviews else "incompatible" if len(protocols) != 1
+        else "completed" if completed == scheduled else "incomplete",
+        "completed": completed,
+        "scheduled": scheduled,
+        "protocol_id": next(iter(protocols)) if len(protocols) == 1 else None,
+        "confirmed": {
+            severity: sum(
+                f["status"] == "confirmed" and f["severity"] == severity for f in findings
+            )
+            for severity in ("P0", "P1", "P2", "P3")
+        },
+        "unconfirmed": sum(f["status"] == "unconfirmed" for f in findings),
+        "evaluation_cost_usd": _sum(costs)
+        if len(reviews) == scheduled and costs and all(c is not None for c in costs) else None,
+        "internal_review": {
+            "recorded": len(internal), "scheduled": scheduled,
+            **{field: sum(r[field] for r in internal) if len(internal) == scheduled else None
+               for field in ("found", "fixed", "unresolved")},
+        },
+    }
+
+
+def _reviews_comparable(summaries):
+    return (
+        bool(summaries)
+        and all(r["status"] == "completed" and not r["unconfirmed"] for r in summaries)
+        and len({r["protocol_id"] for r in summaries}) == 1
+    )
+
+
 def _cost(trial, pricing):
     if not trial.get("usage_complete"):
         return None
@@ -142,6 +184,7 @@ def _dataset(report, contender, conditions, pricing):
         "cost_usd",
         "pricing_digest",
         "model_usage",
+        "code_review",
     )
     selected = [
         {field: t.get(field) for field in allowed_trial_fields}
@@ -239,6 +282,12 @@ def _dataset(report, contender, conditions, pricing):
             for t in attempted
         ],
     }
+    review = code_review_summary(selected, len(tasks) * repetitions)
+    public["code_review"] = review
+    public["eligible"] = (
+        public["eligible"] and review["status"] == "completed"
+        and not review["unconfirmed"] and not any(review["confirmed"].values())
+    )
     groups = [[t for t in selected if t["task_id"] == task] for task in sorted(tasks)]
     # Every selected task has equal weight, irrespective of its absolute workload.
     cost_groups = [[_cost(t, pricing) for t in group] for group in groups]
@@ -374,6 +423,8 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
     """
     if any(policy.get(key) != value for key, value in _DEFAULTS.items()):
         raise ValueError("development-comparison-v1 policy defaults must remain frozen")
+    # Preserve the frozen test/efficiency thresholds and identify the added review gate.
+    policy = dict(policy, code_review_policy="final-patch-review-v1")
     pricing = policy.get("pricing")
     if pricing is not None:
         if not pricing.get("digest") or not isinstance(pricing.get("models"), dict):
@@ -518,7 +569,11 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         identity = (
             key[0] if key[0] != current["report_id"] else current["experiment"].get("request_id")
         )
-        sampling_identity = _digest([identity, key[1], datasets[key]["trials"]])
+        execution_trials = [
+            {field: value for field, value in trial.items() if field != "code_review"}
+            for trial in datasets[key]["trials"]
+        ]
+        sampling_identity = _digest([identity, key[1], execution_trials])
         datasets[key]["sampling_identity"] = sampling_identity
         seed_evidence.append(sampling_identity)
     seed = _digest({"evidence": sorted(seed_evidence), "policy": result["policy_digest"]})
@@ -544,6 +599,17 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         "per_tail_probability": tail,
     }
     result["contenders"] = [datasets[k]["public"] for k in cohort]
+    reviews = [datasets[k]["public"]["code_review"] for k in cohort]
+    if any(r["status"] in {"not_reviewed", "incomplete"} for r in reviews):
+        reasons.append("code_review_incomplete")
+    if any(r["status"] == "incompatible" for r in reviews) or len(
+        {r["protocol_id"] for r in reviews if r["protocol_id"] is not None}
+    ) > 1:
+        reasons.append("code_review_protocol_mismatch")
+    if any(r["unconfirmed"] for r in reviews):
+        reasons.append("code_review_unconfirmed")
+    if any(any(r["confirmed"].values()) for r in reviews):
+        reasons.append("code_review_defects")
     result["pairs"] = [pairs[k] for k in sorted(pairs)]
     result["provisional"] = any(
         r.get("evidence", {}).get("review_state") != "reviewed"
@@ -613,6 +679,7 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         and not quarantined
         and not diagnostic
         and not diagnostic_baseline
+        and _reviews_comparable(reviews)
         and all(datasets[k]["public"]["coverage_complete"] for k in cohort)
     ):
         result.update(
@@ -621,13 +688,15 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         if not eligible:
             result.update(
                 status="no_quality_qualified_winner",
-                summary="No contender passed every scheduled correctness check.",
+                summary="No contender passed every scheduled correctness check and finished "
+                "review with no confirmed remaining defects.",
             )
         elif len(eligible) == 1:
             result.update(
                 status="recommended",
                 winner_id=eligible[0][1],
-                summary="One contender passed every scheduled correctness check.",
+                summary="One contender passed every scheduled correctness check and finished "
+                "review with no confirmed remaining defects.",
             )
             reasons.append("sole_quality_eligible")
         else:
@@ -685,6 +754,7 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
                     not history_claims_allowed
                     or not np["coverage_complete"]
                     or not op["coverage_complete"]
+                    or not _reviews_comparable([np["code_review"], op["code_review"]])
                 ):
                     status = "insufficient_evidence"
                 elif recoveries and regressions:

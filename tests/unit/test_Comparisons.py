@@ -58,6 +58,12 @@ def fixture(ids=("a", "b"), attempts=3):
             "cost_usd": 1.0,
             "pricing_digest": "price-1",
             "model_usage": [],
+            "code_review": {
+                "protocol_id": "review-1",
+                "status": "completed",
+                "findings": [],
+                "cost_usd": 0.5,
+            },
         }
         for c in ids
         for t in conditions["task_ids"]
@@ -73,6 +79,83 @@ def fixture(ids=("a", "b"), attempts=3):
 
 def trials(reports, contender):
     return [t for t in reports[0]["experiment"]["trials"] if t["contender_id"] == contender]
+
+
+def test_test_only_success_cannot_establish_a_code_quality_winner():
+    request, reports = fixture()
+    for trial in trials(reports, "a"):
+        trial["cost_usd"] = 0.01
+        trial.pop("code_review")
+    result = run(request, reports)
+    assert result["winner_id"] is None
+    assert "code_review_incomplete" in result["reasons"]
+    assert result["contenders"][0]["successes"] == 27
+    assert result["contenders"][0]["code_review"]["status"] == "not_reviewed"
+
+
+@pytest.mark.parametrize("status", ["confirmed", "unconfirmed"])
+def test_remaining_defects_are_not_offset_by_cheap_execution(status):
+    request, reports = fixture()
+    trial = trials(reports, "a")[0]
+    trial["code_review"]["findings"] = [{"severity": "P1", "status": status}]
+    result = run(request, reports)
+    if status == "confirmed":
+        assert result["winner_id"] == "b"
+        assert "code_review_defects" in result["reasons"]
+    else:
+        assert result["winner_id"] is None
+        assert "code_review_unconfirmed" in result["reasons"]
+    assert result["contenders"][0]["successes"] == 27
+    assert result["contenders"][0]["eligible"] is False
+
+
+def test_review_protocols_must_match_and_review_cost_is_separate():
+    request, reports = fixture()
+    result = run(request, reports)
+    row = result["contenders"][0]
+    assert row["total_cost_usd"] == 27
+    assert row["code_review"]["evaluation_cost_usd"] == 13.5
+    trials(reports, "a")[0]["code_review"]["cost_usd"] = None
+    trials(reports, "a")[0]["code_review"]["protocol_id"] = "different-review"
+    result = run(request, reports)
+    assert result["winner_id"] is None
+    assert "code_review_protocol_mismatch" in result["reasons"]
+    assert result["contenders"][0]["code_review"]["evaluation_cost_usd"] is None
+
+
+def test_evaluation_cost_does_not_change_execution_uncertainty():
+    request, reports = fixture()
+    original = run(request, reports)
+    for trial in trials(reports, "a"):
+        trial["code_review"]["cost_usd"] = 500
+    changed = run(request, reports)
+    assert original["bootstrap"] == changed["bootstrap"]
+    assert original["pairs"] == changed["pairs"]
+    assert original["winner_id"] == changed["winner_id"]
+
+
+def test_completed_reviews_under_different_protocols_cannot_choose_a_winner():
+    request, reports = fixture()
+    for trial in trials(reports, "a"):
+        trial["code_review"]["protocol_id"] = "different-protocol"
+        trial["cost_usd"] = 0.01
+    result = run(request, reports)
+    assert result["winner_id"] is None
+    assert "code_review_protocol_mismatch" in result["reasons"]
+
+
+def test_unreviewed_predecessor_cannot_support_code_quality_improvement():
+    request, reports = fixture(ids=("new",))
+    old_request, old = fixture(ids=("old",))
+    old[0]["report_id"] = "older-report"
+    old[0]["experiment"]["request_id"] = "older-request"
+    old[0]["experiment"]["contenders"][0]["family"] = "new"
+    for trial in old[0]["experiment"]["trials"]:
+        trial.pop("code_review")
+    request.update(first_version=False, predecessor_result_ids=["older-report"])
+    reports[0]["experiment"].update(copy.deepcopy(request))
+    result = run(request, reports + old)
+    assert result["history"]["status"] == "insufficient_evidence"
 
 
 def quill_diagnostic_fixture(status="completed"):

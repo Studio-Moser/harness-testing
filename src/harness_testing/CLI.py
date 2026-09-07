@@ -94,6 +94,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         "sync", help="publish all pending reports in one data-branch update"
     )
 
+    review_parser = subparsers.add_parser(
+        "review", help="freeze or import model-free final-patch review evidence"
+    )
+    review_subparsers = review_parser.add_subparsers(dest="review_command")
+    review_prepare_parser = review_subparsers.add_parser(
+        "prepare", help="create blinded frozen review packets"
+    )
+    review_prepare_parser.add_argument("--report", type=Path, required=True)
+    review_prepare_parser.add_argument("--protocol", type=Path, required=True)
+    review_prepare_parser.add_argument("--references", type=Path)
+    review_record_parser = review_subparsers.add_parser(
+        "record", help="validate and import returned review evidence"
+    )
+    review_record_parser.add_argument("--plan", type=Path, required=True)
+    review_record_parser.add_argument("--results", type=Path, required=True)
+
     auth_parser = subparsers.add_parser("auth", help="store local subscription credentials")
     auth_subparsers = auth_parser.add_subparsers(dest="auth_command")
     auth_subparsers.add_parser("claude", help="store the Claude subscription token")
@@ -267,6 +283,29 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"Published {len(receipts)} run report(s) to {target.repository}.")
         else:
             print("No public run reports are pending.")
+    elif arguments.command == "review" and arguments.review_command == "prepare":
+        from harness_testing.Code_Reviews import prepare_review
+
+        try:
+            options = {"references_path": arguments.references} if arguments.references else {}
+            outcome = prepare_review(
+                _repository_root(), arguments.report, arguments.protocol, **options
+            )
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        print(json.dumps(outcome, indent=2, sort_keys=True))
+    elif arguments.command == "review" and arguments.review_command == "record":
+        from harness_testing.Code_Reviews import record_review
+        from harness_testing.Run_Reports import refresh_local_dashboard
+
+        try:
+            outcome = record_review(_repository_root(), arguments.plan, arguments.results)
+            refresh_local_dashboard(_repository_root())
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        print(json.dumps(outcome, indent=2, sort_keys=True))
     elif arguments.command == "auth" and arguments.auth_command == "claude":
         from harness_testing.Credentials import store_claude_subscription_token
 

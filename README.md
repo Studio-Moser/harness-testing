@@ -75,6 +75,8 @@ Local reproducibility artifacts are intentionally untracked:
 
 For new comparisons, inspect version-3 experiment trial/comparison evidence for whole-tree measurements; legacy per-job efficiency summaries are not a substitute. Original reports remain retained when corrected. Missing or unreviewed evidence must remain visibly limited.
 
+Passing tests does not mean the final code passed an independent review. Use [Code Review Evaluation](docs/Code%20Review%20Evaluation.md) to prepare blinded reviews of retained submissions and record confirmed remaining defects, unresolved claims and separate evaluation cost. The dashboard distinguishes this from test outcomes and internal review activity; older test-only results cannot establish reviewed-code superiority.
+
 Never copy raw execution transcripts (including model prompts, reasoning, commands and session IDs), credentials or host paths into tracked docs or dashboard assets. Public development-history reports are allowlisted summaries and may include failures; reviewed finalized `results/` remain a separate evidence lane. Publication is bound to the approved manifest destination: local-only runs stay local. See the [Runbook](docs/Runbook.md) before syncing or publishing anything.
 
 ## Local development

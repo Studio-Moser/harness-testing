@@ -47,19 +47,136 @@ const labels = {
   mixed: "Mixed results", no_clear_change: "No clear change"
 };
 const reasons = {
-  quality_ineligible: "Not every scheduled trial has a verified successful result.",
+  quality_ineligible: "A contender failed a required test or has a confirmed remaining defect.",
   usage_incomplete: "Some model usage is missing, so a complete cost comparison is unavailable.",
   pricing_unavailable: "Comparable pricing is unavailable for some attempted work.",
   incomplete_coverage: "The selected evidence does not cover every scheduled, graded trial.",
   cost_time_tradeoff: "Cost and speed favor different harnesses.",
   missing_or_ambiguous_evidence: "Selected comparison evidence is missing or ambiguous.",
   practical_advantage_supported: "The advantage clears the recorded practical-difference and uncertainty thresholds.",
-  diagnostic_only: "This is a diagnostic run, not evidence for an overall recommendation."
+  diagnostic_only: "This is a diagnostic run, not evidence for an overall recommendation.",
+  diagnostic_reference: "A diagnostic result cannot serve as comparison or history evidence.",
+  code_review_incomplete: "Final-patch code review is missing or incomplete for some scheduled trials.",
+  code_review_protocol_mismatch: "Final-patch reviews did not use one matching protocol.",
+  code_review_unconfirmed: "Reviewer claims remain unconfirmed.",
+  code_review_defects: "Confirmed defects remain in at least one final patch.",
+  sole_quality_eligible: "One contender passed every required test and has no confirmed remaining defects."
 };
 const money = v => v == null ? "Unavailable" : new Intl.NumberFormat("en-US", {style: "currency", currency: "USD", maximumFractionDigits: 4}).format(v);
 const tokens = v => v == null ? "Unavailable" : new Intl.NumberFormat("en-US", {notation: "compact", maximumFractionDigits: 1}).format(v);
 const seconds = v => v == null ? "Unavailable" : v < 60 ? `${v.toFixed(1)}s` : `${Math.floor(v / 60)}m ${Math.round(v % 60)}s`;
 const date = v => v ? new Intl.DateTimeFormat("en-US", {month: "short", day: "numeric", year: "numeric"}).format(new Date(v)) : "Not finished";
+const severities = ["P0", "P1", "P2", "P3"];
+
+function reviewTrialsFor(contenderId, trials) {
+  return trials.filter(trial => trial.contender_id === contenderId);
+}
+
+export function summarizeTests(contender, trials = []) {
+  const selected = reviewTrialsFor(contender.id, trials);
+  const scheduled = contender.scheduled ?? selected.length;
+  return {
+    passed: selected.filter(trial => trial.status === "completed" && trial.correctness === true).length,
+    scheduled,
+    protected_unknown: selected.filter(trial => trial.status === "completed" && trial.correctness === true && trial.protected_state == null).length,
+    evidence_complete: selected.length >= scheduled
+  };
+}
+
+export function summarizeCodeReview(contender, trials = []) {
+  const selected = reviewTrialsFor(contender.id, trials);
+  const aggregate = contender.code_review;
+  const scheduled = aggregate?.scheduled ?? contender.scheduled ?? selected.length;
+  const breakdown = {completed: 0, blocked: 0, incomplete: 0, missing: Math.max(0, scheduled - selected.length)};
+  for (const trial of selected) {
+    const status = trial.code_review?.status;
+    if (status === "completed" || status === "blocked" || status === "incomplete") breakdown[status] += 1;
+    else breakdown.missing += 1;
+  }
+  if (aggregate) {
+    const breakdownExact = selected.length === scheduled;
+    return {
+      status: aggregate.status,
+      completed: aggregate.completed,
+      scheduled,
+      protocol_id: aggregate.protocol_id,
+      confirmed: Object.fromEntries(severities.map(name => [name, aggregate.confirmed?.[name] ?? 0])),
+      unconfirmed: aggregate.unconfirmed ?? 0,
+      evaluation_cost_usd: aggregate.evaluation_cost_usd ?? null,
+      breakdown: breakdownExact ? breakdown : {completed: aggregate.completed, blocked: 0, incomplete: 0, missing: 0},
+      breakdown_exact: breakdownExact
+    };
+  }
+  const reviews = selected.map(trial => trial.code_review).filter(Boolean);
+  if (!reviews.length) {
+    return {status: "not_reviewed", completed: 0, scheduled, protocol_id: null, confirmed: Object.fromEntries(severities.map(name => [name, 0])), unconfirmed: 0, evaluation_cost_usd: null, breakdown, breakdown_exact: true};
+  }
+  const protocols = new Set(reviews.map(review => review.protocol_id).filter(Boolean));
+  const confirmed = Object.fromEntries(severities.map(name => [name, 0]));
+  let unconfirmed = 0;
+  for (const review of reviews) {
+    for (const finding of review.findings ?? []) {
+      if (finding.status === "confirmed" && severities.includes(finding.severity)) confirmed[finding.severity] += 1;
+      if (finding.status === "unconfirmed") unconfirmed += 1;
+    }
+  }
+  const costs = reviews.map(review => review.usage_complete ? review.cost_usd : null);
+  const evaluationCost = reviews.length === scheduled && costs.length && costs.every(Number.isFinite) ? costs.reduce((sum, cost) => sum + cost, 0) : null;
+  const completed = breakdown.completed;
+  const status = protocols.size > 1 ? "incompatible" : completed === scheduled && breakdown.blocked === 0 && breakdown.incomplete === 0 && breakdown.missing === 0 ? "completed" : "incomplete";
+  return {status, completed, scheduled, protocol_id: protocols.size === 1 ? [...protocols][0] : null, confirmed, unconfirmed, evaluation_cost_usd: evaluationCost, breakdown, breakdown_exact: true};
+}
+
+export function codeReviewCoverageLabel(summary) {
+  if (summary.status === "not_reviewed") return "Not reviewed";
+  if (!summary.breakdown_exact) {
+    const unresolved = Math.max(0, summary.scheduled - summary.completed);
+    const coverage = unresolved ? `${summary.completed} / ${summary.scheduled} completed · ${unresolved} unresolved` : `${summary.completed} completed of ${summary.scheduled}`;
+    return summary.status === "incompatible" ? `Incompatible protocols · ${coverage}` : coverage;
+  }
+  const coverage = [`${summary.completed} completed`];
+  for (const status of ["blocked", "incomplete", "missing"]) {
+    if (summary.breakdown[status]) coverage.push(`${summary.breakdown[status]} ${status}`);
+  }
+  const suffix = `${coverage.join(" · ")} of ${summary.scheduled}`;
+  return summary.status === "incompatible" ? `Incompatible protocols · ${suffix}` : suffix;
+}
+
+export function codeReviewCountLabel(summary, value) {
+  if (summary.status === "not_reviewed") return "Unknown";
+  return summary.status === "completed" ? String(value) : `${value} recorded`;
+}
+
+export function summarizeInternalReview(contender, trials = []) {
+  const aggregate = contender.code_review?.internal_review;
+  if (aggregate) {
+    const known = aggregate.scheduled > 0 && aggregate.recorded === aggregate.scheduled && [aggregate.found, aggregate.fixed, aggregate.unresolved].every(Number.isFinite);
+    return {...aggregate, known};
+  }
+  const selected = reviewTrialsFor(contender.id, trials);
+  const scheduled = contender.code_review?.scheduled ?? contender.scheduled ?? selected.length;
+  const recorded = selected.map(trial => trial.code_review?.internal_review).filter(internal => internal?.status === "recorded");
+  const known = scheduled > 0 && selected.length >= scheduled && recorded.length === scheduled && recorded.every(internal => [internal.found, internal.fixed, internal.unresolved].every(Number.isFinite));
+  const total = field => known ? recorded.reduce((sum, internal) => sum + internal[field], 0) : null;
+  return {recorded: recorded.length, scheduled, found: total("found"), fixed: total("fixed"), unresolved: total("unresolved"), known};
+}
+
+export function internalReviewCoverageLabel(summary) {
+  return summary.known ? `Recorded for ${summary.recorded} / ${summary.scheduled} trials` : `Unknown (${summary.recorded} / ${summary.scheduled} trials documented)`;
+}
+
+function codeReviewState(rows, trials, winnerId) {
+  const summaries = rows.map(row => summarizeCodeReview(row, trials));
+  if (summaries.every(summary => summary.status === "not_reviewed")) return {kind: "absent", summaries};
+  const protocols = new Set(summaries.map(summary => summary.protocol_id).filter(Boolean));
+  if (summaries.some(summary => summary.status === "incompatible") || protocols.size > 1) return {kind: "incompatible", summaries};
+  if (summaries.some(summary => summary.status !== "completed")) return {kind: "incomplete", summaries};
+  if (protocols.size !== 1) return {kind: "incompatible", summaries};
+  if (summaries.some(summary => summary.unconfirmed > 0)) return {kind: "unconfirmed", summaries};
+  const winner = rows.findIndex(row => row.id === winnerId);
+  if (winner >= 0 && severities.some(name => summaries[winner].confirmed[name] > 0)) return {kind: "winner_findings", summaries};
+  return {kind: "complete", summaries};
+}
 
 function el(tag, text, className) {
   const node = document.createElement(tag);
@@ -97,8 +214,33 @@ function empty(message, reports) {
 }
 
 function evidenceBadge(report) {
-  const provisional = report.experiment.comparison?.provisional !== false;
-  return el("p", provisional ? "Provisional · independent review is still required" : "Reviewed comparison evidence", "comparison-meta");
+  const reviewState = report.evidence?.review_state ?? (report.experiment.comparison?.provisional !== false ? "unreviewed" : "reviewed");
+  const stateLabel = {reviewed: "independently checked", unreviewed: "unreviewed", quarantined: "quarantined"}[reviewState] ?? reviewState.replaceAll("_", " ");
+  const comparisonLabel = report.experiment.comparison?.provisional === false ? "comparison evidence finalized" : "comparison evidence provisional";
+  return el("p", `Report provenance · ${stateLabel}; ${comparisonLabel}. This is separate from final-patch code review.`, "comparison-meta");
+}
+
+function referencedTrials(reports, current) {
+  const referenced = new Set([current.report_id, ...(current.experiment.baseline_result_ids ?? [])]);
+  return reports.filter(report => referenced.has(report.report_id)).flatMap(report => report.experiment?.trials ?? []);
+}
+
+export function comparisonVerdict(report, trials = report.experiment.trials ?? []) {
+  const comparison = report.experiment.comparison;
+  const rows = comparison?.contenders ?? [];
+  const winner = rows.find(row => row.id === comparison?.winner_id);
+  const testHeading = winner ? `${winner.label} led the tests` : labels[comparison?.status] ?? "Results are still arriving";
+  const testSummary = comparison?.summary ?? "Every scheduled trial must finish and be graded before the test comparison can support a conclusion.";
+  if (report.experiment.purpose === "diagnostic") {
+    return {heading: `Diagnostic result · ${testHeading}`, summary: `${testSummary} This diagnostic run covers a limited task sample and cannot establish an overall harness winner.`, reviewKind: "diagnostic"};
+  }
+  const review = codeReviewState(rows, trials, comparison?.winner_id);
+  if (review.kind === "absent") return {heading: `Tests only · ${testHeading}`, summary: `${testSummary} No final-patch code review is recorded, so this report does not establish remaining code quality.`, reviewKind: review.kind};
+  if (review.kind === "incompatible") return {heading: "Code review protocols do not match", summary: `Test verdict: ${testSummary} Final-patch review results from different protocols cannot support a code quality comparison.`, reviewKind: review.kind};
+  if (review.kind === "incomplete") return {heading: "Code review coverage is incomplete", summary: `Test verdict: ${testSummary} Every scheduled final patch needs a completed review under the same protocol before this report can support a code quality conclusion.`, reviewKind: review.kind};
+  if (review.kind === "unconfirmed") return {heading: "Reviewer claims remain unresolved", summary: `Test verdict: ${testSummary} Unconfirmed findings prevent a supported overall winner.`, reviewKind: review.kind};
+  if (review.kind === "winner_findings") return {heading: "The selected harness has confirmed defects", summary: `Test verdict: ${testSummary} A harness with confirmed remaining defects cannot be the supported overall winner.`, reviewKind: review.kind};
+  return {heading: winner ? `${winner.label} is the supported choice` : labels[comparison?.status] ?? "No clear winner", summary: testSummary, reviewKind: review.kind};
 }
 
 export function renderComparison(reports, state = {}) {
@@ -123,14 +265,22 @@ export function renderComparison(reports, state = {}) {
   const kickoff = experiment.conditions.kickoff;
   root.append(el("p", `${kickoff.model} · ${kickoff.effort} effort · ${experiment.conditions.task_ids.length} tasks × ${experiment.conditions.attempts} repetitions`, "comparison-meta"));
   const verdict = el("section", null, "comparison-verdict");
-  const winner = comparison?.contenders.find(c => c.id === comparison.winner_id);
-  verdict.append(el("h2", winner ? `${winner.label} is the supported choice` : labels[comparison?.status] ?? "Results are still arriving"));
-  verdict.append(el("p", comparison?.summary ?? "Every scheduled trial must finish and be graded before this comparison can support a conclusion."));
+  const trials = referencedTrials(reports, current);
+  const verdictContent = comparisonVerdict(current, trials);
+  verdict.append(el("h2", verdictContent.heading));
+  verdict.append(el("p", verdictContent.summary));
   verdict.append(evidenceBadge(current));
   root.append(verdict);
   if (comparison?.contenders.length) {
-    root.append(contenderTable(comparison.contenders, current.report_id));
-    root.append(el("p", "Tested correctness comes first. Cost includes failed attempts and all recorded model calls; figures use shared standard token rates, excluding pricing premiums and tool charges. Time is end-to-end agent work per trial.", "comparison-meta"));
+    root.append(contenderTable(comparison.contenders, trials, current.report_id));
+    root.append(el("p", "Tests passed counts completed trials whose task tests passed; protected-file verification is reported separately. Execution cost includes failed attempts and all recorded model calls; figures use shared standard token rates, excluding pricing premiums and tool charges. Time is end-to-end agent work per trial.", "comparison-meta"));
+    root.append(el("h2", "Final-patch code review"));
+    root.append(el("p", "Confirmed remaining defects and unresolved reviewer claims are shown separately from test outcomes. Evaluation cost covers the review work only.", "comparison-meta"));
+    root.append(codeReviewTable(comparison.contenders, trials, current.report_id));
+    if (experiment.code_review) root.append(el("p", `Review campaign · protocol ${experiment.code_review.protocol_id} · total evaluation cost ${experiment.code_review.evaluation_cost_usd == null ? "unknown" : money(experiment.code_review.evaluation_cost_usd)}.`, "comparison-meta"));
+    root.append(el("h3", "Internal repair evidence"));
+    root.append(el("p", "Counts describe review findings and fixes recorded during the original implementation. They do not affect the final-patch review verdict.", "comparison-meta"));
+    root.append(internalReviewTable(comparison.contenders, trials, current.report_id));
   }
   const baselineDates = experiment.baseline_result_ids.map(id => reports.find(r => r.report_id === id)).filter(Boolean);
   root.append(el("p", baselineDates.length ? `Baselines reused from ${[...new Set(baselineDates.map(r => date(r.finished_at)))].join(" and ")}.` : experiment.purpose === "baseline" ? "Baselines were measured in this experiment." : "No reusable baseline evidence is attached.", "comparison-meta"));
@@ -153,7 +303,7 @@ export function renderComparison(reports, state = {}) {
     }
     why.append(el("p", "Efficiency recommendations require a supported advantage of at least 10% on one measure, with no more than 10% worse performance on the other. Intervals describe repeated trials on these tasks only."));
     root.append(detail("Why this conclusion", why));
-    root.append(detail("Coverage and failures", list(comparison.contenders.map(row => `${row.label}: ${row.successes} successful of ${row.scheduled} scheduled trials; ${Object.entries(row.counts).filter(([, count]) => count > 0).map(([name, count]) => `${count} ${name.replaceAll("_", " ")}`).join(", ")}.`))));
+    root.append(detail("Coverage and failures", list(comparison.contenders.map(row => `${row.label}: ${row.successes} quality-qualified of ${row.scheduled} scheduled trials; ${Object.entries(row.counts).filter(([, count]) => count > 0).map(([name, count]) => `${count} ${name.replaceAll("_", " ")}`).join(", ")}.`))));
   }
   root.append(detail("Limits of this comparison", list(comparison?.limitations ?? ["Evidence has not been evaluated yet."])));
   const provenance = list([`Runtime: ${kickoff.provider} ${kickoff.runtime_version}`, `Decision policy: ${comparison?.policy_id ?? experiment.conditions.decision_policy}`, `Evidence: ${current.report_id}`, `Verified change record: ${experiment.change.diff_digest}`]);
@@ -161,12 +311,16 @@ export function renderComparison(reports, state = {}) {
   return root;
 }
 
-function contenderTable(rows, reportId) {
+function contenderTable(rows, trials, reportId) {
   const table = el("table", null, "comparison-table");
   const head = el("thead");
   const tr = el("tr");
   const body = el("tbody");
-  const columns = [["Harness", null], ["Trials passed", "successes"], ["Cost / success", "cost_per_success_usd"], ["Time / trial", "mean_duration_seconds"], ["Tokens", "total_tokens"]];
+  const values = rows.map(row => {
+    const testSummary = summarizeTests(row, trials);
+    return {...row, test_summary: testSummary, tests_passed: testSummary.passed};
+  });
+  const columns = [["Harness", null], ["Tests passed", "tests_passed"], ["Execution cost", "total_cost_usd"], ["Time / trial", "mean_duration_seconds"], ["Tokens", "total_tokens"]];
   function draw(values) {
     body.replaceChildren();
     for (const row of values) {
@@ -174,8 +328,11 @@ function contenderTable(rows, reportId) {
       const name = el("th");
       name.scope = "row";
       name.append(link(row.label, "/Run_Detail", {comparison: reportId, version: row.id}));
-      if (!row.eligible) name.append(el("span", row.coverage_complete ? "Failed required checks" : "Incomplete evidence", "comparison-note"));
-      node.append(name, el("td", `${row.successes} / ${row.scheduled}`), el("td", row.cost_per_success_usd == null ? "Unknown" : money(row.cost_per_success_usd), row.cost_per_success_usd == null ? "comparison-missing" : null), el("td", row.mean_duration_seconds == null ? "Unknown" : seconds(row.mean_duration_seconds), row.mean_duration_seconds == null ? "comparison-missing" : null), el("td", row.total_tokens == null ? "Unknown" : tokens(row.total_tokens), row.total_tokens == null ? "comparison-missing" : null));
+      if (row.test_summary.protected_unknown) name.append(el("span", "Protected state unknown", "comparison-note"));
+      else if (!row.eligible) name.append(el("span", row.coverage_complete ? "Failed required checks" : "Incomplete evidence", "comparison-note"));
+      const testCell = el("td", `${row.test_summary.passed} / ${row.test_summary.scheduled}`);
+      if (!row.test_summary.evidence_complete) testCell.append(el("span", "Raw test evidence incomplete", "comparison-note"));
+      node.append(name, testCell, el("td", row.total_cost_usd == null ? "Unknown" : money(row.total_cost_usd), row.total_cost_usd == null ? "comparison-missing" : null), el("td", row.mean_duration_seconds == null ? "Unknown" : seconds(row.mean_duration_seconds), row.mean_duration_seconds == null ? "comparison-missing" : null), el("td", row.total_tokens == null ? "Unknown" : tokens(row.total_tokens), row.total_tokens == null ? "comparison-missing" : null));
       body.append(node);
     }
   }
@@ -188,7 +345,7 @@ function contenderTable(rows, reportId) {
       button.addEventListener("click", () => {
         for (const th of tr.children) th.removeAttribute("aria-sort");
         cell.setAttribute("aria-sort", ascending ? "ascending" : "descending");
-        draw(sortNumericRows(rows, field, ascending));
+        draw(sortNumericRows(values, field, ascending));
         ascending = !ascending;
       });
       cell.append(button);
@@ -197,8 +354,78 @@ function contenderTable(rows, reportId) {
   }
   head.append(tr);
   table.append(head, body);
-  draw(rows);
+  draw(values);
   return table;
+}
+
+function codeReviewTable(rows, trials, reportId) {
+  const region = el("div", null, "comparison-table-region");
+  region.setAttribute("role", "region");
+  region.setAttribute("aria-label", "Final-patch code review comparison");
+  region.setAttribute("tabindex", "0");
+  const table = el("table", null, "comparison-table review-table");
+  const head = el("thead");
+  const heading = el("tr");
+  for (const name of ["Harness", "Review coverage", ...severities, "Unconfirmed", "Evaluation cost"]) {
+    const cell = el("th", name);
+    cell.scope = "col";
+    heading.append(cell);
+  }
+  head.append(heading);
+  const body = el("tbody");
+  for (const row of rows) {
+    const summary = summarizeCodeReview(row, trials);
+    const item = el("tr");
+    const name = el("th");
+    name.scope = "row";
+    name.append(link(row.label, "/Run_Detail", {comparison: reportId, version: row.id}));
+    const coverage = el("td", codeReviewCoverageLabel(summary));
+    if (summary.protocol_id) coverage.append(el("span", `Protocol ${summary.protocol_id}`, "comparison-note"));
+    item.append(name, coverage);
+    for (const severity of severities) item.append(el("td", codeReviewCountLabel(summary, summary.confirmed[severity]), summary.status === "not_reviewed" ? "comparison-missing" : null));
+    item.append(el("td", codeReviewCountLabel(summary, summary.unconfirmed), summary.status === "not_reviewed" ? "comparison-missing" : null));
+    item.append(el("td", summary.evaluation_cost_usd == null ? "Unknown" : money(summary.evaluation_cost_usd), summary.evaluation_cost_usd == null ? "comparison-missing" : null));
+    body.append(item);
+  }
+  table.append(head, body);
+  region.append(table);
+  return region;
+}
+
+function internalReviewTable(rows, trials, reportId) {
+  const table = el("table", null, "comparison-table internal-review-table");
+  const head = el("thead");
+  const heading = el("tr");
+  for (const name of ["Harness", "Documentation", "Found", "Fixed", "Unresolved"]) {
+    const cell = el("th", name);
+    cell.scope = "col";
+    heading.append(cell);
+  }
+  head.append(heading);
+  const body = el("tbody");
+  for (const row of rows) {
+    const summary = summarizeInternalReview(row, trials);
+    const item = el("tr");
+    const name = el("th");
+    name.scope = "row";
+    name.append(link(row.label, "/Run_Detail", {comparison: reportId, version: row.id}));
+    item.append(name, el("td", internalReviewCoverageLabel(summary), summary.known ? null : "comparison-missing"));
+    for (const field of ["found", "fixed", "unresolved"]) item.append(el("td", summary.known ? String(summary[field]) : "Unknown", summary.known ? null : "comparison-missing"));
+    body.append(item);
+  }
+  table.append(head, body);
+  return table;
+}
+
+function internalReviewHistoryText(summary) {
+  if (!summary.known) return `Internal repair evidence: ${internalReviewCoverageLabel(summary).toLowerCase()}.`;
+  return `Internal repair evidence: ${summary.found} found · ${summary.fixed} fixed · ${summary.unresolved} unresolved (${summary.recorded} / ${summary.scheduled} trials documented).`;
+}
+
+function reviewHistoryText(summary) {
+  if (summary.status === "not_reviewed") return "Code review: not reviewed; evaluation cost unknown.";
+  const confirmed = severities.map(name => `${name} ${codeReviewCountLabel(summary, summary.confirmed[name])}`).join(" · ");
+  return `Code review: ${codeReviewCoverageLabel(summary)}; confirmed ${confirmed}; ${codeReviewCountLabel(summary, summary.unconfirmed)} unconfirmed; evaluation cost ${summary.evaluation_cost_usd == null ? "unknown" : money(summary.evaluation_cost_usd)}.`;
 }
 
 export function renderHistory(reports, state = {}) {
@@ -211,11 +438,15 @@ export function renderHistory(reports, state = {}) {
     for (const report of version.runs) {
       const experiment = report.experiment;
       const history = experiment.comparison?.history;
+      const trials = referencedTrials(reports, report);
+      const contender = experiment.comparison?.contenders.find(row => row.id === version.id) ?? {id: version.id, scheduled: trials.filter(trial => trial.contender_id === version.id).length};
       const entry = el("section");
       const title = el("h3");
-      title.append(link(`${labels[history?.status] ?? "Pending"} · ${date(report.finished_at ?? report.updated_at)}`, "/", {comparison: report.report_id}));
+      title.append(link(`Tests: ${labels[history?.status] ?? "Pending"} · ${date(report.finished_at ?? report.updated_at)}`, "/", {comparison: report.report_id}));
       entry.append(title, el("p", experiment.change.summary), el("p", `Hypothesis: ${experiment.change.hypothesis}`));
-      if (history) entry.append(el("p", history.summary));
+      if (history) entry.append(el("p", `Test history: ${history.summary}`));
+      entry.append(el("p", `${reviewHistoryText(summarizeCodeReview(contender, trials))} ${internalReviewHistoryText(summarizeInternalReview(contender, trials))}`, "review-history"));
+      for (const predecessor of history?.predecessor_contenders ?? []) entry.append(el("p", `${predecessor.label} predecessor · ${reviewHistoryText(summarizeCodeReview(predecessor))} ${internalReviewHistoryText(summarizeInternalReview(predecessor))}`, "review-history"));
       if (experiment.change.rerun_reason) entry.append(el("p", `Rerun: ${experiment.change.rerun_reason}`));
       for (const id of experiment.predecessor_result_ids) entry.append(link("Compared with this predecessor", "/", {comparison: id}));
       if (experiment.supersedes_report_id) entry.append(el("p", "Corrected evidence revision; the original result remains available."), link("Original evidence", "/Run_Detail", {comparison: experiment.supersedes_report_id}));
@@ -231,7 +462,38 @@ export function trialLabel(trial) {
   if (trial.protected_state === false) return "Protected files changed";
   if (trial.correctness === false) return "Failed tests";
   if (trial.status === "completed" && trial.correctness === true && trial.protected_state === true) return "Passed";
+  if (trial.status === "completed" && trial.correctness === true && trial.protected_state == null) return "Tests passed · protected state unknown";
   return trial.status === "completed" ? "Ungraded" : trial.status.replaceAll("_", " ");
+}
+
+function findingText(finding) {
+  const location = finding.file ? `${finding.file}${finding.line == null ? "" : `:${finding.line}`}` : "Location unavailable";
+  const category = finding.category ? ` · ${finding.category.replaceAll("_", " ")}` : "";
+  return `${finding.severity} · ${finding.status} · ${finding.title} · ${location}${category}`;
+}
+
+function internalReviewText(internal) {
+  if (!internal || internal.status === "unknown") return "Internal repair evidence: unknown.";
+  const value = count => count == null ? "unknown" : count;
+  return `Internal repair evidence: ${value(internal.found)} found · ${value(internal.fixed)} fixed · ${value(internal.unresolved)} unresolved.`;
+}
+
+function trialReview(review) {
+  const section = el("section", null, "trial-review");
+  section.append(el("h4", "Final-patch code review"));
+  if (!review) {
+    section.append(el("p", "Review status: not reviewed."), el("p", "Evaluation cost: unknown."), el("p", "Internal repair evidence: unknown."));
+    return section;
+  }
+  section.append(el("p", `Review status: ${review.status.replaceAll("_", " ")} · protocol ${review.protocol_id ?? "unknown"}.`));
+  const reviewCost = review.usage_complete ? review.cost_usd : null;
+  section.append(el("p", `Evaluation: ${seconds(review.duration_seconds)} · ${reviewCost == null ? "cost unknown" : money(reviewCost)} · ${review.usage_complete ? "usage complete" : "usage incomplete"}.`));
+  const findings = review.findings ?? [];
+  if (findings.length) section.append(el("h5", "Recorded findings"), list(findings.map(findingText)));
+  else section.append(el("p", "No findings are recorded in this review."));
+  section.append(el("p", internalReviewText(review.internal_review)));
+  if (review.model_usage?.length) section.append(detail("Review model usage", list(review.model_usage.map(row => `${row.model}: ${row.input_tokens ?? "unknown"} input + ${row.cache_read_tokens ?? "unknown"} cache read + ${row.cache_write_tokens ?? "unknown"} cache write + ${row.output_tokens ?? "unknown"} output tokens`))));
+  return section;
 }
 
 export function renderEvidence(reports, state = {}) {
@@ -240,8 +502,7 @@ export function renderEvidence(reports, state = {}) {
   const root = el("div", null, "harness-comparison");
   root.append(link("Back to the comparison", "/", {comparison: current.report_id}));
   root.append(el("h2", current.experiment.label), evidenceBadge(current));
-  const referenced = new Set([current.report_id, ...current.experiment.baseline_result_ids]);
-  const trials = reports.filter(r => referenced.has(r.report_id)).flatMap(r => r.experiment?.trials ?? []);
+  const trials = referencedTrials(reports, current);
   const names = new Map(reports.flatMap(r => r.experiment?.contenders ?? []).map(c => [c.id, c.label]));
   const selectLabel = el("label", "Task ");
   const select = el("select");
@@ -267,8 +528,9 @@ export function renderEvidence(reports, state = {}) {
       content.append(el("p", `Execution: ${trial.status.replaceAll("_", " ")} · ${seconds(trial.duration_seconds)} · ${money(trial.cost_usd)}`));
       content.append(el("p", `${trial.usage_complete ? "Complete recorded usage" : "Usage incomplete"} · ${trial.child_count ?? "Unknown"} child agents · ${trial.interaction_count} user replies`));
       if (trial.incomplete_reasons?.length) content.append(list(trial.incomplete_reasons.map(value => value.replaceAll("_", " "))));
-      if (trial.model_usage.length) content.append(list(trial.model_usage.map(row => `${row.model}: ${row.input_tokens ?? "unknown"} input + ${row.cache_read_tokens ?? "unknown"} cache read + ${row.cache_write_tokens ?? "unknown"} cache write + ${row.output_tokens ?? "unknown"} output tokens`)));
+      if (trial.model_usage?.length) content.append(list(trial.model_usage.map(row => `${row.model}: ${row.input_tokens ?? "unknown"} input + ${row.cache_read_tokens ?? "unknown"} cache read + ${row.cache_write_tokens ?? "unknown"} cache write + ${row.output_tokens ?? "unknown"} output tokens`)));
       if (trial.session_usage?.length) content.append(detail("Agent model and effort breakdown", list(trial.session_usage.map(row => `${row.session === "root" ? "Orchestrator" : row.session.replace("child_", "Child ")}: ${row.model} · ${row.effort ?? "unreported"} effort · ${row.input_tokens ?? "unknown"} input / ${row.output_tokens ?? "unknown"} output tokens`))));
+      content.append(trialReview(trial.code_review));
       section.append(detail(title, content));
     }
     root.append(section);

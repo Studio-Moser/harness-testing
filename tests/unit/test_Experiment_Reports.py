@@ -58,6 +58,52 @@ def test_new_report_fields_are_strict():
     assert schema["$defs"]["comparison"]["additionalProperties"] is False
 
 
+def reviewed_report():
+    report = json.loads((ROOT / "tests/Fixtures/Run_Reports/Comparison.json").read_text())
+    digest = "sha256:" + "a" * 64
+    report["experiment"]["code_review"] = {
+        "plan_id": digest, "protocol_id": digest, "source_report_id": report["report_id"],
+        "results_digest": digest, "evaluation_cost_usd": None,
+    }
+    report["experiment"]["trials"][0]["code_review"] = {
+        "protocol_id": digest, "target_digest": digest, "status": "completed",
+        "findings": [{
+            "id": "F1", "severity": "P1", "category": "correctness", "title": "Stale callback",
+            "file": "src/Toolbar.ts", "line": 2, "status": "confirmed", "evidence_digest": digest,
+        }],
+        "cost_usd": None, "duration_seconds": 5, "usage_complete": False, "model_usage": [],
+        "internal_review": {
+            "status": "unknown", "found": None, "fixed": None, "unresolved": None,
+            "evidence_digest": None,
+        },
+    }
+    return report
+
+
+def test_review_report_accepts_safe_evidence_and_rejects_unproven_or_private_fields():
+    report = reviewed_report()
+    report["report_id"] = run_report_id(report)
+    assert validate_run_report(ROOT, report) == ()
+    finding = report["experiment"]["trials"][0]["code_review"]["findings"][0]
+    finding["evidence_digest"] = None
+    report["report_id"] = run_report_id(report)
+    assert validate_run_report(ROOT, report)
+    finding["status"] = "unconfirmed"
+    report["report_id"] = run_report_id(report)
+    assert validate_run_report(ROOT, report) == ()
+    finding["command_output"] = "private evidence"
+    report["report_id"] = run_report_id(report)
+    assert validate_run_report(ROOT, report)
+
+
+@pytest.mark.parametrize("path", ["/tmp/file.ts", "../file.ts", "src/../../file.ts", "C:\\file.ts"])
+def test_review_findings_require_repository_relative_paths(path):
+    report = reviewed_report()
+    report["experiment"]["trials"][0]["code_review"]["findings"][0]["file"] = path
+    report["report_id"] = run_report_id(report)
+    assert validate_run_report(ROOT, report)
+
+
 @pytest.mark.parametrize("status", ["running", "completed"])
 def test_quill_deepswe_diagnostic_report_schema_accepts_pending_and_completed(status):
     report = json.loads((ROOT / "tests/Fixtures/Run_Reports/Comparison.json").read_text())
