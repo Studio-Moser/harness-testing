@@ -51,3 +51,16 @@
 }
 
 #observablehq-main {font-family: var(--sans-serif);}
+
+.task-types {margin-block: 2rem;}
+.task-type {padding-block: 1rem; border-bottom: 1px solid var(--theme-foreground-faintest);}
+.task-type h3 {font-size: 1.15rem; margin-block: 0 0.5rem;}
+.task-type > p {max-width: 72ch; margin-block: 0.5rem;}
+.task-type details {border-top: 0; padding-block: 0.5rem;}
+.task-type-table {min-width: 42rem;}
+.task-type-table th:first-child {width: 22%;}
+.task-type-table th:nth-child(2), .task-type-table td:nth-child(2) {text-align: start; min-width: 13rem; white-space: normal;}
+
+.evidence-filter {margin-inline-end: 1rem;}
+
+.task-types .comparison-meta, .task-types .comparison-note {color: var(--theme-foreground-alt);}

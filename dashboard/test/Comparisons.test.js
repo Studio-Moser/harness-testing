@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {codeReviewCountLabel, codeReviewCoverageLabel, comparisonReports, comparisonVerdict, internalReviewCoverageLabel, renderComparison, renderEvidence, renderHistory, selectComparison, comparisonUrl, summarizeCodeReview, summarizeInternalReview, summarizeTests, versionHistory, sortNumericRows, trialLabel} from "../src/components/Comparisons.js";
+import {codeReviewCountLabel, codeReviewCoverageLabel, comparisonReports, comparisonVerdict, internalReviewCoverageLabel, renderComparison, renderTaskTypes, renderEvidence, renderHistory, selectComparison, comparisonUrl, summarizeCodeReview, summarizeInternalReview, summarizeTests, versionHistory, sortNumericRows, trialLabel} from "../src/components/Comparisons.js";
 
 function report(id, version, purpose = "candidate") {
   return {schema_version: "3", report_id: id, run_id: `run-${id}`, updated_at: `2026-09-05T12:00:0${id}Z`, experiment: {label: id, purpose, contenders: [{id: version, family: "studio-moser", label: version}], predecessor_result_ids: [], comparison: {status: "insufficient_evidence"}}};
@@ -191,4 +191,72 @@ test("task evidence renders safe review findings and explicit unknown internal e
   } finally {
     globalThis.document = previousDocument;
   }
+});
+
+function typedReport() {
+  const contenders = [{id: "nothing", label: "Nothing"}, {id: "studio", label: "Studio Moser"}];
+  return {schema_version: "3", report_id: "typed", updated_at: "2026-09-07T00:00:00Z", experiment: {
+    label: "Typed diagnostic", purpose: "diagnostic", baseline_result_ids: [], contenders,
+    conditions: {task_ids: ["quill-shared-toolbar-focus"], attempts: 1},
+    comparison: {contenders},
+    trials: contenders.map((row, i) => ({task_id: "quill-shared-toolbar-focus", contender_id: row.id, attempt: 1,
+      status: "completed", correctness: true, protected_state: null, usage_complete: true,
+      pricing_digest: "pricing-v1", cost_usd: i + 1, duration_seconds: (i + 1) * 60, interaction_count: 0,
+      model_usage: [{input_tokens: 10, output_tokens: 2, cache_read_tokens: 0, cache_write_tokens: 0}],
+      code_review: {status: "completed", protocol_id: "same", findings: [{status: "confirmed", severity: "P2"}]}
+    }))
+  }};
+}
+
+function descendants(node) { return [node, ...node.children.flatMap(descendants)]; }
+
+test("task types show observed quality and efficiency with untested categories, never a category winner", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag)};
+  try {
+    const current = typedReport();
+    const view = renderTaskTypes(current, current.experiment.trials);
+    assert.match(view.textContent, /By task type/);
+    assert.match(view.textContent, /PolishNot tested/);
+    assert.match(view.textContent, /Small changesNot tested/);
+    assert.match(view.textContent, /All harnesses passed the task tests/);
+    assert.match(view.textContent, /Nothing: 1 confirmed/);
+    assert.match(view.textContent, /Nothing had the lowest recorded execution cost/);
+    assert.match(view.textContent, /protected-file verification is unknown/i);
+    assert.match(view.textContent, /do not establish a winner/);
+    const target = descendants(view).find(node => node.tag === "a" && node.textContent === "Nothing");
+    const url = new URL(target.href, "https://example.invalid");
+    assert.equal(url.searchParams.get("type"), "feature");
+    assert.equal(url.searchParams.get("version"), "nothing");
+    assert.equal(url.searchParams.get("comparison"), "typed");
+    current.experiment.trials[0].code_review.protocol_id = "other";
+    assert.match(renderTaskTypes(current, current.experiment.trials).textContent, /Review protocols differ/);
+    current.experiment.trials.pop();
+    const incomplete = renderTaskTypes(current, current.experiment.trials).textContent;
+    assert.match(incomplete, /Trial evidence is incomplete or ambiguous/);
+    assert.doesNotMatch(incomplete, /lowest recorded/);
+  } finally { globalThis.document = previousDocument; }
+});
+
+test("type evidence filters preserve exact baselines and expose invalid or empty selections", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag)};
+  try {
+    const current = typedReport();
+    current.experiment.conditions.task_ids.push("react-accent-polish");
+    const baseline = structuredClone(current);
+    baseline.report_id = "baseline";
+    baseline.experiment.trials = [current.experiment.trials.pop()];
+    const unrelated = structuredClone(baseline);
+    unrelated.report_id = "unrelated";
+    unrelated.experiment.trials[0].contender_id = "unrelated";
+    current.experiment.baseline_result_ids = ["baseline"];
+    const reports = [current, baseline, unrelated];
+    const view = renderEvidence(reports, {comparison: "typed", type: "feature", version: "studio"});
+    assert.match(view.textContent, /Studio Moser · trial 1/);
+    assert.doesNotMatch(view.textContent, /Nothing · trial 1|react accent polish|unrelated · trial/);
+    assert.match(renderEvidence(reports, {comparison: "typed", type: "grouped"}).textContent, /No tasks of this type/);
+    assert.match(renderEvidence(reports, {comparison: "typed", type: "invalid"}).textContent, /That task type is unavailable/);
+    assert.match(renderEvidence(reports, {comparison: "typed", type: "feature", task: "react-accent-polish"}).textContent, /That task is not part of this task type/);
+  } finally { globalThis.document = previousDocument; }
 });

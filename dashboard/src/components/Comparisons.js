@@ -1,3 +1,5 @@
+import {TASK_TYPES, taskType, summarizeTaskTypes} from "./Task_Types.js";
+
 // The runner owns verdicts; this module selects and presents recorded evidence.
 export function comparisonReports(reports) {
   return reports.filter(r => r.schema_version === "3" && r.experiment?.purpose !== "diagnostic")
@@ -271,6 +273,7 @@ export function renderComparison(reports, state = {}) {
   verdict.append(el("p", verdictContent.summary));
   verdict.append(evidenceBadge(current));
   root.append(verdict);
+  root.append(renderTaskTypes(current, trials));
   if (comparison?.contenders.length) {
     root.append(contenderTable(comparison.contenders, trials, current.report_id));
     root.append(el("p", "Tests passed counts completed trials whose task tests passed; protected-file verification is reported separately. Execution cost includes failed attempts and all recorded model calls; figures use shared standard token rates, excluding pricing premiums and tool charges. Time is end-to-end agent work per trial.", "comparison-meta"));
@@ -309,6 +312,90 @@ export function renderComparison(reports, state = {}) {
   const provenance = list([`Runtime: ${kickoff.provider} ${kickoff.runtime_version}`, `Decision policy: ${comparison?.policy_id ?? experiment.conditions.decision_policy}`, `Evidence: ${current.report_id}`, `Verified change record: ${experiment.change.diff_digest}`]);
   root.append(detail("Sources and configuration", provenance));
   return root;
+}
+
+function taskTypeObservation(group, report) {
+  const rows = group.rows;
+  if (!rows.length || rows.some(row => !row.complete)) return "Trial evidence is incomplete or ambiguous. Complete the scheduled trials before comparing this type.";
+  const reviews = rows.map(row => summarizeCodeReview({id: row.id, scheduled: row.scheduled}, row.trials));
+  const observations = [rows.every(row => row.passed === row.scheduled)
+    ? "All harnesses passed the task tests."
+    : rows.map(row => `${row.label}: ${row.passed} / ${row.scheduled} task tests passed`).join("; ") + "."];
+  const protocols = new Set(reviews.map(review => review.protocol_id).filter(Boolean));
+  if (reviews.some(review => review.status === "incompatible") || protocols.size > 1) observations.push("Review protocols differ; code quality cannot be compared.");
+  else if (reviews.some(review => review.status !== "completed") || protocols.size !== 1) observations.push("Final-patch review is missing or incomplete; remaining code quality is unknown.");
+  else {
+    observations.push(rows.map((row, index) => `${row.label}: ${Object.values(reviews[index].confirmed).reduce((sum, count) => sum + count, 0)} confirmed remaining defects`).join("; ") + ".");
+    if (reviews.some(review => review.unconfirmed)) observations.push("Unconfirmed reviewer claims remain unresolved.");
+  }
+  if (rows.some(row => row.trials.some(trial => trial.protected_state == null))) observations.push("Protected-file verification is unknown for some trials.");
+  if (rows.some(row => row.trials.some(trial => trial.protected_state === false))) observations.push("Protected files changed in some trials.");
+  if (report.experiment.comparison?.status === "incompatible_conditions") observations.push("The recorded conditions are incompatible; efficiency cannot be compared.");
+  else if (rows.length > 1) {
+    const samePricing = rows.every(row => row.pricing_digest) && new Set(rows.map(row => row.pricing_digest)).size === 1;
+    if (!samePricing) observations.push("Recorded costs lack one matching pricing schedule; cost cannot be compared.");
+    for (const [field, label] of [["total_cost_usd", "lowest recorded execution cost"], ["mean_duration_seconds", "shortest recorded time per trial"]]) {
+      if ((field === "total_cost_usd" && !samePricing) || !rows.every(row => Number.isFinite(row[field]))) continue;
+      const minimum = Math.min(...rows.map(row => row[field]));
+      const leaders = rows.filter(row => row[field] === minimum);
+      if (leaders.length === 1) observations.push(`${leaders[0].label} had the ${label}.`);
+      else observations.push(`${leaders.length === rows.length ? "All harnesses" : leaders.map(row => row.label).join(" and ")} tied for the ${label}.`);
+    }
+  }
+  return observations.join(" ");
+}
+
+export function renderTaskTypes(report, trials) {
+  const section = el("section", null, "task-types");
+  section.append(el("h2", "By task type"), el("p", "Results within this comparison, including its selected baselines. These observations do not establish a winner for a whole task type.", "comparison-meta"));
+  const groups = summarizeTaskTypes(report, trials);
+  for (const group of [...groups.filter(group => group.task_ids.length), ...groups.filter(group => !group.task_ids.length)]) {
+    const entry = el("section", null, "task-type");
+    entry.append(el("h3", group.label));
+    if (!group.task_ids.length) {
+      entry.append(el("p", `Not tested in this comparison. ${group.description}`, "comparison-meta"));
+      section.append(entry);
+      continue;
+    }
+    entry.append(el("p", `${group.task_ids.length} ${group.task_ids.length === 1 ? "task" : "tasks"} × ${report.experiment.conditions.attempts} ${report.experiment.conditions.attempts === 1 ? "repetition" : "repetitions"} per harness. ${group.description}`, "comparison-meta"));
+    entry.append(el("p", taskTypeObservation(group, report)));
+    const region = el("div", null, "comparison-table-region");
+    region.setAttribute("role", "region");
+    region.setAttribute("aria-label", `${group.label} harness results`);
+    region.setAttribute("tabindex", "0");
+    const table = el("table", null, "comparison-table task-type-table");
+    const head = el("thead");
+    const heading = el("tr");
+    for (const title of ["Harness", "Tests & review", "Recorded cost", "Time / trial", "Tokens"]) {
+      const cell = el("th", title);
+      cell.scope = "col";
+      heading.append(cell);
+    }
+    head.append(heading);
+    const body = el("tbody");
+    for (const row of group.rows) {
+      const item = el("tr");
+      const name = el("th");
+      name.scope = "row";
+      name.append(link(row.label, "/Run_Detail", {comparison: report.report_id, type: group.id, version: row.id}));
+      const quality = el("td", `${row.passed} / ${row.scheduled} tests passed`);
+      if (!row.complete) quality.append(el("span", "Incomplete or ambiguous evidence", "comparison-note"));
+      const review = summarizeCodeReview({id: row.id, scheduled: row.scheduled}, row.trials);
+      quality.append(el("span", codeReviewCoverageLabel(review), "comparison-note"));
+      if (review.status !== "not_reviewed") {
+        quality.append(el("span", `${severities.map(severity => `${severity}: ${codeReviewCountLabel(review, review.confirmed[severity])}`).join(" · ")}; unconfirmed: ${codeReviewCountLabel(review, review.unconfirmed)}`, "comparison-note"));
+      }
+      item.append(name, quality, el("td", money(row.total_cost_usd)), el("td", seconds(row.mean_duration_seconds)), el("td", tokens(row.total_tokens)));
+      body.append(item);
+    }
+    table.append(head, body);
+    region.append(table);
+    const measurements = el("div");
+    measurements.append(region, el("p", "Recorded execution cost uses each trial’s original pricing schedule and includes failed attempts and all recorded model calls. Review evaluation cost is separate. Missing or incomplete measurements remain unavailable.", "comparison-meta"), link(`Inspect ${group.label.toLowerCase()} evidence`, "/Run_Detail", {comparison: report.report_id, type: group.id}));
+    entry.append(detail("Compare harness measurements", measurements));
+    section.append(entry);
+  }
+  return section;
 }
 
 function contenderTable(rows, trials, reportId) {
@@ -504,10 +591,28 @@ export function renderEvidence(reports, state = {}) {
   root.append(el("h2", current.experiment.label), evidenceBadge(current));
   const trials = referencedTrials(reports, current);
   const names = new Map(reports.flatMap(r => r.experiment?.contenders ?? []).map(c => [c.id, c.label]));
-  const selectLabel = el("label", "Task ");
+  const types = [...TASK_TYPES, {id: "unclassified", label: "Unclassified"}];
+  const typeLabel = el("label", "Task type ", "evidence-filter");
+  const typeSelect = el("select");
+  typeSelect.setAttribute("aria-label", "Filter task type");
+  for (const type of [{id: "", label: "All types"}, ...types]) {
+    const option = el("option", type.label);
+    option.value = type.id;
+    option.selected = type.id === (state.type ?? "");
+    typeSelect.append(option);
+  }
+  typeSelect.addEventListener("change", () => { location.href = comparisonUrl("/Run_Detail", {...state, comparison: current.report_id, type: typeSelect.value, task: ""}); });
+  typeLabel.append(typeSelect);
+  root.append(typeLabel);
+  if (state.type && !types.some(type => type.id === state.type)) {
+    root.append(el("p", "That task type is unavailable. Select an available type."));
+    return root;
+  }
+  const tasks = current.experiment.conditions.task_ids.filter(task => !state.type || taskType(task) === state.type);
+  const selectLabel = el("label", "Task ", "evidence-filter");
   const select = el("select");
   select.setAttribute("aria-label", "Filter task evidence");
-  for (const task of ["", ...current.experiment.conditions.task_ids]) {
+  for (const task of ["", ...tasks]) {
     const option = el("option", task || "All tasks");
     option.value = task;
     option.selected = task === (state.task ?? "");
@@ -517,7 +622,9 @@ export function renderEvidence(reports, state = {}) {
   selectLabel.append(select);
   root.append(selectLabel);
   if (state.task && !current.experiment.conditions.task_ids.includes(state.task)) root.append(el("p", "That task is not part of this comparison."));
-  for (const task of current.experiment.conditions.task_ids.filter(t => !state.task || state.task === t)) {
+  if (state.task && current.experiment.conditions.task_ids.includes(state.task) && !tasks.includes(state.task)) root.append(el("p", "That task is not part of this task type. Select another task or type."));
+  if (!tasks.length) root.append(el("p", "No tasks of this type were scheduled in this comparison."));
+  for (const task of tasks.filter(t => !state.task || state.task === t)) {
     const section = el("section");
     section.append(el("h3", task.replaceAll("-", " ")));
     const selected = trials.filter(t => t.task_id === task && (!state.version || state.version === t.contender_id));
