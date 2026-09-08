@@ -108,6 +108,38 @@ def test_codex_adapter_prefixes_explicit_skill_before_base_run(
     assert instructions == ["$harness:execute Original task\n"]
 
 
+def test_codex_native_adapter_reserves_the_provider_recovery_allowance(tmp_path, monkeypatch):
+    calls = []
+
+    async def fake_stage(environment, settings):
+        del environment
+        calls.append(("stage", settings))
+        return "python3 /tmp/Harness_Native_Conversation/Native_Conversation.py"
+
+    async def fake_exec(self, environment, command, **kwargs):
+        del self, environment
+        calls.append(("exec", command, kwargs))
+
+    monkeypatch.setattr("harness_testing.Codex_Agent.stage_controller", fake_stage)
+    monkeypatch.setattr("harness_testing.Codex_Agent.Codex.exec_as_agent", fake_exec)
+    agent = HarnessCodex(
+        logs_dir=tmp_path,
+        model_name="openai/gpt-5.6-terra",
+        version="0.150.1",
+        conversation={
+            "policy": {"schema_version": "1", "interaction_limit": 1, "facts": {}, "rules": []},
+            "timeout_seconds": 4,
+            "provider_recovery_seconds": 600,
+        },
+    )
+    agent._conversation_instruction = "Task"
+
+    asyncio.run(agent.exec_as_agent(object(), "codex exec Task"))
+
+    assert calls[0][1]["provider_recovery_seconds"] == 600
+    assert calls[1][2]["timeout_sec"] == 614
+
+
 def _write_session(session_dir: Path) -> None:
     events = [
         {

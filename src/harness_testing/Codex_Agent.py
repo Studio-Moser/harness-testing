@@ -256,7 +256,11 @@ class HarnessCodex(Codex):
                 "if [ -s ~/.nvm/nvm.sh ]; then . ~/.nvm/nvm.sh; fi; "
                 + await stage_controller(environment, config)
             )
-            timeout_sec = self._conversation["timeout_seconds"] + 10
+            timeout_sec = (
+                self._conversation["timeout_seconds"]
+                + self._conversation.get("provider_recovery_seconds", 0)
+                + 10
+            )
         return await super().exec_as_agent(
             environment, command, env=env, cwd=cwd, timeout_sec=timeout_sec
         )

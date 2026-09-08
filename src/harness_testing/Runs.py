@@ -1117,6 +1117,7 @@ def _job_document(
     experiment: dict | None = None,
 ) -> tuple[dict[str, object], str]:
     bundle = _bundle_path(root, cell)
+    recovery = experiment["conditions"].get("provider_recovery_seconds", 0) if experiment else 0
     packages = _package_versions(versions)
     if cell.provider == "claude":
         agent_identity = {"import_path": _AGENT_ADAPTERS["claude"][0]}
@@ -1163,6 +1164,8 @@ def _job_document(
                 for entry in conditions["executor_inventory"]
             ],
         }
+        if "provider_recovery_seconds" in conditions:
+            kwargs["conversation"]["provider_recovery_seconds"] = recovery
         if conditions["task_variant"] == "deepswe":
             kwargs["conversation"]["artifact_patch_base_commit"] = base_commit
         if cell.provider == "codex":
@@ -1209,8 +1212,10 @@ def _job_document(
             {
                 **agent_identity,
                 "model_name": model_name,
-                "override_timeout_sec": timeout + 15 if experiment is not None else timeout,
-                "max_timeout_sec": timeout + 15 if experiment is not None else timeout,
+                "override_timeout_sec": (
+                    timeout + recovery + 15 if experiment is not None else timeout
+                ),
+                "max_timeout_sec": timeout + recovery + 15 if experiment is not None else timeout,
                 "extra_allowed_hosts": list(hosts),
                 "skills": skills,
                 "kwargs": kwargs,
@@ -1640,6 +1645,14 @@ def format_plan(manifest: RunManifest) -> str:
         _format_publication(manifest),
         "Cells:",
     ]
+    conditions = manifest.provenance.get("experiment", {}).get("conditions", {})
+    if "provider_recovery_seconds" in conditions:
+        recovery = conditions["provider_recovery_seconds"]
+        index = lines.index(f"Agent timeout: {manifest.agent_timeout_seconds}s") + 1
+        lines[index:index] = [
+            f"Provider recovery allowance: {recovery}s (once per trial, on transport errors only)",
+            f"Maximum agent wall time: {manifest.agent_timeout_seconds + recovery}s",
+        ]
     for cell in manifest.cells:
         commit = f", Harness {cell.harness_commit}" if cell.harness_commit else ""
         lines.append(

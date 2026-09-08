@@ -91,6 +91,31 @@ def test_only_common_conditions_change_comparison_compatibility():
     assert comparison_mismatches(first, changed) == ["kickoff.effort"]
 
 
+@pytest.mark.parametrize("allowance", [0, 600, 3600])
+def test_provider_recovery_is_an_explicit_comparison_condition(allowance):
+    document = request_document()
+    document["conditions"]["provider_recovery_seconds"] = allowance
+    assert validate_experiment_request(document) == []
+    original = request_document()["conditions"]
+    assert comparison_mismatches(original, document["conditions"]) == [
+        "provider_recovery_seconds"
+    ]
+
+
+@pytest.mark.parametrize("allowance", [-1, True, 0.5, 600.0, 3601, float("inf")])
+def test_invalid_provider_recovery_is_rejected(allowance):
+    document = request_document()
+    document["conditions"]["provider_recovery_seconds"] = allowance
+    assert validate_experiment_request(document)
+
+
+def test_recovery_requires_a_supported_native_protocol():
+    document = request_document()
+    document["conditions"]["kickoff"]["provider"] = "claude"
+    document["conditions"]["provider_recovery_seconds"] = 600
+    assert any("Codex" in e for e in validate_experiment_request(document))
+
+
 def test_contender_identity_tracks_effective_inputs_not_labels():
     effective = {
         "sources": [{"commit": "a" * 40}],

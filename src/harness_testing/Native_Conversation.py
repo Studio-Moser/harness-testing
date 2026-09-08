@@ -45,6 +45,14 @@ else:
 
 _REMOTE_DIR = "/tmp/Harness_Native_Conversation"
 _COMMIT = re.compile(r"^[0-9a-f]{40}$")
+_CODEX_TRANSPORT_ERRORS = frozenset(
+    {
+        "httpConnectionFailed",
+        "responseStreamConnectionFailed",
+        "responseStreamDisconnected",
+        "responseTooManyFailedAttempts",
+    }
+)
 
 
 def capture_committed_patch(workspace: Path, base_commit: str, destination: Path) -> None:
@@ -66,6 +74,11 @@ def validate_conversation(config: dict, provider: str) -> None:
     validate_policy(config["policy"])
     if type(config.get("timeout_seconds")) not in (int, float) or config["timeout_seconds"] <= 0:
         raise ValueError("native_timeout_invalid: positive timeout_seconds required")
+    recovery = config.get("provider_recovery_seconds", 0)
+    if type(recovery) is not int or not 0 <= recovery <= 3600:
+        raise ValueError("native_provider_recovery_invalid")
+    if provider != "codex" and recovery:
+        raise ValueError("native_provider_recovery_unsupported")
     expected = "openai" if provider == "codex" else "anthropic"
     for entry in config.get("executor_inventory", []):
         if entry.get("provider") not in {"openai", "anthropic"}:
@@ -82,6 +95,22 @@ def validate_conversation(config: dict, provider: str) -> None:
             raise ValueError(
                 "external_claude_adapter_unavailable: frozen Harness implements external Codex only"
             )
+
+
+def _codex_transport_error(error) -> bool:
+    """Accept only documented structured provider transport failures."""
+    if not isinstance(error, dict):
+        return False
+    info = error.get("codexErrorInfo")
+    if not isinstance(info, dict) or len(info) != 1:
+        return False
+    name, details = next(iter(info.items()))
+    if name not in _CODEX_TRANSPORT_ERRORS or not isinstance(details, dict):
+        return False
+    if set(details) != {"httpStatusCode"}:
+        return False
+    status = details.get("httpStatusCode")
+    return status is None or (type(status) is int and 500 <= status <= 599)
 
 
 def approved_hooks_from_bundle(bundle: Path) -> list[dict]:
@@ -269,6 +298,17 @@ class Conversation:
         self.models = []
         self.root_finished = False
         self.hook_trust = None
+        configured_recovery = config.get("provider_recovery_seconds", 0)
+        self.provider_recovery_seconds = (
+            configured_recovery
+            if type(configured_recovery) is int and 0 <= configured_recovery <= 3600
+            else 0
+        )
+        self.provider_recovery_configured = "provider_recovery_seconds" in config and (
+            type(configured_recovery) is int and 0 <= configured_recovery <= 3600
+        )
+        self.transport_error_count = 0
+        self.provider_recovery_applied = False
 
     def rpc(self, method, params):
         self.counter += 1
@@ -335,6 +375,23 @@ class Conversation:
     def fail(self, reason, status="infrastructure_failure"):
         self.status, self.reason = status, reason
         return []
+
+    def record_transport_error(self):
+        self.transport_error_count += 1
+        if self.provider_recovery_seconds and not self.provider_recovery_applied:
+            self.provider_recovery_applied = True
+
+    def active_transport_error(self, params):
+        if not isinstance(params, dict):
+            return False
+        thread_id, turn_id = params.get("threadId"), params.get("turnId")
+        return (
+            isinstance(thread_id, str)
+            and isinstance(turn_id, str)
+            and type(params.get("willRetry")) is bool
+            and self.active_turns.get(thread_id) == turn_id
+            and _codex_transport_error(params.get("error"))
+        )
 
     def finish_turn(self):
         reply = self.reply(self.text.strip())
@@ -519,6 +576,11 @@ class Conversation:
                     },
                 }
             ]
+        if method == "error" and self.active_transport_error(params):
+            self.record_transport_error()
+            if params.get("willRetry") is True:
+                return []
+            return self.fail("provider_transport_interrupted")
         if method == "turn/started":
             self.active_turns[params["threadId"]] = params["turn"]["id"]
         if method == "item/completed" and params.get("threadId") == self.root:
@@ -526,9 +588,18 @@ class Conversation:
             if item.get("type") == "agentMessage":
                 self.text = item.get("text", "")
         if method == "turn/completed":
-            self.active_turns.pop(params.get("threadId"), None)
-            if params.get("threadId") == self.root:
-                if params.get("turn", {}).get("status") != "completed":
+            thread_id, turn = params.get("threadId"), params.get("turn", {})
+            active = self.active_turns.get(thread_id) == turn.get("id")
+            self.active_turns.pop(thread_id, None)
+            if (
+                active
+                and turn.get("status") != "completed"
+                and _codex_transport_error(turn.get("error"))
+            ):
+                self.record_transport_error()
+                return self.fail("provider_transport_interrupted")
+            if thread_id == self.root:
+                if turn.get("status") != "completed":
                     return self.fail("native_turn_failed", "agent_failed")
                 return self.finish_turn()
             if self.root_finished and not self.active_turns:
@@ -662,6 +733,18 @@ def run_controller(config: dict) -> dict:
     stderr = log_dir / "Native_Stderr.txt"
     try:
         validate_conversation(config, state.provider)
+        base_deadline = started + config["timeout_seconds"]
+
+        def deadline():
+            if state.provider_recovery_applied:
+                return base_deadline + state.provider_recovery_seconds
+            return base_deadline
+
+        def deadline_failure():
+            if state.transport_error_count:
+                return state.fail("provider_transport_interrupted")
+            return state.fail("trial_time_limit", "timeout")
+
         version = subprocess.run(
             [config["command"][0], "--version"],
             capture_output=True,
@@ -733,7 +816,7 @@ def run_controller(config: dict) -> dict:
                     if (
                         message.get("method") in {"thread/start", "thread/resume", "turn/start"}
                         or message.get("type") == "user"
-                    ) and time.monotonic() >= started + config["timeout_seconds"]:
+                    ) and time.monotonic() >= deadline():
                         raise TimeoutError("trial_time_limit")
                     if trial_started is None and (
                         message.get("method") in {"thread/start", "thread/resume"}
@@ -748,10 +831,10 @@ def run_controller(config: dict) -> dict:
 
             send(initial)
             while state.status == "pending":
-                if time.monotonic() - started >= config["timeout_seconds"]:
-                    state.fail("trial_time_limit", "timeout")
+                if time.monotonic() >= deadline():
+                    deadline_failure()
                     break
-                if not selector.select(timeout=min(0.2, config["timeout_seconds"])):
+                if not selector.select(timeout=min(0.2, max(0, deadline() - time.monotonic()))):
                     if process.poll() is not None:
                         state.fail("native_process_exited_without_terminal_event", "agent_failed")
                     continue
@@ -792,7 +875,10 @@ def run_controller(config: dict) -> dict:
                         incomplete.append("malformed_native_event")
             selector.close()
     except TimeoutError:
-        state.fail("trial_time_limit", "timeout")
+        if state.transport_error_count:
+            state.fail("provider_transport_interrupted")
+        else:
+            state.fail("trial_time_limit", "timeout")
     except Exception as error:
         # Provider stderr remains local; do not copy exception text containing
         # arbitrary tool output or credential paths into the reportable status.
@@ -844,7 +930,11 @@ def run_controller(config: dict) -> dict:
             duration_seconds=(finished or time.monotonic()) - (trial_started or started),
             identities=state.identities,
             incomplete_reasons=incomplete
-            + ([state.reason] if state.reason == "executor_condition_mismatch" else []),
+            + (
+                [state.reason]
+                if state.reason in {"executor_condition_mismatch", "provider_transport_interrupted"}
+                else []
+            ),
             executor_inventory=(
                 config["executor_inventory"]
                 + [
@@ -873,6 +963,12 @@ def run_controller(config: dict) -> dict:
                 "provisioning_seconds": (trial_started or started) - started,
             }
         )
+        if state.provider_recovery_configured or state.transport_error_count:
+            evidence["provider_recovery"] = {
+                "allowance_seconds": state.provider_recovery_seconds,
+                "transport_error_count": state.transport_error_count,
+                "extension_applied": state.provider_recovery_applied,
+            }
         (log_dir / "Trial_Evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
         (log_dir / "Scripted_User_Decisions.json").write_text(
             json.dumps(state.decisions, indent=2) + "\n"

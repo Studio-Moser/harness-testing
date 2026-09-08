@@ -231,6 +231,279 @@ def test_initialization_is_before_first_model_request():
     assert first[0]["type"] == "control_request"
 
 
+@pytest.mark.parametrize("value", [True, -1, 1.0, float("nan"), "600", [], {}])
+def test_provider_recovery_allowance_rejects_invalid_shapes(value):
+    from harness_testing.Native_Conversation import validate_conversation
+
+    with pytest.raises(ValueError, match="native_provider_recovery_invalid"):
+        validate_conversation({**config("codex"), "provider_recovery_seconds": value}, "codex")
+
+
+def test_provider_recovery_allowance_is_codex_only():
+    from harness_testing.Native_Conversation import validate_conversation
+
+    with pytest.raises(ValueError, match="native_provider_recovery_unsupported"):
+        validate_conversation({**config("claude"), "provider_recovery_seconds": 1}, "claude")
+
+
+def test_codex_transport_error_uses_one_recovery_allowance_across_children(tmp_path):
+    import sys
+
+    from harness_testing.Native_Conversation import run_controller
+
+    server = tmp_path / "Recovery_Server.py"
+    server.write_text("""import json, sys, time
+mode = sys.argv[1]
+emit = lambda event: print(json.dumps(event), flush=True)
+def transport(thread_id, turn_id):
+    emit({
+        "method": "error",
+        "params": {
+            "threadId": thread_id,
+            "turnId": turn_id,
+            "willRetry": True,
+            "error": {
+                "codexErrorInfo": {
+                    "responseStreamDisconnected": {"httpStatusCode": None}
+                }
+            },
+        },
+    })
+def completed(thread_id, turn_id):
+    emit({
+        "method": "turn/completed",
+        "params": {
+            "threadId": thread_id,
+            "turn": {"id": turn_id, "status": "completed"},
+        },
+    })
+for line in sys.stdin:
+    request = json.loads(line)
+    method = request.get("method")
+    if method == "model/list":
+        result = {
+            "data": [
+                {
+                    "model": "root-model",
+                    "supportedReasoningEfforts": [{"reasoningEffort": "high"}],
+                }
+            ]
+        }
+    elif method == "thread/start":
+        result = {
+            "thread": {"id": "root"},
+            "model": "root-model",
+            "reasoningEffort": "high",
+        }
+    else:
+        result = {}
+    if method == "turn/start":
+        emit({
+            "method": "turn/started",
+            "params": {"threadId": "root", "turn": {"id": "root-turn"}},
+        })
+        emit({
+            "method": "thread/tokenUsage/updated",
+            "params": {
+                "threadId": "root",
+                "turnId": "root-turn",
+                "tokenUsage": {"total": {"inputTokens": 3, "outputTokens": 2}},
+            },
+        })
+        if mode in {"child", "repeat"}:
+            emit({
+                "method": "turn/started",
+                "params": {"threadId": "child", "turn": {"id": "child-turn"}},
+            })
+            thread_id, turn_id = "child", "child-turn"
+        else:
+            thread_id, turn_id = "root", "root-turn"
+        if mode != "no-error":
+            transport(thread_id, turn_id)
+        if mode == "repeat":
+            time.sleep(0.05)
+            transport("child", "child-turn")
+            time.sleep(1.4)
+        else:
+            time.sleep(0.45 if mode in {"recovered", "child"} else 0.8)
+        emit({
+            "method": "item/completed",
+            "params": {
+                "threadId": "root",
+                "item": {"type": "agentMessage", "text": "Implemented."},
+            },
+        })
+        completed("root", "root-turn")
+        if mode == "child":
+            completed("child", "child-turn")
+    if "id" in request:
+        emit({"id": request["id"], "result": result})
+""")
+
+    def run(mode, *, recovery=0):
+        return run_controller(
+            {
+                **config("codex"),
+                "command": [sys.executable, str(server), mode],
+                "cwd": str(tmp_path),
+                "log_dir": str(tmp_path / mode),
+                "timeout_seconds": 0.25,
+                "provider_recovery_seconds": recovery,
+            }
+        )
+
+    recovered = run("recovered", recovery=1)
+    assert recovered["status"] == "completed"
+    assert recovered["provider_recovery"] == {
+        "allowance_seconds": 1,
+        "transport_error_count": 1,
+        "extension_applied": True,
+    }
+
+    child = run("child", recovery=1)
+    assert child["status"] == "completed"
+    assert child["provider_recovery"]["transport_error_count"] == 1
+    assert child["provider_recovery"]["extension_applied"] is True
+
+    repeated = run("repeat", recovery=1)
+    assert repeated["status"] == "infrastructure_failure"
+    assert repeated["terminal_reason"] == "provider_transport_interrupted"
+    assert repeated["provider_recovery"]["transport_error_count"] == 2
+    assert repeated["provider_recovery"]["extension_applied"] is True
+
+    unchanged = run("no-error")
+    assert unchanged["status"] == "timeout"
+    assert unchanged["provider_recovery"] == {
+        "allowance_seconds": 0,
+        "transport_error_count": 0,
+        "extension_applied": False,
+    }
+
+    expired = run("recovered", recovery=0)
+    assert expired["status"] == "infrastructure_failure"
+    assert expired["terminal_reason"] == "provider_transport_interrupted"
+    assert expired["usage_complete"] is False
+
+
+def test_codex_transport_error_requires_active_typed_provider_event():
+    settings = {**config("codex"), "provider_recovery_seconds": 1}
+    state = Conversation(settings)
+    state.root = "root"
+    state.active_turns["root"] = "turn"
+    state.handle(
+        {
+            "method": "error",
+            "params": {
+                "threadId": "root",
+                "turnId": "turn",
+                "willRetry": False,
+                "error": {
+                    "codexErrorInfo": {
+                        "responseStreamDisconnected": {"httpStatusCode": None}
+                    }
+                },
+            },
+        }
+    )
+    assert state.status == "infrastructure_failure"
+    assert state.reason == "provider_transport_interrupted"
+    assert state.transport_error_count == 1
+
+    state = Conversation(settings)
+    state.root = "root"
+    state.active_turns["root"] = "turn"
+    state.handle(
+        {
+            "method": "error",
+            "params": {
+                "threadId": "root",
+                "turnId": "turn",
+                "willRetry": True,
+                "error": {
+                    "codexErrorInfo": {
+                        "responseStreamDisconnected": {"httpStatusCode": 401}
+                    }
+                },
+            },
+        }
+    )
+    assert state.status == "pending"
+    assert state.transport_error_count == 0
+    assert state.provider_recovery_applied is False
+
+    for retry in (None, "true", 1):
+        state = Conversation(settings)
+        state.root = "root"
+        state.active_turns["root"] = "turn"
+        state.handle(
+            {
+                "method": "error",
+                "params": {
+                    "threadId": "root",
+                    "turnId": "turn",
+                    "willRetry": retry,
+                    "error": {
+                        "codexErrorInfo": {
+                            "responseStreamDisconnected": {"httpStatusCode": None}
+                        }
+                    },
+                },
+            }
+        )
+        assert state.status == "pending"
+        assert state.transport_error_count == 0
+        assert state.provider_recovery_applied is False
+
+    state = Conversation(settings)
+    state.root = "root"
+    state.active_turns["root"] = "turn"
+    state.handle(
+        {
+            "method": "error",
+            "params": {
+                "threadId": "root",
+                "turnId": "turn",
+                "willRetry": True,
+                "error": {
+                    "codexErrorInfo": {
+                        "responseStreamDisconnected": {
+                            "httpStatusCode": None,
+                            "unexpected": "value",
+                        }
+                    }
+                },
+            },
+        }
+    )
+    assert state.status == "pending"
+    assert state.transport_error_count == 0
+    assert state.provider_recovery_applied is False
+
+    state = Conversation(settings)
+    state.root = "root"
+    state.active_turns["child"] = "turn"
+    state.handle(
+        {
+            "method": "turn/completed",
+            "params": {
+                "threadId": "child",
+                "turn": {
+                    "id": "turn",
+                    "status": "failed",
+                    "error": {
+                        "codexErrorInfo": {
+                            "responseTooManyFailedAttempts": {"httpStatusCode": None}
+                        }
+                    },
+                },
+            },
+        }
+    )
+    assert state.status == "infrastructure_failure"
+    assert state.reason == "provider_transport_interrupted"
+    assert state.transport_error_count == 1
+
+
 def test_controller_runs_two_native_wire_turns_and_preserves_timeout_usage(tmp_path):
     import json
     import sys

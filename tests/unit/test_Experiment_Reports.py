@@ -58,6 +58,41 @@ def test_new_report_fields_are_strict():
     assert schema["$defs"]["comparison"]["additionalProperties"] is False
 
 
+def test_recovery_evidence_is_public_safe_and_optional():
+    report = json.loads((ROOT / "tests/Fixtures/Run_Reports/Comparison.json").read_text())
+    trial = report["experiment"]["trials"][0]
+    report["experiment"]["conditions"]["provider_recovery_seconds"] = 600
+    trial["provider_recovery"] = {
+        "allowance_seconds": 600, "transport_error_count": 4, "extension_applied": True,
+    }
+    trial["status"] = "infrastructure_failure"
+    trial["incomplete_reasons"] = ["provider_transport_interrupted"]
+    report["report_id"] = run_report_id(report)
+    assert validate_run_report(ROOT, report) == ()
+    trial["provider_recovery"]["raw_error"] = "must remain private"
+    report["report_id"] = run_report_id(report)
+    assert validate_run_report(ROOT, report)
+
+
+def test_outer_timeout_preserves_native_transport_classification(tmp_path):
+    from harness_testing.Experiment_Reports import _safe_trial
+
+    (tmp_path / "agent").mkdir()
+    (tmp_path / "result.json").write_text(json.dumps({
+        "exception_info": {"exception_type": "AgentTimeoutError"},
+    }))
+    recovery = {"allowance_seconds": 600, "transport_error_count": 2,
+                "extension_applied": True}
+    (tmp_path / "agent/Trial_Evidence.json").write_text(json.dumps({
+        "status": "infrastructure_failure", "provider_recovery": recovery,
+        "incomplete_reasons": ["provider_transport_interrupted"],
+    }))
+    trial = _safe_trial(ROOT, "rust-quoted-value-parser", "fixture", 1, tmp_path)
+    assert trial["status"] == "infrastructure_failure"
+    assert trial["provider_recovery"] == recovery
+    assert trial["cost_usd"] is None
+
+
 def reviewed_report():
     report = json.loads((ROOT / "tests/Fixtures/Run_Reports/Comparison.json").read_text())
     digest = "sha256:" + "a" * 64

@@ -92,6 +92,22 @@ def _safe_trial(
     native = _read(directory / "agent/Trial_Evidence.json") if directory else None
     rewards = _read(directory / "verifier/reward.json") if directory else None
     native = native or {}
+    recovery = native.get("provider_recovery")
+    if recovery is not None:
+        if not isinstance(recovery, dict) or not (
+            type(recovery.get("allowance_seconds")) is int
+            and 0 <= recovery["allowance_seconds"] <= 3600
+            and type(recovery.get("transport_error_count")) is int
+            and recovery["transport_error_count"] >= 0
+            and type(recovery.get("extension_applied")) is bool
+            and (not recovery["extension_applied"] or (
+                recovery["allowance_seconds"] > 0 and recovery["transport_error_count"] > 0
+            ))
+        ):
+            raise ValueError("invalid provider recovery evidence")
+        recovery = {key: recovery[key] for key in (
+            "allowance_seconds", "transport_error_count", "extension_applied"
+        )}
     status = native.get("status", "infrastructure_failure" if result else "pending")
     if status not in {
         "completed",
@@ -105,7 +121,11 @@ def _safe_trial(
         status = "agent_failed"
     if (result or {}).get("exception_info"):
         exception = result["exception_info"].get("exception_type")
-        status = "timeout" if exception == "AgentTimeoutError" else "infrastructure_failure"
+        status = (
+            "timeout" if exception == "AgentTimeoutError"
+            and not (recovery and recovery["transport_error_count"])
+            else "infrastructure_failure"
+        )
     score = (rewards or {}).get("reward")
     correctness = score == 1 if type(score) in {int, float} and score in {0, 1} else None
     workspace = directory / "artifacts/workspace" if directory else None
@@ -183,6 +203,7 @@ def _safe_trial(
         "interaction_count": native.get("interaction_count", 0),
         "child_count": native.get("child_count"),
         "incomplete_reasons": native.get("incomplete_reasons", []),
+        **({"provider_recovery": recovery} if recovery is not None else {}),
     }
 
 

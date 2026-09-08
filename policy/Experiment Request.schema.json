@@ -230,6 +230,12 @@
           "type": "integer",
           "minimum": 1
         },
+        "provider_recovery_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600,
+          "description": "One fixed transport-recovery allowance per Codex trial. New Codex plans default to 600 seconds; zero disables it."
+        },
         "retry_policy": {
           "enum": [
             "none"

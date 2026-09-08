@@ -868,6 +868,11 @@
         "adapter_digest": {
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "provider_recovery_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600
         }
       },
       "required": [
@@ -1058,6 +1063,29 @@
         },
         "code_review": {
           "$ref": "#/$defs/codeReview"
+        },
+        "provider_recovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowance_seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3600
+            },
+            "transport_error_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "extension_applied": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowance_seconds",
+            "transport_error_count",
+            "extension_applied"
+          ]
         }
       },
       "required": [

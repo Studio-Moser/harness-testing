@@ -53,6 +53,16 @@ def validate_experiment_request(document: dict) -> list[str]:
     if document["first_version"] == bool(document["predecessor_result_ids"]):
         errors.append("predecessor_result_ids: supply a predecessor or declare first_version")
     conditions, limits = document["conditions"], document["limits"]
+    if (
+        "provider_recovery_seconds" in conditions
+        and type(conditions["provider_recovery_seconds"]) is not int
+    ):
+        errors.append("conditions.provider_recovery_seconds: an integer is required")
+    if (
+        conditions.get("provider_recovery_seconds", 0)
+        and conditions["kickoff"]["provider"] != "codex"
+    ):
+        errors.append("conditions.provider_recovery_seconds: recovery requires the Codex protocol")
     if conditions["task_variant"] == "deepswe" and (
         purpose != "diagnostic"
         or conditions["task_ids"] != ["quill-shared-toolbar-focus"]
@@ -232,6 +242,9 @@ def plan_experiment(
         raise ValueError("invalid experiment request:\n" + "\n".join(errors))
     request = copy.deepcopy(document)
     conditions, limits = request["conditions"], request["limits"]
+    conditions.setdefault(
+        "provider_recovery_seconds", 600 if conditions["kickoff"]["provider"] == "codex" else 0
+    )
     if limits.get("budget_enforcement") == "hard-stop":
         raise ValueError(
             "tree_budget_hard_stop_unsupported: native providers do not guarantee "

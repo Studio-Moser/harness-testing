@@ -45,6 +45,25 @@ test("trial labels distinguish protected failures and incomplete execution", () 
   assert.equal(trialLabel({status:"completed", correctness:null, protected_state:null}), "Ungraded");
   assert.equal(trialLabel({status:"task_definition_gap", correctness:false, protected_state:true}), "task definition gap");
   assert.equal(trialLabel({status:"infrastructure_failure", correctness:false, protected_state:false}), "infrastructure failure");
+  assert.equal(trialLabel({status:"infrastructure_failure", incomplete_reasons:["provider_transport_interrupted"]}), "Provider connection interrupted");
+});
+
+test("task evidence explains bounded provider recovery without hiding elapsed time", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag)};
+  try {
+    const current = typedReport();
+    const trial = current.experiment.trials[0];
+    trial.status = "infrastructure_failure";
+    trial.duration_seconds = 700;
+    trial.incomplete_reasons = ["provider_transport_interrupted"];
+    trial.provider_recovery = {allowance_seconds: 600, transport_error_count: 4, extension_applied: true};
+    const text = renderEvidence([current], {comparison: "typed"}).textContent;
+    assert.match(text, /Provider connection interrupted/);
+    assert.match(text, /4 transport errors.*10m 0s recovery allowance activated/);
+    assert.match(text, /Elapsed time includes connection waits/);
+    assert.match(text, /excluded from harness quality judgments/);
+  } finally { globalThis.document = previousDocument; }
 });
 
 test("derives exact review coverage and keeps unknown evaluation cost distinct from zero", () => {

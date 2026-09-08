@@ -2842,6 +2842,49 @@ def test_every_generated_job_round_trips_through_harbor(run_root: Path):
     assert all(job.agents[0].override_timeout_sec == 900 for job in jobs)
 
 
+@pytest.mark.parametrize("allowance", [None, 0, 120])
+def test_comparison_planning_freezes_recovery_and_reserves_outer_time(
+    run_root: Path, monkeypatch: pytest.MonkeyPatch, allowance
+):
+    from test_Experiments import request_document
+
+    from harness_testing.Experiments import plan_experiment
+
+    task = "react-active-badge-count"
+    shutil.copytree(REPOSITORY_ROOT / "tasks/workflow" / task,
+                    run_root / "tasks/workflow" / task)
+    versions = load_versions(run_root / "Versions.toml")
+    model = next(row for row in versions["models"] if row["provider"] == "codex")
+    version = next(row["version"] for row in versions["packages"]
+                   if row["name"] == "@openai/codex")
+    request = request_document()
+    request.update(purpose="diagnostic", baseline_result_ids=[])
+    request["contenders"] = [{"family": "nothing", "label": "Nothing", "sources": [],
+                              "rubric": {"mode": "disabled", "path": None},
+                              "startup_paths": [], "delivery_config": {}}]
+    request["conditions"].update(
+        kickoff={"provider": "codex", "runtime_version": version,
+                 "model": model["model"], "effort": model["effort"]},
+        task_ids=[task], attempts=1, timeout_seconds=30,
+    )
+    if allowance is not None:
+        request["conditions"]["provider_recovery_seconds"] = allowance
+    monkeypatch.setattr("harness_testing.Experiments.runtime_image_digests",
+                        lambda root, images: {image: _digest("f") for image in images})
+    manifest = plan_experiment(run_root, request, native_cli=False)
+    expected = 600 if allowance is None else allowance
+    assert manifest.provenance["experiment"]["conditions"]["provider_recovery_seconds"] == expected
+    job = load_job(manifest.path.parent / manifest.harbor_config_paths[0])
+    agent = job.agents[0]
+    assert agent.kwargs["conversation"]["timeout_seconds"] == 30
+    assert agent.kwargs["conversation"]["provider_recovery_seconds"] == expected
+    assert agent.override_timeout_sec == agent.max_timeout_sec == 30 + expected + 15
+    assert job.retry.max_retries == 0
+    plan = Runs.format_plan(manifest)
+    assert f"Provider recovery allowance: {expected}s" in plan
+    assert f"Maximum agent wall time: {30 + expected}s" in plan
+
+
 def test_research_profile_uses_only_the_materialized_deepswe_dataset(
     run_root: Path, monkeypatch: pytest.MonkeyPatch
 ):
