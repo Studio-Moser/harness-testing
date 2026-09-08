@@ -4,32 +4,76 @@ from __future__ import annotations
 
 import re
 
-_ROUTINE_APPROVAL_REQUEST = re.compile(
-    r"""(?isx)(?:^|[.!?]\s+|\n\s*\n)
+_LOCAL_DEVELOPMENT_APPROVAL = re.compile(
+    r"""(?isx)
     (?:
-        (?:may|shall|should|can)\s+i\s+(?:proceed|continue)\b.*
-        |(?:please\s+)?(?:approve|confirm)\s+(?:this|that|the)\s+(?:plan|design|approach)
-          (?:\s+(?:so\s+i\s+can|and\s+i(?:'|’)ll)\s+(?:implement\s+it|proceed|continue))?
-        |does\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right
-    )[?.]?\s*$"""
+        \b(?:may|shall|should|can)\s+i\s+(?:proceed|continue)\b
+        |\b(?:please\s+)?(?:approve|confirm)\s+(?:this|that|the)\s+
+          (?:plan|design|approach)\b
+        |\bdoes\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right\b
+    )"""
 )
-_EXTERNAL_APPROVAL_REQUEST = re.compile(
-    r"""(?isx)(?:^|[.!?]\s+|\n\s*\n)(?:please\s+)?(?:approve|confirm)\s+
-    (?:(?:this|that|the)\s+)?(?:external\s+)?
-    (?:deployment|publication|spending|deploy|publish|spend)\b.*?[?.]?\s*$"""
+_TERMINAL_DIRECT_REQUEST = re.compile(
+    r"""(?isx)(?:^|[.!?]\s+|\n\s*\n)
+    (?P<request>
+        (?:
+            (?:may|shall|should|can)\s+i\s+(?:proceed|continue)\b
+            |(?:please\s+)?(?:approve|confirm)\b
+            |does\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right\b
+        )
+        (?:(?![.!?]\s+).)*
+    )
+    [?.]?\s*$"""
+)
+_BROADER_AUTHORITY = re.compile(
+    r"\b(?:deploy(?:ment|ing)?|publish(?:ing)?|publication|push(?:ing)?|"
+    r"spend(?:ing)?|pay(?:ing)?|purchas(?:e|ing)|send(?:ing)?|upload(?:ing)?|"
+    r"production|credentials?)\b",
+    re.I,
+)
+_SCOPE_EXPANSION = re.compile(
+    r"\b(?:additional|extra|broader)\s+(?:permissions?|authority)\b"
+    r"|\boutside\s+(?:the\s+)?original\s+scope\b",
+    re.I,
+)
+_COMPLETED_OR_NEGATED_APPROVAL = re.compile(
+    r"""(?isx)
+    \b(?:implemented|completed)\s+(?:the\s+)?(?:approved\s+)?(?:plan|design|approach)\b
+    |\bi\s+(?:no\s+longer|do\s+not|don't|did\s+not|didn't)\s+need\s+you\s+to\s+
+      (?:approve|confirm)\b
+    """
 )
 _AMBIGUOUS_APPROVAL_REQUEST = re.compile(
     r"(?is)(?:^|[.!?]\s+|\n\s*\n)(?:please\s+)?(?:approve|confirm)\b.*?[?.]?\s*$"
 )
 
 
+def _terminal_request_clause(text: str) -> str | None:
+    match = _TERMINAL_DIRECT_REQUEST.search(text)
+    return match["request"].strip() if match else None
+
+
+def _local_development_approval(text: str) -> bool:
+    request = _terminal_request_clause(text)
+    return bool(
+        request
+        and _LOCAL_DEVELOPMENT_APPROVAL.match(request)
+        and not _BROADER_AUTHORITY.search(request)
+        and not _SCOPE_EXPANSION.search(request)
+        and not _COMPLETED_OR_NEGATED_APPROVAL.search(request)
+    )
+
+
 def terminal_approval_request(text: str) -> str | None:
     """Classify terminal approval requests without treating completion prose as a request."""
-    if _ROUTINE_APPROVAL_REQUEST.search(text):
-        return "routine"
-    if _EXTERNAL_APPROVAL_REQUEST.search(text):
+    request = _terminal_request_clause(text)
+    if request is None or _COMPLETED_OR_NEGATED_APPROVAL.search(request):
+        return None
+    if _BROADER_AUTHORITY.search(request) or _SCOPE_EXPANSION.search(request):
         return "external"
-    if _AMBIGUOUS_APPROVAL_REQUEST.search(text):
+    if _local_development_approval(text):
+        return "routine"
+    if _AMBIGUOUS_APPROVAL_REQUEST.search(request):
         return "ambiguous"
     return None
 
@@ -57,7 +101,11 @@ def validate_policy(policy: dict) -> None:
         raise ValueError("scripted rules must be a list")
     ids = set()
     for rule in rules:
-        if not isinstance(rule, dict) or set(rule) != {"id", "kind", "pattern", "fact"}:
+        base = {"id", "kind", "fact"}
+        if not isinstance(rule, dict) or set(rule) not in (
+            base | {"pattern"},
+            base | {"matcher"},
+        ):
             raise ValueError("invalid scripted response rule")
         if not all(isinstance(value, str) for value in rule.values()):
             raise ValueError("scripted rule values must be strings")
@@ -69,10 +117,15 @@ def validate_policy(policy: dict) -> None:
         ):
             raise ValueError("invalid response identity, kind or fact reference")
         ids.add(rule["id"])
-        try:
-            re.compile(rule["pattern"])
-        except re.error as error:
-            raise ValueError("invalid scripted response pattern") from error
+        if "matcher" in rule and (
+            rule["kind"] != "approval" or rule["matcher"] != "local-development-approval"
+        ):
+            raise ValueError("invalid scripted response matcher")
+        if "pattern" in rule:
+            try:
+                re.compile(rule["pattern"])
+            except re.error as error:
+                raise ValueError("invalid scripted response pattern") from error
 
 
 def select_reply(request: dict, policy: dict, interactions: int) -> dict:
@@ -96,7 +149,11 @@ def select_reply(request: dict, policy: dict, interactions: int) -> dict:
         for rule in policy["rules"]
         if len(text) <= 8192
         and rule["kind"] == kind
-        and re.fullmatch(rule["pattern"], text, re.IGNORECASE)
+        and (
+            _local_development_approval(text)
+            if rule.get("matcher") == "local-development-approval"
+            else re.fullmatch(rule["pattern"], text, re.IGNORECASE)
+        )
     ]
     if len(matches) != 1:
         return {

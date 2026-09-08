@@ -145,6 +145,9 @@ def test_terminal_approval_requests_keep_report_status_and_reason(text, interact
         "I will update the source value, then run the checks.\n\nApprove this approach?",
         "Plan:\n\nPlease approve this plan so I can proceed.",
         "Design:\n\nPlease confirm this design and I\u2019ll continue.",
+        "Please approve this plan so I can branch and implement.",
+        "Please approve this plan so I can update src/lib.rs.",
+        "Please approve this plan before I release v1.2.",
     ],
 )
 def test_frozen_routine_approval_continues_the_native_root(text):
@@ -170,10 +173,51 @@ def test_frozen_routine_approval_continues_the_native_root(text):
         "I will update the source value, then run the checks.\n\nApprove this approach?",
         "Plan:\n\nPlease approve this plan so I can proceed.",
         "Design:\n\nPlease confirm this design and I\u2019ll continue.",
+        "Please approve this plan so I can branch and implement.",
+        "Please approve this plan so I can update src/lib.rs.",
+        "Please approve this plan before I release v1.2.",
     ],
 )
 def test_terminal_routine_approval_is_a_routine_request(text):
     assert terminal_approval_request(text) == "routine"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Implemented the approved plan.", None),
+        ("I no longer need you to approve this plan.", None),
+        ("Please approve this plan so I can deploy.", "external"),
+        ("Please approve this approach and publish it.", "external"),
+        ("Please approve this plan for publication.", "external"),
+        ("Please approve this plan so I can upload logs.", "external"),
+        ("Please approve this plan for sending credentials.", "external"),
+        ("Please approve this plan with additional permissions.", "external"),
+        ("Please approve this plan with broader authority.", "external"),
+        ("Please approve this plan outside the original scope.", "external"),
+        ("Please approve this plan? Implemented it; all tests passed.", None),
+    ],
+)
+def test_terminal_approval_rejects_completed_and_broader_authority(text, expected):
+    assert terminal_approval_request(text) == expected
+
+
+def test_expanded_authority_approval_stays_blocked_without_an_interaction():
+    import json
+    from pathlib import Path
+
+    policy_path = (
+        Path(__file__).parents[2]
+        / "tasks/workflow/react-saved-view-feature/Scripted User.json"
+    )
+    state = Conversation({**config("codex"), "policy": json.loads(policy_path.read_text())})
+    state.root = "root"
+    state.text = "Please approve this plan with additional permissions."
+
+    assert state.finish_turn() == []
+    assert state.status == "task_definition_gap"
+    assert state.reason == "authority_denied"
+    assert state.interactions == 0
 
 
 def test_initialization_is_before_first_model_request():

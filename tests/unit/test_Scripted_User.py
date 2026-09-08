@@ -97,6 +97,16 @@ def test_all_comparison_tasks_answer_authored_questions():
             ("approval", "Plan:\n\nPlease approve this plan so I can proceed."),
             ("approval", "Design:\n\nPlease confirm this design and I\u2019ll implement it."),
             ("approval", "Design:\n\nPlease confirm this design and I\u2019ll continue."),
+            ("approval", "Please approve this plan so I can branch and implement."),
+            ("approval", "Please approve this plan so I can update src/lib.rs."),
+            ("approval", "Please approve this plan before I release v1.2."),
+            (
+                "approval",
+                (
+                    "The plan only changes the local display. "
+                    "Please approve this plan while I prepare it."
+                ),
+            ),
             (
                 "approval",
                 (
@@ -150,6 +160,91 @@ def test_routine_approval_rule_does_not_reply_to_completed_or_external_work():
             0,
         )
         assert decision["status"] == "authority_denied", path
+
+
+def test_local_development_matcher_is_strict_and_legacy_patterns_still_work():
+    local = policy()
+    local["facts"]["authority"] = "Proceed within the original local task."
+    local["rules"].append(
+        {
+            "id": "local",
+            "kind": "approval",
+            "matcher": "local-development-approval",
+            "fact": "authority",
+        }
+    )
+    for text in (
+        "Please approve this plan so I can branch and implement.",
+        "This plan changes one local value. Please confirm this approach when ready.",
+        "May I continue with this plan after the check?",
+        "The plan says do not publish. Please approve this plan while I prepare it.",
+    ):
+        assert select_reply({"kind": "approval", "text": text}, local, 0)["status"] == "reply"
+    for text in (
+        "I no longer need you to approve this plan.",
+        "Implemented the approved plan.",
+        "Please approve this plan so I can deploy.",
+        "Please approve this plan and publish it.",
+        "Please approve this plan for publication.",
+        "Please approve this plan so I can upload logs.",
+        "Please approve this plan for sending credentials.",
+        "Please confirm receipt before I approve this plan.",
+        "Please approve extra authority to confirm this plan.",
+        "Please approve this plan with additional permissions.",
+        "Please approve this plan with broader authority.",
+        "Please approve this plan outside the original scope.",
+        "Please approve this proposal.",
+    ):
+        assert (
+            select_reply({"kind": "approval", "text": text}, local, 0)["status"]
+            == "authority_denied"
+        )
+    legacy = policy()
+    legacy["facts"]["authority"] = "Proceed within the original local task."
+    legacy["rules"].append(
+        {
+            "id": "legacy",
+            "kind": "approval",
+            "pattern": "Ready to proceed\\?",
+            "fact": "authority",
+        }
+    )
+    assert (
+        select_reply({"kind": "approval", "text": "Ready to proceed?"}, legacy, 0)["status"]
+        == "reply"
+    )
+
+
+def test_matcher_policy_shape_is_exclusive_in_runtime_and_schema():
+    import json
+    from pathlib import Path
+
+    from jsonschema import Draft202012Validator
+
+    local = {
+        "id": "local",
+        "kind": "approval",
+        "matcher": "local-development-approval",
+        "fact": "authority",
+    }
+    valid = policy()
+    valid["facts"]["authority"] = "Proceed locally."
+    valid["rules"].append(local)
+    validate_policy(valid)
+    schema_path = Path(__file__).parents[2] / "policy/Scripted User.schema.json"
+    schema = json.loads(schema_path.read_text())
+    validator = Draft202012Validator(schema)
+    assert validator.is_valid(valid)
+    for rule in (
+        local | {"pattern": "Ready\\?"},
+        {key: value for key, value in local.items() if key != "matcher"},
+        local | {"matcher": "unknown"},
+        local | {"kind": "clarification"},
+    ):
+        invalid = valid | {"rules": [valid["rules"][0], rule]}
+        with pytest.raises(ValueError):
+            validate_policy(invalid)
+        assert not validator.is_valid(invalid)
 
 
 def test_research_policy_approves_routine_plans_but_denies_tool_authority():
