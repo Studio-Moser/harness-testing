@@ -8,7 +8,7 @@ _ROUTINE_APPROVAL_REQUEST = re.compile(
     r"""(?isx)(?:^|[.!?]\s+|\n\s*\n)
     (?:
         (?:may|shall|should|can)\s+i\s+(?:proceed|continue)\b.*
-        |(?:please\s+)?(?:approve|confirm)\s+(?:this|that|the)\s+(?:plan|design)
+        |(?:please\s+)?(?:approve|confirm)\s+(?:this|that|the)\s+(?:plan|design|approach)
           (?:\s+(?:so\s+i\s+can|and\s+i(?:'|’)ll)\s+implement\s+it)?
         |does\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right
     )[?.]?\s*$"""

@@ -135,6 +135,48 @@ def test_record_rejects_tampered_target_without_persisting_results(tmp_path, mon
     assert not (plan_path.parent / "Evidence").exists()
 
 
+def test_partial_trial_coverage_reviews_finished_work_without_erasing_gap(tmp_path, monkeypatch):
+    from harness_testing.Code_Reviews import prepare_review, record_review
+    from harness_testing.Run_Reports import load_run_report, run_report_id
+
+    root, report_path = _root(tmp_path, monkeypatch)
+    source = json.loads(report_path.read_text())
+    interrupted = source["experiment"]["trials"][0]
+    interrupted.update(status="task_definition_gap", correctness=False)
+    source["report_id"] = run_report_id(source)
+    report_path.write_text(json.dumps(source, indent=2) + "\n")
+    source_bytes = report_path.read_bytes()
+
+    prepared = prepare_review(root, report_path, root / "policy/Code Review Protocol.json")
+    plan_path = Path(prepared["artifacts"]["files"][0])
+    plan = json.loads(plan_path.read_text())
+    assert len(plan["packets"]) == len(source["experiment"]["trials"]) - 1
+    assert plan["unreviewed_trials"] == [
+        {"trial_id": interrupted["trial_id"], "status": "task_definition_gap"}
+    ]
+    from harness_testing.Code_Reviews import _verify_frozen_inputs
+
+    for changed in (
+        plan | {"packets": plan["packets"][1:]},
+        plan | {"packets": plan["packets"] + [plan["packets"][0]]},
+        plan | {"unreviewed_trials": []},
+    ):
+        with pytest.raises(ValueError, match="cover completed trials"):
+            _verify_frozen_inputs(root, changed, plan_path.parent)
+    results_path = root / "Results.json"
+    results_path.write_text(json.dumps(_results(plan_path)))
+    recorded = record_review(root, plan_path, results_path)
+    revised = load_run_report(root, Path(recorded["artifacts"]["report"]))
+    gap = next(
+        t for t in revised["experiment"]["trials"] if t["trial_id"] == interrupted["trial_id"]
+    )
+    assert gap == interrupted
+    assert revised["experiment"]["comparison"]["winner_id"] is None
+    assert (plan_path.parent / "Source Report.json").read_bytes() == source_bytes
+    reviewed = [t for t in revised["experiment"]["trials"] if "code_review" in t]
+    assert len(reviewed) == len(plan["packets"])
+
+
 @pytest.mark.parametrize("tamper", ["patch", "packet", "protocol", "conditions", "session"])
 def test_record_rejects_changed_review_inputs(tmp_path, monkeypatch, tamper):
     from harness_testing.Code_Reviews import prepare_review, record_review

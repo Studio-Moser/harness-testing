@@ -382,8 +382,6 @@ def prepare_review(
     ]
     if not selected:
         raise ValueError("review preparation requires at least one completed experiment trial")
-    if len(selected) != len(trials):
-        raise ValueError("review preparation refuses reports with non-completed experiment trials")
     report = load_run_report(root, report_path)
     source_snapshot = (
         root / "runs" / "evidence" / (report["report_id"].removeprefix("sha256:") + ".json")
@@ -478,6 +476,11 @@ def prepare_review(
         "conditions": protocol["reviewer"],
         "pricing_digest": _price_usage(root, [])[1],
         "reference_revisions": references,
+        "unreviewed_trials": [
+            {"trial_id": trial["trial_id"], "status": trial["status"]}
+            for trial in trials
+            if trial["status"] != "completed"
+        ],
         "packets": [
             {key: value for key, value in item.items() if key not in {"packet", "packet_bytes"}}
             | {"packet_digest": _sha256(item["packet_bytes"])}
@@ -567,6 +570,19 @@ def _verify_frozen_inputs(
     if not isinstance(report_trials, list):
         raise ValueError("source report has no experiment trials")
     by_id = {trial.get("trial_id"): trial for trial in report_trials if isinstance(trial, Mapping)}
+    expected = {trial["trial_id"] for trial in report_trials if trial["status"] == "completed"}
+    actual = [item.get("trial_id") for item in packets if isinstance(item, Mapping)]
+    unreviewed = [
+        {"trial_id": trial["trial_id"], "status": trial["status"]}
+        for trial in report_trials
+        if trial["status"] != "completed"
+    ]
+    if (
+        len(actual) != len(expected)
+        or set(actual) != expected
+        or plan.get("unreviewed_trials", []) != unreviewed
+    ):
+        raise ValueError("review plan must cover completed trials and retain incomplete trials")
     for item in packets:
         if not isinstance(item, Mapping):
             raise ValueError("review plan packet is invalid")

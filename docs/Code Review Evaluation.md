@@ -2,6 +2,8 @@
 
 `harness-test review prepare` creates blinded, content-addressed final-patch review packets. It makes no model calls and runs no benchmark workload. It only reads and validates retained evidence, reconstructs portable patches when needed, hashes frozen inputs, and writes private files under `runs/reviews/`.
 
+A report with interrupted or pending trials can still supply its completed submissions for review. The plan explicitly lists every unreviewed trial and its execution status. Import requires every completed submission exactly once, preserves interrupted trials unchanged, and leaves their quality coverage incomplete. Review preparation still requires at least one completed trial.
+
 Each plan freezes the source report and manifest, neutral original task instruction, final patch bytes, patch base, actual manifest-pinned agent image, common review protocol, reviewer conditions, time budget, and pricing digest. Packet IDs are random and packet order is shuffled. Packets contain no contender name, harness configuration, execution cost, or raw execution trace.
 
 When reconstructing a local comparison patch from a retained workspace, the packet contains a portable binary diff against the manifest-cached base plus `base_files`. Each base-file entry records its content as base64 and whether it was executable, so applying the patch does not depend on host paths or an unretained checkout. For DeepSWE, preparation resolves the manifest-pinned task cache. Missing, ambiguous, or changed retained inputs fail preparation.

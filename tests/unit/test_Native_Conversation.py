@@ -1,6 +1,7 @@
 import pytest
 
 from harness_testing.Native_Conversation import Conversation
+from harness_testing.Scripted_User import terminal_approval_request
 
 
 def config(provider):
@@ -137,7 +138,14 @@ def test_terminal_approval_requests_keep_report_status_and_reason(text, interact
     assert state.reason == reason
 
 
-def test_frozen_routine_approval_continues_the_native_root():
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Design:\n\nPlease confirm this design and I\u2019ll implement it.",
+        "I will update the source value, then run the checks.\n\nApprove this approach?",
+    ],
+)
+def test_frozen_routine_approval_continues_the_native_root(text):
     import json
     from pathlib import Path
 
@@ -145,13 +153,22 @@ def test_frozen_routine_approval_continues_the_native_root():
     policy_path = Path(__file__).parents[2] / "tasks/workflow" / task / "Scripted User.json"
     state = Conversation({**config("codex"), "policy": json.loads(policy_path.read_text())})
     state.root = "root"
-    state.text = "Design:\n\nPlease confirm this design and I\u2019ll implement it."
+    state.text = text
 
     outbound = state.finish_turn()
 
     assert outbound[0]["method"] == "turn/start"
     assert outbound[0]["params"]["threadId"] == "root"
     assert outbound[0]["params"]["input"][0]["text"].startswith("Proceed with the original")
+
+
+def test_terminal_approach_approval_is_a_routine_request():
+    assert (
+        terminal_approval_request(
+            "I will update the source value, then run the checks.\n\nApprove this approach?"
+        )
+        == "routine"
+    )
 
 
 def test_initialization_is_before_first_model_request():

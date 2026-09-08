@@ -95,6 +95,13 @@ def test_all_comparison_tasks_answer_authored_questions():
             ),
             ("approval", "Plan:\n\nPlease approve this plan so I can implement it."),
             ("approval", "Design:\n\nPlease confirm this design and I\u2019ll implement it."),
+            (
+                "approval",
+                (
+                    "I will update the source value, then run the checks.\n\n"
+                    "Approve this approach?"
+                ),
+            ),
             ("approval", "Design:\n\nDoes that design look right?"),
         ]:
             assert select_reply({"kind": kind, "text": text}, frozen, 0)["status"] == "reply", path
@@ -110,6 +117,7 @@ def test_routine_approval_rule_does_not_reply_to_completed_or_external_work():
         for text in (
             "Implemented the approved plan.",
             "I no longer need you to approve this plan.",
+            "I no longer need you to approve this approach.",
             "Please approve this deployment.",
             "Please approve this publication plan.",
         ):
@@ -118,7 +126,7 @@ def test_routine_approval_rule_does_not_reply_to_completed_or_external_work():
         decision = select_reply(
             {
                 "kind": "approval",
-                "text": "Plan: deploy the result externally.\n\nPlease approve this plan.",
+                "text": "Plan: deploy the result externally.\n\nApprove this approach?",
                 "actions": ["deploy"],
             },
             frozen,
