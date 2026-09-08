@@ -1,0 +1,69 @@
+{
+  "admission_estimate_usd": 4.5,
+  "completed_jobs": 0,
+  "completed_trials": 0,
+  "evidence": {
+    "limitations": [
+      "partial-run"
+    ],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 1,
+  "expected_trials": 1,
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-08T18:26:52.314420Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.236",
+      "arm": "A0",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-sonnet-4-6",
+      "name": "run-a6ce930e07db18371607-claude-A0-baseline-task-one",
+      "provider": "claude",
+      "role": "baseline",
+      "runtime_seconds": null,
+      "series_key": "sha256:bfaf6628c5882a9cb49c0f0e8ae3829f839d36a801fc5aae64fc594313bf42b6",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "task-one",
+      "task_digest": "sha256:07f8e51795cbfd5ce2171772787e85ad8525274f9a978c05b6e8e26e78d8a73b",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:7a81202d0cd138192a07647e46d8abc6ee775a0a6dc51264d14a551bae36e323",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": null,
+  "pending_jobs": 1,
+  "profile": "smoke",
+  "report_id": "sha256:707905230e57773ab6c12785e94f65206073d36609b22b5a7d34d448428d15db",
+  "run_id": "run-a6ce930e07db18371607",
+  "schema_version": "2",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-08T18:26:52.157182Z",
+  "status": "completed",
+  "updated_at": "2026-09-08T18:26:52.314420Z"
+}
