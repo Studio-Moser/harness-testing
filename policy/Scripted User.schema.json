@@ -71,7 +71,10 @@
             "type": "string"
           },
           "matcher": {
-            "const": "local-development-approval"
+            "enum": [
+              "local-development-approval",
+              "local-branch-handoff"
+            ]
           },
           "fact": {
             "type": "string",
@@ -83,12 +86,36 @@
             "if": {
               "required": [
                 "matcher"
-              ]
+              ],
+              "properties": {
+                "matcher": {
+                  "const": "local-development-approval"
+                }
+              }
             },
             "then": {
               "properties": {
                 "kind": {
                   "const": "approval"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "matcher"
+              ],
+              "properties": {
+                "matcher": {
+                  "const": "local-branch-handoff"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "kind": {
+                  "const": "clarification"
                 }
               }
             }

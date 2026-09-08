@@ -269,3 +269,80 @@ def test_research_policy_approves_routine_plans_but_denies_tool_authority():
         )["status"]
         == "authority_denied"
     )
+
+
+# Synthetic completion menu: no private run transcript or task solution.
+HANDOFF_MENU = (
+    "Checks passed.\n\nImplementation complete. What would you like to do?\n\n"
+    "1. Merge back to main locally\n"
+    "2. Push and create a Pull Request\n"
+    "3. Keep the branch as-is (I'll handle it later)\n\n"
+    "Which option?"
+)
+HANDOFF_REPLY = (
+    "Keep the branch and workspace as-is. Do not merge, push, publish, discard changes, "
+    "or remove the worktree. Report the local handoff and stop."
+)
+
+
+def test_all_task_policies_answer_only_explicit_local_branch_handoffs():
+    import json
+    from pathlib import Path
+
+    from jsonschema import Draft202012Validator
+
+    root = Path(__file__).parents[2]
+    validator = Draft202012Validator(
+        json.loads((root / "policy/Scripted User.schema.json").read_text())
+    )
+    for path in (root / "tasks/workflow").glob("*/Scripted User.json"):
+        frozen = json.loads(path.read_text())
+        assert validator.is_valid(frozen)
+        for text in (HANDOFF_MENU, HANDOFF_MENU.replace("3. Keep", "4) Keep")):
+            assert select_reply({"kind": "clarification", "text": text}, frozen, 1) == {
+                "status": "reply",
+                "rule_id": "local-handoff",
+                "reply": HANDOFF_REPLY,
+            }
+        for text in (
+            "",
+            "Which option?",
+            "Keep the branch as-is?",
+            HANDOFF_MENU.replace("Implementation complete.", "Implementation blocked."),
+            HANDOFF_MENU.replace("Keep the branch as-is", "Discard the branch"),
+            HANDOFF_MENU.replace("(I'll handle it later)", "and push it"),
+            HANDOFF_MENU + " Please approve publication?",
+            HANDOFF_MENU + "x" * 8192,
+        ):
+            assert (
+                select_reply({"kind": "clarification", "text": text}, frozen, 1)["status"]
+                == "task_definition_gap"
+            )
+        assert (
+            select_reply(
+                {"kind": "clarification", "text": HANDOFF_MENU, "actions": ["push"]}, frozen, 1
+            )["status"]
+            == "authority_denied"
+        )
+        assert (
+            select_reply({"kind": "clarification", "text": HANDOFF_MENU}, frozen, 12)["status"]
+            == "interaction_limit"
+        )
+        legacy = frozen | {"rules": [r for r in frozen["rules"] if r["id"] != "local-handoff"]}
+        assert (
+            select_reply({"kind": "clarification", "text": HANDOFF_MENU}, legacy, 1)["status"]
+            == "task_definition_gap"
+        )
+        invalid = frozen | {
+            "rules": [
+                {
+                    "id": "bad",
+                    "kind": "approval",
+                    "matcher": "local-branch-handoff",
+                    "fact": "task",
+                }
+            ]
+        }
+        assert not validator.is_valid(invalid)
+        with pytest.raises(ValueError):
+            validate_policy(invalid)

@@ -869,3 +869,44 @@ for line in sys.stdin:
         assert ("missing_background_terminal" in evidence["incomplete_reasons"]) is timeout
         assert sum(row["output_tokens"] for row in evidence["model_usage"]) == (2 if timeout else 5)
         assert json.loads((logs / "Trial_Evidence.json").read_text()) == evidence
+
+
+@pytest.mark.parametrize("provider", ["codex", "claude"])
+def test_local_handoff_resumes_same_root_and_requires_final_acknowledgment(provider):
+    import json
+    from pathlib import Path
+
+    path = Path(__file__).parents[2] / "tasks/workflow/rust-quoted-value-parser/Scripted User.json"
+    state = Conversation(config(provider) | {"policy": json.loads(path.read_text())})
+    state.root = "root"
+    state.interactions = 1
+    state.text = (
+        "Implementation complete. What would you like to do?\n\n"
+        "1. Push and create a Pull Request\n"
+        "2. Keep the branch as-is (I'll handle it later)\n"
+        "3. Discard this work\n\nWhich option?"
+    )
+    outbound = state.finish_turn()
+    assert len(outbound) == 1
+    reply = outbound[0]
+    if provider == "codex":
+        assert reply["method"] == "turn/start"
+        assert reply["params"]["threadId"] == "root"
+        assert reply["params"]["model"] == "root-model"
+        assert reply["params"]["effort"] == "high"
+        text = reply["params"]["input"][0]["text"]
+    else:
+        assert reply["session_id"] == "root"
+        text = reply["message"]["content"]
+    assert text == (
+        "Keep the branch and workspace as-is. Do not merge, push, publish, discard changes, "
+        "or remove the worktree. Report the local handoff and stop."
+    )
+    assert state.interactions == 2
+    assert not state.root_finished
+    assert state.status != "completed"
+    assert state.decisions[-1]["rule_id"] == "local-handoff"
+    state.text = "The branch and workspace are preserved locally. Handoff complete."
+    assert state.finish_turn() == []
+    assert state.root_finished
+    assert state.status == "completed"

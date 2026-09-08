@@ -78,6 +78,34 @@ def terminal_approval_request(text: str) -> str | None:
     return None
 
 
+def _local_branch_handoff(text: str) -> bool:
+    # ponytail: explicit completed branch menus; replay new forms before extending this matcher.
+    menu = re.search(
+        r"(?im)^(?:implementation|work|task) (?:is )?complete[.!][ \t]*"
+        r"(?:what would you like to do\?)?[ \t]*\n"
+        r"(?P<options>(?:[ \t]*\n|[ \t]*\d+[.)][ \t]+[^\n]+\n)+)"
+        r"[ \t]*(?:which option(?: would you like)?|what would you like to do)\?[ \t]*\Z",
+        text,
+    )
+    if menu is None:
+        return False
+    return any(
+        re.fullmatch(
+            r"\s*\d+[.)]\s+Keep the branch as[- ]is"
+            r"(?:\s+\(I['’]ll handle it later\))?[.!]?\s*",
+            line,
+            re.I,
+        )
+        for line in menu["options"].splitlines()
+    )
+
+
+_MATCHERS = {
+    "local-development-approval": ("approval", _local_development_approval),
+    "local-branch-handoff": ("clarification", _local_branch_handoff),
+}
+
+
 def validate_policy(policy: dict) -> None:
     if not isinstance(policy, dict) or set(policy) != {
         "schema_version",
@@ -118,7 +146,7 @@ def validate_policy(policy: dict) -> None:
             raise ValueError("invalid response identity, kind or fact reference")
         ids.add(rule["id"])
         if "matcher" in rule and (
-            rule["kind"] != "approval" or rule["matcher"] != "local-development-approval"
+            rule["matcher"] not in _MATCHERS or rule["kind"] != _MATCHERS[rule["matcher"]][0]
         ):
             raise ValueError("invalid scripted response matcher")
         if "pattern" in rule:
@@ -150,8 +178,8 @@ def select_reply(request: dict, policy: dict, interactions: int) -> dict:
         if len(text) <= 8192
         and rule["kind"] == kind
         and (
-            _local_development_approval(text)
-            if rule.get("matcher") == "local-development-approval"
+            _MATCHERS[rule["matcher"]][1](text)
+            if "matcher" in rule
             else re.fullmatch(rule["pattern"], text, re.IGNORECASE)
         )
     ]
