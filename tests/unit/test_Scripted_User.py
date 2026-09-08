@@ -94,7 +94,9 @@ def test_all_comparison_tasks_answer_authored_questions():
                 ),
             ),
             ("approval", "Plan:\n\nPlease approve this plan so I can implement it."),
+            ("approval", "Plan:\n\nPlease approve this plan so I can proceed."),
             ("approval", "Design:\n\nPlease confirm this design and I\u2019ll implement it."),
+            ("approval", "Design:\n\nPlease confirm this design and I\u2019ll continue."),
             (
                 "approval",
                 (
@@ -120,6 +122,11 @@ def test_routine_approval_rule_does_not_reply_to_completed_or_external_work():
             "I no longer need you to approve this approach.",
             "Please approve this deployment.",
             "Please approve this publication plan.",
+            "Please approve this plan so I can deploy.",
+            "Please approve this plan so I can proceed with deployment.",
+            "Please approve this plan so I can continue and publish.",
+            "Please approve this plan so I can implement it and spend money.",
+            "I will proceed with the local change.",
         ):
             decision = select_reply({"kind": "approval", "text": text}, frozen, 0)
             assert decision["status"] == "authority_denied", path
@@ -127,6 +134,16 @@ def test_routine_approval_rule_does_not_reply_to_completed_or_external_work():
             {
                 "kind": "approval",
                 "text": "Plan: deploy the result externally.\n\nApprove this approach?",
+                "actions": ["deploy"],
+            },
+            frozen,
+            0,
+        )
+        assert decision["status"] == "authority_denied", path
+        decision = select_reply(
+            {
+                "kind": "approval",
+                "text": "Please approve this plan so I can proceed.",
                 "actions": ["deploy"],
             },
             frozen,

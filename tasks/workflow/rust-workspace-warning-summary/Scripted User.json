@@ -22,7 +22,7 @@
     {
       "id": "routine-plan",
       "kind": "approval",
-      "pattern": "(?is)(?:.*(?:[.!?]\\s+|\\n\\s*\\n))?(?:(?:May|Shall|Should|Can) I (?:proceed|continue)(?: with (?:the |this )?(?:plan|implementation|task|changes))?|(?:Please )?(?:approve|confirm) (?:this|that|the) (?:plan|design|approach)(?: (?:so I can|and I(?:'|\u2019)ll) implement it)?|Does (?:this|that|the) (?:plan|design) look right)(?:[?.])?\\s*",
+      "pattern": "(?is)(?:.*(?:[.!?]\\s+|\\n\\s*\\n))?(?:(?:May|Shall|Should|Can) I (?:proceed|continue)(?: with (?:the |this )?(?:plan|implementation|task|changes))?|(?:Please )?(?:approve|confirm) (?:this|that|the) (?:plan|design|approach)(?: (?:so I can|and I(?:'|\u2019)ll) (?:implement it|proceed|continue))?|Does (?:this|that|the) (?:plan|design) look right)(?:[?.])?\\s*",
       "fact": "authority"
     }
   ]

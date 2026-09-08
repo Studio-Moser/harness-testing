@@ -143,6 +143,8 @@ def test_terminal_approval_requests_keep_report_status_and_reason(text, interact
     [
         "Design:\n\nPlease confirm this design and I\u2019ll implement it.",
         "I will update the source value, then run the checks.\n\nApprove this approach?",
+        "Plan:\n\nPlease approve this plan so I can proceed.",
+        "Design:\n\nPlease confirm this design and I\u2019ll continue.",
     ],
 )
 def test_frozen_routine_approval_continues_the_native_root(text):
@@ -162,13 +164,16 @@ def test_frozen_routine_approval_continues_the_native_root(text):
     assert outbound[0]["params"]["input"][0]["text"].startswith("Proceed with the original")
 
 
-def test_terminal_approach_approval_is_a_routine_request():
-    assert (
-        terminal_approval_request(
-            "I will update the source value, then run the checks.\n\nApprove this approach?"
-        )
-        == "routine"
-    )
+@pytest.mark.parametrize(
+    "text",
+    [
+        "I will update the source value, then run the checks.\n\nApprove this approach?",
+        "Plan:\n\nPlease approve this plan so I can proceed.",
+        "Design:\n\nPlease confirm this design and I\u2019ll continue.",
+    ],
+)
+def test_terminal_routine_approval_is_a_routine_request(text):
+    assert terminal_approval_request(text) == "routine"
 
 
 def test_initialization_is_before_first_model_request():
