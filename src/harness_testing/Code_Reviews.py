@@ -15,6 +15,7 @@ import math
 import os
 import re
 import secrets
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -300,6 +301,63 @@ def _trial_inputs(
     }
 
 
+def _fixture_copy_files(source: Path) -> set[Path] | None:
+    """Return files present in a fixture's runtime base from literal COPY instructions."""
+    dockerfile = source / "Dockerfile"
+    if dockerfile.is_symlink():
+        raise ValueError("review workspace contains a symlink")
+    if not dockerfile.is_file():
+        return None
+    copied = set()
+    for line in dockerfile.read_text().splitlines():
+        instruction = line.lstrip().split(maxsplit=1)
+        if not instruction or instruction[0].upper() != "COPY":
+            continue
+        try:
+            tokens = shlex.split(line, comments=True)
+        except ValueError as error:
+            raise ValueError("unsupported fixture COPY instruction") from error
+        if len(tokens) < 3 or any(token.startswith("--") for token in tokens[1:]):
+            raise ValueError("unsupported fixture COPY instruction")
+        sources, destination = tokens[1:-1], tokens[-1]
+        if any(any(character in token for character in "*?[") for token in [*sources, destination]):
+            raise ValueError("unsupported fixture COPY instruction")
+        source_paths = []
+        for token in sources:
+            path = Path(token)
+            if path.is_absolute() or ".." in path.parts:
+                raise ValueError("unsafe fixture COPY source")
+            source_paths.append(path)
+        destination_path = Path(destination)
+        if destination_path.is_absolute() or ".." in destination_path.parts:
+            raise ValueError("unsafe fixture COPY destination")
+        if destination_path != Path(".") and (
+            len(source_paths) != 1 or destination_path != source_paths[0]
+        ):
+            raise ValueError("unsupported fixture COPY destination")
+        for relative in source_paths:
+            candidate = source / relative
+            if not candidate.is_relative_to(source) or not candidate.exists():
+                raise ValueError("fixture COPY source is unavailable")
+            if candidate.is_symlink():
+                raise ValueError("review workspace contains a symlink")
+            if candidate.is_file():
+                if relative.parent != destination_path.parent:
+                    raise ValueError("unsupported fixture COPY destination")
+                copied.add(relative)
+            elif candidate.is_dir():
+                if destination_path == Path(".") and relative != Path("."):
+                    raise ValueError("unsupported fixture COPY destination")
+                for path in candidate.rglob("*"):
+                    if path.is_symlink():
+                        raise ValueError("review workspace contains a symlink")
+                    if path.is_file():
+                        copied.add(path.relative_to(source))
+            else:
+                raise ValueError("unsupported fixture COPY source")
+    return copied
+
+
 def _comparison_patch(source: Path, workspace: Path) -> tuple[bytes, dict]:
     """Make an applicable diff without host paths, runtime instructions or build output."""
     ignored = {".git", "node_modules", "dist", "target", ".codex", ".claude", ".agents"}
@@ -307,6 +365,7 @@ def _comparison_patch(source: Path, workspace: Path) -> tuple[bytes, dict]:
     base_files = {}
     if source.is_symlink() or workspace.is_symlink():
         raise ValueError("review workspace contains a symlink")
+    copied_files = _fixture_copy_files(source)
     with tempfile.TemporaryDirectory() as scratch:
         directory = Path(scratch)
         for label, origin in (("a", source), ("b", workspace)):
@@ -318,6 +377,8 @@ def _comparison_patch(source: Path, workspace: Path) -> tuple[bytes, dict]:
                     continue
                 if path.is_symlink():
                     raise ValueError("review workspace contains a symlink")
+                if label == "a" and copied_files is not None and relative not in copied_files:
+                    continue
                 if not path.is_file():
                     continue
                 contents = _path_bytes(path, "review source file")

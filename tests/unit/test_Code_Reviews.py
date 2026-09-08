@@ -41,6 +41,74 @@ def test_comparison_patch_accepts_noop_and_rejects_symlink_escape(tmp_path):
         _comparison_patch(source, final)
 
 
+def test_comparison_patch_excludes_uncopied_rust_builder_dockerfile(tmp_path):
+    from harness_testing.Code_Reviews import _comparison_patch
+
+    source, final = tmp_path / "source", tmp_path / "final"
+    (source / "src").mkdir(parents=True)
+    (final / "src").mkdir(parents=True)
+    (source / "Dockerfile").write_text(
+        "COPY Cargo.toml ./\nCOPY src ./src\nRUN command \\\n  --ignored\n"
+    )
+    (source / "Cargo.toml").write_text("[package]\nname = \"fixture\"\n")
+    (source / "src" / "lib.rs").write_text("pub fn fixture() {}\n")
+    (final / "Cargo.toml").write_text("[package]\nname = \"fixture\"\n")
+    (final / "src" / "lib.rs").write_text("pub fn fixture() {}\n")
+
+    patch, base_files = _comparison_patch(source, final)
+
+    assert patch == b""
+    assert "Dockerfile" not in base_files
+
+
+def test_comparison_patch_rejects_uncopied_source_symlinks(tmp_path):
+    from harness_testing.Code_Reviews import _comparison_patch
+
+    source, final = tmp_path / "source", tmp_path / "final"
+    source.mkdir()
+    final.mkdir()
+    (source / "Dockerfile").write_text("COPY Cargo.toml ./\n")
+    (source / "Cargo.toml").write_text("[package]\nname = \"fixture\"\n")
+    (source / "uncopied").symlink_to(source / "Cargo.toml")
+    (final / "Cargo.toml").write_text("[package]\nname = \"fixture\"\n")
+
+    with pytest.raises(ValueError, match="symlink"):
+        _comparison_patch(source, final)
+
+
+def test_comparison_patch_keeps_dockerfile_deletion_when_copy_dot_includes_it(tmp_path):
+    from harness_testing.Code_Reviews import _comparison_patch
+
+    source, final = tmp_path / "source", tmp_path / "final"
+    source.mkdir()
+    final.mkdir()
+    (source / "Dockerfile").write_text("COPY . .\n")
+    (source / "App.ts").write_text("export const fixture = true;\n")
+    (final / "App.ts").write_text("export const fixture = true;\n")
+
+    patch, base_files = _comparison_patch(source, final)
+
+    assert b"diff --git a/Dockerfile a/Dockerfile" in patch
+    assert "Dockerfile" in base_files
+
+
+def test_comparison_patch_keeps_real_rust_source_file_deletion(tmp_path):
+    from harness_testing.Code_Reviews import _comparison_patch
+
+    source, final = tmp_path / "source", tmp_path / "final"
+    (source / "src").mkdir(parents=True)
+    final.mkdir()
+    (source / "Dockerfile").write_text("COPY Cargo.toml ./\nCOPY src ./src\n")
+    (source / "Cargo.toml").write_text("[package]\nname = \"fixture\"\n")
+    (source / "src" / "lib.rs").write_text("pub fn fixture() {}\n")
+    (final / "Cargo.toml").write_text("[package]\nname = \"fixture\"\n")
+
+    patch, base_files = _comparison_patch(source, final)
+
+    assert b"diff --git a/src/lib.rs a/src/lib.rs" in patch
+    assert "src/lib.rs" in base_files
+
+
 def test_prepare_rejects_a_report_without_a_completed_experiment_trial(tmp_path: Path):
     from harness_testing.Code_Reviews import prepare_review
 
