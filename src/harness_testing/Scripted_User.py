@@ -7,7 +7,7 @@ import re
 _LOCAL_DEVELOPMENT_APPROVAL = re.compile(
     r"""(?isx)
     (?:
-        \b(?:may|shall|should|can)\s+i\s+(?:proceed|continue)\b
+        \b(?:may|shall|should|can)\s+i\s+(?:proceed|continue|implement)\b
         |\b(?:please\s+)?(?:approve|confirm)\s+(?:this|that|the)\s+
           (?:plan|design|approach)\b
         |\bdoes\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right\b
@@ -17,7 +17,7 @@ _TERMINAL_DIRECT_REQUEST = re.compile(
     r"""(?isx)(?:^|[.!?]\s+|\n\s*\n)
     (?P<request>
         (?:
-            (?:may|shall|should|can)\s+i\s+(?:proceed|continue)\b
+            (?:may|shall|should|can)\s+i\s+(?:proceed|continue|implement)\b
             |(?:please\s+)?(?:approve|confirm)\b
             |does\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right\b
         )

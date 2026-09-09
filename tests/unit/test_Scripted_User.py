@@ -85,6 +85,7 @@ def test_all_comparison_tasks_answer_authored_questions():
             ("clarification", "Where should I work?"),
             ("clarification", "What are the requirements?"),
             ("approval", "May I proceed with the plan?"),
+            ("approval", "Shall I implement and verify this minimal fix?"),
             (
                 "approval",
                 (
@@ -177,6 +178,7 @@ def test_local_development_matcher_is_strict_and_legacy_patterns_still_work():
         "Please approve this plan so I can branch and implement.",
         "This plan changes one local value. Please confirm this approach when ready.",
         "May I continue with this plan after the check?",
+        "Shall I implement and verify this minimal fix?",
         "The plan says do not publish. Please approve this plan while I prepare it.",
     ):
         assert select_reply({"kind": "approval", "text": text}, local, 0)["status"] == "reply"
@@ -193,6 +195,7 @@ def test_local_development_matcher_is_strict_and_legacy_patterns_still_work():
         "Please approve this plan with additional permissions.",
         "Please approve this plan with broader authority.",
         "Please approve this plan outside the original scope.",
+        "Shall I implement and publish this minimal fix?",
         "Please approve this proposal.",
     ):
         assert (

@@ -143,6 +143,7 @@ def test_terminal_approval_requests_keep_report_status_and_reason(text, interact
     [
         "Design:\n\nPlease confirm this design and I\u2019ll implement it.",
         "I will update the source value, then run the checks.\n\nApprove this approach?",
+        "Shall I implement and verify this minimal fix?",
         "Plan:\n\nPlease approve this plan so I can proceed.",
         "Design:\n\nPlease confirm this design and I\u2019ll continue.",
         "Please approve this plan so I can branch and implement.",
@@ -171,6 +172,7 @@ def test_frozen_routine_approval_continues_the_native_root(text):
     "text",
     [
         "I will update the source value, then run the checks.\n\nApprove this approach?",
+        "Shall I implement and verify this minimal fix?",
         "Plan:\n\nPlease approve this plan so I can proceed.",
         "Design:\n\nPlease confirm this design and I\u2019ll continue.",
         "Please approve this plan so I can branch and implement.",
