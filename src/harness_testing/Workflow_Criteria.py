@@ -319,11 +319,11 @@ def cargo_packages_succeeded(packages: Sequence[str]) -> bool:
 
 
 def no_comprehensive_commands() -> bool:
-    """Return false for any successful comprehensive command."""
+    """Return false for any observed comprehensive command."""
 
     return not any(
-        kind == "command" and command in _COMPREHENSIVE_COMMANDS and success is True
-        for kind, command, success in _events()
+        kind == "command" and command in _COMPREHENSIVE_COMMANDS
+        for kind, command, _ in _events()
     )
 
 

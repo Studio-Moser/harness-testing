@@ -365,6 +365,16 @@ def test_affected_validation_routes_shared_trajectory_decoder_checks():
     )
 
 
+def test_affected_validation_rebuilds_and_checks_shared_workflow_scorer():
+    commands = affected_validation_commands(
+        REPOSITORY_ROOT,
+        [Path("src/harness_testing/Workflow_Criteria.py")],
+    )
+
+    assert ("uv", "run", "harness-test", "images", "build", "--verifier") in commands
+    assert any(command[-2:] == ("workflow", "--all-cases") for command in commands)
+
+
 def test_affected_validation_runs_only_oracle_and_nop_for_one_changed_task():
     commands = affected_validation_commands(
         REPOSITORY_ROOT,

@@ -77,6 +77,37 @@ def test_workflow_criteria_distinguish_direct_and_final_verification(
     assert Workflow_Criteria.command_after_last_mutation("npm test") is True
 
 
+def test_compound_shell_does_not_infer_required_check_but_records_test_churn(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+    _write_trajectory(
+        trajectory,
+        ["git diff; npm run check:cta; npm run gate; npm run build"],
+    )
+
+    assert Workflow_Criteria.command_after_last_mutation("npm run check:cta") is False
+    assert Workflow_Criteria.no_comprehensive_commands() is False
+
+
+def test_known_failed_required_check_does_not_satisfy_workflow(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+    _write_trajectory(trajectory, ["npm run check:cta"])
+    document = json.loads(trajectory.read_text())
+    result = document["steps"][1]["observation"]["results"][1]
+    result["content"] = "[exit_code] 1"
+    result["extra"]["exit_code"] = 1
+    trajectory.write_text(json.dumps(document))
+
+    assert Workflow_Criteria.command_after_last_mutation("npm run check:cta") is False
+
+
 def test_combined_cargo_command_covers_each_selected_package(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

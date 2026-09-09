@@ -946,6 +946,9 @@ def affected_validation_commands(
             unit_tests.update(_TRAJECTORY_DECODER_TESTS)
             images.add("verifier")
             workflow_pack = True
+        if name == "src/harness_testing/Workflow_Criteria.py":
+            images.add("verifier")
+            workflow_pack = True
 
         if name in {
             "policy/Dashboard_Publication.toml",
