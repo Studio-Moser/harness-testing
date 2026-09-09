@@ -176,6 +176,10 @@ def test_local_development_matcher_is_strict_and_legacy_patterns_still_work():
     )
     for text in (
         "Please approve this plan so I can branch and implement.",
+        "Approve this minimal design and I’ll implement it.",
+        "Please confirm this narrow plan and I’ll proceed.",
+        "Please confirm and I'll apply the local change.",
+        "Please confirm, and I’ll proceed with implementation.",
         "This plan changes one local value. Please confirm this approach when ready.",
         "May I continue with this plan after the check?",
         "Shall I implement and verify this minimal fix?",
@@ -307,6 +311,15 @@ def test_all_task_policies_answer_only_explicit_local_branch_handoffs():
                 "rule_id": "local-handoff",
                 "reply": HANDOFF_REPLY,
             }
+        reviewed_menu = HANDOFF_MENU.replace(
+            "Implementation complete.",
+            "Implementation complete and independently reviewed; checks pass.",
+        )
+        assert select_reply({"kind": "clarification", "text": reviewed_menu}, frozen, 1) == {
+            "status": "reply",
+            "rule_id": "local-handoff",
+            "reply": HANDOFF_REPLY,
+        }
         for text in (
             "",
             "Which option?",

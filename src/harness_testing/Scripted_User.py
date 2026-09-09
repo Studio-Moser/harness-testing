@@ -9,7 +9,10 @@ _LOCAL_DEVELOPMENT_APPROVAL = re.compile(
     (?:
         \b(?:may|shall|should|can)\s+i\s+(?:proceed|continue|implement)\b
         |\b(?:please\s+)?(?:approve|confirm)\s+(?:this|that|the)\s+
+          (?:(?:minimal|narrow|bounded|proposed|exact)\s+)?
           (?:plan|design|approach)\b
+        |\b(?:please\s+)?confirm\s*,?\s+and\s+i(?:['’]ll|\s+will)\s+
+          (?:apply|implement|proceed|continue)\b
         |\bdoes\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right\b
     )"""
 )
@@ -81,7 +84,8 @@ def terminal_approval_request(text: str) -> str | None:
 def _local_branch_handoff(text: str) -> bool:
     # ponytail: explicit completed branch menus; replay new forms before extending this matcher.
     menu = re.search(
-        r"(?im)^(?:implementation|work|task) (?:is )?complete[.!][ \t]*"
+        r"(?im)^(?:implementation|work|task) (?:is )?complete(?:[.!]|[ \t]+and[ \t]+"
+        r"(?:independently[ \t]+)?(?:reviewed|verified|tested)(?:;[^\n]*)?[.!])[ \t]*"
         r"(?:what would you like to do\?)?[ \t]*\n"
         r"(?P<options>(?:[ \t]*\n|[ \t]*\d+[.)][ \t]+[^\n]+\n)+)"
         r"[ \t]*(?:which option(?: would you like)?|what would you like to do)\?[ \t]*\Z",
