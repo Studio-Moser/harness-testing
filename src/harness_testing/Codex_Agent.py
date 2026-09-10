@@ -14,6 +14,11 @@ from harbor.environments.base import BaseEnvironment
 from harbor.models.agent.context import AgentContext
 from harbor.models.trajectories import Observation, ObservationResult, ToolCall, Trajectory
 
+from harness_testing.Native_Conversation import (
+    remove_controller,
+    stage_controller,
+    validate_conversation,
+)
 from harness_testing.Skill_Evaluation import explicit_instruction, validate_skill_name
 
 
@@ -101,9 +106,7 @@ def _output(item: dict[str, Any]) -> str | None:
     if isinstance(formatted, str):
         return formatted
     parts = [
-        value
-        for key in ("stdout", "stderr")
-        if isinstance((value := item.get(key)), str) and value
+        value for key in ("stdout", "stderr") if isinstance((value := item.get(key)), str) and value
     ]
     return "".join(parts) or None
 
@@ -178,13 +181,14 @@ class HarnessCodex(Codex):
         self,
         *args: Any,
         skill_invocation: str | None = None,
+        conversation: dict | None = None,
         **kwargs: Any,
     ) -> None:
         self._skill_invocation = (
-            validate_skill_name(skill_invocation)
-            if skill_invocation is not None
-            else None
+            validate_skill_name(skill_invocation) if skill_invocation is not None else None
         )
+        self._conversation = conversation
+        self._conversation_instruction = None
         super().__init__(*args, **kwargs)
 
     @override
@@ -193,7 +197,73 @@ class HarnessCodex(Codex):
     ) -> None:
         if self._skill_invocation is not None:
             instruction = explicit_instruction("codex", self._skill_invocation, instruction)
-        await super().run(instruction, environment, context)
+        if self._conversation is None:
+            await super().run(instruction, environment, context)
+            return
+        validate_conversation(self._conversation, "codex")
+        if self._resume or self._load:
+            raise ValueError(
+                "native_resume_requires_explicit_root: use conversation.root_session_id"
+            )
+        self._conversation_instruction = instruction
+        try:
+            await super().run(instruction, environment, context)
+        finally:
+            # Harbor stages config/auth before its try/finally. Cover those
+            # failures too, retaining transcripts before removing credentials.
+            home = shlex.quote(self._REMOTE_CODEX_HOME.as_posix())
+            secrets = shlex.quote(self._REMOTE_CODEX_SECRETS_DIR.as_posix())
+            cache = f"{home}/plugins/cache"
+            try:
+                result = await environment.exec(
+                    f"mkdir -p /logs/agent/sessions; "
+                    f"if [ -d {home}/sessions ]; then "
+                    f"cp -R {home}/sessions/. /logs/agent/sessions/; fi; "
+                    f"rm -rf -- {secrets} && "
+                    # The frozen cache is a read-only bind mount inside CODEX_HOME.
+                    # Keep that mount and its parents; remove all writable state.
+                    f"if mountpoint -q {cache} && "
+                    f"findmnt -rn --mountpoint {cache} -O ro >/dev/null; then "
+                    f"find {home} -mindepth 1 -maxdepth 1 ! -name plugins "
+                    f"-exec rm -rf -- {{}} + && "
+                    f"find {home}/plugins -mindepth 1 -maxdepth 1 ! -name cache "
+                    f"-exec rm -rf -- {{}} +; "
+                    f"else rm -rf -- {home}; fi",
+                    user="root",
+                )
+                if result.return_code:
+                    raise RuntimeError("Codex credential cleanup failed")
+            finally:
+                await remove_controller(environment)
+
+    @override
+    async def exec_as_agent(self, environment, command, env=None, cwd=None, timeout_sec=None):
+        if self._conversation is not None and "codex exec " in command:
+            cli = ["codex", "app-server", "--stdio", "--enable", "unified_exec"]
+            cli.extend(shlex.split(self.build_cli_flags()))
+            config = {
+                **self._conversation,
+                "provider": "codex",
+                "command": cli,
+                "model": self.model_name.split("/")[-1],
+                "effort": self._resolved_flags.get(
+                    "reasoning_effort", self._base_config.get("model_reasoning_effort")
+                ),
+                "runtime_version": self._version,
+                "instruction": self._conversation_instruction,
+            }
+            command = (
+                "if [ -s ~/.nvm/nvm.sh ]; then . ~/.nvm/nvm.sh; fi; "
+                + await stage_controller(environment, config)
+            )
+            timeout_sec = (
+                self._conversation["timeout_seconds"]
+                + self._conversation.get("provider_recovery_seconds", 0)
+                + 10
+            )
+        return await super().exec_as_agent(
+            environment, command, env=env, cwd=cwd, timeout_sec=timeout_sec
+        )
 
     @override
     async def _upload_effective_config(

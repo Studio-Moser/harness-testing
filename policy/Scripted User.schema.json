@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "interaction_limit",
+    "facts",
+    "rules"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "interaction_limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "facts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "fact"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "pattern"
+            ],
+            "not": {
+              "required": [
+                "matcher"
+              ]
+            }
+          },
+          {
+            "required": [
+              "matcher"
+            ],
+            "not": {
+              "required": [
+                "pattern"
+              ]
+            }
+          }
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "clarification",
+              "approval"
+            ]
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "matcher": {
+            "enum": [
+              "local-development-approval",
+              "local-branch-handoff"
+            ]
+          },
+          "fact": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "matcher"
+              ],
+              "properties": {
+                "matcher": {
+                  "const": "local-development-approval"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "kind": {
+                  "const": "approval"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "matcher"
+              ],
+              "properties": {
+                "matcher": {
+                  "const": "local-branch-handoff"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "kind": {
+                  "const": "clarification"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

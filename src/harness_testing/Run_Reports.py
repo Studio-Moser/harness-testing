@@ -8,7 +8,7 @@ import math
 import os
 import subprocess
 from collections.abc import Callable, Mapping
-from datetime import UTC, datetime
+from datetime import UTC, datetime, tzinfo
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -99,14 +99,13 @@ def validate_run_report(
     errors.extend(_run_report_schema_errors(root, document))
     if not isinstance(document, Mapping):
         return tuple(dict.fromkeys(errors))
-    if published and document.get("schema_version") != "2":
+    if published and document.get("schema_version") not in {"2", "3"}:
         errors.append(
             f"run report schema version {document.get('schema_version')} is local-only; "
-            "published reports require version 2"
+            "published reports require version 2 or 3"
         )
-    if (
-        document.get("schema_version") == "2"
-        and document.get("report_id") != run_report_id(document)
+    if document.get("schema_version") in {"2", "3"} and document.get("report_id") != run_report_id(
+        document
     ):
         errors.append("run report identity does not match its content")
     return tuple(dict.fromkeys(errors))
@@ -148,9 +147,81 @@ def _timestamp(value: object) -> tuple[str | None, datetime | None]:
     except ValueError:
         return None, None
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
+        return None, None
     parsed = parsed.astimezone(UTC)
     return parsed.isoformat().replace("+00:00", "Z"), parsed
+
+
+def record_job_timestamps(job_directory: Path, *, naive_timezone: tzinfo) -> None:
+    """Preserve explicit UTC times separately from an unchanged Harbor result.
+
+    The caller must know the execution timezone; imported evidence must never
+    infer it from the machine performing the import.
+    """
+
+    if not isinstance(naive_timezone, tzinfo):
+        raise TypeError("an explicit execution timezone is required")
+    result_path = job_directory / "result.json"
+    try:
+        contents = result_path.read_bytes()
+        result = json.loads(contents)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return
+    if not isinstance(result, dict):
+        return
+    timestamps: dict[str, object] = {
+        "result_digest": "sha256:" + hashlib.sha256(contents).hexdigest(),
+    }
+    for field in ("started_at", "updated_at", "finished_at"):
+        value = result.get(field)
+        if not isinstance(value, str):
+            continue
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=naive_timezone)
+        timestamps[field] = parsed.astimezone(UTC).isoformat().replace("+00:00", "Z")
+    path = job_directory / "Job_Timestamps.json"
+    temporary = path.with_name(".Job_Timestamps.json.tmp")
+    temporary.write_text(json.dumps(timestamps, indent=2, sort_keys=True) + "\n")
+    os.replace(temporary, path)
+
+
+def read_timed_job_result(result_path: Path) -> dict[str, Any] | None:
+    """Read Harbor data with only matching, explicitly zoned timestamp evidence."""
+
+    try:
+        contents = result_path.read_bytes()
+        result = json.loads(contents)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        result = None
+    if not isinstance(result, dict):
+        result = None
+    timestamps = _read_object(result_path.with_name("Job_Timestamps.json"))
+    if result is not None and timestamps is not None:
+        digest = "sha256:" + hashlib.sha256(contents).hexdigest()
+        if timestamps.get("result_digest") == digest:
+            for field in ("started_at", "updated_at", "finished_at"):
+                normalized, _ = _timestamp(timestamps.get(field))
+                if normalized is not None:
+                    result[field] = normalized
+    return result
+
+
+def _runtime_seconds(result: Mapping[str, object] | None) -> float | None:
+    if result is None:
+        return None
+    try:
+        start = datetime.fromisoformat(str(result.get("started_at")).replace("Z", "+00:00"))
+        finish = datetime.fromisoformat(str(result.get("finished_at")).replace("Z", "+00:00"))
+        # Harbor's same-clock naive pair still measures duration, even when its
+        # absolute timezone is unknown; mixed aware/naive values are invalid.
+        seconds = (finish - start).total_seconds()
+    except (ValueError, TypeError):
+        return None
+    return seconds if seconds >= 0 else None
 
 
 def _score(stats: Mapping[str, object], name: str) -> float | None:
@@ -202,9 +273,7 @@ def _series_key(
 ) -> str:
     adapter_digests = manifest.provenance.get("agent_adapter_digests")
     image_input_digests = manifest.provenance.get("image_input_digests")
-    if not isinstance(adapter_digests, Mapping) or not isinstance(
-        image_input_digests, Mapping
-    ):
+    if not isinstance(adapter_digests, Mapping) or not isinstance(image_input_digests, Mapping):
         raise ValueError("run manifest has incomplete series provenance")
     adapter_digest = adapter_digests.get(cell.provider)
     if not isinstance(adapter_digest, str):
@@ -290,8 +359,9 @@ def build_job_report(
 ) -> dict[str, object]:
     """Build one allowlisted job summary from manifest and top-level result data."""
 
-    cell: RunCell = manifest.cells[index % len(manifest.cells)]
-    task = manifest.task_ids[index // len(manifest.cells)]
+    from harness_testing.Runs import job_slot
+
+    cell, task, _ = job_slot(manifest, index)
     job_config = load_job(manifest.path.parent / relative_path)
     job_name = job_config.job_name
     agent_config = job_config.agents[0]
@@ -302,16 +372,12 @@ def build_job_report(
     if not isinstance(agent_version, str) or not agent_version:
         raise ValueError(f"Harbor job has no agent version: {relative_path}")
     task_pack, task_digest = _task_identity(manifest, task)
-    status, counts = _job_status(result, expected_trials=manifest.attempts)
+    status, counts = _job_status(result, expected_trials=job_config.n_attempts)
     stats = result.get("stats") if isinstance(result, Mapping) else None
     stats = stats if isinstance(stats, Mapping) else {}
-    started_at, started = _timestamp(result.get("started_at") if result else None)
-    finished_at, finished = _timestamp(result.get("finished_at") if result else None)
-    runtime = (
-        max(0.0, (finished - started).total_seconds())
-        if started is not None and finished is not None
-        else None
-    )
+    started_at, _ = _timestamp(result.get("started_at") if result else None)
+    finished_at, _ = _timestamp(result.get("finished_at") if result else None)
+    runtime = _runtime_seconds(result)
     unavailable_reason = series_key_unavailable_reason
     if agent_config.import_path is None:
         unavailable_reason = "missing-provenance"
@@ -340,16 +406,14 @@ def build_job_report(
         "task": task,
         "task_pack": task_pack,
         "task_digest": task_digest,
-        "comparability": (
-            "comparable" if unavailable_reason is None else "diagnostic-only"
-        ),
+        "comparability": ("comparable" if unavailable_reason is None else "diagnostic-only"),
         "series_key": series_key,
         "series_key_unavailable_reason": unavailable_reason,
         "status": status,
         "started_at": started_at,
         "finished_at": finished_at,
         "runtime_seconds": runtime,
-        "expected_trials": manifest.attempts,
+        "expected_trials": job_config.n_attempts,
         "completed_trials": counts["completed"],
         "errored_trials": counts["errored"],
         "cancelled_trials": counts["cancelled"],
@@ -374,7 +438,8 @@ def _job_report(
     relative_path: str,
 ) -> dict[str, object]:
     job_name = load_job(manifest.path.parent / relative_path).job_name
-    result = _read_object(root / "jobs" / "raw" / job_name / "result.json")
+    result_path = root / "jobs" / "raw" / job_name / "result.json"
+    result = read_timed_job_result(result_path)
     return build_job_report(manifest, index, relative_path, result)
 
 
@@ -412,10 +477,7 @@ def write_run_report(
     failed_jobs = sum(job["status"] in {"failed", "incomplete"} for job in jobs)
     pending_jobs = sum(job["status"] in {"pending", "running"} for job in jobs)
     completed_trials = sum(int(job["completed_trials"]) for job in jobs)
-    failed_trials = sum(
-        int(job["errored_trials"]) + int(job["cancelled_trials"])
-        for job in jobs
-    )
+    failed_trials = sum(int(job["errored_trials"]) + int(job["cancelled_trials"]) for job in jobs)
     limitations: list[str] = []
     if completed_jobs != len(jobs) or completed_trials != manifest.session_count:
         limitations.append("partial-run")
@@ -445,9 +507,9 @@ def write_run_report(
         "status": status,
         "started_at": started_at,
         "updated_at": updated_at,
-        "finished_at": (
-            max(job_finishes) if job_finishes else updated_at
-        ) if status != "running" else None,
+        "finished_at": (max(job_finishes) if job_finishes else updated_at)
+        if status != "running"
+        else None,
         "expected_jobs": len(jobs),
         "completed_jobs": completed_jobs,
         "failed_jobs": failed_jobs,
@@ -456,11 +518,13 @@ def write_run_report(
         "completed_trials": completed_trials,
         "failed_trials": failed_trials,
         "admission_estimate_usd": float(manifest.api_equivalent_cost_usd),
-        "observed_api_equivalent_cost_usd": (
-            sum(observed_costs) if observed_costs else None
-        ),
+        "observed_api_equivalent_cost_usd": (sum(observed_costs) if observed_costs else None),
         "jobs": jobs,
     }
+    if manifest.provenance.get("experiment") is not None:
+        from harness_testing.Experiment_Reports import attach_experiment_report
+
+        attach_experiment_report(root, manifest, report, previous)
     report["report_id"] = run_report_id(report)
     errors = validate_run_report(root, report)
     if errors:
@@ -469,6 +533,13 @@ def write_run_report(
     temporary = report_path.with_name(".Run_Report.json.tmp")
     temporary.write_text(contents)
     os.replace(temporary, report_path)
+    if report["schema_version"] == "3" and status != "running":
+        evidence_directory = root / "runs/evidence"
+        evidence_directory.mkdir(parents=True, exist_ok=True)
+        snapshot = evidence_directory / (report["report_id"].removeprefix("sha256:") + ".json")
+        if snapshot.exists() and snapshot.read_text() != contents:
+            raise ValueError("immutable report revision conflicts with its content identity")
+        snapshot.write_text(contents)
     return report_path
 
 
@@ -483,13 +554,7 @@ def refresh_local_dashboard(
     if not (root / "dashboard" / "package.json").is_file():
         return None
     (
-        root
-        / "dashboard"
-        / "src"
-        / ".observablehq"
-        / "cache"
-        / "data"
-        / "Public_Results.json"
+        root / "dashboard" / "src" / ".observablehq" / "cache" / "data" / "Public_Results.json"
     ).unlink(missing_ok=True)
     try:
         runner(

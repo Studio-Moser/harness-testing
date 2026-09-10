@@ -6,6 +6,7 @@ import sys
 from dataclasses import replace
 from decimal import Decimal
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 import yaml
@@ -89,8 +90,7 @@ def test_v1_run_report_is_local_only(run_root: Path):
     path = RUN_REPORT_FIXTURES / "Legacy_V1.json"
     report = json.loads(path.read_text())
     assert any(
-        "version 1" in error
-        for error in validate_run_report(run_root, report, published=True)
+        "version 1" in error for error in validate_run_report(run_root, report, published=True)
     )
     assert load_run_report(run_root, path)["schema_version"] == "1"
 
@@ -178,9 +178,7 @@ def source_repositories(
                     ],
                 }
             ),
-            ".claude-plugin/plugin.json": json.dumps(
-                {"name": "superpowers", "version": "6.3.0"}
-            ),
+            ".claude-plugin/plugin.json": json.dumps({"name": "superpowers", "version": "6.3.0"}),
             ".agents/plugins/marketplace.json": json.dumps(
                 {
                     "name": "superpowers-dev",
@@ -222,9 +220,7 @@ def source_repositories(
                 {"name": "harness", "version": "0.8.7"}
             ),
             "plugins/harness/skills/execute/SKILL.md": "# Execute\n",
-            "plugins/harness/templates/AGENTS_Baseline.md": (
-                "# Benchmark baseline\n"
-            ),
+            "plugins/harness/templates/AGENTS_Baseline.md": ("# Benchmark baseline\n"),
             "plugins/harness/references/harness-contract.md": "# Contract\n",
             "plugins/harness/scripts/resolve-route.py": "#!/usr/bin/env python3\n",
         },
@@ -273,12 +269,8 @@ commit = "{harness_commit}"
     (tmp_path / "runs" / "Profiles.toml").write_text(PROFILE_TEXT)
     (tmp_path / "tasks" / "workflow" / "task-one").mkdir(parents=True)
     (tmp_path / "tasks" / "workflow" / "task-two").mkdir()
-    (tmp_path / "tasks" / "workflow" / "task-one" / "instruction.md").write_text(
-        "task one\n"
-    )
-    (tmp_path / "tasks" / "workflow" / "task-two" / "instruction.md").write_text(
-        "task two\n"
-    )
+    (tmp_path / "tasks" / "workflow" / "task-one" / "instruction.md").write_text("task one\n")
+    (tmp_path / "tasks" / "workflow" / "task-two" / "instruction.md").write_text("task two\n")
     for task_id in ("task-one", "task-two"):
         (tmp_path / "tasks" / "workflow" / task_id / "task.toml").write_text(
             'schema_version = "1.4"\n'
@@ -296,6 +288,10 @@ commit = "{harness_commit}"
         "src/harness_testing/Harness_Result.py",
         "src/harness_testing/Harness_Result.schema.json",
         "src/harness_testing/Skill_Evaluation.py",
+        "src/harness_testing/Native_Conversation.py",
+        "src/harness_testing/External_Codex.py",
+        "src/harness_testing/Trial_Evidence.py",
+        "src/harness_testing/Scripted_User.py",
         "src/harness_testing/Trajectory_Events.py",
         "src/harness_testing/Workflow_Criteria.py",
     ):
@@ -308,9 +304,7 @@ commit = "{harness_commit}"
 
 def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> Path:
     versions = load_versions(root / "Versions.toml")
-    pins = {
-        str(source["name"]): source for source in versions.get("sources", [])
-    }
+    pins = {str(source["name"]): source for source in versions.get("sources", [])}
     source_overrides = {}
     if cell.harness_commit is not None:
         harness_pin = pins["Studio Harness"]
@@ -365,9 +359,7 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
             surface = "codex-plugin"
         (path / relative).mkdir(parents=True, exist_ok=True)
         (path / relative / "skills").mkdir(exist_ok=True)
-        plugin_skill_name = (
-            "using-superpowers" if layer == "Superpowers" else "execute"
-        )
+        plugin_skill_name = "using-superpowers" if layer == "Superpowers" else "execute"
         skill = path / relative / "skills" / plugin_skill_name
         skill.mkdir()
         (skill / "SKILL.md").write_text(f"# {plugin_skill_name}\n")
@@ -375,8 +367,7 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
             manifest = path / relative / ".claude-plugin"
             manifest.mkdir(exist_ok=True)
             (manifest / "plugin.json").write_text(
-                json.dumps({"name": plugin, "version": plugin_version})
-                + "\n"
+                json.dumps({"name": plugin, "version": plugin_version}) + "\n"
             )
             if layer == "Superpowers":
                 (path / relative / "hooks").mkdir(exist_ok=True)
@@ -384,8 +375,8 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
             template = path / relative / "templates" / "AGENTS_Baseline.md"
             template.parent.mkdir(exist_ok=True)
             template.write_text("# Benchmark baseline\n")
-            instruction = path / "project" / (
-                "CLAUDE.md" if cell.provider == "claude" else "AGENTS.md"
+            instruction = (
+                path / "project" / ("CLAUDE.md" if cell.provider == "claude" else "AGENTS.md")
             )
             instruction.parent.mkdir(exist_ok=True)
             instruction.write_text("# Benchmark baseline\n")
@@ -402,17 +393,14 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
                 "path": provider_path,
                 "capabilities": (
                     ["skills", "hooks"]
-                    if cell.provider == "claude"
-                    and layer == "Superpowers"
+                    if cell.provider == "claude" and layer == "Superpowers"
                     else ["skills"]
                 ),
             }
         )
     if cell.provider == "codex" and layers:
         provider_home = path / "codex" / "provider-home"
-        marketplaces = {
-            surface["path"].split("/")[-3] for surface in delivery_surfaces
-        }
+        marketplaces = {surface["path"].split("/")[-3] for surface in delivery_surfaces}
         for marketplace in marketplaces:
             (provider_home / "marketplaces" / marketplace).mkdir(parents=True)
         sections = []
@@ -422,10 +410,7 @@ def _add_bundle(root: Path, cell: RunCell, *, skill_name: str | None = None) -> 
                 (
                     f"[marketplaces.{marketplace}]",
                     'source_type = "local"',
-                    (
-                        'source = "/harness-arm/codex/provider-home/marketplaces/'
-                        f'{marketplace}"'
-                    ),
+                    (f'source = "/harness-arm/codex/provider-home/marketplaces/{marketplace}"'),
                     "",
                     f'[plugins."{plugin}@{marketplace}"]',
                     "enabled = true",
@@ -543,9 +528,7 @@ def test_new_manifest_binds_public_report_destination(run_root: Path):
         "workflow": "Publish_Pages.yml",
         "code_ref": "main",
     }
-    assert "Public run report: Studio-Moser/harness-testing" in Runs.format_plan(
-        manifest
-    )
+    assert "Public run report: Studio-Moser/harness-testing" in Runs.format_plan(manifest)
 
 
 def test_local_only_manifest_is_explicit_and_content_addressed(run_root: Path):
@@ -571,9 +554,7 @@ def test_v2_report_separates_estimate_from_observed_cost(run_root: Path):
     report = json.loads(report_path.read_text())
 
     assert report["schema_version"] == "2"
-    assert report["admission_estimate_usd"] == float(
-        manifest.api_equivalent_cost_usd
-    )
+    assert report["admission_estimate_usd"] == float(manifest.api_equivalent_cost_usd)
     assert report["observed_api_equivalent_cost_usd"] == 0.04
     assert report["report_id"] == run_report_id(report)
 
@@ -584,9 +565,7 @@ def test_codex_candidate_version_can_differ_from_ledger_version(
 ):
     pinned_source, _ = source_repositories["Studio Harness"]
     candidate_source = run_root / "candidate-harness"
-    subprocess.run(
-        ("git", "clone", "--quiet", pinned_source, candidate_source), check=True
-    )
+    subprocess.run(("git", "clone", "--quiet", pinned_source, candidate_source), check=True)
     subprocess.run(
         ("git", "-C", candidate_source, "config", "user.name", "Harness Test"),
         check=True,
@@ -725,7 +704,7 @@ def _write_completed_job(
                             ]
                         }
                     },
-                }
+                },
             }
         )
         + "\n"
@@ -743,9 +722,7 @@ def _write_completed_job(
         if include_exception_info:
             trial_result["exception_info"] = exception_info
         (trial / "result.json").write_text(json.dumps(trial_result) + "\n")
-        (verifier / "reward.json").write_text(
-            json.dumps({"reward": reward}) + "\n"
-        )
+        (verifier / "reward.json").write_text(json.dumps({"reward": reward}) + "\n")
         if cell.provider == "claude":
             event = {
                 "type": "system",
@@ -858,13 +835,16 @@ def test_completed_job_delivery_accepts_expected_plugins_and_skill_directories(
         skills=skills,
     )
 
-    assert Runs._completed_job_errors(
-        run_root,
-        cell,
-        "valid-delivery",
-        frozenset({"superpowers:using-superpowers", "harness:execute"}),
-        expected_attempts=1,
-    ) == ()
+    assert (
+        Runs._completed_job_errors(
+            run_root,
+            cell,
+            "valid-delivery",
+            frozenset({"superpowers:using-superpowers", "harness:execute"}),
+            expected_attempts=1,
+        )
+        == ()
+    )
 
 
 def test_completed_job_delivery_accepts_repeated_equivalent_claude_init(
@@ -873,27 +853,22 @@ def test_completed_job_delivery_accepts_repeated_equivalent_claude_init(
     cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
     _add_bundle(run_root, cell)
     _write_completed_job(run_root, cell, "repeated-init")
-    evidence = (
-        run_root
-        / "jobs"
-        / "raw"
-        / "repeated-init"
-        / "trial-1"
-        / "agent"
-        / "claude-code.txt"
-    )
+    evidence = run_root / "jobs" / "raw" / "repeated-init" / "trial-1" / "agent" / "claude-code.txt"
     event = json.loads(evidence.read_text())
     event["session_id"] = "primary-session"
     line = json.dumps(event) + "\n"
     evidence.write_text(line + line)
 
-    assert Runs._completed_job_errors(
-        run_root,
-        cell,
-        "repeated-init",
-        frozenset({"harness:execute"}),
-        expected_attempts=1,
-    ) == ()
+    assert (
+        Runs._completed_job_errors(
+            run_root,
+            cell,
+            "repeated-init",
+            frozenset({"harness:execute"}),
+            expected_attempts=1,
+        )
+        == ()
+    )
 
 
 def test_completed_job_delivery_rejects_repeated_claude_init_across_sessions(
@@ -903,13 +878,7 @@ def test_completed_job_delivery_rejects_repeated_claude_init_across_sessions(
     _add_bundle(run_root, cell)
     _write_completed_job(run_root, cell, "cross-session-init")
     evidence = (
-        run_root
-        / "jobs"
-        / "raw"
-        / "cross-session-init"
-        / "trial-1"
-        / "agent"
-        / "claude-code.txt"
+        run_root / "jobs" / "raw" / "cross-session-init" / "trial-1" / "agent" / "claude-code.txt"
     )
     first = json.loads(evidence.read_text())
     first["session_id"] = "primary-session"
@@ -935,13 +904,7 @@ def test_completed_job_delivery_rejects_conflicting_repeated_claude_init(
     _add_bundle(run_root, cell)
     _write_completed_job(run_root, cell, "conflicting-init")
     evidence = (
-        run_root
-        / "jobs"
-        / "raw"
-        / "conflicting-init"
-        / "trial-1"
-        / "agent"
-        / "claude-code.txt"
+        run_root / "jobs" / "raw" / "conflicting-init" / "trial-1" / "agent" / "claude-code.txt"
     )
     first = json.loads(evidence.read_text())
     first["session_id"] = "primary-session"
@@ -1026,10 +989,7 @@ def test_completed_job_delivery_rejects_unselected_benchmark_skill_namespace(
         expected_attempts=1,
     )
 
-    assert any(
-        "skill" in error and "superpowers:using-superpowers" in error
-        for error in errors
-    )
+    assert any("skill" in error and "superpowers:using-superpowers" in error for error in errors)
 
 
 def test_completed_job_delivery_rejects_blank_benchmark_plugin_marketplace(
@@ -1084,13 +1044,16 @@ def test_completed_job_correctness_zero_passes_infrastructure(run_root: Path):
     _add_bundle(run_root, cell)
     _write_completed_job(run_root, cell, "correctness-zero", reward=0.0)
 
-    assert Runs._completed_job_errors(
-        run_root,
-        cell,
-        "correctness-zero",
-        frozenset(),
-        expected_attempts=1,
-    ) == ()
+    assert (
+        Runs._completed_job_errors(
+            run_root,
+            cell,
+            "correctness-zero",
+            frozenset(),
+            expected_attempts=1,
+        )
+        == ()
+    )
 
 
 def test_completed_job_delivery_accepts_one_trial_per_attempt(run_root: Path):
@@ -1098,13 +1061,16 @@ def test_completed_job_delivery_accepts_one_trial_per_attempt(run_root: Path):
     _add_bundle(run_root, cell)
     _write_completed_job(run_root, cell, "two-attempts", attempts=2)
 
-    assert Runs._completed_job_errors(
-        run_root,
-        cell,
-        "two-attempts",
-        frozenset(),
-        expected_attempts=2,
-    ) == ()
+    assert (
+        Runs._completed_job_errors(
+            run_root,
+            cell,
+            "two-attempts",
+            frozenset(),
+            expected_attempts=2,
+        )
+        == ()
+    )
 
 
 def test_completed_job_delivery_rejects_trial_exception(run_root: Path):
@@ -1171,8 +1137,7 @@ def test_completed_job_delivery_rejects_malformed_benchmark_evidence_with_a_cap(
     )
 
     assert errors == tuple(
-        "malformed-delivery: "
-        f"Claude plugin entry {index} has malformed benchmark plugin evidence"
+        f"malformed-delivery: Claude plugin entry {index} has malformed benchmark plugin evidence"
         for index in range(12)
     )
 
@@ -1210,6 +1175,7 @@ def test_execution_updates_local_dashboard_after_completed_run(
     run_root: Path,
     monkeypatch: pytest.MonkeyPatch,
 ):
+    monkeypatch.setenv("TZ", "America/Los_Angeles")
     manifest = _compile_pair(run_root, publish_report=True)
     _stub_execution_preflight(monkeypatch)
     refreshes: list[Path] = []
@@ -1223,15 +1189,14 @@ def test_execution_updates_local_dashboard_after_completed_run(
     monkeypatch.setattr(
         Runs,
         "sync_pending_reports",
-        lambda root, target: (
-            publications.append((root, target.repository)) or (object(),)
-        ),
+        lambda root, target: publications.append((root, target.repository)) or (object(),),
     )
     real_run = subprocess.run
 
     def fake_run(command, **kwargs):
         if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
             return real_run(command, **kwargs)
+        assert kwargs["env"]["TZ"] == "UTC"
         job = load_job(Path(command[-1]))
         index = list(manifest.harbor_config_paths).index(
             Path(command[-1]).relative_to(manifest.path.parent).as_posix()
@@ -1250,6 +1215,9 @@ def test_execution_updates_local_dashboard_after_completed_run(
     assert report_path.is_file()
     report = json.loads(report_path.read_text())
     assert report["status"] == "completed"
+    for job in report["jobs"]:
+        timing = run_root / "jobs/raw" / job["name"] / "Job_Timestamps.json"
+        assert json.loads(timing.read_text())["finished_at"] == "2026-09-03T20:01:00Z"
     assert report["expected_jobs"] == 4
     assert report["completed_jobs"] == 4
     assert report["expected_trials"] == 4
@@ -1267,6 +1235,50 @@ def test_execution_updates_local_dashboard_after_completed_run(
     }
     assert refreshes == [run_root]
     assert publications == [(run_root, "Studio-Moser/harness-testing")]
+    assert os.environ["TZ"] == "America/Los_Angeles"
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("2026-09-06T10:27:00", None),
+        ("2026-09-06T10:27:00-07:00", "2026-09-06T17:27:00Z"),
+        ("2026-09-06T17:27:00Z", "2026-09-06T17:27:00Z"),
+    ],
+)
+def test_report_timestamps_require_explicit_timezone(value, expected):
+    assert Run_Reports._timestamp(value)[0] == expected
+
+
+def test_job_timestamp_sidecar_preserves_raw_and_rejects_stale_source(run_root: Path):
+    manifest = _compile_pair(run_root)
+    relative_path = manifest.harbor_config_paths[0]
+    job = load_job(manifest.path.parent / relative_path)
+    _write_completed_job(run_root, manifest.cells[0], job.job_name)
+    directory = run_root / "jobs/raw" / job.job_name
+    result_path = directory / "result.json"
+    result = json.loads(result_path.read_text())
+    result.update(started_at="2026-09-06T10:22:00", finished_at="2026-09-06T10:27:00")
+    original = json.dumps(result)
+    result_path.write_text(original)
+
+    unknown = Run_Reports._job_report(run_root, manifest, 0, relative_path)
+    assert unknown["started_at"] is None
+    assert unknown["finished_at"] is None
+    assert unknown["runtime_seconds"] == 300
+
+    Run_Reports.record_job_timestamps(directory, naive_timezone=ZoneInfo("America/Los_Angeles"))
+    report = Run_Reports._job_report(run_root, manifest, 0, relative_path)
+    assert result_path.read_text() == original
+    assert report["started_at"] == "2026-09-06T17:22:00Z"
+    assert report["finished_at"] == "2026-09-06T17:27:00Z"
+    assert report["runtime_seconds"] == 300
+
+    result["finished_at"] = "2026-09-06T10:28:00"
+    result_path.write_text(json.dumps(result))
+    stale = Run_Reports._job_report(run_root, manifest, 0, relative_path)
+    assert stale["finished_at"] is None
+    assert stale["runtime_seconds"] == 360
 
 
 def test_dashboard_refresh_invalidates_the_observable_data_loader_cache(
@@ -1288,9 +1300,7 @@ def test_dashboard_refresh_invalidates_the_observable_data_loader_cache(
     output = Run_Reports.refresh_local_dashboard(tmp_path, runner=fake_runner)
 
     assert output == dashboard / "dist" / "index.html"
-    assert calls == [
-        (("npm", "--prefix", "dashboard", "run", "build"), tmp_path, True)
-    ]
+    assert calls == [(("npm", "--prefix", "dashboard", "run", "build"), tmp_path, True)]
 
 
 def test_terminal_publication_failure_remains_retryable(
@@ -1327,9 +1337,7 @@ def test_execution_updates_local_dashboard_after_delivery_failure(
     monkeypatch.setattr(
         Runs,
         "sync_pending_reports",
-        lambda root, target: (
-            publications.append((root, target.repository)) or (object(),)
-        ),
+        lambda root, target: publications.append((root, target.repository)) or (object(),),
     )
     calls: list[str] = []
     real_run = subprocess.run
@@ -1389,8 +1397,7 @@ def test_delivery_canary_stops_before_the_second_task(
         Runs.execute_run(run_root, manifest.path, manifest.digest)
 
     assert calls == [
-        load_job(manifest.path.parent / path).job_name
-        for path in manifest.harbor_config_paths[:2]
+        load_job(manifest.path.parent / path).job_name for path in manifest.harbor_config_paths[:2]
     ]
 
 
@@ -1417,8 +1424,7 @@ def test_delivery_canary_correctness_zero_runs_every_task(
     Runs.execute_run(run_root, manifest.path, manifest.digest)
 
     assert calls == [
-        load_job(manifest.path.parent / path).job_name
-        for path in manifest.harbor_config_paths
+        load_job(manifest.path.parent / path).job_name for path in manifest.harbor_config_paths
     ]
 
 
@@ -1428,10 +1434,7 @@ def test_execution_reuses_valid_completed_jobs_and_runs_only_remaining_work(
 ):
     manifest = _compile_pair(run_root)
     _stub_execution_preflight(monkeypatch)
-    jobs = [
-        load_job(manifest.path.parent / path).job_name
-        for path in manifest.harbor_config_paths
-    ]
+    jobs = [load_job(manifest.path.parent / path).job_name for path in manifest.harbor_config_paths]
     for index, job_name in enumerate(jobs[:3]):
         _write_completed_job(
             run_root,
@@ -1466,9 +1469,7 @@ def test_execution_rejects_incomplete_multi_attempt_job_before_running_more_work
 ):
     manifest = _compile_pair(run_root, attempts=2, max_sessions=8)
     _stub_execution_preflight(monkeypatch)
-    first_job = load_job(
-        manifest.path.parent / manifest.harbor_config_paths[0]
-    ).job_name
+    first_job = load_job(manifest.path.parent / manifest.harbor_config_paths[0]).job_name
     _write_completed_job(
         run_root,
         manifest.cells[0],
@@ -1500,9 +1501,7 @@ def test_execution_refuses_to_rerun_an_invalid_existing_job(
 ):
     manifest = _compile_pair(run_root)
     _stub_execution_preflight(monkeypatch)
-    first_job = load_job(
-        manifest.path.parent / manifest.harbor_config_paths[0]
-    ).job_name
+    first_job = load_job(manifest.path.parent / manifest.harbor_config_paths[0]).job_name
     _write_completed_job(
         run_root,
         manifest.cells[0],
@@ -1554,8 +1553,7 @@ def test_delivery_failure_after_canary_stops_immediately(
         Runs.execute_run(run_root, manifest.path, manifest.digest)
 
     assert calls == [
-        load_job(manifest.path.parent / path).job_name
-        for path in manifest.harbor_config_paths[:3]
+        load_job(manifest.path.parent / path).job_name for path in manifest.harbor_config_paths[:3]
     ]
 
 
@@ -1610,19 +1608,14 @@ def test_generated_claude_jobs_follow_exact_arm_delivery_provenance(
 ):
     manifest = _compile_claude_matrix(run_root)
     agents = [
-        load_job(manifest.path.parent / path).agents[0]
-        for path in manifest.harbor_config_paths
+        load_job(manifest.path.parent / path).agents[0] for path in manifest.harbor_config_paths
     ]
     a0_agent, a1_agent, a2_agent, a3_agent = agents
 
     assert a0_agent.import_path == "harness_testing.Claude_Agent:HarnessClaude"
     assert "plugin_dirs" not in a0_agent.kwargs
-    assert a1_agent.kwargs["plugin_dirs"] == [
-        "/harness-arm/claude/plugins/superpowers"
-    ]
-    assert a2_agent.kwargs["plugin_dirs"] == [
-        "/harness-arm/claude/plugins/harness"
-    ]
+    assert a1_agent.kwargs["plugin_dirs"] == ["/harness-arm/claude/plugins/superpowers"]
+    assert a2_agent.kwargs["plugin_dirs"] == ["/harness-arm/claude/plugins/harness"]
     assert a3_agent.kwargs["plugin_dirs"] == [
         "/harness-arm/claude/plugins/superpowers",
         "/harness-arm/claude/plugins/harness",
@@ -1655,9 +1648,10 @@ def test_capability_manifest_round_trip_and_job_kwargs(run_root: Path):
         "name": "harness:execute",
     }
     for path in manifest.harbor_config_paths:
-        assert load_job(manifest.path.parent / path).agents[0].kwargs[
-            "skill_invocation"
-        ] == "harness:execute"
+        assert (
+            load_job(manifest.path.parent / path).agents[0].kwargs["skill_invocation"]
+            == "harness:execute"
+        )
     assert "Skill evaluation: capability harness:execute" in Runs.format_plan(manifest)
 
 
@@ -1692,9 +1686,7 @@ def test_discovery_requires_five_attempts_and_keeps_job_prompt_unmodified(
         attempts=5,
         skill_evaluation=evaluation,
     )
-    agent = load_job(
-        manifest.path.parent / manifest.harbor_config_paths[0]
-    ).agents[0]
+    agent = load_job(manifest.path.parent / manifest.harbor_config_paths[0]).agents[0]
     assert "skill_invocation" not in agent.kwargs
 
 
@@ -1751,9 +1743,7 @@ def test_skill_evaluation_rejects_a_skill_absent_from_any_selected_arm(
     ],
     ids=lambda value: value if isinstance(value, str) else None,
 )
-def test_delivery_provenance_rejects_invalid_arm_claims(
-    run_root: Path, description: str, mutate
-):
+def test_delivery_provenance_rejects_invalid_arm_claims(run_root: Path, description: str, mutate):
     arm = "A3" if description != "extra-a0-layer" else "A0"
     harness_commit = "a" * 40 if arm == "A3" else None
     cell = _cell("claude", arm, "candidate", "a", harness_commit)
@@ -1817,9 +1807,7 @@ def test_delivery_provenance_rejects_duplicate_targets(run_root: Path):
     bundle = _add_bundle(run_root, cell)
     provenance_path = bundle / "Provenance.json"
     provenance = json.loads(provenance_path.read_text())
-    provenance["delivery_surfaces"][1]["path"] = provenance["delivery_surfaces"][0][
-        "path"
-    ]
+    provenance["delivery_surfaces"][1]["path"] = provenance["delivery_surfaces"][0]["path"]
     shutil.rmtree(bundle / "claude" / "plugins" / "harness")
     provenance_path.write_text(json.dumps(provenance) + "\n")
     _reseal_bundle(cell, bundle)
@@ -1861,9 +1849,7 @@ def test_delivery_provenance_rejects_renamed_in_root_path(run_root: Path):
 
 
 @pytest.mark.parametrize("capabilities", ([], None), ids=("wrong", "missing"))
-def test_delivery_provenance_rejects_wrong_capabilities(
-    run_root: Path, capabilities: object
-):
+def test_delivery_provenance_rejects_wrong_capabilities(run_root: Path, capabilities: object):
     cell = _cell("claude", "A1", "candidate", "a")
     bundle = _add_bundle(run_root, cell)
     provenance_path = bundle / "Provenance.json"
@@ -1915,14 +1901,12 @@ def test_delivery_provenance_rejects_renamed_codex_marketplace(run_root: Path):
         provider_home / "marketplaces" / "forged-marketplace"
     )
     config_path = provider_home / "config.toml"
-    config_path.write_text(
-        config_path.read_text().replace("superpowers-dev", "forged-marketplace")
-    )
+    config_path.write_text(config_path.read_text().replace("superpowers-dev", "forged-marketplace"))
     provenance_path = bundle / "Provenance.json"
     provenance = json.loads(provenance_path.read_text())
-    provenance["delivery_surfaces"][0]["path"] = provenance["delivery_surfaces"][
-        0
-    ]["path"].replace("superpowers-dev", "forged-marketplace")
+    provenance["delivery_surfaces"][0]["path"] = provenance["delivery_surfaces"][0]["path"].replace(
+        "superpowers-dev", "forged-marketplace"
+    )
     provenance_path.write_text(json.dumps(provenance) + "\n")
     _reseal_bundle(cell, bundle)
 
@@ -1942,13 +1926,7 @@ def test_delivery_provenance_rejects_renamed_codex_version(run_root: Path):
     cell = _cell("codex", "A1", "candidate", "a")
     bundle = _add_bundle(run_root, cell)
     plugin = (
-        bundle
-        / "codex"
-        / "provider-home"
-        / "plugins"
-        / "cache"
-        / "superpowers-dev"
-        / "superpowers"
+        bundle / "codex" / "provider-home" / "plugins" / "cache" / "superpowers-dev" / "superpowers"
     )
     version = plugin / "6.3.0"
     forged = plugin / "9.9.9"
@@ -1959,9 +1937,9 @@ def test_delivery_provenance_rejects_renamed_codex_version(run_root: Path):
     manifest_path.write_text(json.dumps(manifest) + "\n")
     provenance_path = bundle / "Provenance.json"
     provenance = json.loads(provenance_path.read_text())
-    provenance["delivery_surfaces"][0]["path"] = provenance["delivery_surfaces"][
-        0
-    ]["path"].replace("6.3.0", "9.9.9")
+    provenance["delivery_surfaces"][0]["path"] = provenance["delivery_surfaces"][0]["path"].replace(
+        "6.3.0", "9.9.9"
+    )
     provenance_path.write_text(json.dumps(provenance) + "\n")
     _reseal_bundle(cell, bundle)
 
@@ -2020,14 +1998,7 @@ def test_delivery_provenance_rejects_coherently_edited_harness_instruction(
 ):
     cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
     bundle = _add_bundle(run_root, cell)
-    template = (
-        bundle
-        / "claude"
-        / "plugins"
-        / "harness"
-        / "templates"
-        / "AGENTS_Baseline.md"
-    )
+    template = bundle / "claude" / "plugins" / "harness" / "templates" / "AGENTS_Baseline.md"
     instruction = bundle / "project" / "CLAUDE.md"
     template.write_text("# Forged baseline\n")
     instruction.write_text("# Forged baseline\n")
@@ -2051,11 +2022,7 @@ def test_delivery_provenance_rejects_poisoned_reused_source_cache(
     versions_path = run_root / "Versions.toml"
     versions = load_versions(versions_path)
     harness_repository = Path(
-        next(
-            source["url"]
-            for source in versions["sources"]
-            if source["name"] == "Studio Harness"
-        )
+        next(source["url"] for source in versions["sources"] if source["name"] == "Studio Harness")
     )
     versions_path.write_text(
         versions_path.read_text().replace(
@@ -2068,9 +2035,7 @@ def test_delivery_provenance_rejects_poisoned_reused_source_cache(
     bundle = _add_bundle(run_root, cell)
     versions = load_versions(versions_path)
     harness_pin = next(
-        source
-        for source in versions["sources"]
-        if source["name"] == "Studio Harness"
+        source for source in versions["sources"] if source["name"] == "Studio Harness"
     )
     cached_source = _resolve_source_trees(
         run_root,
@@ -2083,27 +2048,16 @@ def test_delivery_provenance_rejects_poisoned_reused_source_cache(
         },
     )[0]
     forged_instruction = "# Forged cached baseline\n"
-    (
-        cached_source.path
-        / "plugins"
-        / "harness"
-        / "templates"
-        / "AGENTS_Baseline.md"
-    ).write_text(forged_instruction)
-    (
-        bundle
-        / "claude"
-        / "plugins"
-        / "harness"
-        / "templates"
-        / "AGENTS_Baseline.md"
-    ).write_text(forged_instruction)
+    (cached_source.path / "plugins" / "harness" / "templates" / "AGENTS_Baseline.md").write_text(
+        forged_instruction
+    )
+    (bundle / "claude" / "plugins" / "harness" / "templates" / "AGENTS_Baseline.md").write_text(
+        forged_instruction
+    )
     (bundle / "project" / "CLAUDE.md").write_text(forged_instruction)
     provenance_path = bundle / "Provenance.json"
     provenance = json.loads(provenance_path.read_text())
-    provenance["sources"][0]["source_tree_digest"] = _tree_digest(
-        cached_source.path
-    )
+    provenance["sources"][0]["source_tree_digest"] = _tree_digest(cached_source.path)
     provenance_path.write_text(json.dumps(provenance) + "\n")
     _reseal_bundle(cell, bundle)
 
@@ -2125,12 +2079,7 @@ def test_delivery_provenance_rejects_rehashed_uninspected_plugin_payload(
     cell = _cell("claude", "A1", "candidate", "a")
     bundle = _add_bundle(run_root, cell)
     payload_relative = (
-        Path("claude")
-        / "plugins"
-        / "superpowers"
-        / "skills"
-        / "payload"
-        / "SKILL.md"
+        Path("claude") / "plugins" / "superpowers" / "skills" / "payload" / "SKILL.md"
     )
     payload = bundle / payload_relative
     payload.parent.mkdir()
@@ -2262,9 +2211,7 @@ def test_generated_claude_plugin_seed_environment_is_rejected(run_root: Path):
     }
     text = yaml.safe_dump(document, sort_keys=False)
     path.write_text(text)
-    manifest.provenance["harbor_config_digests"][relative_path] = Runs._sha256(
-        text.encode()
-    )
+    manifest.provenance["harbor_config_digests"][relative_path] = Runs._sha256(text.encode())
 
     with pytest.raises(ValueError, match="plugin seed"):
         _verify_generated_inputs(run_root, manifest)
@@ -2375,9 +2322,7 @@ def test_explicit_task_resolves_to_a_unique_pack_outside_profile_defaults(
     )
 
     assert set(manifest.provenance["task_digests"]) == {"contract/contract-task"}
-    config = yaml.safe_load(
-        (manifest.path.parent / manifest.harbor_config_paths[0]).read_text()
-    )
+    config = yaml.safe_load((manifest.path.parent / manifest.harbor_config_paths[0]).read_text())
     assert config["datasets"][0]["path"] == "tasks/contract"
 
 
@@ -2523,9 +2468,7 @@ def test_job_names_use_a_stable_run_id_that_changes_with_inputs(run_root: Path):
     for manifest in (first, repeated, changed):
         run_id = manifest.provenance["run_id"]
         for relative_path in manifest.harbor_config_paths:
-            config = yaml.safe_load(
-                (manifest.path.parent / relative_path).read_text()
-            )
+            config = yaml.safe_load((manifest.path.parent / relative_path).read_text())
             assert config["job_name"].startswith(f"{run_id}-")
 
 
@@ -2544,9 +2487,10 @@ def test_manifest_digest_binds_every_selected_task_tree(run_root: Path):
     task.write_text("changed task one\n")
     second = _compile_pair(run_root)
 
-    assert first.provenance["task_digests"]["workflow/task-one"] != second.provenance[
-        "task_digests"
-    ]["workflow/task-one"]
+    assert (
+        first.provenance["task_digests"]["workflow/task-one"]
+        != second.provenance["task_digests"]["workflow/task-one"]
+    )
     assert first.digest != second.digest
 
 
@@ -2589,9 +2533,7 @@ def test_manifest_and_execution_bind_selected_image_inputs(run_root: Path):
     decoder.write_text("changed after approval\n")
     changed = _compile_pair(run_root)
 
-    assert approved_images["verifier"] != changed.provenance[
-        "image_input_digests"
-    ]["verifier"]
+    assert approved_images["verifier"] != changed.provenance["image_input_digests"]["verifier"]
     assert approved.digest != changed.digest
     with pytest.raises(ValueError, match="image input digest mismatch"):
         _verify_generated_inputs(run_root, approved)
@@ -2647,9 +2589,7 @@ def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Pat
     assert manifest.estimated_budget_usd == Decimal("0")
     assert manifest.max_budget_usd == Decimal("0")
     assert manifest.api_equivalent_cost_usd == Decimal("6.4")
-    assert manifest.provenance["budget_enforcement"] == (
-        "subscription-only-no-api-fallback"
-    )
+    assert manifest.provenance["budget_enforcement"] == ("subscription-only-no-api-fallback")
     assert manifest.provenance["subscription_selectors"] == {
         "codex": {"name": "CODEX_FORCE_AUTH_JSON", "value": "1"}
     }
@@ -2672,17 +2612,13 @@ def test_subscription_manifest_binds_codex_auth_and_cost_semantics(run_root: Pat
         assert "CODEX_FORCE_AUTH_JSON" not in config_path.read_text()
         assert load_job(config_path).agents[0].env == {}
     candidate_config = next(
-        manifest.path.parent / path
-        for path in manifest.harbor_config_paths
-        if "candidate" in path
+        manifest.path.parent / path for path in manifest.harbor_config_paths if "candidate" in path
     )
     candidate_agent = load_job(candidate_config).agents[0]
     assert candidate_agent.import_path == "harness_testing.Codex_Agent:HarnessCodex"
     assert candidate_agent.name is None
     assert candidate_agent.skills == [str(candidate_skills)]
-    assert [resolved.name for resolved in resolve_skills(candidate_agent.skills)] == [
-        "dev-task"
-    ]
+    assert [resolved.name for resolved in resolve_skills(candidate_agent.skills)] == ["dev-task"]
 
 
 def test_subscription_selector_is_scoped_to_the_harbor_process(
@@ -2756,9 +2692,7 @@ def test_keychain_token_is_scoped_to_claude_harbor_child(
         "CLAUDE_FORCE_OAUTH",
     ):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setattr(
-        Runs, "load_claude_subscription_token", lambda environment: "resolved"
-    )
+    monkeypatch.setattr(Runs, "load_claude_subscription_token", lambda environment: "resolved")
     monkeypatch.setattr(Runs, "validate_repository", lambda root: ())
     monkeypatch.setattr(Runs, "dockerfile_policy_errors", lambda root: ())
     monkeypatch.setattr(Runs, "require_current_image", lambda root, image: None)
@@ -2893,9 +2827,7 @@ def test_each_job_has_one_arm_mount_and_pairs_alternate(run_root: Path):
         config_path = manifest.path.parent / relative_path
         raw = yaml.safe_load(config_path.read_text())
         arm_mounts = [
-            mount
-            for mount in raw["environment"]["mounts"]
-            if mount["target"] == "/harness-arm"
+            mount for mount in raw["environment"]["mounts"] if mount["target"] == "/harness-arm"
         ]
         assert len(arm_mounts) == 1
         assert arm_mounts[0]["read_only"] is True
@@ -2904,12 +2836,53 @@ def test_each_job_has_one_arm_mount_and_pairs_alternate(run_root: Path):
 def test_every_generated_job_round_trips_through_harbor(run_root: Path):
     manifest = _compile_pair(run_root)
 
-    jobs = [
-        load_job(manifest.path.parent / path) for path in manifest.harbor_config_paths
-    ]
+    jobs = [load_job(manifest.path.parent / path) for path in manifest.harbor_config_paths]
     assert len(jobs) == 4
     assert all(job.n_concurrent_trials == 1 for job in jobs)
     assert all(job.agents[0].override_timeout_sec == 900 for job in jobs)
+
+
+@pytest.mark.parametrize("allowance", [None, 0, 120])
+def test_comparison_planning_freezes_recovery_and_reserves_outer_time(
+    run_root: Path, monkeypatch: pytest.MonkeyPatch, allowance
+):
+    from test_Experiments import request_document
+
+    from harness_testing.Experiments import plan_experiment
+
+    task = "react-active-badge-count"
+    shutil.copytree(REPOSITORY_ROOT / "tasks/workflow" / task,
+                    run_root / "tasks/workflow" / task)
+    versions = load_versions(run_root / "Versions.toml")
+    model = next(row for row in versions["models"] if row["provider"] == "codex")
+    version = next(row["version"] for row in versions["packages"]
+                   if row["name"] == "@openai/codex")
+    request = request_document()
+    request.update(purpose="diagnostic", baseline_result_ids=[])
+    request["contenders"] = [{"family": "nothing", "label": "Nothing", "sources": [],
+                              "rubric": {"mode": "disabled", "path": None},
+                              "startup_paths": [], "delivery_config": {}}]
+    request["conditions"].update(
+        kickoff={"provider": "codex", "runtime_version": version,
+                 "model": model["model"], "effort": model["effort"]},
+        task_ids=[task], attempts=1, timeout_seconds=30,
+    )
+    if allowance is not None:
+        request["conditions"]["provider_recovery_seconds"] = allowance
+    monkeypatch.setattr("harness_testing.Experiments.runtime_image_digests",
+                        lambda root, images: {image: _digest("f") for image in images})
+    manifest = plan_experiment(run_root, request, native_cli=False)
+    expected = 600 if allowance is None else allowance
+    assert manifest.provenance["experiment"]["conditions"]["provider_recovery_seconds"] == expected
+    job = load_job(manifest.path.parent / manifest.harbor_config_paths[0])
+    agent = job.agents[0]
+    assert agent.kwargs["conversation"]["timeout_seconds"] == 30
+    assert agent.kwargs["conversation"]["provider_recovery_seconds"] == expected
+    assert agent.override_timeout_sec == agent.max_timeout_sec == 30 + expected + 15
+    assert job.retry.max_retries == 0
+    plan = Runs.format_plan(manifest)
+    assert f"Provider recovery allowance: {expected}s" in plan
+    assert f"Maximum agent wall time: {30 + expected}s" in plan
 
 
 def test_research_profile_uses_only_the_materialized_deepswe_dataset(
@@ -2917,18 +2890,18 @@ def test_research_profile_uses_only_the_materialized_deepswe_dataset(
 ):
     task_id = DEEPSWE_TASK_IDS[0]
     dataset_digest = _digest("f")
-    dataset = (
-        run_root
-        / ".cache"
-        / "deepswe"
-        / "datasets"
-        / dataset_digest.removeprefix("sha256:")
-    )
+    dataset = run_root / ".cache" / "deepswe" / "datasets" / dataset_digest.removeprefix("sha256:")
     task = dataset / "tasks" / task_id
     task.mkdir(parents=True)
     (task / "instruction.md").write_text("DeepSWE research task\n")
     materialized = MaterializedDeepSWE(path=dataset, digest=dataset_digest)
-    monkeypatch.setattr(Runs, "load_deepswe_dataset", lambda root: materialized)
+    selections = []
+
+    def load_research(root, **kwargs):
+        selections.append(kwargs.get("task_ids"))
+        return materialized
+
+    monkeypatch.setattr(Runs, "load_deepswe_dataset", load_research)
     cell = _cell("codex", "A0", "baseline", "e")
     _add_bundle(run_root, cell)
 
@@ -2942,25 +2915,191 @@ def test_research_profile_uses_only_the_materialized_deepswe_dataset(
         max_budget_usd=Decimal("0"),
     )
 
-    config = yaml.safe_load(
-        (manifest.path.parent / manifest.harbor_config_paths[0]).read_text()
-    )
+    config = yaml.safe_load((manifest.path.parent / manifest.harbor_config_paths[0]).read_text())
     assert len(config["datasets"]) == 1
-    assert config["datasets"][0]["path"] == str(
-        dataset.relative_to(run_root) / "tasks"
-    )
+    assert config["datasets"][0]["path"] == str(dataset.relative_to(run_root) / "tasks")
     assert config["datasets"][0]["task_names"] == [task_id]
-    assert manifest.provenance["task_digests"] == {
-        f"research/{task_id}": Runs._tree_digest(task)
-    }
+    assert manifest.provenance["task_digests"] == {f"research/{task_id}": Runs._tree_digest(task)}
     assert manifest.provenance["deepswe_dataset_digest"] == dataset_digest
     assert manifest.provenance["image_input_digests"] == {}
+    assert selections == [None]
     _verify_generated_inputs(run_root, manifest)
+    assert selections == [None, None]
+
+    (dataset / "Provenance.json").write_text(
+        json.dumps(
+            {
+                "tasks": [
+                    {
+                        "task_id": task_id,
+                        "derived_image_digest": _digest("b"),
+                        "verifier_image_digest": _digest("c"),
+                    }
+                ]
+            }
+        )
+    )
+    manifest.provenance["experiment"] = {
+        "conditions": {
+            "task_variant": "deepswe",
+            "image_digests": {
+                f"{task_id}:agent": _digest("b"),
+                f"{task_id}:verifier": _digest("c"),
+            },
+        }
+    }
+    _verify_generated_inputs(run_root, manifest)
+    assert selections == [None, None, (task_id,)]
 
     monkeypatch.setattr(
         Runs,
         "load_deepswe_dataset",
-        lambda root: MaterializedDeepSWE(path=dataset, digest=_digest("a")),
+        lambda root, **_: MaterializedDeepSWE(path=dataset, digest=_digest("a")),
     )
     with pytest.raises(ValueError, match="DeepSWE dataset digest mismatch"):
         _verify_generated_inputs(run_root, manifest)
+
+
+def test_approved_runtime_providers_include_only_declared_secondary_inventory():
+    from types import SimpleNamespace
+
+    from harness_testing.Runs import _approved_runtime_providers
+
+    manifest = SimpleNamespace(
+        cells=(SimpleNamespace(provider="claude"),),
+        provenance={"experiment": {"conditions": {"executor_inventory": [{"provider": "codex"}]}}},
+    )
+    assert _approved_runtime_providers(manifest) == {"claude", "codex"}
+    manifest.provenance["experiment"]["conditions"]["executor_inventory"] = []
+    assert _approved_runtime_providers(manifest) == {"claude"}
+
+
+def test_subscription_preflight_checks_approved_secondary_credentials(tmp_path):
+    from types import SimpleNamespace
+
+    from harness_testing.Runs import _verify_subscription_auth
+
+    with pytest.raises(ValueError, match="Codex subscription credential is missing"):
+        _verify_subscription_auth(
+            (SimpleNamespace(provider="claude"),),
+            {"CLAUDE_CODE_OAUTH_TOKEN": "primary-only"},
+            tmp_path,
+            providers={"claude", "codex"},
+        )
+
+
+@pytest.mark.parametrize("provider", ["codex", "claude"])
+def test_full_collection_delivery_uses_frozen_plugin_names_and_marketplaces(tmp_path, provider):
+    plugins = {
+        name: {
+            "name": name,
+            "pluginId": f"{name}@experiment-{name}",
+            "marketplaceName": f"experiment-{name}",
+            "version": "1.2.3",
+            "enabled": True,
+            "installed": True,
+        }
+        for name in ("superpowers", "harness", "pm", "custom-workflow")
+    }
+    path = tmp_path / "inventory.json"
+    if provider == "codex":
+        path.write_text(json.dumps({"installed": list(plugins.values()), "available": []}))
+        errors = Runs._codex_delivery_errors(path, plugins, complete_inventory=True)
+    else:
+        skills = frozenset(f"{name}:example" for name in plugins)
+        path.write_text(
+            json.dumps(
+                {
+                    "type": "system",
+                    "subtype": "init",
+                    "plugins": list(plugins.values()),
+                    "skills": sorted(skills),
+                }
+            )
+        )
+        errors = Runs._claude_delivery_errors(
+            path, frozenset(plugins), skills, skills, complete_inventory=True
+        )
+    assert errors == []
+
+
+@pytest.mark.parametrize(
+    ("provider", "bad"),
+    [
+        (provider, bad)
+        for provider in ("codex", "claude")
+        for bad in ("extra", "malformed", "missing", "duplicate", "disabled", "identity")
+        if provider == "codex" or bad not in {"disabled", "identity"}
+    ],
+)
+def test_full_collection_delivery_rejects_inventory_drift(tmp_path, provider, bad):
+    expected = {"pm": _codex_inventory_record("pm")}
+    expected["pm"].update(pluginId="pm@experiment-pm", marketplaceName="experiment-pm")
+    entries = [dict(expected["pm"])]
+    if bad == "extra":
+        entries.append(_codex_inventory_record("unapproved-plugin"))
+    elif bad == "malformed":
+        entries.append({"unexpected": "plugin"})
+    elif bad == "missing":
+        entries = []
+    elif bad == "duplicate":
+        entries *= 2
+    elif bad == "disabled":
+        entries[0]["enabled"] = False
+    else:
+        entries[0]["pluginId"] = "pm@different-marketplace"
+    path = tmp_path / "inventory.json"
+    if provider == "codex":
+        path.write_text(json.dumps({"installed": entries}))
+        errors = Runs._codex_delivery_errors(path, expected, complete_inventory=True)
+    else:
+        path.write_text(
+            json.dumps({"type": "system", "subtype": "init", "plugins": entries, "skills": []})
+        )
+        errors = Runs._claude_delivery_errors(
+            path, frozenset(expected), frozenset(), frozenset(), complete_inventory=True
+        )
+    assert errors
+
+
+@pytest.mark.parametrize("provider", ["codex", "claude"])
+def test_nothing_comparison_rejects_unexpected_nonlegacy_plugin(tmp_path, provider):
+    path = tmp_path / "inventory.json"
+    entries = [_codex_inventory_record("unapproved-plugin")]
+    if provider == "codex":
+        path.write_text(json.dumps({"installed": entries}))
+        errors = Runs._codex_delivery_errors(path, {}, complete_inventory=True)
+    else:
+        path.write_text(
+            json.dumps({"type": "system", "subtype": "init", "plugins": entries, "skills": []})
+        )
+        errors = Runs._claude_delivery_errors(
+            path, frozenset(), frozenset(), frozenset(), complete_inventory=True
+        )
+    assert errors
+
+
+def test_execution_preserves_harbor_error_when_timestamp_recording_fails(
+    run_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    manifest = _compile_pair(run_root)
+    _stub_execution_preflight(monkeypatch)
+    monkeypatch.setattr(Runs, "refresh_local_dashboard", lambda root: None)
+    real_run = subprocess.run
+    failure = subprocess.CalledProcessError(17, "harbor")
+
+    def failed_run(command, **kwargs):
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
+            return real_run(command, **kwargs)
+        raise failure
+
+    def failed_record(*args, **kwargs):
+        raise OSError("timing disk failure")
+
+    monkeypatch.setattr(Runs.subprocess, "run", failed_run)
+    monkeypatch.setattr(Runs, "record_job_timestamps", failed_record)
+    with pytest.raises(subprocess.CalledProcessError) as caught:
+        Runs.execute_run(run_root, manifest.path, manifest.digest)
+    assert caught.value is failure
+    assert "timing disk failure" in " ".join(caught.value.__notes__)

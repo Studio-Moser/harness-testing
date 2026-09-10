@@ -1,0 +1,3883 @@
+{
+  "schema_version": "3",
+  "report_id": "sha256:1cccb9e484d7848d61f07368409817e4ee760016e1f77038cb31f2a56d2f925a",
+  "manifest_schema_version": "0.3.0",
+  "manifest_digest": "sha256:d73dda59bad84372f94499627e52325aa49bb01d8141d8eccfbba0cc2375f05a",
+  "run_id": "run-d73dda59bad84372f944",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "evidence": {
+    "review_state": "unreviewed",
+    "limitations": []
+  },
+  "profile": "smoke",
+  "status": "completed",
+  "started_at": "2026-09-03T20:00:00Z",
+  "updated_at": "2026-09-03T20:01:00Z",
+  "finished_at": "2026-09-03T20:01:00Z",
+  "expected_jobs": 1,
+  "completed_jobs": 1,
+  "failed_jobs": 0,
+  "pending_jobs": 0,
+  "expected_trials": 1,
+  "completed_trials": 1,
+  "failed_trials": 0,
+  "admission_estimate_usd": 1.25,
+  "observed_api_equivalent_cost_usd": 0.01,
+  "jobs": [
+    {
+      "name": "run-d73dda59bad84372f944-codex-A2-candidate-react-saved-view-feature",
+      "provider": "codex",
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.150.1",
+      "arm": "A2",
+      "role": "candidate",
+      "model": "gpt-5.6-terra",
+      "effort": "high",
+      "harness_commit": "c319557c681bf35c35fa348fdf38d45d12091cef",
+      "task": "react-saved-view-feature",
+      "task_pack": "workflow",
+      "task_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "comparability": "comparable",
+      "series_key": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "series_key_unavailable_reason": null,
+      "status": "completed",
+      "started_at": "2026-09-03T20:00:00Z",
+      "finished_at": "2026-09-03T20:01:00Z",
+      "runtime_seconds": 60.0,
+      "expected_trials": 1,
+      "completed_trials": 1,
+      "errored_trials": 0,
+      "cancelled_trials": 0,
+      "dimensions": {
+        "correctness": 1.0,
+        "workflow": 1.0,
+        "efficiency_policy": 1.0
+      },
+      "efficiency": {
+        "prompt_tokens": 100,
+        "cached_tokens": 40,
+        "completion_tokens": 20,
+        "api_equivalent_cost_usd": 0.01
+      }
+    }
+  ],
+  "experiment": {
+    "request_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "label": "UI fixture \u2014 first comparison",
+    "purpose": "baseline",
+    "conditions": {
+      "kickoff": {
+        "provider": "codex",
+        "runtime_version": "0.150.1",
+        "model": "gpt-6-astra",
+        "effort": "high"
+      },
+      "task_ids": [
+        "react-accent-polish",
+        "react-active-badge-count",
+        "react-grouped-ui-updates",
+        "react-saved-view-feature",
+        "rust-quoted-value-parser",
+        "rust-workspace-warning-summary",
+        "static-accessible-disclosure",
+        "static-grouped-page-updates",
+        "static-pricing-copy-polish"
+      ],
+      "task_variant": "comparison",
+      "executor_inventory": [],
+      "attempts": 3,
+      "concurrency": 1,
+      "timeout_seconds": 1800,
+      "retry_policy": "none",
+      "accounting_policy": "agent-tree-v1",
+      "decision_policy": "development-comparison-v1",
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "evaluator_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "scripted_user_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "authority_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "adapter_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "task_digests": {
+        "react-accent-polish": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "react-active-badge-count": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "react-grouped-ui-updates": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "react-saved-view-feature": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "rust-quoted-value-parser": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "rust-workspace-warning-summary": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "static-accessible-disclosure": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "static-grouped-page-updates": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "static-pricing-copy-polish": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "image_digests": {
+        "node": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    "contenders": [
+      {
+        "id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "family": "nothing",
+        "label": "Nothing",
+        "source_commits": [],
+        "inventory_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "rubric_digest": null
+      },
+      {
+        "id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "family": "superpowers",
+        "label": "Superpowers",
+        "source_commits": [],
+        "inventory_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "rubric_digest": null
+      },
+      {
+        "id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "family": "studio-moser",
+        "label": "Studio Moser v1",
+        "source_commits": [],
+        "inventory_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "rubric_digest": null
+      }
+    ],
+    "baseline_result_ids": [],
+    "predecessor_result_ids": [],
+    "first_version": true,
+    "change": {
+      "summary": "Fixture: establish the first full-collection version",
+      "hypothesis": "Fixture: improve correctness and reduce repeated work",
+      "rerun_reason": null,
+      "diff_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "trials": [
+      {
+        "trial_id": "sha256:ac8f7a74c8d2fb847d6db78b8b04bfdb7e0fcd6a84bdbe9603586047fe47d7a1",
+        "task_id": "react-accent-polish",
+        "attempt": 1,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": false,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:b0b6debdda67892417563d2994dfb6293bcc9a7c46f70d925ae72ed47a67af06",
+        "task_id": "react-accent-polish",
+        "attempt": 2,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": false,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:67017557984334089e0381341cfb0faa355b082eca9ba9eecea45f5a9e3c35f8",
+        "task_id": "react-accent-polish",
+        "attempt": 3,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": false,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:6390882319b800faa1e1ed77033457de65127d09c4ff2053e15c58ee15cb01a9",
+        "task_id": "react-active-badge-count",
+        "attempt": 1,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:0da23f1d90a868d168237a58cf763427383f01a748397ed77c74735130451fef",
+        "task_id": "react-active-badge-count",
+        "attempt": 2,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:d8fa6b2aed8ec6fc0b58a2ec073eab3789e778f26e41e4eec7a4b743e26c197b",
+        "task_id": "react-active-badge-count",
+        "attempt": 3,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:228823650ce9b7f290cce29d9568cd8a96705c8074f6af955d4b3fdd25aea280",
+        "task_id": "react-grouped-ui-updates",
+        "attempt": 1,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:b3597323da25ae98464a5c63ca227235d99bca7d311235f34c0e4ddc64435f78",
+        "task_id": "react-grouped-ui-updates",
+        "attempt": 2,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:219af0efe46cce97009cdfc6a67609ab2a144f5187dd02f87e90faa70b5e9caa",
+        "task_id": "react-grouped-ui-updates",
+        "attempt": 3,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:78ac546415defded2374bacbf1b44d3b974920f1721d18acee25040958f13990",
+        "task_id": "react-saved-view-feature",
+        "attempt": 1,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:0c5e82f1e8dacf4534146adfa8d78d95e6e61105bc065adb7a389d2c1c08fe71",
+        "task_id": "react-saved-view-feature",
+        "attempt": 2,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:49e15301e4045b6317511c36dfbff9ed7d07df9322b25b1526917fd4fc06c233",
+        "task_id": "react-saved-view-feature",
+        "attempt": 3,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:1c9a0619c54e6d638f2251eb4427fe63b27206f566633c15eaa70beb33a700ae",
+        "task_id": "rust-quoted-value-parser",
+        "attempt": 1,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:c869d09a1af58ccc43c549165e685c35aaea7ade59544e62fd413553a16e2f89",
+        "task_id": "rust-quoted-value-parser",
+        "attempt": 2,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:ffb0bbb5711381df99583bf621bb0cd626f89a6be59f42d927f08142950e2b4f",
+        "task_id": "rust-quoted-value-parser",
+        "attempt": 3,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:e088507e7efedaff39811ebb0daa78a2fe42a60f3bf3772ed39a1bc335c249c2",
+        "task_id": "rust-workspace-warning-summary",
+        "attempt": 1,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:f10073487543edd42e8bc3932d0aa959a24225ce55378cc8f29e4a05d495e4a7",
+        "task_id": "rust-workspace-warning-summary",
+        "attempt": 2,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:25907378e49842fdd7ec2626fb6c99e3d5ab4bada43f6406ed346aaa1b909cab",
+        "task_id": "rust-workspace-warning-summary",
+        "attempt": 3,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:e353c201d7538e8fd64ee454e935a9e02bf248cbdd70fa633a38b96ee4eed420",
+        "task_id": "static-accessible-disclosure",
+        "attempt": 1,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:22a7d0a92467b5da5e421669240445dfee597281f86c59061a2d84b698686744",
+        "task_id": "static-accessible-disclosure",
+        "attempt": 2,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:117cae27533e0ca1452c860de2fb0c9a8f6388475c5efae75d6d482f67f80650",
+        "task_id": "static-accessible-disclosure",
+        "attempt": 3,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:6005662b13a3722632c086b4b31af1ecbaaf2aa40d67e8c960db3eb800057c2b",
+        "task_id": "static-grouped-page-updates",
+        "attempt": 1,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:397207a03a17d4a481b366110496666828f631dcb6ad34db79d7cb3c034e7030",
+        "task_id": "static-grouped-page-updates",
+        "attempt": 2,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:cf09639f10e9507924fea1a51d3c731ccc06837db9ad6ed28ec21c86526f2ff6",
+        "task_id": "static-grouped-page-updates",
+        "attempt": 3,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:05ab51246a9177e989e29baa24eca674d6b5896789d270c1eddbdcf7c53d1122",
+        "task_id": "static-pricing-copy-polish",
+        "attempt": 1,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:319ee9ac76fef1c17fa85ea05f5350f91c72e2091908b4d3016e61f00eac4d60",
+        "task_id": "static-pricing-copy-polish",
+        "attempt": 2,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:c86745ae20657a1dc953b0c0d823dfd20ed20132071ae034bd8841a979c3fd57",
+        "task_id": "static-pricing-copy-polish",
+        "attempt": 3,
+        "contender_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 80,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1000,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:b7d04cac836458c40d454ba5f8aae0a12565303c47fbd0e652002e9f649d84f5",
+        "task_id": "react-accent-polish",
+        "attempt": 1,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": false,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:7927ef694a8740c643b509955c63ee478084850d2c7f798d789d5a88b27e2ae3",
+        "task_id": "react-accent-polish",
+        "attempt": 2,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": false,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:9ce874ad1b5f61876f4073e5a5f338d6a890b29ee39c369665e689898596e8b1",
+        "task_id": "react-accent-polish",
+        "attempt": 3,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": false,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:fe3f29cd4a32ad68a9fd20363629de16e4ed6245c78da298d42ed37f45070357",
+        "task_id": "react-active-badge-count",
+        "attempt": 1,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:5e0e4fa0267ebd9e09f1bac4ae7f19f9a69e6423ce15c84c84991e7428b82814",
+        "task_id": "react-active-badge-count",
+        "attempt": 2,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:88aaa1abf478f092986e9324e111ad3bbb2e29fa47aba58d9feaa03703542651",
+        "task_id": "react-active-badge-count",
+        "attempt": 3,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:e6291742615ac49d9e07080a3f8c3ec5cf77f09ba1ee6c6b8946b2837cb3530d",
+        "task_id": "react-grouped-ui-updates",
+        "attempt": 1,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:f1fb7514d87dbf4cb1908aec50f63f2f0f44203301fa634e7d86784fa971e069",
+        "task_id": "react-grouped-ui-updates",
+        "attempt": 2,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:1fcf0ed3a7d03a9ee6fd7bd194aa0095c1493622e20b4f462be27302028dfff4",
+        "task_id": "react-grouped-ui-updates",
+        "attempt": 3,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:a86d260e139ccb57de85def86358b2adbb495a14251e74d80929e4d6be944751",
+        "task_id": "react-saved-view-feature",
+        "attempt": 1,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:265933daf5111e15ebfb11279f7cea79806b3d15aa826815cc2a734c76545191",
+        "task_id": "react-saved-view-feature",
+        "attempt": 2,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:c18b7a9c5d512631aab51b2536dbb7e66e0dfc3cfdfdac5e5790ea0cf43838cf",
+        "task_id": "react-saved-view-feature",
+        "attempt": 3,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:17bf1abb52bdc58af601842dd3287cc7ae28ff0edfa90bd667369a8dc3b8a39f",
+        "task_id": "rust-quoted-value-parser",
+        "attempt": 1,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:1ab6dc8619f1bea57fa8b86739962444618b3859e13ba2e7de563cb2442fdde0",
+        "task_id": "rust-quoted-value-parser",
+        "attempt": 2,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:3e4fc5927e222c837688692c14dc51e9bcc96d79021033506c595276b094df80",
+        "task_id": "rust-quoted-value-parser",
+        "attempt": 3,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:d3de45eed2cda220f866241b9ba0904e137dc62ad1b5932d8e00bd26cad3ee91",
+        "task_id": "rust-workspace-warning-summary",
+        "attempt": 1,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:8ee8e83154e7ad4034f76b93ccd7efd7b4d0e27b6d84733760e3e2bdafaccb0e",
+        "task_id": "rust-workspace-warning-summary",
+        "attempt": 2,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:1eaec0e0f97a8fe2a3b1db4176cf660bde107296484c1075206b615305cb0175",
+        "task_id": "rust-workspace-warning-summary",
+        "attempt": 3,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:761b5088c2e25449a3d5fbbaf8bbad96ed752cbcc31ddc9c9752893aaa2e1c06",
+        "task_id": "static-accessible-disclosure",
+        "attempt": 1,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:a44286f1ff2c715e177f9ef8ab4af48d6dd0d704083cb11020a4a008b04e4661",
+        "task_id": "static-accessible-disclosure",
+        "attempt": 2,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:bd3a68b2b7fe911e5350dd33348fe4e3c9540f760539d24c4e4a25743811f266",
+        "task_id": "static-accessible-disclosure",
+        "attempt": 3,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:77763af5911eb14a17fe6e703509b0ef45d1bdc7bd822f1a27fa7ee39111be4f",
+        "task_id": "static-grouped-page-updates",
+        "attempt": 1,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:addea18f02ad3956c21e8aacc0e7b803081ca0048900a484926c527b55cb8fec",
+        "task_id": "static-grouped-page-updates",
+        "attempt": 2,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:1976521ed1188fec357166a599c57a0325ae7de6d4667793aa047e9c5792cde6",
+        "task_id": "static-grouped-page-updates",
+        "attempt": 3,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:18560d499b8b5b30a2a8f98aba5bca0dee8a35e6542b100cce81e0a241c53afe",
+        "task_id": "static-pricing-copy-polish",
+        "attempt": 1,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:2a487aca3ffaff1341be31168c7510021e71e1913a780a71352217ec9f3adc2a",
+        "task_id": "static-pricing-copy-polish",
+        "attempt": 2,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:5e36d8d83e7c2a4796221172eea812a548075913610d855fbd12e9a2b2ba4c2e",
+        "task_id": "static-pricing-copy-polish",
+        "attempt": 3,
+        "contender_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 65,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1100,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:3375146d1c6f1bfa6b25b920556135072b79fd54aeab54627927f18067885784",
+        "task_id": "react-accent-polish",
+        "attempt": 1,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:bb9dd4bc6033d5c6a219048c576343bfa85cc45deecff99587a950c248ff2bf0",
+        "task_id": "react-accent-polish",
+        "attempt": 2,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:db437b1d411d1f7543befba260a74e9500a26a9960ced85c73f644c6202179bb",
+        "task_id": "react-accent-polish",
+        "attempt": 3,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:527d92e5c5f0446d5c77e8986a830885ef1d2270016b725985c8bd46a14760a2",
+        "task_id": "react-active-badge-count",
+        "attempt": 1,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:da3dda08f9a8359d448d4a2534ae292eec8ef95e1813cbd9b14dc1cb9df037c6",
+        "task_id": "react-active-badge-count",
+        "attempt": 2,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:0922781dcab4dc5605d1a49d32372de743d01db1487afb20dd9b9b8c094373ef",
+        "task_id": "react-active-badge-count",
+        "attempt": 3,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:b8042eb0d4b760df2bbe667b122ad0fb6fb88ae5be0d38ccd5a2b44aa75f027a",
+        "task_id": "react-grouped-ui-updates",
+        "attempt": 1,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:1b18efd24f53dc914dd9e3f9bdb36826cafe0c8429da19d21b52c277cccb9682",
+        "task_id": "react-grouped-ui-updates",
+        "attempt": 2,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:9032afc5ffa4fc7a719456ce8ab941572cea1b96920f307c2054bdda2a26a8dd",
+        "task_id": "react-grouped-ui-updates",
+        "attempt": 3,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:4ed533923d81d3e5fb2e385c92161331c274cc17852e66ef03d2b15f7dd7adab",
+        "task_id": "react-saved-view-feature",
+        "attempt": 1,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:a6fc8c368a2ad9edece68845b49c0879c3718e47002e43d193125570237b93f7",
+        "task_id": "react-saved-view-feature",
+        "attempt": 2,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:b4698064fa3bd415c0fc84872aaca1556d10f38027e0c283d50d393c02621e3e",
+        "task_id": "react-saved-view-feature",
+        "attempt": 3,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:acc6ba81a1ff15ad32f802faf18d34f7f419a3201b7ae0ccf96facfc3359cfa4",
+        "task_id": "rust-quoted-value-parser",
+        "attempt": 1,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:8d394e2a78737756cbd178b174f60cb27d646498b392fb9925a50aa93273482c",
+        "task_id": "rust-quoted-value-parser",
+        "attempt": 2,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:886779bd9e1ff6b07e18f77b770a31f766dcaf4fc4fb476587e724c2dfa40041",
+        "task_id": "rust-quoted-value-parser",
+        "attempt": 3,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:ff1672323f9f4fd3038201af1530a4c8d9c18f90f85b2004126e355df1d66413",
+        "task_id": "rust-workspace-warning-summary",
+        "attempt": 1,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:88a2e4270e31e0f5cf99724d76223da4388f5c32bbc025040bd0cb0d8a988842",
+        "task_id": "rust-workspace-warning-summary",
+        "attempt": 2,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:2b5c7fe1c8c9085b8bd9921e5338e1ee39ed6e078e3c06ce30b53158259305cd",
+        "task_id": "rust-workspace-warning-summary",
+        "attempt": 3,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:0d2139ad082b7736ccdc6a3349120ba2db9500e052e75e220317677ecf358108",
+        "task_id": "static-accessible-disclosure",
+        "attempt": 1,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:710584ab6db468bbd6104bc9928ecf7a21338fdd925252d93745ce52615a6256",
+        "task_id": "static-accessible-disclosure",
+        "attempt": 2,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:7b8f233cd393a9c1484f13d1eac888bad589826b82eb4b57dabaeb1960eb021f",
+        "task_id": "static-accessible-disclosure",
+        "attempt": 3,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:54771c560fd5dbcdc1dc86b8d7340443e914abcca9d6765818e7e821234c98b9",
+        "task_id": "static-grouped-page-updates",
+        "attempt": 1,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:b27b47ed688d9f1d7ae6c37c3d0929fc764a0c5a8559afb85d4ca64bf3fa1db4",
+        "task_id": "static-grouped-page-updates",
+        "attempt": 2,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:c7401b0324a76e1d876cec85870ecc6d73c5caa65ddb91db41cd0bc7450a53e1",
+        "task_id": "static-grouped-page-updates",
+        "attempt": 3,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:9ef1367cc50f918939d4c15dbd094b734e90c4d08efedc86ea2229d144bda0c5",
+        "task_id": "static-pricing-copy-polish",
+        "attempt": 1,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:c79a0a05bd39ea82863a7c187502283b60405cd6685ae8827990c998dd535146",
+        "task_id": "static-pricing-copy-polish",
+        "attempt": 2,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      },
+      {
+        "trial_id": "sha256:433fc12b5211294f7b168fd52dcb7035703b4f3755b0923d586a1979e151af78",
+        "task_id": "static-pricing-copy-polish",
+        "attempt": 3,
+        "contender_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "status": "completed",
+        "correctness": true,
+        "protected_state": true,
+        "duration_seconds": 50,
+        "usage_complete": true,
+        "cost_usd": 0.02,
+        "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "model_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0
+          }
+        ],
+        "session_usage": [
+          {
+            "provider": "openai",
+            "model": "gpt-6-astra",
+            "input_tokens": 1200,
+            "output_tokens": 100,
+            "cache_read_tokens": 100,
+            "cache_write_tokens": 0,
+            "session": "root",
+            "effort": "high"
+          }
+        ],
+        "interaction_count": 2,
+        "child_count": 0,
+        "incomplete_reasons": []
+      }
+    ],
+    "comparison": {
+      "status": "recommended",
+      "winner_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "summary": "One contender passed every scheduled correctness check.",
+      "reasons": [
+        "quality_ineligible",
+        "sole_quality_eligible"
+      ],
+      "contenders": [
+        {
+          "id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "family": "nothing",
+          "label": "Nothing",
+          "scheduled": 27,
+          "completed": 27,
+          "attempted": 27,
+          "successes": 24,
+          "success_fraction": {
+            "numerator": 24,
+            "denominator": 27
+          },
+          "eligible": false,
+          "coverage_complete": true,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 27,
+            "infrastructure_failure": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0,
+            "missing": 0,
+            "missing_grading": 0
+          },
+          "task_successes": {
+            "react-accent-polish": 0,
+            "react-active-badge-count": 3,
+            "react-grouped-ui-updates": 3,
+            "react-saved-view-feature": 3,
+            "rust-quoted-value-parser": 3,
+            "rust-workspace-warning-summary": 3,
+            "static-accessible-disclosure": 3,
+            "static-grouped-page-updates": 3,
+            "static-pricing-copy-polish": 3
+          },
+          "repetitions": 3,
+          "total_cost_usd": 0.4077,
+          "total_tokens": 32400,
+          "cost_per_success_usd": 0.0169875,
+          "mean_duration_seconds": 80.0,
+          "usage_complete": true,
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "original_estimates": [
+            {
+              "trial_id": "sha256:ac8f7a74c8d2fb847d6db78b8b04bfdb7e0fcd6a84bdbe9603586047fe47d7a1",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:b0b6debdda67892417563d2994dfb6293bcc9a7c46f70d925ae72ed47a67af06",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:67017557984334089e0381341cfb0faa355b082eca9ba9eecea45f5a9e3c35f8",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:6390882319b800faa1e1ed77033457de65127d09c4ff2053e15c58ee15cb01a9",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:0da23f1d90a868d168237a58cf763427383f01a748397ed77c74735130451fef",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:d8fa6b2aed8ec6fc0b58a2ec073eab3789e778f26e41e4eec7a4b743e26c197b",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:228823650ce9b7f290cce29d9568cd8a96705c8074f6af955d4b3fdd25aea280",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:b3597323da25ae98464a5c63ca227235d99bca7d311235f34c0e4ddc64435f78",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:219af0efe46cce97009cdfc6a67609ab2a144f5187dd02f87e90faa70b5e9caa",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:78ac546415defded2374bacbf1b44d3b974920f1721d18acee25040958f13990",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:0c5e82f1e8dacf4534146adfa8d78d95e6e61105bc065adb7a389d2c1c08fe71",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:49e15301e4045b6317511c36dfbff9ed7d07df9322b25b1526917fd4fc06c233",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:1c9a0619c54e6d638f2251eb4427fe63b27206f566633c15eaa70beb33a700ae",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:c869d09a1af58ccc43c549165e685c35aaea7ade59544e62fd413553a16e2f89",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:ffb0bbb5711381df99583bf621bb0cd626f89a6be59f42d927f08142950e2b4f",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:e088507e7efedaff39811ebb0daa78a2fe42a60f3bf3772ed39a1bc335c249c2",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:f10073487543edd42e8bc3932d0aa959a24225ce55378cc8f29e4a05d495e4a7",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:25907378e49842fdd7ec2626fb6c99e3d5ab4bada43f6406ed346aaa1b909cab",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:e353c201d7538e8fd64ee454e935a9e02bf248cbdd70fa633a38b96ee4eed420",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:22a7d0a92467b5da5e421669240445dfee597281f86c59061a2d84b698686744",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:117cae27533e0ca1452c860de2fb0c9a8f6388475c5efae75d6d482f67f80650",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:6005662b13a3722632c086b4b31af1ecbaaf2aa40d67e8c960db3eb800057c2b",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:397207a03a17d4a481b366110496666828f631dcb6ad34db79d7cb3c034e7030",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:cf09639f10e9507924fea1a51d3c731ccc06837db9ad6ed28ec21c86526f2ff6",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:05ab51246a9177e989e29baa24eca674d6b5896789d270c1eddbdcf7c53d1122",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:319ee9ac76fef1c17fa85ea05f5350f91c72e2091908b4d3016e61f00eac4d60",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:c86745ae20657a1dc953b0c0d823dfd20ed20132071ae034bd8841a979c3fd57",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ],
+          "mean_cost_usd": 0.015099999999999999
+        },
+        {
+          "id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "family": "superpowers",
+          "label": "Superpowers",
+          "scheduled": 27,
+          "completed": 27,
+          "attempted": 27,
+          "successes": 24,
+          "success_fraction": {
+            "numerator": 24,
+            "denominator": 27
+          },
+          "eligible": false,
+          "coverage_complete": true,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 27,
+            "infrastructure_failure": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0,
+            "missing": 0,
+            "missing_grading": 0
+          },
+          "task_successes": {
+            "react-accent-polish": 0,
+            "react-active-badge-count": 3,
+            "react-grouped-ui-updates": 3,
+            "react-saved-view-feature": 3,
+            "rust-quoted-value-parser": 3,
+            "rust-workspace-warning-summary": 3,
+            "static-accessible-disclosure": 3,
+            "static-grouped-page-updates": 3,
+            "static-pricing-copy-polish": 3
+          },
+          "repetitions": 3,
+          "total_cost_usd": 0.4347,
+          "total_tokens": 35100,
+          "cost_per_success_usd": 0.0181125,
+          "mean_duration_seconds": 65.0,
+          "usage_complete": true,
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "original_estimates": [
+            {
+              "trial_id": "sha256:b7d04cac836458c40d454ba5f8aae0a12565303c47fbd0e652002e9f649d84f5",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:7927ef694a8740c643b509955c63ee478084850d2c7f798d789d5a88b27e2ae3",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:9ce874ad1b5f61876f4073e5a5f338d6a890b29ee39c369665e689898596e8b1",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:fe3f29cd4a32ad68a9fd20363629de16e4ed6245c78da298d42ed37f45070357",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:5e0e4fa0267ebd9e09f1bac4ae7f19f9a69e6423ce15c84c84991e7428b82814",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:88aaa1abf478f092986e9324e111ad3bbb2e29fa47aba58d9feaa03703542651",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:e6291742615ac49d9e07080a3f8c3ec5cf77f09ba1ee6c6b8946b2837cb3530d",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:f1fb7514d87dbf4cb1908aec50f63f2f0f44203301fa634e7d86784fa971e069",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:1fcf0ed3a7d03a9ee6fd7bd194aa0095c1493622e20b4f462be27302028dfff4",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:a86d260e139ccb57de85def86358b2adbb495a14251e74d80929e4d6be944751",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:265933daf5111e15ebfb11279f7cea79806b3d15aa826815cc2a734c76545191",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:c18b7a9c5d512631aab51b2536dbb7e66e0dfc3cfdfdac5e5790ea0cf43838cf",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:17bf1abb52bdc58af601842dd3287cc7ae28ff0edfa90bd667369a8dc3b8a39f",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:1ab6dc8619f1bea57fa8b86739962444618b3859e13ba2e7de563cb2442fdde0",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:3e4fc5927e222c837688692c14dc51e9bcc96d79021033506c595276b094df80",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:d3de45eed2cda220f866241b9ba0904e137dc62ad1b5932d8e00bd26cad3ee91",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:8ee8e83154e7ad4034f76b93ccd7efd7b4d0e27b6d84733760e3e2bdafaccb0e",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:1eaec0e0f97a8fe2a3b1db4176cf660bde107296484c1075206b615305cb0175",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:761b5088c2e25449a3d5fbbaf8bbad96ed752cbcc31ddc9c9752893aaa2e1c06",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:a44286f1ff2c715e177f9ef8ab4af48d6dd0d704083cb11020a4a008b04e4661",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:bd3a68b2b7fe911e5350dd33348fe4e3c9540f760539d24c4e4a25743811f266",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:77763af5911eb14a17fe6e703509b0ef45d1bdc7bd822f1a27fa7ee39111be4f",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:addea18f02ad3956c21e8aacc0e7b803081ca0048900a484926c527b55cb8fec",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:1976521ed1188fec357166a599c57a0325ae7de6d4667793aa047e9c5792cde6",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:18560d499b8b5b30a2a8f98aba5bca0dee8a35e6542b100cce81e0a241c53afe",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:2a487aca3ffaff1341be31168c7510021e71e1913a780a71352217ec9f3adc2a",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:5e36d8d83e7c2a4796221172eea812a548075913610d855fbd12e9a2b2ba4c2e",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ],
+          "mean_cost_usd": 0.0161
+        },
+        {
+          "id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "family": "studio-moser",
+          "label": "Studio Moser v1",
+          "scheduled": 27,
+          "completed": 27,
+          "attempted": 27,
+          "successes": 27,
+          "success_fraction": {
+            "numerator": 27,
+            "denominator": 27
+          },
+          "eligible": true,
+          "coverage_complete": true,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 27,
+            "infrastructure_failure": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0,
+            "missing": 0,
+            "missing_grading": 0
+          },
+          "task_successes": {
+            "react-accent-polish": 3,
+            "react-active-badge-count": 3,
+            "react-grouped-ui-updates": 3,
+            "react-saved-view-feature": 3,
+            "rust-quoted-value-parser": 3,
+            "rust-workspace-warning-summary": 3,
+            "static-accessible-disclosure": 3,
+            "static-grouped-page-updates": 3,
+            "static-pricing-copy-polish": 3
+          },
+          "repetitions": 3,
+          "total_cost_usd": 0.4617,
+          "total_tokens": 37800,
+          "cost_per_success_usd": 0.0171,
+          "mean_duration_seconds": 50.0,
+          "usage_complete": true,
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "original_estimates": [
+            {
+              "trial_id": "sha256:3375146d1c6f1bfa6b25b920556135072b79fd54aeab54627927f18067885784",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:bb9dd4bc6033d5c6a219048c576343bfa85cc45deecff99587a950c248ff2bf0",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:db437b1d411d1f7543befba260a74e9500a26a9960ced85c73f644c6202179bb",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:527d92e5c5f0446d5c77e8986a830885ef1d2270016b725985c8bd46a14760a2",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:da3dda08f9a8359d448d4a2534ae292eec8ef95e1813cbd9b14dc1cb9df037c6",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:0922781dcab4dc5605d1a49d32372de743d01db1487afb20dd9b9b8c094373ef",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:b8042eb0d4b760df2bbe667b122ad0fb6fb88ae5be0d38ccd5a2b44aa75f027a",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:1b18efd24f53dc914dd9e3f9bdb36826cafe0c8429da19d21b52c277cccb9682",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:9032afc5ffa4fc7a719456ce8ab941572cea1b96920f307c2054bdda2a26a8dd",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:4ed533923d81d3e5fb2e385c92161331c274cc17852e66ef03d2b15f7dd7adab",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:a6fc8c368a2ad9edece68845b49c0879c3718e47002e43d193125570237b93f7",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:b4698064fa3bd415c0fc84872aaca1556d10f38027e0c283d50d393c02621e3e",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:acc6ba81a1ff15ad32f802faf18d34f7f419a3201b7ae0ccf96facfc3359cfa4",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:8d394e2a78737756cbd178b174f60cb27d646498b392fb9925a50aa93273482c",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:886779bd9e1ff6b07e18f77b770a31f766dcaf4fc4fb476587e724c2dfa40041",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:ff1672323f9f4fd3038201af1530a4c8d9c18f90f85b2004126e355df1d66413",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:88a2e4270e31e0f5cf99724d76223da4388f5c32bbc025040bd0cb0d8a988842",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:2b5c7fe1c8c9085b8bd9921e5338e1ee39ed6e078e3c06ce30b53158259305cd",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:0d2139ad082b7736ccdc6a3349120ba2db9500e052e75e220317677ecf358108",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:710584ab6db468bbd6104bc9928ecf7a21338fdd925252d93745ce52615a6256",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:7b8f233cd393a9c1484f13d1eac888bad589826b82eb4b57dabaeb1960eb021f",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:54771c560fd5dbcdc1dc86b8d7340443e914abcca9d6765818e7e821234c98b9",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:b27b47ed688d9f1d7ae6c37c3d0929fc764a0c5a8559afb85d4ca64bf3fa1db4",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:c7401b0324a76e1d876cec85870ecc6d73c5caa65ddb91db41cd0bc7450a53e1",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:9ef1367cc50f918939d4c15dbd094b734e90c4d08efedc86ea2229d144bda0c5",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:c79a0a05bd39ea82863a7c187502283b60405cd6685ae8827990c998dd535146",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            {
+              "trial_id": "sha256:433fc12b5211294f7b168fd52dcb7035703b4f3755b0923d586a1979e151af78",
+              "cost_usd": 0.02,
+              "pricing_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ],
+          "mean_cost_usd": 0.0171
+        }
+      ],
+      "pairs": [
+        {
+          "left_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "right_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "left_report_id": null,
+          "right_report_id": null,
+          "cost_ratio": {
+            "estimate": 0.937888198757764,
+            "lower": 0.937888198757764,
+            "upper": 0.937888198757764
+          },
+          "cost_difference_usd": -0.0010000000000000009,
+          "time_ratio": {
+            "estimate": 1.2307692307692308,
+            "lower": 1.2307692307692308,
+            "upper": 1.2307692307692308
+          },
+          "time_difference_seconds": 15.0
+        },
+        {
+          "left_id": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "right_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "left_report_id": null,
+          "right_report_id": null,
+          "cost_ratio": {
+            "estimate": 0.8830409356725145,
+            "lower": 0.8830409356725145,
+            "upper": 0.8830409356725145
+          },
+          "cost_difference_usd": -0.0020000000000000018,
+          "time_ratio": {
+            "estimate": 1.6,
+            "lower": 1.6,
+            "upper": 1.6
+          },
+          "time_difference_seconds": 30.0
+        },
+        {
+          "left_id": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "right_id": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "left_report_id": null,
+          "right_report_id": null,
+          "cost_ratio": {
+            "estimate": 0.9415204678362573,
+            "lower": 0.9415204678362573,
+            "upper": 0.9415204678362573
+          },
+          "cost_difference_usd": -0.0010000000000000009,
+          "time_ratio": {
+            "estimate": 1.3,
+            "lower": 1.3,
+            "upper": 1.3
+          },
+          "time_difference_seconds": 15.0
+        }
+      ],
+      "leaders": {
+        "observed_cost_ids": [
+          "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        ],
+        "observed_time_ids": [
+          "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        ]
+      },
+      "provisional": true,
+      "history": {
+        "status": "first_version",
+        "summary": "No predecessor selected.",
+        "predecessor_ids": [],
+        "hypothesis": "Fixture: improve correctness and reduce repeated work",
+        "task_changes": [],
+        "predecessor_contenders": []
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "Intervals describe repetition variation within the selected fixed tasks; they do not cover model drift, provider load changes, new tasks, or broad software quality.",
+        "Three repetitions are the default minimum. Identical repetitions can yield narrow intervals without proving universal stability.",
+        "Historical time comparisons are observational; they do not establish causality.",
+        "The 10% advantage and noninferiority thresholds are product defaults, not research findings.",
+        "No clear change does not establish equivalence."
+      ],
+      "policy_id": "development-comparison-v1",
+      "policy_digest": "sha256:f3a1beb5e366623940d305206b4b55af2b947d3a73a04eb4e66c57c8e249866f",
+      "bootstrap": {
+        "seed": "sha256:2034cddca45c2eefc864c3f4d1cff5aaf0062f56a7986566ef4ad8931cb84a7f",
+        "draws": 20000,
+        "pair_count": 3,
+        "per_tail_probability": 0.004166666666666667
+      }
+    },
+    "supersedes_report_id": null
+  }
+}

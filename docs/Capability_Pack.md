@@ -4,6 +4,43 @@ The optional capability pack measures longer-horizon work on six frozen DeepSWE 
 tasks. It is a manual `research` lane, not part of validation, checkpoints, releases, or
 continuous integration.
 
+## Next Queued Experiment
+
+**Q1 — Quill shared-toolbar pilot** · prepared September 6, 2026; user requested launch.
+
+Select the existing `quill-shared-toolbar-focus` task. Implement a shared toolbar
+that follows the active editor, keeps its controls in sync, and handles disabled
+or removed editors and dynamically changed controls. This is a TypeScript feature
+in the real Quill codebase, with interacting behavior across modules, themes and
+UI. The upstream verifier runs existing toolbar/picker tests and a separate new
+browser-test suite. This makes it a more substantial pilot than the local stub
+and styling fixtures; whether harnesses help is still the question being tested.
+
+| Input | Queued selection |
+| --- | --- |
+| Task definition | [Pinned Quill task](https://github.com/datacurve-ai/deep-swe/tree/8cae5984d5dd0ee37445beff0e928dc10c331116/tasks/quill-shared-toolbar-focus) |
+| Starting repository | `slab/quill` at `539cbffd0a13b18e9c65eb84dd35e6596e403158` |
+| Harnesses | Nothing, Superpowers, full Studio Moser; retain the existing frozen source/rubric identities |
+| Kickoff | Codex 0.153.4, GPT-6 Astra, High |
+| Pilot size | One repetition per harness: three root trials, sequential |
+| Delegation | Normal native harness behavior; no forced child or diagnostic startup instructions |
+| Conclusion | Exploratory outcomes and whole-tree cost/time/tokens; no overall winner from one task |
+| Execution | User requested the three-trial pilot; inspect the local manifest and run report for live status before starting another run |
+
+Preparation connects this research task to the versioned contender,
+native-conversation, and whole-tree reporting path through the `deepswe` diagnostic
+variant. It accepts only the selected Quill task. Preserve the upstream prompt,
+repository pin, hidden grader and image identity. Model-free no-op/reference grading
+and committed-patch artifact transfer are verified; the upstream grader does not
+report protected state, so reports retain that field as unknown.
+
+Select this task explicitly to avoid downloading/building the full cohort. Keep fetched
+content in the ignored cache. Freeze resource/time limits and an estimate appropriate
+to this task before requesting execution approval.
+
+This pilot takes priority over the previously prepared, unapproved 81-trial local
+fixture cohort. No additional benchmark run is authorized by this queue entry.
+
 ## Frozen Source
 
 - Repository: [datacurve-ai/deep-swe](https://github.com/datacurve-ai/deep-swe)
@@ -29,25 +66,25 @@ files. Materialization therefore fails unless `.cache/deepswe` is ignored and un
 Preview the exact network, image, task, and cache scope:
 
 ```bash
-uv run harness-test deepswe materialize
+uv run harness-test deepswe materialize --task quill-shared-toolbar-focus
 ```
 
 The preview writes nothing. Execute it only with explicit confirmation:
 
 ```bash
-uv run harness-test deepswe materialize --confirm-download
+uv run harness-test deepswe materialize --task quill-shared-toolbar-focus --confirm-download
 ```
 
 Materialization does not start Claude, Codex, Harbor, or a benchmark trial. It:
 
-1. fetches the exact Git commit with blob filtering and archives only the six allowlisted
-   task directories;
+1. fetches the exact Git commit with blob filtering and archives only the selected
+   allowlisted task directories;
 2. records sorted SHA-256 manifests for each instruction, solution, verifier, metadata
    set, and starting repository;
 3. pulls each task's upstream `linux/amd64` image by its pinned manifest digest and
    records both that manifest digest and the local image ID;
 4. builds or reuses a separately tagged `linux/amd64` agent-tools image from the pinned
-   Harness Testing Node Dockerfile, then copies its Claude Code and Codex CLI payloads
+   Harness Testing Node Dockerfile, then copies its Claude Code, Codex and pinned `yq` payloads
    into each derived image outside `/app`;
 5. builds a separate hidden-test image from the unchanged upstream verifier files while
    pinning its generated `FROM` line to the same immutable manifest;
@@ -77,6 +114,10 @@ Generated content stays under:
 Reusing a cache validates every recorded byte, wrapper digest, current CLI pin, and local
 derived-image ID. Drift is an error; the materializer never silently repairs or publishes
 a changed cache.
+
+DeepSWE materializer schema 2 includes the `yq` executable required by the Studio
+Moser rubric. Rematerialization rebuilds older tooling snapshots while retaining
+their dataset directories; all three contenders use the same derived image.
 
 ## Plan a Research Run
 

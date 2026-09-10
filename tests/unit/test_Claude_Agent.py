@@ -167,22 +167,123 @@ def test_claude_adapter_keeps_oauth_token_out_of_exec_argv_and_cleans_up(
     else:
         asyncio.run(run_in_trial_scope())
 
-    assert environment.uploads == [
-        (secret, "/tmp/Harness_Claude_OAuth_Token", 0o600)
-    ]
+    assert environment.uploads == [(secret, "/tmp/Harness_Claude_OAuth_Token", 0o600)]
     assert all(secret not in command for command, _ in environment.execs)
     assert all(secret not in argument for argv in environment.argvs for argument in argv)
-    assert all(
-        secret not in (env or {}).values() for _, env in environment.execs
-    )
-    assert all(
-        "CLAUDE_CODE_OAUTH_TOKEN" not in (env or {})
-        for _, env in environment.execs
-    )
+    assert all(secret not in (env or {}).values() for _, env in environment.execs)
+    assert all("CLAUDE_CODE_OAUTH_TOKEN" not in (env or {}) for _, env in environment.execs)
     assert any(
-        'CLAUDE_CODE_OAUTH_TOKEN="$(cat -- /tmp/Harness_Claude_OAuth_Token)"'
-        in command
+        'CLAUDE_CODE_OAUTH_TOKEN="$(cat -- /tmp/Harness_Claude_OAuth_Token)"' in command
         and "rm -f -- /tmp/Harness_Claude_OAuth_Token" in command
         for command, _ in environment.execs
     )
     assert environment.execs[-1][0] == "rm -f -- /tmp/Harness_Claude_OAuth_Token"
+
+
+def test_claude_native_adapter_stages_control_config_and_cleans_failure(tmp_path, monkeypatch):
+    import json
+
+    class Environment:
+        default_user = None
+
+        def __init__(self):
+            self.commands = []
+            self.config = None
+
+        async def upload_file(self, source, target):
+            if target.endswith("Trial_Config.json"):
+                self.config = json.loads(Path(source).read_text())
+
+        async def exec(self, command, **kwargs):
+            self.commands.append(command)
+            return SimpleNamespace(return_code=0, stdout="", stderr="")
+
+    async def fake_run(self, instruction, environment, context):
+        await self.exec_as_agent(
+            environment, "claude --verbose --output-format=stream-json --print"
+        )
+        raise RuntimeError("retained failure")
+
+    monkeypatch.setattr("harness_testing.Claude_Agent.ClaudeCode.run", fake_run)
+    policy = {"schema_version": "1", "interaction_limit": 3, "facts": {}, "rules": []}
+    agent = HarnessClaude(
+        logs_dir=tmp_path,
+        model_name="anthropic/claude-sonnet-4-6",
+        version="2.1.236",
+        reasoning_effort="high",
+        conversation={"policy": policy, "timeout_seconds": 4},
+        plugin_dirs=[f"/harness-arm/claude/plugins/{name}" for name in ("a", "b", "c")],
+    )
+    environment = Environment()
+    with pytest.raises(RuntimeError, match="retained failure"):
+        asyncio.run(agent.run("Ordinary request", environment, object()))
+    assert environment.config["instruction"] == "Ordinary request"
+    assert environment.config["command"].count("--plugin-dir") == 3
+    assert "--permission-prompt-tool" in environment.config["command"]
+    assert "--continue" not in environment.config["command"]
+    assert environment.commands[-1] == "rm -rf -- /tmp/Harness_Native_Conversation"
+
+
+@pytest.mark.parametrize("fails", [False, True])
+def test_secondary_codex_auth_is_file_scoped_and_removed_in_finally(tmp_path, monkeypatch, fails):
+    import json
+
+    secret = "secondary-key-never-in-argv"
+
+    class Environment:
+        default_user = None
+
+        def __init__(self):
+            self.uploads = []
+            self.commands = []
+
+        async def upload_file(self, source, target):
+            self.uploads.append(
+                (target, Path(source).read_text(), stat.S_IMODE(Path(source).stat().st_mode))
+            )
+
+        async def exec(self, command, **kwargs):
+            self.commands.append(command)
+            return SimpleNamespace(return_code=0, stdout="", stderr="")
+
+    async def fake_run(self, instruction, environment, context):
+        await self.exec_as_agent(
+            environment, "claude --verbose --output-format=stream-json --print"
+        )
+        if fails:
+            raise RuntimeError("primary failed")
+
+    monkeypatch.setattr("harness_testing.Claude_Agent.ClaudeCode.run", fake_run)
+    policy = {"schema_version": "1", "interaction_limit": 3, "facts": {}, "rules": []}
+    agent = HarnessClaude(
+        logs_dir=tmp_path,
+        model_name="anthropic/claude-sonnet-4-6",
+        version="2.1.236",
+        reasoning_effort="high",
+        conversation={
+            "policy": policy,
+            "timeout_seconds": 4,
+            "executor_inventory": [
+                {
+                    "provider": "openai",
+                    "runtime_version": "0.150.1",
+                    "model": "child",
+                    "effort": "low",
+                }
+            ],
+        },
+        extra_env={"OPENAI_API_KEY": secret},
+    )
+    environment = Environment()
+    if fails:
+        with pytest.raises(RuntimeError, match="primary failed"):
+            asyncio.run(agent.run("Task", environment, object()))
+    else:
+        asyncio.run(agent.run("Task", environment, object()))
+    auth = next(row for row in environment.uploads if row[0].endswith("/auth.json"))
+    assert json.loads(auth[1]) == {"OPENAI_API_KEY": secret}
+    assert "OPENAI_API_KEY" not in agent.extra_env
+    assert auth[2] == 0o600
+    assert all(secret not in command for command in environment.commands)
+    assert "rm -rf -- /tmp/Harness_External_Codex" in environment.commands
+    assert environment.commands[-1] == "rm -rf -- /tmp/Harness_Native_Conversation"

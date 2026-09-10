@@ -19,6 +19,8 @@ provider-homes/
 arms/materialized/
 runs/generated/
 runs/history/
+runs/evidence/
+runs/reviews/
 
 # Dashboard dependencies and output
 dashboard/node_modules/
@@ -28,3 +30,7 @@ dashboard/dist/
 .env
 .env.*
 !.env.example
+
+runs/inputs/
+output/playwright/
+.playwright-cli/

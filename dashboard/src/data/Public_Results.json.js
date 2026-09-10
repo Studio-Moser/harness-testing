@@ -146,10 +146,10 @@ async function readRunReport(path, name, validator, kind) {
   if (safetyErrors.length) {
     throw new Error(`${name}: ${kind} run report safety validation failed: ${safetyErrors.join("; ")}`);
   }
-  if (kind === "published" && report.schema_version !== "2") {
+  if (kind === "published" && !["2", "3"].includes(report.schema_version)) {
     throw new Error(`${name}: published run report schema validation failed: version 2 required`);
   }
-  if (report.schema_version === "2" && report.report_id !== runReportId(report)) {
+  if (["2", "3"].includes(report.schema_version) && report.report_id !== runReportId(report)) {
     throw new Error(`${name}: ${kind} run report identity does not match its content`);
   }
   return report;
@@ -157,15 +157,16 @@ async function readRunReport(path, name, validator, kind) {
 
 function combinedRunReports(publishedRuns, localRuns) {
   const combined = new Map();
-  for (const report of [...publishedRuns, ...localRuns.filter((run) => run.schema_version === "2")]) {
-    const previous = combined.get(report.run_id);
+  for (const report of [...publishedRuns, ...localRuns.filter((run) => ["2", "3"].includes(run.schema_version))]) {
+    const key = report.schema_version === "3" ? report.report_id : report.run_id;
+    const previous = combined.get(key);
     if (previous === undefined) {
-      combined.set(report.run_id, report);
+      combined.set(key, report);
       continue;
     }
     const comparison = compareText(report.updated_at, previous.updated_at);
     if (comparison > 0) {
-      combined.set(report.run_id, report);
+      combined.set(key, report);
     } else if (comparison === 0 && report.report_id !== previous.report_id) {
       throw new Error(`${report.run_id}: run reports conflict at the same update time`);
     }
@@ -234,6 +235,16 @@ export async function loadPublicResults({
     localRuns.push(report);
   }
 
+  for (const entry of await resultEntries(resolve(runsDirectory, "../evidence"))) {
+    localRuns.push(await readRunReport(resolve(runsDirectory, "../evidence", entry.name), entry.name, validateRunReport, "local"));
+  }
+  const runReports = combinedRunReports(publishedRuns, localRuns);
+  const identities = new Set(runReports.map((run) => run.report_id));
+  for (const run of runReports.filter((run) => run.schema_version === "3")) {
+    for (const reference of [...run.experiment.baseline_result_ids, ...run.experiment.predecessor_result_ids, ...[run.experiment.supersedes_report_id].filter(Boolean)]) {
+      if (!identities.has(reference)) throw new Error(`${run.run_id}: missing referenced evidence ${reference}`);
+    }
+  }
   finalized.sort((left, right) =>
     compareText(resultSortKey(left), resultSortKey(right))
   );
@@ -248,7 +259,7 @@ export async function loadPublicResults({
   return {
     schema_version: "2",
     results: finalized,
-    run_reports: combinedRunReports(publishedRuns, localRuns),
+    run_reports: runReports,
     local_runs: localRuns.sort((left, right) =>
       compareText(
         `${left.updated_at}\0${left.run_id}`,

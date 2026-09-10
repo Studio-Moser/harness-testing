@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shlex
 import subprocess
 import sys
@@ -60,9 +61,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     deepswe_materialize_parser = deepswe_subparsers.add_parser(
         "materialize", help="fetch and derive the pinned six-task cohort"
     )
-    deepswe_materialize_parser.add_argument(
-        "--confirm-download", action="store_true"
-    )
+    deepswe_materialize_parser.add_argument("--confirm-download", action="store_true")
+    deepswe_materialize_parser.add_argument("--task", action="append", default=[])
 
     regrade_parser = subparsers.add_parser(
         "regrade", help="re-run Harbor verification without an agent phase"
@@ -87,14 +87,28 @@ def main(argv: Sequence[str] | None = None) -> int:
     backfill_parser = report_subparsers.add_parser(
         "backfill", help="reconstruct reports from model-free historical artifacts"
     )
-    backfill_parser.add_argument(
-        "--source-root", type=Path, action="append", required=True
-    )
+    backfill_parser.add_argument("--source-root", type=Path, action="append", required=True)
     backfill_parser.add_argument("--mapping", type=Path, required=True)
     backfill_parser.add_argument("--output", type=Path, required=True)
     report_subparsers.add_parser(
         "sync", help="publish all pending reports in one data-branch update"
     )
+
+    review_parser = subparsers.add_parser(
+        "review", help="freeze or import model-free final-patch review evidence"
+    )
+    review_subparsers = review_parser.add_subparsers(dest="review_command")
+    review_prepare_parser = review_subparsers.add_parser(
+        "prepare", help="create blinded frozen review packets"
+    )
+    review_prepare_parser.add_argument("--report", type=Path, required=True)
+    review_prepare_parser.add_argument("--protocol", type=Path, required=True)
+    review_prepare_parser.add_argument("--references", type=Path)
+    review_record_parser = review_subparsers.add_parser(
+        "record", help="validate and import returned review evidence"
+    )
+    review_record_parser.add_argument("--plan", type=Path, required=True)
+    review_record_parser.add_argument("--results", type=Path, required=True)
 
     auth_parser = subparsers.add_parser("auth", help="store local subscription credentials")
     auth_subparsers = auth_parser.add_subparsers(dest="auth_command")
@@ -103,18 +117,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     run_parser = subparsers.add_parser("run", help="plan or execute guarded Harbor runs")
     run_subparsers = run_parser.add_subparsers(dest="run_command")
     plan_parser = run_subparsers.add_parser("plan", help="compile a dry-run manifest")
+    plan_parser.add_argument("--request", type=Path)
     plan_parser.add_argument(
         "--profile",
         choices=("smoke", "checkpoint", "release", "calibration", "research"),
-        required=True,
+        required=False,
     )
-    plan_parser.add_argument(
-        "--billing-mode", choices=("subscription", "api"), required=True
-    )
+    plan_parser.add_argument("--billing-mode", choices=("subscription", "api"))
     plan_parser.add_argument("--cell", action="append", default=[])
     plan_parser.add_argument("--task", action="append", default=[])
-    plan_parser.add_argument("--max-sessions", type=int, required=True)
-    plan_parser.add_argument("--max-budget-usd", type=Decimal, required=True)
+    plan_parser.add_argument("--max-sessions", type=int)
+    plan_parser.add_argument("--max-budget-usd", type=Decimal)
     plan_parser.add_argument("--attempts", type=int)
     plan_parser.add_argument("--concurrency", type=int)
     plan_parser.add_argument("--agent-timeout-seconds", type=int)
@@ -122,9 +135,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     skill_evaluation = plan_parser.add_mutually_exclusive_group()
     skill_evaluation.add_argument("--invoke-skill")
     skill_evaluation.add_argument("--observe-skill")
-    execute_parser = run_subparsers.add_parser(
-        "execute", help="execute an exact approved manifest"
-    )
+    execute_parser = run_subparsers.add_parser("execute", help="execute an exact approved manifest")
     execute_parser.add_argument("--manifest", type=Path, required=True)
     execute_parser.add_argument("--approve", required=True)
 
@@ -140,6 +151,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         choices=("oracle", "nop", "near-miss", "adversarial", "source-tamper"),
     )
     qa_cases.add_argument("--all-cases", action="store_true")
+    qa_parser.add_argument("--variant", choices=("workflow", "comparison"), default="workflow")
 
     arguments = parser.parse_args(argv)
     if arguments.command == "validate":
@@ -167,9 +179,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         if not selected:
             print("Planned image builds:")
-            for command in image_build_commands(
-                _repository_root(), ("node", "rust", "verifier")
-            ):
+            for command in image_build_commands(_repository_root(), ("node", "rust", "verifier")):
                 print(f"  {shlex.join(command.arguments)}")
             print("No image selected; pass a specific image flag or --all.", file=sys.stderr)
             return 2
@@ -186,17 +196,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(f"{materialized.provider}:{materialized.arm} {materialized.digest}")
         print(materialized.path)
-    elif (
-        arguments.command == "deepswe"
-        and arguments.deepswe_command == "materialize"
-    ):
+    elif arguments.command == "deepswe" and arguments.deepswe_command == "materialize":
         from harness_testing.Materialize import (
             deepswe_materialization_plan,
             format_deepswe_plan,
             materialize_deepswe,
         )
 
-        plan = deepswe_materialization_plan(_repository_root())
+        task_ids = tuple(arguments.task) or None
+        plan = deepswe_materialization_plan(_repository_root(), task_ids=task_ids)
         print(format_deepswe_plan(plan))
         if not arguments.confirm_download:
             print(
@@ -206,7 +214,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             return 2
         materialized = materialize_deepswe(
-            _repository_root(), confirm_download=True
+            _repository_root(), confirm_download=True, task_ids=task_ids
         )
         print(f"Materialized dataset: {materialized.digest}")
         print(materialized.path)
@@ -275,6 +283,29 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"Published {len(receipts)} run report(s) to {target.repository}.")
         else:
             print("No public run reports are pending.")
+    elif arguments.command == "review" and arguments.review_command == "prepare":
+        from harness_testing.Code_Reviews import prepare_review
+
+        try:
+            options = {"references_path": arguments.references} if arguments.references else {}
+            outcome = prepare_review(
+                _repository_root(), arguments.report, arguments.protocol, **options
+            )
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        print(json.dumps(outcome, indent=2, sort_keys=True))
+    elif arguments.command == "review" and arguments.review_command == "record":
+        from harness_testing.Code_Reviews import record_review
+        from harness_testing.Run_Reports import refresh_local_dashboard
+
+        try:
+            outcome = record_review(_repository_root(), arguments.plan, arguments.results)
+            refresh_local_dashboard(_repository_root())
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        print(json.dumps(outcome, indent=2, sort_keys=True))
     elif arguments.command == "auth" and arguments.auth_command == "claude":
         from harness_testing.Credentials import store_claude_subscription_token
 
@@ -288,6 +319,43 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif arguments.command == "run" and arguments.run_command == "plan":
         from harness_testing.Runs import format_plan, plan_run
         from harness_testing.Skill_Evaluation import SkillEvaluation
+
+        if arguments.request is not None:
+            from harness_testing.Experiments import plan_experiment
+
+            conflicts = (
+                arguments.profile,
+                arguments.billing_mode,
+                arguments.cell,
+                arguments.task,
+                arguments.max_sessions,
+                arguments.max_budget_usd,
+                arguments.attempts,
+                arguments.concurrency,
+                arguments.agent_timeout_seconds,
+                arguments.local_report_only,
+                arguments.invoke_skill,
+                arguments.observe_skill,
+            )
+            if any(value is not None and value is not False and value != [] for value in conflicts):
+                parser.error(
+                    "--request cannot be combined with legacy run selection or limit flags"
+                )
+            manifest = plan_experiment(
+                _repository_root(), json.loads(arguments.request.read_text())
+            )
+            print(format_plan(manifest))
+            return 0
+        missing = [
+            name
+            for name in ("profile", "billing_mode", "max_sessions", "max_budget_usd")
+            if getattr(arguments, name) is None
+        ]
+        if missing:
+            parser.error(
+                "required without --request: "
+                + ", ".join("--" + name.replace("_", "-") for name in missing)
+            )
 
         evaluation = (
             SkillEvaluation("capability", arguments.invoke_skill)
@@ -328,10 +396,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         show_identity = arguments.pack is not None or arguments.all_cases
         for task_id in task_ids:
             for case in cases:
-                scores = run_task_qa(_repository_root(), task_id, case)
+                scores = (
+                    run_task_qa(_repository_root(), task_id, case, variant="comparison")
+                    if arguments.variant == "comparison"
+                    else run_task_qa(_repository_root(), task_id, case)
+                )
                 summary = " ".join(
-                    f"{name}={scores[name]:g}"
-                    for name in ("reward", "workflow", "efficiency")
+                    f"{name}={scores[name]:g}" for name in ("reward", "workflow", "efficiency")
                 )
                 prefix = f"{task_id}:{case} " if show_identity else ""
                 print(f"{prefix}{summary}")

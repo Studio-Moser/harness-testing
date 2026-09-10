@@ -48,9 +48,7 @@ def _initialized_repositories(tmp_path: Path) -> tuple[Path, Path]:
     _git(caller, "config", "user.name", "Harness Test")
     _git(caller, "config", "user.email", "harness@example.invalid")
     (caller / ".gitignore").write_text("runs/history/\nruns/generated/\n")
-    (caller / "Versions.toml").write_text(
-        '[repository]\nschema_version = "0.3.0"\n'
-    )
+    (caller / "Versions.toml").write_text('[repository]\nschema_version = "0.3.0"\n')
     (caller / "policy").mkdir()
     shutil.copyfile(
         REPOSITORY_ROOT / "policy" / "Run_Report.schema.json",
@@ -111,9 +109,12 @@ def _write_live_report(
     if publication is not None:
         provenance["report_publication"] = publication
     manifest: dict[str, object] = {"provenance": provenance}
-    manifest["digest"] = "sha256:" + hashlib.sha256(
-        json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
-    ).hexdigest()
+    manifest["digest"] = (
+        "sha256:"
+        + hashlib.sha256(
+            json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+    )
 
     output = caller / "runs" / "generated" / f"live-{index}" / "Run_Report.json"
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -224,8 +225,7 @@ def test_publication_policy_rejects_untrusted_targets(
         text += replacement + "\n"
     else:
         text = "\n".join(
-            replacement if line.startswith(f"{key} =") else line
-            for line in text.splitlines()
+            replacement if line.startswith(f"{key} =") else line for line in text.splitlines()
         )
     (policy / "Dashboard_Publication.toml").write_text(text + "\n")
 
@@ -407,3 +407,127 @@ def test_report_sync_with_no_pending_reports_is_model_free(
 
     assert CLI.main(["report", "sync"]) == 0
     assert capsys.readouterr().out == "No public run reports are pending.\n"
+
+
+def test_comparison_publication_requires_referenced_evidence(tmp_path):
+    from harness_testing.Report_Publication import _apply_reports
+    from harness_testing.Run_Reports import run_report_id
+
+    root = Path(__file__).parents[2]
+    report = json.loads((root / "tests/Fixtures/Run_Reports/Comparison.json").read_text())
+    report["experiment"]["baseline_result_ids"] = ["sha256:" + "0" * 64]
+    report["report_id"] = run_report_id(report)
+    source = tmp_path / "Incoming.json"
+    source.write_text(json.dumps(report))
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    with pytest.raises(ValueError, match="referenced comparison evidence"):
+        _apply_reports(root, checkout, ((source, report),))
+
+
+def _retained_comparison(caller, index, publication):
+    live = _write_live_report(caller, index, publication)
+    manifest = json.loads(live.read_text())["manifest_digest"]
+    report = json.loads((RUN_REPORT_FIXTURE.parent / "Comparison.json").read_text())
+    report["manifest_digest"] = manifest
+    report["run_id"] = f"run-{index:020x}"
+    report["report_id"] = run_report_id(report)
+    live.write_text(json.dumps(report))
+    retained = caller / "runs/evidence" / (report["report_id"][7:] + ".json")
+    retained.parent.mkdir(parents=True, exist_ok=True)
+    retained.write_text(json.dumps(report))
+    return live, retained, report
+
+
+def test_sync_publishes_retained_original_and_superseding_revision_after_failure(tmp_path):
+    caller, remote = _initialized_repositories(tmp_path)
+    live, retained, original = _retained_comparison(
+        caller, 1, publication_manifest_record(TEST_TARGET)
+    )
+    calls, dispatches = [], []
+    with pytest.raises(ValueError, match="could not publish"):
+        publish_run_reports(
+            caller,
+            (live,),
+            TEST_TARGET,
+            runner=_recording_runner(remote, calls, dispatches, fail_push=True),
+        )
+    revision = json.loads(json.dumps(original))
+    revision["updated_at"] = "2026-09-04T20:00:00Z"
+    revision["experiment"]["supersedes_report_id"] = original["report_id"]
+    revision["report_id"] = run_report_id(revision)
+    live.write_text(json.dumps(revision))
+    duplicate = retained.with_name(revision["report_id"][7:] + ".json")
+    duplicate.write_text(json.dumps(revision))
+    pending = pending_run_reports(caller)
+    assert set(pending) == {live, retained}
+    receipts = Report_Publication.sync_pending_reports(
+        caller, TEST_TARGET, runner=_recording_runner(remote, calls, dispatches)
+    )
+    assert {r.report_id for r in receipts} == {original["report_id"], revision["report_id"]}
+    assert pending_run_reports(caller) == ()
+    assert _git(remote, "ls-tree", "--name-only", "dashboard-data:reports").splitlines() == sorted(
+        [original["report_id"][7:] + ".json", revision["report_id"][7:] + ".json"]
+    )
+    assert retained.with_suffix(".Publication.json").is_file()
+    assert not duplicate.with_suffix(".Publication.json").exists()
+
+
+@pytest.mark.parametrize(
+    "publication",
+    [
+        None,
+        {"mode": "local-only"},
+        {**publication_manifest_record(TEST_TARGET), "repository": "Other/repo"},
+    ],
+)
+def test_retained_revision_requires_original_exact_publication_binding(tmp_path, publication):
+    caller, _ = _initialized_repositories(tmp_path)
+    _, retained, _ = _retained_comparison(caller, 1, publication)
+    assert pending_run_reports(caller) == ()
+    with pytest.raises(ValueError, match="publication binding"):
+        publish_run_reports(caller, (retained,), TEST_TARGET)
+
+
+def test_retained_revision_rejects_missing_tampered_manifest_and_wrong_filename(tmp_path):
+    caller, _ = _initialized_repositories(tmp_path)
+    live, retained, _ = _retained_comparison(caller, 1, publication_manifest_record(TEST_TARGET))
+    wrong = retained.with_name("0" * 64 + ".json")
+    shutil.copyfile(retained, wrong)
+    with pytest.raises(ValueError, match="identity"):
+        publish_run_reports(caller, (wrong,), TEST_TARGET)
+    manifest = live.with_name("Manifest.json")
+    document = json.loads(manifest.read_text())
+    document["provenance"]["run_id"] = "tampered"
+    manifest.write_text(json.dumps(document))
+    with pytest.raises(ValueError, match="manifest digest mismatch"):
+        publish_run_reports(caller, (retained,), TEST_TARGET)
+    manifest.unlink()
+    with pytest.raises(ValueError, match="publication binding"):
+        publish_run_reports(caller, (retained,), TEST_TARGET)
+
+
+def test_retained_revision_keeps_public_safety_and_strict_path_checks(tmp_path):
+    caller, _ = _initialized_repositories(tmp_path)
+    live, retained, report = _retained_comparison(
+        caller, 1, publication_manifest_record(TEST_TARGET)
+    )
+    report["private_transcript"] = "not an allowed public report field"
+    report["report_id"] = run_report_id(report)
+    private = retained.with_name(report["report_id"][7:] + ".json")
+    private.write_text(json.dumps(report))
+    with pytest.raises(ValueError, match="invalid run report"):
+        publish_run_reports(caller, (private,), TEST_TARGET)
+    outside = tmp_path / retained.name
+    shutil.copyfile(retained, outside)
+    retained.unlink()
+    retained.symlink_to(outside)
+    with pytest.raises(ValueError, match="inside the repository"):
+        publish_run_reports(caller, (retained,), TEST_TARGET)
+    manifest = live.with_name("Manifest.json")
+    external_manifest = tmp_path / "Manifest.json"
+    shutil.copyfile(manifest, external_manifest)
+    manifest.unlink()
+    manifest.symlink_to(external_manifest)
+    with pytest.raises(ValueError, match="exact retained path"):
+        pending_run_reports(caller)

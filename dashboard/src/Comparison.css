@@ -1,0 +1,66 @@
+@import url("observablehq:default.css");
+@import url("observablehq:theme-air.css") (prefers-color-scheme: light);
+@import url("observablehq:theme-near-midnight.css") (prefers-color-scheme: dark);
+@import url("observablehq:theme-wide.css");
+
+.harness-comparison, .comparison-empty {max-width: 72rem; line-height: 1.6;}
+.harness-comparison h2 {margin-top: 2rem; font-size: 1.5rem; line-height: 1.25;}
+.comparison-verdict {margin: 2rem 0; padding-bottom: 1.5rem; border-bottom: 1px solid var(--theme-foreground-faintest);}
+.comparison-verdict h2 {font-size: clamp(1.8rem, 4vw, 2.8rem); max-width: 27ch; text-wrap: balance;}
+.comparison-verdict > p {max-width: 70ch;}
+.comparison-meta, .comparison-note {color: var(--theme-foreground-muted); font-size: 0.9rem;}
+.comparison-note {display: block; font-weight: normal; margin-top: 0.35rem;}
+.comparison-table {width: 100%; max-width: none; font-variant-numeric: tabular-nums; margin: 1.5rem 0;}
+.comparison-table th, .comparison-table td {padding: 1rem 0.75rem; vertical-align: top;}
+.comparison-table th:first-child {width: 32%; padding-left: 0;}
+.comparison-table th:not(:first-child), .comparison-table td {text-align: right;}
+.comparison-table button {font: inherit; color: inherit; padding: 0; background: transparent; border: 0; cursor: pointer; text-align: inherit; text-decoration: underline; text-underline-offset: 0.25em;}
+.comparison-table-region {max-width: 100%; overflow-x: auto; scrollbar-color: var(--theme-foreground-faint) var(--theme-background);}
+.review-table {min-width: 58rem;}
+.review-table th:nth-child(2), .review-table td:nth-child(2) {min-width: 14rem; text-align: start;}
+.review-table td {white-space: nowrap;}
+.internal-review-table th:nth-child(2), .internal-review-table td:nth-child(2) {text-align: start;}
+.harness-comparison a {text-underline-offset: 0.2em;}
+.harness-comparison :focus-visible {outline: 2px solid var(--theme-foreground-focus); outline-offset: 4px;}
+.harness-comparison select {max-width: 100%; padding: 0.5rem; font: inherit; color: var(--theme-foreground); background: var(--theme-background); border: 1px solid var(--theme-foreground-faint); border-radius: 4px; margin: 0.5rem 0;}
+.comparison-links {display: flex; flex-wrap: wrap; gap: 1rem 2rem;}
+.harness-comparison details {border-top: 1px solid var(--theme-foreground-faintest); padding: 1rem 0; overflow-wrap: anywhere;}
+.harness-comparison summary {cursor: pointer; font-weight: 600;}
+.harness-comparison details p, .harness-comparison details ul {max-width: 72ch;}
+.version-entry {padding: 0.5rem 0 1.5rem; border-bottom: 1px solid var(--theme-foreground-faintest);}
+.version-entry h3 {font-size: 1rem; margin: 1.5rem 0 0.5rem;}
+.version-entry p {max-width: 72ch;}
+.review-history {color: var(--theme-foreground-muted);}
+.trial-review {margin-block-start: 1.25rem; padding-block-start: 0.75rem; border-top: 1px solid var(--theme-foreground-faintest);}
+.trial-review h4 {margin-block: 0 0.5rem; font-size: 1rem;}
+.trial-review h5 {margin-block: 1rem 0.25rem; font-size: 0.9rem;}
+.trial-review p {margin-block: 0.35rem;}
+.trial-review li {overflow-wrap: anywhere;}
+.comparison-empty {padding: 1rem 0 3rem; max-width: 65ch;}
+.comparison-empty h2 {font-size: 2rem; line-height: 1.25;}
+@media (max-width: 600px) {
+  .comparison-table {font-size: 0.8rem; table-layout: auto;}
+  .comparison-table th, .comparison-table td {padding: 0.75rem 0.25rem; overflow-wrap: normal;}
+  .comparison-table th:first-child {width: 26%;}
+  .comparison-table td {white-space: nowrap;}
+  .comparison-table td.comparison-missing {white-space: normal;}
+  .review-table {font-size: 0.8rem;}
+  .comparison-note {font-size: 0.75rem;}
+  .harness-comparison label {display: block;}
+  .harness-comparison select {display: block; width: 100%; box-sizing: border-box;}
+}
+
+#observablehq-main {font-family: var(--sans-serif);}
+
+.task-types {margin-block: 2rem;}
+.task-type {padding-block: 1rem; border-bottom: 1px solid var(--theme-foreground-faintest);}
+.task-type h3 {font-size: 1.15rem; margin-block: 0 0.5rem;}
+.task-type > p {max-width: 72ch; margin-block: 0.5rem;}
+.task-type details {border-top: 0; padding-block: 0.5rem;}
+.task-type-table {min-width: 42rem;}
+.task-type-table th:first-child {width: 22%;}
+.task-type-table th:nth-child(2), .task-type-table td:nth-child(2) {text-align: start; min-width: 13rem; white-space: normal;}
+
+.evidence-filter {margin-inline-end: 1rem;}
+
+.task-types .comparison-meta, .task-types .comparison-note {color: var(--theme-foreground-alt);}

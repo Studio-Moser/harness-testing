@@ -15,6 +15,7 @@ import tempfile
 import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
+from datetime import UTC
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -43,7 +44,11 @@ from harness_testing.Report_Publication import (
     publication_manifest_record,
     sync_pending_reports,
 )
-from harness_testing.Run_Reports import refresh_local_dashboard, write_run_report
+from harness_testing.Run_Reports import (
+    record_job_timestamps,
+    refresh_local_dashboard,
+    write_run_report,
+)
 from harness_testing.Skill_Evaluation import SkillEvaluation, write_skill_evaluation_report
 from harness_testing.Validate import find_sensitive_keys, validate_repository
 
@@ -86,7 +91,16 @@ _AGENT_ADAPTERS = {
         Path("src/harness_testing/Codex_Agent.py"),
     ),
 }
-_AGENT_ADAPTER_SHARED_PATHS = (Path("src/harness_testing/Skill_Evaluation.py"),)
+_AGENT_ADAPTER_SHARED_PATHS = tuple(
+    Path("src/harness_testing") / name
+    for name in (
+        "Skill_Evaluation.py",
+        "Native_Conversation.py",
+        "Trial_Evidence.py",
+        "Scripted_User.py",
+        "External_Codex.py",
+    )
+)
 
 
 @dataclass(frozen=True)
@@ -99,6 +113,7 @@ class RunCell:
     effort: str
     harness_commit: str | None
     bundle_digest: str
+    contender: dict[str, object] | None = None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -110,6 +125,7 @@ class RunCell:
             "effort": self.effort,
             "harness_commit": self.harness_commit,
             "bundle_digest": self.bundle_digest,
+            **({"contender": self.contender} if self.contender is not None else {}),
         }
 
 
@@ -140,9 +156,7 @@ class RunManifest:
             "profile": self.profile,
             "billing_mode": self.billing_mode,
             "skill_evaluation": (
-                self.skill_evaluation.to_dict()
-                if self.skill_evaluation is not None
-                else None
+                self.skill_evaluation.to_dict() if self.skill_evaluation is not None else None
             ),
             "cells": [cell.to_dict() for cell in self.cells],
             "task_ids": list(self.task_ids),
@@ -153,9 +167,7 @@ class RunManifest:
             "max_sessions": self.max_sessions,
             "max_budget_usd": _decimal_text(self.max_budget_usd),
             "estimated_budget_usd": _decimal_text(self.estimated_budget_usd),
-            "api_equivalent_cost_usd": _decimal_text(
-                self.api_equivalent_cost_usd
-            ),
+            "api_equivalent_cost_usd": _decimal_text(self.api_equivalent_cost_usd),
             "harbor_config_paths": list(self.harbor_config_paths),
             "provenance": self.provenance,
             "digest": self.digest,
@@ -174,11 +186,10 @@ class RunManifest:
                 model=str(cell["model"]),
                 effort=str(cell["effort"]),
                 harness_commit=(
-                    str(cell["harness_commit"])
-                    if cell.get("harness_commit") is not None
-                    else None
+                    str(cell["harness_commit"]) if cell.get("harness_commit") is not None else None
                 ),
                 bundle_digest=str(cell["bundle_digest"]),
+                contender=cell.get("contender"),
             )
             for cell in _object_list(document.get("cells"), "cells")
         )
@@ -189,9 +200,7 @@ class RunManifest:
             schema_version=str(document["schema_version"]),
             profile=str(document["profile"]),
             billing_mode=str(document["billing_mode"]),
-            skill_evaluation=SkillEvaluation.from_document(
-                document["skill_evaluation"]
-            ),
+            skill_evaluation=SkillEvaluation.from_document(document["skill_evaluation"]),
             cells=cells,
             task_ids=tuple(str(task) for task in document["task_ids"]),
             attempts=int(document["attempts"]),
@@ -201,9 +210,7 @@ class RunManifest:
             max_sessions=int(document["max_sessions"]),
             max_budget_usd=Decimal(str(document["max_budget_usd"])),
             estimated_budget_usd=Decimal(str(document["estimated_budget_usd"])),
-            api_equivalent_cost_usd=Decimal(
-                str(document["api_equivalent_cost_usd"])
-            ),
+            api_equivalent_cost_usd=Decimal(str(document["api_equivalent_cost_usd"])),
             harbor_config_paths=tuple(str(item) for item in document["harbor_config_paths"]),
             provenance=provenance,
             digest=str(document["digest"]),
@@ -244,9 +251,7 @@ def _agent_adapter_digests(root: Path) -> dict[str, str]:
     digests: dict[str, str] = {}
     for provider, (_, adapter_path) in _AGENT_ADAPTERS.items():
         paths = (adapter_path, *_AGENT_ADAPTER_SHARED_PATHS)
-        inputs = {
-            path.as_posix(): _sha256((root / path).read_bytes()) for path in paths
-        }
+        inputs = {path.as_posix(): _sha256((root / path).read_bytes()) for path in paths}
         digests[provider] = _sha256(_canonical_json(inputs))
     return digests
 
@@ -264,9 +269,7 @@ def _tree_digest(root: Path) -> str:
             continue
         relative = path.relative_to(root).as_posix()
         payload = (
-            f"symlink:{os.readlink(path)}".encode()
-            if path.is_symlink()
-            else path.read_bytes()
+            f"symlink:{os.readlink(path)}".encode() if path.is_symlink() else path.read_bytes()
         )
         digest.update(relative.encode())
         digest.update(b"\0")
@@ -305,23 +308,48 @@ def _load_profile(root: Path, name: str) -> _Profile:
         concurrency=int(raw["concurrency"]),
         packs=tuple(str(pack) for pack in raw["packs"]),
         max_sessions=int(raw["max_sessions"]),
-        estimated_input_tokens_per_session=int(
-            raw["estimated_input_tokens_per_session"]
-        ),
-        estimated_output_tokens_per_session=int(
-            raw["estimated_output_tokens_per_session"]
-        ),
+        estimated_input_tokens_per_session=int(raw["estimated_input_tokens_per_session"]),
+        estimated_output_tokens_per_session=int(raw["estimated_output_tokens_per_session"]),
     )
 
 
 def _model_entries(versions: dict[str, Any]) -> dict[str, dict[str, object]]:
-    return {str(model["provider"]): model for model in versions.get("models", [])}
+    return {
+        str(model["provider"]): model
+        for model in versions.get("models", [])
+        if not model.get("comparison_only")
+    }
+
+
+def comparison_schedule(cells, task_ids, attempts):
+    """Rotate contender order across tasks and repetitions; reset every trial."""
+    return [
+        {
+            "cell_index": (position + task_index + attempt - 1) % len(cells),
+            "task_id": task,
+            "attempt": attempt,
+        }
+        for attempt in range(1, attempts + 1)
+        for task_index, task in enumerate(task_ids)
+        for position in range(len(cells))
+    ]
+
+
+def job_slot(manifest, index):
+    schedule = manifest.provenance.get("trial_schedule")
+    if schedule is not None:
+        slot = schedule[index]
+        return manifest.cells[slot["cell_index"]], slot["task_id"], slot["attempt"]
+    return (
+        manifest.cells[index % len(manifest.cells)],
+        manifest.task_ids[index // len(manifest.cells)],
+        None,
+    )
 
 
 def _package_versions(versions: dict[str, Any]) -> dict[str, str]:
     return {
-        str(package["name"]): str(package["version"])
-        for package in versions.get("packages", [])
+        str(package["name"]): str(package["version"]) for package in versions.get("packages", [])
     }
 
 
@@ -359,10 +387,7 @@ def _authoritative_source_trees(
     destination: Path,
 ) -> tuple[Materialize._SourceTree, ...]:
     cached_sources = _resolve_source_trees(root, layers, source_overrides)
-    pins = {
-        str(source["name"]): source
-        for source in versions.get("sources", [])
-    }
+    pins = {str(source["name"]): source for source in versions.get("sources", [])}
     authoritative: list[Materialize._SourceTree] = []
     for index, source in enumerate(cached_sources):
         if source.name in source_overrides:
@@ -378,12 +403,7 @@ def _authoritative_source_trees(
         repository = Materialize._local_repository(repository_source)
         if repository is None:
             cache_key = hashlib.sha256(str(repository_source).encode()).hexdigest()
-            repository = (
-                root
-                / ".cache"
-                / "source-repositories"
-                / f"{cache_key}.git"
-            )
+            repository = root / ".cache" / "source-repositories" / f"{cache_key}.git"
         try:
             resolved_commit = (
                 Materialize._run_git(
@@ -399,9 +419,7 @@ def _authoritative_source_trees(
                 .strip()
             )
             if resolved_commit != commit:
-                raise ValueError(
-                    f"pinned source Git object is invalid for {source.name}"
-                )
+                raise ValueError(f"pinned source Git object is invalid for {source.name}")
             Materialize._run_git(
                 (
                     "--no-replace-objects",
@@ -422,9 +440,7 @@ def _authoritative_source_trees(
                 cwd=repository,
             ).stdout
         except (OSError, subprocess.CalledProcessError) as error:
-            raise ValueError(
-                f"pinned source Git object is invalid for {source.name}"
-            ) from error
+            raise ValueError(f"pinned source Git object is invalid for {source.name}") from error
 
         tree = destination / f"source-{index}"
         tree.mkdir()
@@ -432,9 +448,7 @@ def _authoritative_source_trees(
             with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as archive_file:
                 archive_file.extractall(tree, filter="data")
         except (OSError, tarfile.TarError) as error:
-            raise ValueError(
-                f"pinned source Git archive is invalid for {source.name}"
-            ) from error
+            raise ValueError(f"pinned source Git archive is invalid for {source.name}") from error
         authoritative.append(
             replace(
                 source,
@@ -463,13 +477,9 @@ def _validate_materialized_bundle(
         try:
             path_status = path.lstat()
         except OSError as error:
-            raise ValueError(
-                f"cell {cell.label} materialized arm path is missing"
-            ) from error
+            raise ValueError(f"cell {cell.label} materialized arm path is missing") from error
         if stat.S_ISLNK(path_status.st_mode):
-            raise ValueError(
-                f"cell {cell.label} materialized arm path must not contain a symlink"
-            )
+            raise ValueError(f"cell {cell.label} materialized arm path must not contain a symlink")
         if not stat.S_ISDIR(path_status.st_mode):
             raise ValueError(f"cell {cell.label} materialized arm path is missing")
     expected_physical = (
@@ -488,16 +498,11 @@ def _validate_materialized_bundle(
     provenance = _bundle_provenance(bundle)
     unsigned_provenance = dict(provenance)
     unsigned_provenance.pop("bundle_digest", None)
-    canonical_digest = Materialize._sha256_bytes(
-        Materialize._canonical_json(unsigned_provenance)
-    )
-    if (
-        canonical_digest != cell.bundle_digest
-        or bundle.name != canonical_digest.removeprefix("sha256:")
+    canonical_digest = Materialize._sha256_bytes(Materialize._canonical_json(unsigned_provenance))
+    if canonical_digest != cell.bundle_digest or bundle.name != canonical_digest.removeprefix(
+        "sha256:"
     ):
-        raise ValueError(
-            f"cell {cell.label} materialized arm provenance digest mismatch"
-        )
+        raise ValueError(f"cell {cell.label} materialized arm provenance digest mismatch")
     if (
         provenance.get("provider") != cell.provider
         or provenance.get("arm") != cell.arm
@@ -542,14 +547,10 @@ def _validate_materialized_bundle(
         )
         if harness_source is not None:
             source_template = (
-                harness_source.path
-                / "plugins"
-                / "harness"
-                / "templates"
-                / "AGENTS_Baseline.md"
+                harness_source.path / "plugins" / "harness" / "templates" / "AGENTS_Baseline.md"
             )
-            instruction = bundle / "project" / (
-                "CLAUDE.md" if cell.provider == "claude" else "AGENTS.md"
+            instruction = (
+                bundle / "project" / ("CLAUDE.md" if cell.provider == "claude" else "AGENTS.md")
             )
             try:
                 expected_instruction = f"{source_template.read_text().rstrip()}\n"
@@ -667,10 +668,9 @@ def _observed_capabilities(target: Path, provider: str) -> list[str]:
     if (target / "skills").is_dir() or manifest.get("skills"):
         capabilities.append("skills")
     hooks = manifest.get("hooks")
-    if (
-        provider == "claude"
-        and ((target / "hooks").is_dir() or bool(hooks))
-    ) or (provider == "codex" and bool(hooks)):
+    if (provider == "claude" and ((target / "hooks").is_dir() or bool(hooks))) or (
+        provider == "codex" and bool(hooks)
+    ):
         capabilities.append("hooks")
     return capabilities
 
@@ -700,16 +700,9 @@ def _canonical_delivery_path(
         actual_marketplace, plugin_name, actual_version = target.relative_to(cache_root).parts
     except ValueError as error:
         raise ValueError(f"delivery target is not canonical for layer {layer}") from error
-    if (
-        actual_marketplace != marketplace
-        or plugin_name != plugin
-        or actual_version != version
-    ):
+    if actual_marketplace != marketplace or plugin_name != plugin or actual_version != version:
         raise ValueError(f"delivery target is not canonical for layer {layer}")
-    return (
-        "/harness-arm/codex/provider-home/plugins/cache/"
-        f"{marketplace}/{plugin}/{version}"
-    )
+    return f"/harness-arm/codex/provider-home/plugins/cache/{marketplace}/{plugin}/{version}"
 
 
 def _validate_codex_provider_home(bundle: Path, targets: set[Path]) -> None:
@@ -719,24 +712,23 @@ def _validate_codex_provider_home(bundle: Path, targets: set[Path]) -> None:
             raise ValueError("Codex delivery contamination in A0")
         return
     _reject_control_symlinks(bundle, codex_root, "Codex provider root")
-    if not codex_root.is_dir() or {path.name for path in codex_root.iterdir()} != {
-        "provider-home"
-    }:
+    if not codex_root.is_dir() or {path.name for path in codex_root.iterdir()} != {"provider-home"}:
         raise ValueError("Codex delivery contamination in provider root")
 
     provider_home = codex_root / "provider-home"
     _reject_control_symlinks(bundle, provider_home, "Codex provider home")
     expected_home_entries = {"config.toml", "marketplaces", "plugins"}
-    if not provider_home.is_dir() or {
-        path.name for path in provider_home.iterdir()
-    } != expected_home_entries:
+    if (
+        not provider_home.is_dir()
+        or {path.name for path in provider_home.iterdir()} != expected_home_entries
+    ):
         raise ValueError("Codex delivery contamination in provider home")
     cache_root = provider_home / "plugins" / "cache"
     _reject_control_symlinks(bundle, provider_home / "plugins", "Codex plugins root")
     _reject_control_symlinks(bundle, cache_root, "Codex plugin cache")
-    if not cache_root.is_dir() or {
-        path.name for path in (provider_home / "plugins").iterdir()
-    } != {"cache"}:
+    if not cache_root.is_dir() or {path.name for path in (provider_home / "plugins").iterdir()} != {
+        "cache"
+    }:
         raise ValueError("Codex delivery contamination in plugin cache")
 
     expected_paths: dict[str, dict[str, set[str]]] = {}
@@ -758,9 +750,10 @@ def _validate_codex_provider_home(bundle: Path, targets: set[Path]) -> None:
         for plugin, versions in plugins.items():
             plugin_path = marketplace_path / plugin
             _reject_control_symlinks(bundle, plugin_path, "Codex cache plugin")
-            if not plugin_path.is_dir() or {
-                path.name for path in plugin_path.iterdir()
-            } != versions:
+            if (
+                not plugin_path.is_dir()
+                or {path.name for path in plugin_path.iterdir()} != versions
+            ):
                 raise ValueError("Codex delivery contamination in cache versions")
             for version in versions:
                 _reject_control_symlinks(
@@ -770,13 +763,11 @@ def _validate_codex_provider_home(bundle: Path, targets: set[Path]) -> None:
     marketplaces = provider_home / "marketplaces"
     _reject_control_symlinks(bundle, marketplaces, "Codex marketplaces")
     for marketplace in expected_paths:
-        _reject_control_symlinks(
-            bundle, marketplaces / marketplace, "Codex marketplace"
-        )
-    if not marketplaces.is_dir() or {
-        path.name for path in marketplaces.iterdir()
-    } != set(expected_paths) or not all(
-        (marketplaces / marketplace).is_dir() for marketplace in expected_paths
+        _reject_control_symlinks(bundle, marketplaces / marketplace, "Codex marketplace")
+    if (
+        not marketplaces.is_dir()
+        or {path.name for path in marketplaces.iterdir()} != set(expected_paths)
+        or not all((marketplaces / marketplace).is_dir() for marketplace in expected_paths)
     ):
         raise ValueError("Codex delivery contamination in marketplaces")
     try:
@@ -790,10 +781,7 @@ def _validate_codex_provider_home(bundle: Path, targets: set[Path]) -> None:
         "marketplaces": {
             marketplace: {
                 "source_type": "local",
-                "source": (
-                    "/harness-arm/codex/provider-home/marketplaces/"
-                    f"{marketplace}"
-                ),
+                "source": (f"/harness-arm/codex/provider-home/marketplaces/{marketplace}"),
             }
             for marketplace in expected_paths
         },
@@ -840,6 +828,15 @@ def _validated_delivery_surfaces(
     arm: str,
 ) -> tuple[dict[str, object], ...]:
     provenance = _bundle_provenance(bundle)
+    if provenance.get("contender") is not None:
+        from harness_testing.Contenders import validate_contender_bundle
+
+        validate_contender_bundle(
+            bundle, provenance["contender"]["id"], provenance["bundle_digest"]
+        )
+        if provenance["provider"] != provider or provenance["arm"] != arm:
+            raise ValueError("contender delivery identity mismatch")
+        return tuple(provenance["delivery_surfaces"])
     expected_layers = _ARM_LAYERS.get(arm)
     if expected_layers is None:
         raise ValueError(f"unsupported arm delivery policy: {arm}")
@@ -896,15 +893,34 @@ def _validated_delivery_surfaces(
 
 
 def _claude_plugin_dirs(bundle: Path, arm: str) -> list[str]:
-    return [
-        str(surface["path"])
-        for surface in _validated_delivery_surfaces(bundle, "claude", arm)
-    ]
+    return [str(surface["path"]) for surface in _validated_delivery_surfaces(bundle, "claude", arm)]
 
 
 def _validate_cell(root: Path, cell: RunCell, versions: dict[str, Any]) -> None:
     if cell.provider not in _PROVIDER_ORDER:
         raise ValueError(f"unsupported provider in cell {cell.label}: {cell.provider}")
+    if cell.contender is not None:
+        from harness_testing.Contenders import validate_contender_bundle
+
+        if not isinstance(cell.contender, dict) or not _DIGEST.fullmatch(
+            str(cell.contender.get("id", ""))
+        ):
+            raise ValueError("comparison cell requires an exact contender identity")
+        expected_arm = "V" + str(cell.contender["id"]).removeprefix("sha256:")[:16]
+        if (
+            cell.arm != expected_arm
+            or cell.label != f"{cell.provider}-{cell.arm}-{cell.role}"
+            or cell.role not in _ROLE_ORDER
+        ):
+            raise ValueError("comparison cell label or role is invalid")
+        provenance = validate_contender_bundle(
+            _bundle_path(root, cell), str(cell.contender["id"]), cell.bundle_digest
+        )
+        if provenance["contender"] != cell.contender or provenance["provider"] != cell.provider:
+            raise ValueError("comparison contender provenance mismatch")
+        if not cell.model or not cell.effort:
+            raise ValueError("comparison kickoff model and effort are required")
+        return
     if cell.arm not in {"A0", "A1", "A2", "A3"}:
         raise ValueError(f"unsupported arm in cell {cell.label}: {cell.arm}")
     if cell.role not in _ROLE_ORDER:
@@ -951,9 +967,7 @@ def _ordered_cells(cells: tuple[RunCell, ...]) -> tuple[RunCell, ...]:
     )
 
 
-def _required_images(
-    profile: _Profile, task_ids: tuple[str, ...]
-) -> tuple[str, ...]:
+def _required_images(profile: _Profile, task_ids: tuple[str, ...]) -> tuple[str, ...]:
     if profile.name == "research":
         return ()
     required = {"verifier"}
@@ -980,10 +994,7 @@ def _is_trusted_local_task(root: Path, pack: str, task_id: str) -> bool:
     pack_root = tasks_root / pack
     task_root = pack_root / task_id
     task_config = task_root / "task.toml"
-    if any(
-        path.is_symlink()
-        for path in (tasks_root, pack_root, task_root, task_config)
-    ):
+    if any(path.is_symlink() for path in (tasks_root, pack_root, task_root, task_config)):
         return False
     if (
         not tasks_root.is_dir()
@@ -1009,29 +1020,25 @@ def _is_trusted_local_task(root: Path, pack: str, task_id: str) -> bool:
 
 
 def _task_pack(root: Path, profile: _Profile, task_id: str) -> str:
-    matches = [
-        pack
-        for pack in profile.packs
-        if _is_trusted_local_task(root, pack, task_id)
-    ]
+    matches = [pack for pack in profile.packs if _is_trusted_local_task(root, pack, task_id)]
     if len(matches) == 1:
         return matches[0]
     local_matches = [
-        pack
-        for pack in _LOCAL_TASK_PACKS
-        if _is_trusted_local_task(root, pack, task_id)
+        pack for pack in _LOCAL_TASK_PACKS if _is_trusted_local_task(root, pack, task_id)
     ]
     if not matches and len(local_matches) == 1:
         return local_matches[0]
     raise ValueError(f"task {task_id} does not resolve to exactly one profile pack")
 
 
-def _research_dataset(root: Path, profile: _Profile) -> MaterializedDeepSWE | None:
+def _research_dataset(
+    root: Path, profile: _Profile, task_ids: tuple[str, ...] | None = None
+) -> MaterializedDeepSWE | None:
     if profile.name != "research":
         return None
     if profile.packs != ("research",):
         raise ValueError("research profile must contain only the DeepSWE research pack")
-    return load_deepswe_dataset(root)
+    return load_deepswe_dataset(root, task_ids=task_ids)
 
 
 def _task_location(
@@ -1107,8 +1114,10 @@ def _job_document(
     versions: dict[str, Any],
     billing_mode: str,
     skill_evaluation: SkillEvaluation | None,
+    experiment: dict | None = None,
 ) -> tuple[dict[str, object], str]:
     bundle = _bundle_path(root, cell)
+    recovery = experiment["conditions"].get("provider_recovery_seconds", 0) if experiment else 0
     packages = _package_versions(versions)
     if cell.provider == "claude":
         agent_identity = {"import_path": _AGENT_ADAPTERS["claude"][0]}
@@ -1128,6 +1137,51 @@ def _job_document(
         else _API_HOSTS[cell.provider]
     )
     kwargs: dict[str, object] = {"version": version, "reasoning_effort": cell.effort}
+    if experiment is not None:
+        conditions = experiment["conditions"]
+        environment["XDG_CONFIG_HOME"] = "/harness-arm/config"
+        if conditions["retry_policy"] != "none":
+            raise ValueError(
+                "comparison transport retries cannot preserve prior attempt evidence; "
+                "use retry_policy none and record a separate rerun"
+            )
+        if conditions["task_variant"] == "comparison":
+            policy = json.loads((dataset_path / task_id / "Scripted User.json").read_text())
+        else:
+            from harness_testing.Comparison_Tasks import research_scripted_user_policy
+
+            policy = research_scripted_user_policy([task_id])
+            configuration = tomllib.loads((dataset_path / task_id / "task.toml").read_text())
+            base_commit = configuration.get("metadata", {}).get("base_commit_hash")
+            if not isinstance(base_commit, str) or not _COMMIT.fullmatch(base_commit):
+                raise ValueError("DeepSWE task has no exact base commit")
+        kwargs["conversation"] = {
+            "policy": policy | {"interaction_limit": experiment["limits"]["interaction_limit"]},
+            "timeout_seconds": timeout,
+            "contender_id": cell.contender["id"],
+            "executor_inventory": [
+                dict(entry, provider={"codex": "openai", "claude": "anthropic"}[entry["provider"]])
+                for entry in conditions["executor_inventory"]
+            ],
+        }
+        if "provider_recovery_seconds" in conditions:
+            kwargs["conversation"]["provider_recovery_seconds"] = recovery
+        if conditions["task_variant"] == "deepswe":
+            kwargs["conversation"]["artifact_patch_base_commit"] = base_commit
+        if cell.provider == "codex":
+            from harness_testing.Native_Conversation import approved_hooks_from_bundle
+
+            kwargs["conversation"]["approved_hooks"] = approved_hooks_from_bundle(bundle)
+        host_map = _SUBSCRIPTION_HOSTS if billing_mode == "subscription" else _API_HOSTS
+        hosts = tuple(
+            sorted(
+                {
+                    host
+                    for executor in conditions["executor_inventory"] + [conditions["kickoff"]]
+                    for host in host_map[executor["provider"]]
+                }
+            )
+        )
     if skill_evaluation is not None and skill_evaluation.mode == "capability":
         kwargs["skill_invocation"] = skill_evaluation.name
     provider_config = _provider_config(bundle, cell.provider)
@@ -1158,8 +1212,10 @@ def _job_document(
             {
                 **agent_identity,
                 "model_name": model_name,
-                "override_timeout_sec": timeout,
-                "max_timeout_sec": timeout,
+                "override_timeout_sec": (
+                    timeout + recovery + 15 if experiment is not None else timeout
+                ),
+                "max_timeout_sec": timeout + recovery + 15 if experiment is not None else timeout,
                 "extra_allowed_hosts": list(hosts),
                 "skills": skills,
                 "kwargs": kwargs,
@@ -1173,6 +1229,10 @@ def _job_document(
             }
         ],
     }
+    if experiment is not None:
+        raw["retry"]["max_retries"] = 0 if experiment["conditions"]["retry_policy"] == "none" else 1
+        for key, value in experiment["conditions"]["resources"].items():
+            raw["environment"]["override_cpus" if key == "cpus" else "override_memory_mb"] = value
     job = JobConfig.model_validate(raw)
     document = job.model_dump(mode="json", exclude_none=True)
     retry = document.get("retry")
@@ -1196,11 +1256,20 @@ def _estimated_budget(
     profile: _Profile,
     versions: dict[str, Any],
 ) -> Decimal:
-    models = _model_entries(versions)
     total = Decimal("0")
     million = Decimal("1000000")
     for cell in cells:
-        model = models[cell.provider]
+        matches = [
+            model
+            for model in versions.get("models", [])
+            if model["provider"] == cell.provider and model["model"] == cell.model
+        ]
+        if not matches:
+            raise ValueError(
+                f"pricing missing for {cell.provider}/{cell.model}; "
+                "add a verified pricing entry to Versions.toml before planning"
+            )
+        model = matches[0]
         per_session = (
             Decimal(str(model["input_usd_per_million_tokens"]))
             * profile.estimated_input_tokens_per_session
@@ -1227,6 +1296,7 @@ def compile_run(
     agent_timeout_seconds: int | None = None,
     skill_evaluation: SkillEvaluation | None = None,
     publish_report: bool = True,
+    experiment: dict | None = None,
 ) -> RunManifest:
     """Compile immutable one-cell task shards and write a dry-run manifest."""
 
@@ -1247,11 +1317,7 @@ def compile_run(
         raise ValueError("attempts must be positive")
     if not isinstance(skill_evaluation, (SkillEvaluation, type(None))):
         raise ValueError("skill_evaluation must be a SkillEvaluation or None")
-    if (
-        skill_evaluation is not None
-        and skill_evaluation.mode == "discovery"
-        and attempts < 5
-    ):
+    if skill_evaluation is not None and skill_evaluation.mode == "discovery" and attempts < 5:
         raise ValueError("skill discovery requires at least five attempts")
     if timeout < 1:
         raise ValueError("agent timeout must be positive")
@@ -1284,9 +1350,7 @@ def compile_run(
         for cell in cells:
             _, delivered_skills = _expected_runtime_delivery(root, cell)
             if skill_evaluation.name not in delivered_skills:
-                raise ValueError(
-                    f"cell {cell.label} does not expose skill {skill_evaluation.name}"
-                )
+                raise ValueError(f"cell {cell.label} does not expose skill {skill_evaluation.name}")
     session_count = len(cells) * len(task_ids) * attempts
     if session_count > max_sessions:
         raise ValueError(f"run needs {session_count} sessions but max_sessions {max_sessions}")
@@ -1298,9 +1362,7 @@ def compile_run(
     api_equivalent_cost = _estimated_budget(
         cells, len(task_ids), attempts, selected_profile, versions
     )
-    estimated_budget = (
-        Decimal("0") if billing_mode == "subscription" else api_equivalent_cost
-    )
+    estimated_budget = Decimal("0") if billing_mode == "subscription" else api_equivalent_cost
     if billing_mode == "api" and estimated_budget > max_budget_usd:
         raise ValueError(
             f"estimated budget ${_decimal_text(estimated_budget)} exceeds "
@@ -1308,13 +1370,24 @@ def compile_run(
         )
 
     schema_version = str(versions["repository"]["schema_version"])
-    research_dataset = _research_dataset(root, selected_profile)
+    research_selection = (
+        task_ids
+        if experiment is not None
+        and experiment["conditions"]["task_variant"] == "deepswe"
+        else None
+    )
+    research_dataset = _research_dataset(root, selected_profile, research_selection)
+    comparison_dataset = None
+    if experiment is not None and experiment["conditions"]["task_variant"] == "comparison":
+        from harness_testing.Comparison_Tasks import materialize_comparison_tasks
+
+        comparison_dataset = materialize_comparison_tasks(root, list(task_ids))
     task_digests = {}
     for task_id in task_ids:
-        pack, _, task_path = _task_location(
-            root, selected_profile, task_id, research_dataset
-        )
+        pack, _, task_path = _task_location(root, selected_profile, task_id, research_dataset)
         task_digests[f"{pack}/{task_id}"] = _tree_digest(task_path)
+        if comparison_dataset is not None:
+            task_digests[f"{pack}/{task_id}"] = _tree_digest(comparison_dataset / task_id)
     image_input_digests = {
         image: image_input_digest(root, image)
         for image in _required_images(selected_profile, task_ids)
@@ -1328,33 +1401,41 @@ def compile_run(
         else {"mode": "local-only"}
     )
 
+    schedule = (
+        comparison_schedule(cells, task_ids, attempts)
+        if experiment
+        else [
+            {"cell_index": index, "task_id": task, "attempt": None}
+            for task in task_ids
+            for index in range(len(cells))
+        ]
+    )
+
     def build_job_documents(run_id: str) -> dict[str, tuple[dict[str, object], str]]:
         documents = {}
-        index = 0
-        for task_id in task_ids:
-            _, dataset_path, _ = _task_location(
-                root, selected_profile, task_id, research_dataset
+        for index, slot in enumerate(schedule, 1):
+            task_id, cell = slot["task_id"], cells[slot["cell_index"]]
+            _, dataset_path, _ = _task_location(root, selected_profile, task_id, research_dataset)
+            if comparison_dataset is not None:
+                dataset_path = comparison_dataset
+            document, text = _job_document(
+                root,
+                cell,
+                task_id,
+                f"{run_id}-r{slot['attempt']}" if experiment else run_id,
+                dataset_path,
+                1 if experiment else attempts,
+                concurrency,
+                timeout,
+                versions,
+                billing_mode,
+                skill_evaluation,
+                experiment,
             )
-            for cell in cells:
-                index += 1
-                document, text = _job_document(
-                    root,
-                    cell,
-                    task_id,
-                    run_id,
-                    dataset_path,
-                    attempts,
-                    concurrency,
-                    timeout,
-                    versions,
-                    billing_mode,
-                    skill_evaluation,
-                )
-                relative_path = (
-                    f"jobs/{index:03d}-{cell.provider}-{cell.role}-{cell.arm}-"
-                    f"{task_id}.yaml"
-                )
-                documents[relative_path] = (document, text)
+            relative_path = (
+                f"jobs/{index:03d}-{cell.provider}-{cell.role}-{cell.arm}-{task_id}.yaml"
+            )
+            documents[relative_path] = (document, text)
         return documents
 
     provisional_jobs = build_job_documents("run-pending")
@@ -1362,9 +1443,7 @@ def compile_run(
         "schema_version": schema_version,
         "profile": profile,
         "billing_mode": billing_mode,
-        "skill_evaluation": (
-            skill_evaluation.to_dict() if skill_evaluation is not None else None
-        ),
+        "skill_evaluation": (skill_evaluation.to_dict() if skill_evaluation is not None else None),
         "cells": [cell.to_dict() for cell in cells],
         "task_ids": list(task_ids),
         "attempts": attempts,
@@ -1379,31 +1458,23 @@ def compile_run(
         "agent_adapter_digests": agent_adapter_digests,
         "report_publication": report_publication,
         "harbor_configs": {
-            path: {
-                key: value
-                for key, value in document.items()
-                if key != "job_name"
-            }
+            path: {key: value for key, value in document.items() if key != "job_name"}
             for path, (document, _) in provisional_jobs.items()
         },
     }
     if research_dataset is not None:
         run_identity["deepswe_dataset_digest"] = research_dataset.digest
-    run_id = "run-" + _sha256(_canonical_json(run_identity)).removeprefix(
-        "sha256:"
-    )[:20]
-    job_texts = {
-        path: text for path, (_, text) in build_job_documents(run_id).items()
-    }
+    if experiment is not None:
+        run_identity["experiment"] = experiment
+    run_id = "run-" + _sha256(_canonical_json(run_identity)).removeprefix("sha256:")[:20]
+    job_texts = {path: text for path, (_, text) in build_job_documents(run_id).items()}
 
     provenance: dict[str, object] = {
         "run_id": run_id,
         "versions_digest": versions_digest,
         "profiles_digest": profiles_digest,
         "arm_digests": {cell.label: cell.bundle_digest for cell in cells},
-        "harbor_config_digests": {
-            path: _sha256(text.encode()) for path, text in job_texts.items()
-        },
+        "harbor_config_digests": {path: _sha256(text.encode()) for path, text in job_texts.items()},
         "task_digests": task_digests,
         "image_input_digests": image_input_digests,
         "agent_adapter_digests": agent_adapter_digests,
@@ -1419,6 +1490,9 @@ def compile_run(
     }
     if research_dataset is not None:
         provenance["deepswe_dataset_digest"] = research_dataset.digest
+    if experiment is not None:
+        provenance["experiment"] = experiment
+        provenance["trial_schedule"] = schedule
     manifest = RunManifest(
         schema_version=schema_version,
         profile=profile,
@@ -1561,18 +1635,24 @@ def format_plan(manifest: RunManifest) -> str:
         "Expected incremental cost: "
         f"${_decimal_text(manifest.estimated_budget_usd)} / "
         f"${_decimal_text(manifest.max_budget_usd)}",
-        "API-equivalent usage estimate: "
-        f"${_decimal_text(manifest.api_equivalent_cost_usd)}",
+        f"API-equivalent usage estimate: ${_decimal_text(manifest.api_equivalent_cost_usd)}",
         (
             "Budget enforcement: subscription credential only; subscription quota "
             "is not a dollar hard stop"
             if manifest.billing_mode == "subscription"
-            else "Budget enforcement: admission estimate only; no consistent provider "
-            "hard stop"
+            else "Budget enforcement: admission estimate only; no consistent provider hard stop"
         ),
         _format_publication(manifest),
         "Cells:",
     ]
+    conditions = manifest.provenance.get("experiment", {}).get("conditions", {})
+    if "provider_recovery_seconds" in conditions:
+        recovery = conditions["provider_recovery_seconds"]
+        index = lines.index(f"Agent timeout: {manifest.agent_timeout_seconds}s") + 1
+        lines[index:index] = [
+            f"Provider recovery allowance: {recovery}s (once per trial, on transport errors only)",
+            f"Maximum agent wall time: {manifest.agent_timeout_seconds + recovery}s",
+        ]
     for cell in manifest.cells:
         commit = f", Harness {cell.harness_commit}" if cell.harness_commit else ""
         lines.append(
@@ -1623,30 +1703,22 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
         raise ValueError("subscription manifest must authorize zero incremental spend")
     if manifest.billing_mode == "api" and manifest.max_budget_usd <= 0:
         raise ValueError("API manifest must have a positive approval cap")
-    if manifest.billing_mode == "api" and (
-        manifest.estimated_budget_usd > manifest.max_budget_usd
-    ):
+    if manifest.billing_mode == "api" and (manifest.estimated_budget_usd > manifest.max_budget_usd):
         raise ValueError("manifest estimated budget exceeds its approval cap")
     if manifest.billing_mode == "api" and (
         manifest.estimated_budget_usd != manifest.api_equivalent_cost_usd
     ):
         raise ValueError("API manifest cost estimate is inconsistent")
     expected_selectors = (
-        _subscription_selectors(manifest.cells)
-        if manifest.billing_mode == "subscription"
-        else {}
+        _subscription_selectors(manifest.cells) if manifest.billing_mode == "subscription" else {}
     )
     if manifest.provenance.get("subscription_selectors") != expected_selectors:
         raise ValueError("manifest subscription selectors do not match its billing route")
     report_publication = manifest.provenance.get("report_publication")
     if report_publication is not None and report_publication != {"mode": "local-only"}:
-        expected_publication = publication_manifest_record(
-            load_publication_target(root)
-        )
+        expected_publication = publication_manifest_record(load_publication_target(root))
         if report_publication != expected_publication:
-            raise ValueError(
-                "manifest report publication does not match the tracked destination"
-            )
+            raise ValueError("manifest report publication does not match the tracked destination")
     versions = load_versions(root / "Versions.toml")
     for cell in manifest.cells:
         _validate_cell(root, cell, versions)
@@ -1654,19 +1726,32 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     if not isinstance(expected_task_digests, dict):
         raise ValueError("manifest has no task digests")
     profile = _load_profile(root, manifest.profile)
-    research_dataset = _research_dataset(root, profile)
+    experiment = manifest.provenance.get("experiment")
+    research_selection = (
+        manifest.task_ids
+        if experiment is not None
+        and experiment["conditions"]["task_variant"] == "deepswe"
+        else None
+    )
+    research_dataset = _research_dataset(root, profile, research_selection)
+    comparison_dataset = None
+    if (
+        manifest.provenance.get("experiment") is not None
+        and manifest.provenance["experiment"]["conditions"]["task_variant"] == "comparison"
+    ):
+        from harness_testing.Comparison_Tasks import materialize_comparison_tasks
+
+        comparison_dataset = materialize_comparison_tasks(root, list(manifest.task_ids))
     actual_task_digests = {}
     for task_id in manifest.task_ids:
-        pack, _, task_path = _task_location(
-            root, profile, task_id, research_dataset
-        )
+        pack, _, task_path = _task_location(root, profile, task_id, research_dataset)
         actual_task_digests[f"{pack}/{task_id}"] = _tree_digest(task_path)
+        if comparison_dataset is not None:
+            actual_task_digests[f"{pack}/{task_id}"] = _tree_digest(comparison_dataset / task_id)
     if expected_task_digests != actual_task_digests:
         raise ValueError("task digest mismatch after manifest approval")
     expected_deepswe_digest = manifest.provenance.get("deepswe_dataset_digest")
-    actual_deepswe_digest = (
-        research_dataset.digest if research_dataset is not None else None
-    )
+    actual_deepswe_digest = research_dataset.digest if research_dataset is not None else None
     if expected_deepswe_digest != actual_deepswe_digest:
         raise ValueError("DeepSWE dataset digest mismatch after manifest approval")
     expected_image_digests = manifest.provenance.get("image_input_digests")
@@ -1678,6 +1763,28 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     }
     if expected_image_digests != actual_image_digests:
         raise ValueError("image input digest mismatch after manifest approval")
+    if experiment:
+        frozen_images = experiment["conditions"]["image_digests"]
+        if experiment["conditions"]["task_variant"] == "deepswe":
+            if research_dataset is None:
+                raise ValueError("DeepSWE experiment has no materialized dataset")
+            records = {
+                record["task_id"]: record
+                for record in json.loads(research_dataset.provenance_path.read_text())["tasks"]
+            }
+            actual_frozen_images = {
+                f"{task}:agent": records[task]["derived_image_digest"]
+                for task in manifest.task_ids
+            } | {
+                f"{task}:verifier": records[task]["verifier_image_digest"]
+                for task in manifest.task_ids
+            }
+        else:
+            from harness_testing.Experiments import runtime_image_digests
+
+            actual_frozen_images = runtime_image_digests(root, frozen_images)
+        if actual_frozen_images != frozen_images:
+            raise ValueError("runtime image content mismatch after manifest approval")
     expected_adapter_digests = manifest.provenance.get("agent_adapter_digests")
     actual_adapter_digests = _agent_adapter_digests(root)
     if expected_adapter_digests != actual_adapter_digests:
@@ -1695,7 +1802,7 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
         if expected != _sha256(path.read_bytes()):
             raise ValueError(f"Harbor config digest mismatch: {relative_path}")
         job = load_job(path)
-        cell = manifest.cells[index % len(manifest.cells)]
+        cell, _, _ = job_slot(manifest, index)
         if f"-{cell.label}-" not in job.job_name:
             raise ValueError(f"Harbor config order mismatch: {relative_path}")
         agent = job.agents[0]
@@ -1710,12 +1817,9 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
         )
         actual_skill_invocation = agent.kwargs.get("skill_invocation")
         if actual_skill_invocation != expected_skill_invocation or (
-            expected_skill_invocation is None
-            and "skill_invocation" in agent.kwargs
+            expected_skill_invocation is None and "skill_invocation" in agent.kwargs
         ):
-            raise ValueError(
-                f"Harbor skill invocation does not match evaluation: {relative_path}"
-            )
+            raise ValueError(f"Harbor skill invocation does not match evaluation: {relative_path}")
         if cell.provider != "claude":
             continue
         if "CLAUDE_CODE_PLUGIN_SEED_DIR" in agent.env:
@@ -1732,18 +1836,29 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
             raise ValueError(f"Claude settings config is forbidden: {relative_path}")
 
 
+def _approved_runtime_providers(manifest: RunManifest) -> set[str]:
+    providers = {cell.provider for cell in manifest.cells}
+    experiment = manifest.provenance.get("experiment")
+    if experiment is not None:
+        aliases = {"openai": "codex", "anthropic": "claude", "codex": "codex", "claude": "claude"}
+        providers.update(
+            aliases[row["provider"]] for row in experiment["conditions"]["executor_inventory"]
+        )
+    return providers
+
+
 def _verify_subscription_auth(
     cells: tuple[RunCell, ...],
     environment: Mapping[str, str],
     home: Path,
+    *,
+    providers: set[str] | None = None,
 ) -> None:
-    providers = {cell.provider for cell in cells}
+    providers = providers if providers is not None else {cell.provider for cell in cells}
     if "codex" in providers:
         for name in ("OPENAI_API_KEY", "OPENAI_BASE_URL", "OPENAI_API_BASE"):
             if environment.get(name, "").strip():
-                raise ValueError(
-                    f"{name} must be unset for Codex subscription billing"
-                )
+                raise ValueError(f"{name} must be unset for Codex subscription billing")
         configured_path = environment.get("CODEX_AUTH_JSON_PATH", "").strip()
         auth_path = Path(configured_path) if configured_path else home / ".codex" / "auth.json"
         if not auth_path.is_file():
@@ -1762,16 +1877,12 @@ def _verify_subscription_auth(
             or not isinstance(tokens.get("refresh_token"), str)
             or not tokens["refresh_token"].strip()
         ):
-            raise ValueError(
-                "Codex credential does not contain ChatGPT subscription auth"
-            )
+            raise ValueError("Codex credential does not contain ChatGPT subscription auth")
 
     if "claude" in providers:
         for name in ("ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL"):
             if environment.get(name, "").strip():
-                raise ValueError(
-                    f"{name} must be unset for Claude subscription billing"
-                )
+                raise ValueError(f"{name} must be unset for Claude subscription billing")
         if not environment.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip():
             raise ValueError("Claude subscription credential is missing")
 
@@ -1804,17 +1915,19 @@ def _expected_runtime_delivery(
     skills: set[str] = set()
     for surface in surfaces:
         layer = str(surface["layer"])
-        plugin = _LAYER_PLUGIN_NAMES[layer]
+        plugin = layer if cell.contender is not None else _LAYER_PLUGIN_NAMES[layer]
         target = _delivery_surface_host_path(bundle, cell.provider, surface["path"])
         skill_root = target / "skills"
         if skill_root.is_dir():
             skills.update(
-                f"{plugin}:{path.name}"
-                for path in sorted(skill_root.iterdir())
-                if path.is_dir()
+                f"{plugin}:{path.name}" for path in sorted(skill_root.iterdir()) if path.is_dir()
             )
         if cell.provider == "codex":
-            marketplace = _CODEX_LAYER_MARKETPLACES[layer]
+            marketplace = (
+                target.parent.parent.name
+                if cell.contender is not None
+                else _CODEX_LAYER_MARKETPLACES[layer]
+            )
             version = target.name
             plugins[plugin] = {
                 "name": plugin,
@@ -1859,6 +1972,8 @@ def _claude_delivery_errors(
     expected_plugins: frozenset[str],
     expected_skills: frozenset[str],
     benchmark_skill_names: frozenset[str],
+    *,
+    complete_inventory: bool = False,
 ) -> list[str]:
     errors: list[str] = []
     try:
@@ -1871,9 +1986,7 @@ def _claude_delivery_errors(
             event = json.loads(line)
         except json.JSONDecodeError:
             if _benchmark_looking(line):
-                errors.append(
-                    f"Claude line {line_number} has malformed benchmark startup evidence"
-                )
+                errors.append(f"Claude line {line_number} has malformed benchmark startup evidence")
                 if len(errors) == _MAX_DELIVERY_ERRORS:
                     break
             continue
@@ -1890,8 +2003,10 @@ def _claude_delivery_errors(
     event = init_events[0]
     if len(init_events) > 1:
         session_id = event.get("session_id")
-        if not isinstance(session_id, str) or not session_id or any(
-            repeated.get("session_id") != session_id for repeated in init_events[1:]
+        if (
+            not isinstance(session_id, str)
+            or not session_id
+            or any(repeated.get("session_id") != session_id for repeated in init_events[1:])
         ):
             errors.append("Claude startup evidence has multiple primary sessions")
             return errors
@@ -1918,9 +2033,12 @@ def _claude_delivery_errors(
                     len(parts) == 2 and all(part.strip() for part in parts)
                 ):
                     normalized = parts[0]
-            if normalized not in _BENCHMARK_PLUGIN_NAMES:
+            if normalized is None or (
+                not complete_inventory
+                and normalized not in _BENCHMARK_PLUGIN_NAMES | expected_plugins
+            ):
                 candidate = name if isinstance(name, str) else entry
-                if _benchmark_looking(candidate):
+                if complete_inventory or _benchmark_looking(candidate):
                     errors.append(
                         f"Claude plugin entry {index} has malformed benchmark plugin evidence"
                     )
@@ -1955,16 +2073,14 @@ def _claude_delivery_errors(
                         continue
                     seen_skills.add(entry)
                     observed_skills.add(entry)
-                elif _benchmark_looking(entry):
+                elif complete_inventory or _benchmark_looking(entry):
                     errors.append(
                         f"Claude skill entry {index} has unexpected benchmark skill {entry}"
                     )
                     if len(errors) == _MAX_DELIVERY_ERRORS:
                         break
-            elif _benchmark_looking(entry):
-                errors.append(
-                    f"Claude skill entry {index} has malformed benchmark skill evidence"
-                )
+            elif complete_inventory or _benchmark_looking(entry):
+                errors.append(f"Claude skill entry {index} has malformed benchmark skill evidence")
                 if len(errors) == _MAX_DELIVERY_ERRORS:
                     break
     if observed_plugins != expected_plugins:
@@ -1983,6 +2099,8 @@ def _claude_delivery_errors(
 def _codex_delivery_errors(
     evidence_path: Path,
     expected_plugins: dict[str, dict[str, object]],
+    *,
+    complete_inventory: bool = False,
 ) -> list[str]:
     try:
         document = json.loads(evidence_path.read_text())
@@ -1993,9 +2111,10 @@ def _codex_delivery_errors(
 
     errors: list[str] = []
     observed: dict[str, dict[str, object]] = {}
+    benchmark_names = _BENCHMARK_PLUGIN_NAMES | expected_plugins.keys()
     for index, entry in enumerate(document["installed"]):
         if not isinstance(entry, dict):
-            if _benchmark_looking(entry):
+            if complete_inventory or _benchmark_looking(entry):
                 errors.append(
                     f"Codex installed entry {index} has malformed benchmark plugin evidence"
                 )
@@ -2006,16 +2125,15 @@ def _codex_delivery_errors(
         plugin_id = entry.get("pluginId")
         benchmark_name = (
             name
-            if isinstance(name, str) and name in _BENCHMARK_PLUGIN_NAMES
+            if isinstance(name, str) and (complete_inventory or name in benchmark_names)
             else plugin_id.split("@", 1)[0]
-            if isinstance(plugin_id, str)
-            and plugin_id.split("@", 1)[0] in _BENCHMARK_PLUGIN_NAMES
+            if isinstance(plugin_id, str) and plugin_id.split("@", 1)[0] in benchmark_names
             else None
         )
         if benchmark_name is None:
             identity = (name, plugin_id, entry.get("marketplaceName"))
             candidate = entry if all(value is None for value in identity) else identity
-            if _benchmark_looking(candidate):
+            if complete_inventory or _benchmark_looking(candidate):
                 errors.append(
                     f"Codex installed entry {index} has malformed benchmark plugin evidence"
                 )
@@ -2033,21 +2151,19 @@ def _codex_delivery_errors(
                 "installed",
             )
         }
-        expected_marketplace = (
-            "superpowers-dev" if benchmark_name == "superpowers" else "studio-moser"
+        expected_marketplace = expected_plugins.get(benchmark_name, {}).get(
+            "marketplaceName",
+            "superpowers-dev" if benchmark_name == "superpowers" else "studio-moser",
         )
         if (
             normalized["name"] != benchmark_name
-            or normalized["pluginId"]
-            != f"{benchmark_name}@{expected_marketplace}"
+            or normalized["pluginId"] != f"{benchmark_name}@{expected_marketplace}"
             or normalized["marketplaceName"] != expected_marketplace
             or not isinstance(normalized["version"], str)
             or normalized["enabled"] is not True
             or normalized["installed"] is not True
         ):
-            errors.append(
-                f"Codex installed entry {index} has malformed benchmark plugin evidence"
-            )
+            errors.append(f"Codex installed entry {index} has malformed benchmark plugin evidence")
             if len(errors) == _MAX_DELIVERY_ERRORS:
                 break
             continue
@@ -2106,15 +2222,11 @@ def _completed_job_errors(
         type(stats.get(name)) is not int or stats.get(name) != expected
         for name, expected in expected_counts.items()
     ):
-        errors.append(
-            f"{job_name}: Harbor job did not complete one clean trial per attempt"
-        )
+        errors.append(f"{job_name}: Harbor job did not complete one clean trial per attempt")
 
     trial_dirs = (
         sorted(
-            path
-            for path in job_dir.iterdir()
-            if path.is_dir() and (path / "result.json").is_file()
+            path for path in job_dir.iterdir() if path.is_dir() and (path / "result.json").is_file()
         )
         if job_dir.is_dir()
         else []
@@ -2140,11 +2252,7 @@ def _completed_job_errors(
             elif trial_result["exception_info"] is not None:
                 errors.append(f"{label}: Harbor trial exception is present")
             verifier_result = trial_result.get("verifier_result")
-            rewards = (
-                verifier_result.get("rewards")
-                if isinstance(verifier_result, dict)
-                else None
-            )
+            rewards = verifier_result.get("rewards") if isinstance(verifier_result, dict) else None
             if not isinstance(rewards, dict):
                 errors.append(f"{label}: Harbor verifier rewards are missing")
         if _read_json_object(trial_dir / "verifier" / "reward.json") is None:
@@ -2156,11 +2264,13 @@ def _completed_job_errors(
                 expected_plugins,
                 expected_skills,
                 benchmark_skill_names,
+                complete_inventory=cell.contender is not None,
             )
         else:
             delivery_errors = _codex_delivery_errors(
                 trial_dir / "agent" / "plugin-inventory.json",
                 expected_plugin_records,
+                complete_inventory=cell.contender is not None,
             )
         errors.extend(f"{label}: {error}" for error in delivery_errors)
         if len(errors) >= _MAX_DELIVERY_ERRORS:
@@ -2168,9 +2278,7 @@ def _completed_job_errors(
     return tuple(errors[:_MAX_DELIVERY_ERRORS])
 
 
-def _skill_evaluation_trials(
-    root: Path, manifest: RunManifest
-) -> tuple[dict[str, object], ...]:
+def _skill_evaluation_trials(root: Path, manifest: RunManifest) -> tuple[dict[str, object], ...]:
     trials: list[dict[str, object]] = []
     cell_count = len(manifest.cells)
     for index, relative_path in enumerate(manifest.harbor_config_paths):
@@ -2179,9 +2287,7 @@ def _skill_evaluation_trials(
         job_name = load_job(manifest.path.parent / relative_path).job_name
         job_dir = root / "jobs" / "raw" / job_name
         trial_dirs = sorted(
-            path
-            for path in job_dir.iterdir()
-            if path.is_dir() and (path / "result.json").is_file()
+            path for path in job_dir.iterdir() if path.is_dir() and (path / "result.json").is_file()
         )
         trials.extend(
             {
@@ -2194,9 +2300,7 @@ def _skill_evaluation_trials(
             for attempt, trial_dir in enumerate(trial_dirs, start=1)
         )
     if len(trials) != manifest.session_count:
-        raise ValueError(
-            "skill evaluation trial count does not match the approved manifest"
-        )
+        raise ValueError("skill evaluation trial count does not match the approved manifest")
     return tuple(trials)
 
 
@@ -2217,16 +2321,30 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
         raise ValueError("image policy validation failed: " + "; ".join(image_errors))
     _verify_generated_inputs(root, manifest)
     execution_environment = os.environ.copy()
+    # Harbor emits naive host times; new jobs use an explicit, recorded UTC clock.
+    execution_environment["TZ"] = "UTC"
     for name, _ in _SUBSCRIPTION_SELECTORS.values():
         execution_environment.pop(name, None)
+    providers = _approved_runtime_providers(manifest)
     if manifest.billing_mode == "subscription":
-        if any(cell.provider == "claude" for cell in manifest.cells):
+        if "claude" in providers:
             token = load_claude_subscription_token(os.environ)
             if token:
                 execution_environment["CLAUDE_CODE_OAUTH_TOKEN"] = token
-        _verify_subscription_auth(manifest.cells, execution_environment, Path.home())
-        for selector in _subscription_selectors(manifest.cells).values():
-            execution_environment[selector["name"]] = selector["value"]
+        _verify_subscription_auth(
+            manifest.cells, execution_environment, Path.home(), providers=providers
+        )
+        for provider in providers:
+            name, value = _SUBSCRIPTION_SELECTORS[provider]
+            execution_environment[name] = value
+    elif "codex" in providers and all(cell.provider == "claude" for cell in manifest.cells):
+        if not execution_environment.get("OPENAI_API_KEY", "").strip():
+            raise ValueError("external Codex API credential is missing")
+        if any(
+            execution_environment.get(name, "").strip()
+            for name in ("OPENAI_BASE_URL", "OPENAI_API_BASE")
+        ):
+            raise ValueError("external Codex proxy endpoint is not an approved native executor")
     profile = _load_profile(root, manifest.profile)
     for image in _required_images(profile, manifest.task_ids):
         require_current_image(root, image)
@@ -2236,7 +2354,7 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
         canary_jobs: list[tuple[RunCell, str]] = []
         for index, relative_path in enumerate(manifest.harbor_config_paths):
             config_path = manifest.path.parent / relative_path
-            cell = manifest.cells[index % len(manifest.cells)]
+            cell, _, _ = job_slot(manifest, index)
             job_name = load_job(config_path).job_name
             job_dir = root / "jobs" / "raw" / job_name
             if job_dir.exists():
@@ -2245,20 +2363,29 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
                     cell,
                     job_name,
                     benchmark_skill_names,
-                    expected_attempts=manifest.attempts,
+                    expected_attempts=1
+                    if manifest.provenance.get("experiment")
+                    else manifest.attempts,
                 )
                 if existing_errors:
-                    raise ValueError(
-                        "existing job is not resumable: " + "; ".join(existing_errors)
-                    )
+                    raise ValueError("existing job is not resumable: " + "; ".join(existing_errors))
                 print(f"Reusing completed job: {job_name}")
             else:
-                subprocess.run(
-                    harbor_command("run", "-c", str(config_path)),
-                    cwd=root,
-                    check=True,
-                    env=execution_environment,
-                )
+                try:
+                    subprocess.run(
+                        harbor_command("run", "-c", str(config_path)),
+                        cwd=root,
+                        check=True,
+                        env=execution_environment,
+                    )
+                except BaseException as error:
+                    try:
+                        record_job_timestamps(job_dir, naive_timezone=UTC)
+                    except Exception as timing_error:
+                        error.add_note(f"Job timestamp recording also failed: {timing_error}")
+                    raise
+                else:
+                    record_job_timestamps(job_dir, naive_timezone=UTC)
             write_run_report(root, manifest, "running")
             if index < len(manifest.cells):
                 canary_jobs.append((cell, job_name))
@@ -2271,7 +2398,9 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
                             canary_cell,
                             canary_job_name,
                             benchmark_skill_names,
-                            expected_attempts=manifest.attempts,
+                            expected_attempts=1
+                            if manifest.provenance.get("experiment")
+                            else manifest.attempts,
                         )
                     ][:_MAX_DELIVERY_ERRORS]
                     if errors:
@@ -2282,7 +2411,7 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
                 cell,
                 job_name,
                 benchmark_skill_names,
-                expected_attempts=manifest.attempts,
+                expected_attempts=1 if manifest.provenance.get("experiment") else manifest.attempts,
             )
             if errors:
                 raise ValueError("job delivery failed: " + "; ".join(errors))

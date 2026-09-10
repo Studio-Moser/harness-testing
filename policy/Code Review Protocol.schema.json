@@ -1,0 +1,50 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "schema_version",
+        "reviewer",
+        "instruction",
+        "categories",
+        "time_budget_seconds",
+        "confirmation"
+    ],
+    "properties": {
+        "schema_version": {"const": "1"},
+        "reviewer": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["provider", "model", "effort", "executor", "runtime_version"],
+            "properties": {
+                "provider": {"type": "string", "minLength": 1},
+                "model": {"type": "string", "minLength": 1},
+                "effort": {"type": "string", "minLength": 1},
+                "executor": {"type": "string", "minLength": 1},
+                "runtime_version": {"type": "string", "minLength": 1}
+            }
+        },
+        "instruction": {"type": "string", "minLength": 1},
+        "categories": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+        },
+        "time_budget_seconds": {"type": "integer", "minimum": 1},
+        "confirmation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "independent_session_required",
+                "reproduction_required",
+                "evidence_file_required"
+            ],
+            "properties": {
+                "independent_session_required": {"const": true},
+                "reproduction_required": {"const": true},
+                "evidence_file_required": {"const": true}
+            }
+        }
+    }
+}

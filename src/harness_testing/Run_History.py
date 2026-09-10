@@ -17,6 +17,7 @@ from harness_testing.Config import load_job, load_versions
 from harness_testing.Run_Reports import (
     _timestamp,
     build_job_report,
+    read_timed_job_result,
     run_report_id,
     validate_run_report,
 )
@@ -200,7 +201,9 @@ def _job_names(manifest: RunManifest) -> tuple[str, ...]:
 
 
 def _read_result(result_path: Path) -> dict[str, object]:
-    result = _read_object(result_path, "top-level Harbor result")
+    result = read_timed_job_result(result_path)
+    if result is None:
+        raise ValueError(f"invalid top-level Harbor result: {result_path}")
     for field in ("started_at", "updated_at", "finished_at"):
         value = result.get(field)
         if value is not None and _timestamp(value)[0] is None:
