@@ -1,0 +1,35 @@
+{
+  "schema_version": "1",
+  "scenario": "development_grouped",
+  "expectations": {
+    "initial_update": "required",
+    "progress_updates": {
+      "minimum": 1,
+      "maximum": 3,
+      "require_new_information": true
+    },
+    "questions": {
+      "minimum": 0,
+      "maximum": 0
+    },
+    "approval_requests": {
+      "minimum": 0,
+      "maximum": 0
+    },
+    "final_answer_words": {
+      "minimum": 1,
+      "maximum": 160
+    },
+    "prompt_restatement": false
+  },
+  "rubric": [
+    "directness",
+    "proportionality",
+    "progress_usefulness",
+    "autonomy",
+    "candor",
+    "warmth",
+    "restraint",
+    "completion_clarity"
+  ]
+}

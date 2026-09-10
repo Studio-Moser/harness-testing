@@ -54,6 +54,50 @@ def test_codex_turns_always_address_explicit_root_after_child():
     assert outbound[0]["params"]["input"][0]["text"] == "Proceed"
 
 
+def test_codex_records_only_root_visible_messages_with_kinds_and_elapsed_time(monkeypatch):
+    ticks = iter([10.0, 11.0, 12.5, 13.0])
+    monkeypatch.setattr("harness_testing.Native_Conversation.time.monotonic", lambda: next(ticks))
+    state = Conversation(config("codex"))
+    state.root = "root"
+    state.turn("Do the task")
+    state.handle({
+        "method": "item/completed",
+        "params": {"threadId": "child", "item": {"type": "agentMessage", "text": "hidden"}},
+    })
+    state.handle({
+        "method": "item/completed",
+        "params": {"threadId": "root", "item": {
+            "type": "agentMessage", "text": "I found the cause.", "phase": "commentary"
+        }},
+    })
+    state.handle({
+        "method": "item/completed",
+        "params": {"threadId": "root", "item": {
+            "type": "agentMessage", "text": "Fixed and tested.", "phase": "final_answer"
+        }},
+    })
+    assert [(row["role"], row["kind"], row["content"]) for row in state.transcript] == [
+        ("user", "user", "Do the task"),
+        ("assistant", "progress", "I found the cause."),
+        ("assistant", "final", "Fixed and tested."),
+    ]
+    assert [row["ordinal"] for row in state.transcript] == [1, 2, 3]
+    assert [row["elapsed_seconds"] for row in state.transcript] == [0.0, 1.0, 2.5]
+
+
+def test_claude_records_progress_and_final_without_duplicate_result():
+    state = Conversation(config("claude"))
+    state.root = "root"
+    state.turn("Do the task")
+    state.handle({
+        "type": "assistant",
+        "message": {"content": [{"type": "text", "text": "Checking the failing test."}]},
+    })
+    state.handle({"type": "result", "subtype": "success", "result": "Done."})
+    assert [row["kind"] for row in state.transcript] == ["user", "progress", "final"]
+    assert state.transcript[-1]["content"] == "Done."
+
+
 def test_native_pending_requests_keep_request_identity_and_claude_original_input():
     state = Conversation(config("claude"))
     request = {
