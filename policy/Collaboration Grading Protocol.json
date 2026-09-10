@@ -1,0 +1,23 @@
+{
+  "schema_version": "1",
+  "rubric_version": "tim-collaboration-v1",
+  "grader": {
+    "provider": "codex",
+    "model": "gpt-6-astra",
+    "effort": "high",
+    "executor": "native",
+    "runtime_version": "0.153.4"
+  },
+  "instruction": "Judge only the supplied user-visible conversation against its communication contract and outcome. Do not infer the model, harness, or author. Score each named dimension independently from 1 to 5 and give one concise rationale grounded in exact visible behavior. Keep the separate would-work-again judgment independent from engineering correctness.",
+  "dimensions": [
+    "directness",
+    "proportionality",
+    "progress_usefulness",
+    "autonomy",
+    "candor",
+    "warmth",
+    "restraint",
+    "completion_clarity"
+  ],
+  "time_budget_seconds": 600
+}

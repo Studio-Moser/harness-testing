@@ -82,6 +82,24 @@ def test_request_validation_is_strict_and_aggregates_errors():
     assert "max_sessions" in errors
 
 
+def test_startup_instructions_can_define_a_personality_only_contender():
+    document = request_document()
+    contender = document["contenders"][0]
+    contender["family"] = "studio-personality"
+    contender["sources"] = []
+    contender["startup_paths"] = ["runs/inputs/House Style.md"]
+    assert validate_experiment_request(document) == []
+
+
+def test_non_nothing_contender_requires_a_frozen_input():
+    document = request_document()
+    contender = document["contenders"][0]
+    contender["sources"] = []
+    assert any(
+        "sources or startup_paths" in error for error in validate_experiment_request(document)
+    )
+
+
 def test_only_common_conditions_change_comparison_compatibility():
     first = request_document()["conditions"]
     assert comparison_mismatches(first, copy.deepcopy(first)) == []
@@ -97,9 +115,7 @@ def test_provider_recovery_is_an_explicit_comparison_condition(allowance):
     document["conditions"]["provider_recovery_seconds"] = allowance
     assert validate_experiment_request(document) == []
     original = request_document()["conditions"]
-    assert comparison_mismatches(original, document["conditions"]) == [
-        "provider_recovery_seconds"
-    ]
+    assert comparison_mismatches(original, document["conditions"]) == ["provider_recovery_seconds"]
 
 
 @pytest.mark.parametrize("allowance", [-1, True, 0.5, 600.0, 3601, float("inf")])

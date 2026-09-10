@@ -101,12 +101,31 @@ def test_nothing_has_no_harness_instructions(tmp_path):
     assert not (bundle.path / "project").exists()
 
 
+def test_personality_only_contender_freezes_startup_instructions(tmp_path):
+    style = tmp_path / "House Style.md"
+    style.write_text("Be concise and direct.\n")
+    contender = {
+        "family": "studio-personality",
+        "label": "Studio personality only",
+        "sources": [],
+        "startup_paths": [str(style)],
+        "rubric": {"mode": "disabled", "path": None},
+        "delivery_config": {},
+    }
+    bundle, public = materialize_contender(tmp_path, "claude", contender, native_cli=False)
+    assert (bundle.path / "project/CLAUDE.md").read_text() == "Be concise and direct.\n\n"
+    assert public["family"] == "studio-personality"
+    assert public["source_commits"] == []
+
+
 def test_reviewed_rubric_accepts_numeric_taste_threshold(tmp_path):
     from harness_testing.Contenders import _rubric_bytes
 
     path = tmp_path / "Rubric.yml"
-    content = ("reviewed: 2026-09-05\ncapabilities: {codex: true}\n"
+    content = (
+        "reviewed: 2026-09-05\ncapabilities: {codex: true}\n"
         "routing: {default: 'fixture@high', taste_min: 9}\n"
-        "models: [{name: fixture, effort: high, trust: routine, efficiency: 8}]\n")
+        "models: [{name: fixture, effort: high, trust: routine, efficiency: 8}]\n"
+    )
     path.write_text(content)
     assert _rubric_bytes({"rubric": {"mode": "enabled", "path": str(path)}}) == content.encode()

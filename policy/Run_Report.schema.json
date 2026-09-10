@@ -1722,6 +1722,12 @@
         },
         "code_review": {
           "$ref": "#/$defs/codeReviewCampaign"
+        },
+        "collaboration_evaluation": {
+          "$ref": "#/$defs/collaborationCampaign"
+        },
+        "collaboration_calibration": {
+          "$ref": "#/$defs/collaborationCalibration"
         }
       },
       "required": [
@@ -2945,6 +2951,9 @@
               "type": "null"
             }
           ]
+        },
+        "grade": {
+          "$ref": "#/$defs/collaborationGrade"
         }
       },
       "required": [
@@ -2954,6 +2963,206 @@
         "contract",
         "transcript",
         "metrics"
+      ]
+    },
+    "collaborationDimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "enum": [
+            "directness",
+            "proportionality",
+            "progress_usefulness",
+            "autonomy",
+            "candor",
+            "warmth",
+            "restraint",
+            "completion_clarity"
+          ]
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "name",
+        "score",
+        "rationale"
+      ]
+    },
+    "collaborationGrade": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "completed",
+            "blocked",
+            "incomplete"
+          ]
+        },
+        "protocol_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "rubric_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/collaborationDimension"
+          }
+        },
+        "would_work_again": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "duration_seconds": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "usage_complete": {
+          "type": "boolean"
+        },
+        "model_usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modelUsage"
+          }
+        },
+        "cost_usd": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "pricing_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "required": [
+        "status",
+        "protocol_id",
+        "rubric_version",
+        "dimensions",
+        "would_work_again",
+        "duration_seconds",
+        "usage_complete",
+        "model_usage",
+        "cost_usd",
+        "pricing_digest"
+      ]
+    },
+    "collaborationCampaign": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "plan_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "protocol_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "rubric_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_report_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "results_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "evaluation_cost_usd": {
+          "$ref": "#/$defs/nullableNumber"
+        }
+      },
+      "required": [
+        "plan_id",
+        "protocol_id",
+        "rubric_version",
+        "source_report_id",
+        "results_digest",
+        "evaluation_cost_usd"
+      ]
+    },
+    "calibrationLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pair_id": {
+          "type": "string",
+          "pattern": "^pair-[a-f0-9]{24}$"
+        },
+        "scenario": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preferred_contender_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "other_contender_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "annoyance_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        },
+        "grader_agreement": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "pair_id",
+        "scenario",
+        "preferred_contender_id",
+        "other_contender_id",
+        "annoyance_reason",
+        "grader_agreement"
+      ]
+    },
+    "collaborationCalibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1"
+        },
+        "plan_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "labels_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/calibrationLabel"
+          }
+        },
+        "calibrated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "plan_id",
+        "labels_digest",
+        "labels",
+        "calibrated"
       ]
     }
   }
