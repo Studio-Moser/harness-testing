@@ -184,6 +184,14 @@ def test_local_development_matcher_is_strict_and_legacy_patterns_still_work():
         "May I continue with this plan after the check?",
         "Shall I implement and verify this minimal fix?",
         "The plan says do not publish. Please approve this plan while I prepare it.",
+        (
+            "This is a bounded change. Proposed design: update one local selector and "
+            "run its tests.\n\nProceed?"
+        ),
+        (
+            "This is a bounded change.\n\nDesign: add one local field and run the "
+            "workspace tests.\n\nProceed?"
+        ),
     ):
         assert select_reply({"kind": "approval", "text": text}, local, 0)["status"] == "reply"
     for text in (
@@ -201,6 +209,10 @@ def test_local_development_matcher_is_strict_and_legacy_patterns_still_work():
         "Please approve this plan outside the original scope.",
         "Shall I implement and publish this minimal fix?",
         "Please approve this proposal.",
+        "Proceed?",
+        "Update one local selector and run its tests.\n\nProceed?",
+        "This is a bounded change. Proposed design: deploy it.\n\nProceed?",
+        "This is a bounded change. Proposed design: upload the logs.\n\nProceed?",
     ):
         assert (
             select_reply({"kind": "approval", "text": text}, local, 0)["status"]

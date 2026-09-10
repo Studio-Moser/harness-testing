@@ -23,6 +23,7 @@ _TERMINAL_DIRECT_REQUEST = re.compile(
             (?:may|shall|should|can)\s+i\s+(?:proceed|continue|implement)\b
             |(?:please\s+)?(?:approve|confirm)\b
             |does\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right\b
+            |proceed\b
         )
         (?:(?![.!?]\s+).)*
     )
@@ -32,6 +33,12 @@ _BROADER_AUTHORITY = re.compile(
     r"\b(?:deploy(?:ment|ing)?|publish(?:ing)?|publication|push(?:ing)?|"
     r"spend(?:ing)?|pay(?:ing)?|purchas(?:e|ing)|send(?:ing)?|upload(?:ing)?|"
     r"production|credentials?)\b",
+    re.I,
+)
+_EXTERNAL_ACTION = re.compile(
+    r"\b(?:deploy(?:ment|ing)?|publish(?:ing)?|publication|push(?:ing)?|"
+    r"release|ship(?:ping)?|spend(?:ing)?|pay(?:ing)?|purchas(?:e|ing)|"
+    r"send(?:ing)?|upload(?:ing)?|credentials?)\b",
     re.I,
 )
 _SCOPE_EXPANSION = re.compile(
@@ -58,12 +65,25 @@ def _terminal_request_clause(text: str) -> str | None:
 
 def _local_development_approval(text: str) -> bool:
     request = _terminal_request_clause(text)
+    bare_bounded_design = bool(
+        request
+        and re.fullmatch(r"proceed\s*\?", request, re.I)
+        and re.search(r"\b(?:proposed\s+)?design\s*:", text, re.I)
+        and not _EXTERNAL_ACTION.search(text)
+        and not _SCOPE_EXPANSION.search(text)
+        and not _COMPLETED_OR_NEGATED_APPROVAL.search(text)
+    )
     return bool(
         request
-        and _LOCAL_DEVELOPMENT_APPROVAL.match(request)
-        and not _BROADER_AUTHORITY.search(request)
-        and not _SCOPE_EXPANSION.search(request)
-        and not _COMPLETED_OR_NEGATED_APPROVAL.search(request)
+        and (
+            bare_bounded_design
+            or (
+                _LOCAL_DEVELOPMENT_APPROVAL.match(request)
+                and not _BROADER_AUTHORITY.search(request)
+                and not _SCOPE_EXPANSION.search(request)
+                and not _COMPLETED_OR_NEGATED_APPROVAL.search(request)
+            )
+        )
     )
 
 
