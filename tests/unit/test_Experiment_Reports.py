@@ -63,7 +63,9 @@ def test_recovery_evidence_is_public_safe_and_optional():
     trial = report["experiment"]["trials"][0]
     report["experiment"]["conditions"]["provider_recovery_seconds"] = 600
     trial["provider_recovery"] = {
-        "allowance_seconds": 600, "transport_error_count": 4, "extension_applied": True,
+        "allowance_seconds": 600,
+        "transport_error_count": 4,
+        "extension_applied": True,
     }
     trial["status"] = "infrastructure_failure"
     trial["incomplete_reasons"] = ["provider_transport_interrupted"]
@@ -78,15 +80,23 @@ def test_outer_timeout_preserves_native_transport_classification(tmp_path):
     from harness_testing.Experiment_Reports import _safe_trial
 
     (tmp_path / "agent").mkdir()
-    (tmp_path / "result.json").write_text(json.dumps({
-        "exception_info": {"exception_type": "AgentTimeoutError"},
-    }))
-    recovery = {"allowance_seconds": 600, "transport_error_count": 2,
-                "extension_applied": True}
-    (tmp_path / "agent/Trial_Evidence.json").write_text(json.dumps({
-        "status": "infrastructure_failure", "provider_recovery": recovery,
-        "incomplete_reasons": ["provider_transport_interrupted"],
-    }))
+    (tmp_path / "result.json").write_text(
+        json.dumps(
+            {
+                "exception_info": {"exception_type": "AgentTimeoutError"},
+            }
+        )
+    )
+    recovery = {"allowance_seconds": 600, "transport_error_count": 2, "extension_applied": True}
+    (tmp_path / "agent/Trial_Evidence.json").write_text(
+        json.dumps(
+            {
+                "status": "infrastructure_failure",
+                "provider_recovery": recovery,
+                "incomplete_reasons": ["provider_transport_interrupted"],
+            }
+        )
+    )
     trial = _safe_trial(ROOT, "rust-quoted-value-parser", "fixture", 1, tmp_path)
     assert trial["status"] == "infrastructure_failure"
     assert trial["provider_recovery"] == recovery
@@ -97,18 +107,37 @@ def reviewed_report():
     report = json.loads((ROOT / "tests/Fixtures/Run_Reports/Comparison.json").read_text())
     digest = "sha256:" + "a" * 64
     report["experiment"]["code_review"] = {
-        "plan_id": digest, "protocol_id": digest, "source_report_id": report["report_id"],
-        "results_digest": digest, "evaluation_cost_usd": None,
+        "plan_id": digest,
+        "protocol_id": digest,
+        "source_report_id": report["report_id"],
+        "results_digest": digest,
+        "evaluation_cost_usd": None,
     }
     report["experiment"]["trials"][0]["code_review"] = {
-        "protocol_id": digest, "target_digest": digest, "status": "completed",
-        "findings": [{
-            "id": "F1", "severity": "P1", "category": "correctness", "title": "Stale callback",
-            "file": "src/Toolbar.ts", "line": 2, "status": "confirmed", "evidence_digest": digest,
-        }],
-        "cost_usd": None, "duration_seconds": 5, "usage_complete": False, "model_usage": [],
+        "protocol_id": digest,
+        "target_digest": digest,
+        "status": "completed",
+        "findings": [
+            {
+                "id": "F1",
+                "severity": "P1",
+                "category": "correctness",
+                "title": "Stale callback",
+                "file": "src/Toolbar.ts",
+                "line": 2,
+                "status": "confirmed",
+                "evidence_digest": digest,
+            }
+        ],
+        "cost_usd": None,
+        "duration_seconds": 5,
+        "usage_complete": False,
+        "model_usage": [],
         "internal_review": {
-            "status": "unknown", "found": None, "fixed": None, "unresolved": None,
+            "status": "unknown",
+            "found": None,
+            "fixed": None,
+            "unresolved": None,
             "evidence_digest": None,
         },
     }
@@ -199,6 +228,73 @@ def test_infrastructure_failure_and_safe_agent_breakdown(tmp_path):
     assert result["status"] == "infrastructure_failure"
     assert result["session_usage"] == [{k: v for k, v in session.items() if k != "private_path"}]
     assert result["cost_usd"] is not None  # Recorded work is retained, not counted as free.
+
+
+def test_safe_trial_attaches_contract_transcript_and_reproducible_metrics(tmp_path):
+    from harness_testing.Experiment_Reports import _safe_trial
+
+    trial = tmp_path / "trial"
+    (trial / "agent").mkdir(parents=True)
+    usage = {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "input_tokens": 20,
+        "output_tokens": 10,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+    }
+    transcript = [
+        {
+            "ordinal": 1,
+            "role": "user",
+            "kind": "user",
+            "content": "Do the task.",
+            "elapsed_seconds": 0,
+        },
+        {
+            "ordinal": 2,
+            "role": "assistant",
+            "kind": "final",
+            "content": "Done and tested.",
+            "elapsed_seconds": 2,
+        },
+    ]
+    (trial / "agent/Trial_Evidence.json").write_text(
+        json.dumps(
+            {
+                "status": "completed",
+                "usage_complete": True,
+                "model_usage": [usage],
+                "session_usage": [usage | {"session": "root", "effort": "high"}],
+                "transcript": transcript,
+            }
+        )
+    )
+    result = _safe_trial(ROOT, "react-active-badge-count", "sha256:" + "a" * 64, 1, trial)
+    collaboration = result["collaboration"]
+    assert collaboration["status"] == "complete"
+    assert collaboration["contract"]["scenario"] == "development_small"
+    assert collaboration["contract_digest"].startswith("sha256:")
+    assert collaboration["transcript"] == transcript
+    assert collaboration["metrics"]["assistant_message_count"] == 1
+    assert collaboration["metrics"]["communication_to_model_output_ratio"] is not None
+
+
+def test_safe_trial_marks_missing_transcript_unavailable_without_inventing_zero(tmp_path):
+    from harness_testing.Experiment_Reports import _safe_trial
+
+    trial = tmp_path / "trial"
+    (trial / "agent").mkdir(parents=True)
+    (trial / "agent/Trial_Evidence.json").write_text('{"status":"completed"}')
+    result = _safe_trial(ROOT, "react-active-badge-count", "fixture", 1, trial)
+    assert result["collaboration"] == {
+        "status": "unavailable",
+        "reasons": ["missing_transcript"],
+        "contract_digest": result["collaboration"]["contract_digest"],
+        "contract": result["collaboration"]["contract"],
+        "transcript": [],
+        "metrics": None,
+    }
 
 
 def test_safe_trial_keeps_research_protected_state_unknown(tmp_path: Path):
