@@ -6,7 +6,7 @@ toc: false
 
 # Task evidence
 
-Inspect graded trials, recorded model usage, final-patch review findings, internal repair evidence, and separate evaluation cost behind a comparison. Missing review evidence remains explicitly unknown.
+Inspect graded trials, recorded model usage, final-patch review findings, internal repair evidence, user-visible collaboration transcripts, and separate evaluation cost behind a comparison. Missing review or collaboration evidence remains explicitly unknown.
 
 ```js
 import {renderEvidence} from "./components/Comparisons.js";

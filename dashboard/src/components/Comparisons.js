@@ -1,4 +1,5 @@
 import {TASK_TYPES, taskType, summarizeTaskTypes} from "./Task_Types.js";
+import {renderCollaboration, renderCollaborationEvidence} from "./Collaboration.js";
 
 // The runner owns verdicts; this module selects and presents recorded evidence.
 export function comparisonReports(reports) {
@@ -273,6 +274,7 @@ export function renderComparison(reports, state = {}) {
   verdict.append(el("p", verdictContent.summary));
   verdict.append(evidenceBadge(current));
   root.append(verdict);
+  root.append(renderCollaboration(current, comparison?.contenders ?? experiment.contenders, trials));
   root.append(renderTaskTypes(current, trials));
   if (comparison?.contenders.length) {
     root.append(contenderTable(comparison.contenders, trials, current.report_id));
@@ -654,6 +656,7 @@ export function renderEvidence(reports, state = {}) {
       if (trial.incomplete_reasons?.length) content.append(list(trial.incomplete_reasons.map(value => value.replaceAll("_", " "))));
       if (trial.model_usage?.length) content.append(list(trial.model_usage.map(row => `${row.model}: ${row.input_tokens ?? "unknown"} input + ${row.cache_read_tokens ?? "unknown"} cache read + ${row.cache_write_tokens ?? "unknown"} cache write + ${row.output_tokens ?? "unknown"} output tokens`)));
       if (trial.session_usage?.length) content.append(detail("Agent model and effort breakdown", list(trial.session_usage.map(row => `${row.session === "root" ? "Orchestrator" : row.session.replace("child_", "Child ")}: ${row.model} · ${row.effort ?? "unreported"} effort · ${row.input_tokens ?? "unknown"} input / ${row.output_tokens ?? "unknown"} output tokens`))));
+      content.append(renderCollaborationEvidence(trial));
       content.append(trialReview(trial.code_review));
       section.append(detail(title, content));
     }

@@ -114,3 +114,81 @@ def test_slop_and_formatting_are_measured_separately_from_quality():
     assert result["bullet_count"] == 1
     assert result["slop_phrase_count"] == 3
     assert result["formatting_density"] > 0
+
+
+def test_every_contract_boundary_produces_inspectable_violations():
+    rows = [
+        {
+            "ordinal": 1,
+            "role": "user",
+            "kind": "user",
+            "content": "Make the change.",
+            "elapsed_seconds": 0,
+        },
+        {
+            "ordinal": 2,
+            "role": "assistant",
+            "kind": "final",
+            "content": "Done.",
+            "elapsed_seconds": 4,
+        },
+    ]
+    expected = contract()
+    expected["expectations"].update(
+        {
+            "questions": {"minimum": 1, "maximum": 1},
+            "approval_requests": {"minimum": 1, "maximum": 1},
+            "final_answer_words": {"minimum": 3, "maximum": 8},
+        }
+    )
+    result = calculate_communication_metrics(
+        rows, expected, task_text="Make the change.", model_output_tokens=10
+    )
+    kinds = {row["kind"] for row in result["violations"]}
+    assert kinds == {
+        "missing_initial_update",
+        "missing_progress_update",
+        "missing_question",
+        "missing_approval_request",
+        "short_final_answer",
+    }
+    assert {row["ordinal"] for row in result["violations"]} == {2}
+
+
+def test_excess_and_uninformative_progress_updates_point_to_exact_messages():
+    rows = transcript()
+    expected = contract()
+    expected["expectations"]["initial_update"] = "forbidden"
+    expected["expectations"]["progress_updates"]["maximum"] = 1
+    result = calculate_communication_metrics(
+        rows, expected, task_text="Different task.", model_output_tokens=10
+    )
+    violations = {(row["kind"], row["ordinal"]) for row in result["violations"]}
+    assert ("forbidden_initial_update", 2) in violations
+    assert ("excess_progress_update", 3) in violations
+    assert ("uninformative_progress_update", 3) in violations
+
+
+def test_approval_facts_are_not_misclassified_as_approval_requests():
+    rows = [
+        {
+            "ordinal": 1,
+            "role": "user",
+            "kind": "user",
+            "content": "Report the outcome.",
+            "elapsed_seconds": 0,
+        },
+        {
+            "ordinal": 2,
+            "role": "assistant",
+            "kind": "final",
+            "content": "The change is complete. No approval was required.",
+            "elapsed_seconds": 1,
+        },
+    ]
+
+    result = calculate_communication_metrics(
+        rows, contract(), task_text="Report the outcome.", model_output_tokens=20
+    )
+
+    assert result["approval_request_count"] == 0

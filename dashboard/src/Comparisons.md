@@ -6,7 +6,7 @@ toc: false
 
 # Harness comparison
 
-Compare harnesses under the same test conditions.
+Compare engineering correctness, cost, and user-visible collaboration under the same test conditions.
 
 ```js
 import {renderComparison} from "./components/Comparisons.js";

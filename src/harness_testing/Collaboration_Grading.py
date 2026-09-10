@@ -18,6 +18,13 @@ from harness_testing.Experiment_Reports import _price_usage
 from harness_testing.Public_Safety import public_safety_errors
 from harness_testing.Run_Reports import load_run_report, run_report_id, validate_run_report
 
+_MINIMUM_CALIBRATION_LABELS = 15
+
+
+def calibration_is_ready(label_count: int) -> bool:
+    """Return whether personal labels are numerous enough to drive the verdict."""
+    return label_count >= _MINIMUM_CALIBRATION_LABELS
+
 
 def _sha256(contents: bytes) -> str:
     return "sha256:" + hashlib.sha256(contents).hexdigest()
@@ -316,11 +323,16 @@ def prepare_calibration(root: Path, report_path: Path) -> dict:
     """Create same-scenario A/B packets while keeping identities in the private plan."""
     root = root.resolve()
     report = load_run_report(root, report_path.resolve())
-    by_scenario = defaultdict(list)
+    by_slot = defaultdict(list)
     for trial in _eligible_trials(report):
-        by_scenario[trial["collaboration"]["contract"]["scenario"]].append(trial)
+        key = (
+            trial["task_id"],
+            trial["attempt"],
+            trial["collaboration"]["contract"]["scenario"],
+        )
+        by_slot[key].append(trial)
     prepared = []
-    for scenario, trials in sorted(by_scenario.items()):
+    for (_, _, scenario), trials in sorted(by_slot.items()):
         for left, right in combinations(trials, 2):
             if left["contender_id"] == right["contender_id"]:
                 continue
@@ -423,7 +435,7 @@ def record_calibration(root: Path, plan_path: Path, labels_path: Path) -> dict:
         "plan_id": plan["plan_id"],
         "labels_digest": _sha256(label_bytes),
         "labels": public,
-        "calibrated": len(public) >= 15,
+        "calibrated": calibration_is_ready(len(public)),
     }
     evidence = _write_revised_report(
         root, revised, source, source_path, directory, label_bytes, "calibration"

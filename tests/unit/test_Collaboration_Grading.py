@@ -1,8 +1,10 @@
+import copy
 import json
 import shutil
 from pathlib import Path
 
 from harness_testing.Collaboration_Grading import (
+    calibration_is_ready,
     prepare_calibration,
     prepare_grading,
     record_calibration,
@@ -13,6 +15,11 @@ from harness_testing.Communication_Contracts import communication_contract_for_t
 from harness_testing.Run_Reports import load_run_report, run_report_id
 
 ROOT = Path(__file__).parents[2]
+
+
+def test_personal_calibration_requires_fifteen_blinded_choices():
+    assert calibration_is_ready(14) is False
+    assert calibration_is_ready(15) is True
 
 
 def prepared_root(tmp_path):
@@ -169,3 +176,18 @@ def test_calibration_pairs_same_scenario_blindly_and_records_preference(tmp_path
     assert calibration["labels"][0]["preferred_contender_id"] in {
         contender["id"] for contender in contenders
     }
+
+
+def test_calibration_never_pairs_different_tasks_with_the_same_scenario(tmp_path):
+    root, report_path, _ = prepared_root(tmp_path)
+    report = json.loads(report_path.read_text())
+    extra = copy.deepcopy(report["experiment"]["trials"][0])
+    extra["trial_id"] = "sha256:" + "9" * 64
+    extra["task_id"] = "another-small-change"
+    report["experiment"]["trials"].append(extra)
+    report["report_id"] = run_report_id(report)
+    report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+
+    outcome = prepare_calibration(root, report_path)
+
+    assert len(outcome["packets"]) == 1

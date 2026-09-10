@@ -10,7 +10,12 @@ _WORD = re.compile(r"[\w]+(?:[’'-][\w]+)*", re.UNICODE)
 _TOKEN = re.compile(r"[\w]+|[^\w\s]", re.UNICODE)
 _SENTENCE = re.compile(r"(?<=[.!?])\s+|\n+")
 _APPROVAL = re.compile(
-    r"(?i)\b(?:approve|approval|confirm|permission|authorize|shall I|may I|ready to proceed)\b"
+    r"(?ix)\b(?:please\s+)?(?:approve|confirm|authorize)\b|"
+    r"\b(?:need|require|request|ask(?:ing)?\s+for|await(?:ing)?)\s+"
+    r"(?:your\s+)?(?:approval|permission|confirmation|authorization)\b|"
+    r"\b(?:shall|may|can|could|would)\s+i\b[^.!?\n]{0,80}"
+    r"\b(?:proceed|continue|deploy|publish|merge|send|apply|start|run)\b|"
+    r"\b(?:do\s+i\s+have|give\s+me)\s+(?:your\s+)?(?:approval|permission)\b"
 )
 _USEFUL = re.compile(
     r"(?i)\b(?:found|confirmed|passed|failed|blocked|changed|decided|root cause|"
@@ -165,7 +170,72 @@ def calculate_communication_metrics(
         approval_excess,
         "Approval request exceeds scenario budget",
     )
-    add("prompt_restatement", assistant, int(bool(restatement_rows)), "Task prompt was restated")
+    anchor = final or (assistant[-1] if assistant else transcript[-1])
+
+    def missing(kind: str, count: int, detail: str) -> None:
+        for _ in range(count):
+            violations.append({"kind": kind, "ordinal": anchor["ordinal"], "detail": detail})
+
+    initial = assistant[0] if assistant else None
+    if expectations["initial_update"] == "required" and (
+        initial is None or initial["kind"] != "progress"
+    ):
+        missing("missing_initial_update", 1, "Required initial update was not provided")
+    if (
+        expectations["initial_update"] == "forbidden"
+        and initial is not None
+        and initial["kind"] == "progress"
+    ):
+        violations.append(
+            {
+                "kind": "forbidden_initial_update",
+                "ordinal": initial["ordinal"],
+                "detail": "Scenario forbids an initial update",
+            }
+        )
+    progress_expectation = expectations["progress_updates"]
+    missing(
+        "missing_progress_update",
+        max(0, progress_expectation["minimum"] - len(progress)),
+        "Progress updates fall below the scenario minimum",
+    )
+    for row in progress[progress_expectation["maximum"] :]:
+        violations.append(
+            {
+                "kind": "excess_progress_update",
+                "ordinal": row["ordinal"],
+                "detail": "Progress update exceeds scenario budget",
+            }
+        )
+    if progress_expectation["require_new_information"]:
+        for row in progress:
+            if row not in useful_rows:
+                violations.append(
+                    {
+                        "kind": "uninformative_progress_update",
+                        "ordinal": row["ordinal"],
+                        "detail": "Progress update contains no recognized new information",
+                    }
+                )
+    missing(
+        "missing_question",
+        max(0, expectations["questions"]["minimum"] - len(question_rows)),
+        "Questions fall below the scenario minimum",
+    )
+    missing(
+        "missing_approval_request",
+        max(0, expectations["approval_requests"]["minimum"] - len(approval_rows)),
+        "Approval requests fall below the scenario minimum",
+    )
+    if not expectations["prompt_restatement"]:
+        for ordinal in sorted(set(restatement_rows)):
+            violations.append(
+                {
+                    "kind": "prompt_restatement",
+                    "ordinal": ordinal,
+                    "detail": "Task prompt was restated",
+                }
+            )
     for ordinal in sorted(set(repeated)):
         violations.append(
             {
@@ -183,6 +253,17 @@ def calculate_communication_metrics(
                 "kind": "long_final_answer",
                 "ordinal": final["ordinal"],
                 "detail": "Final answer exceeds scenario budget",
+            }
+        )
+    if (
+        final is not None
+        and len(_words(final["content"])) < expectations["final_answer_words"]["minimum"]
+    ):
+        violations.append(
+            {
+                "kind": "short_final_answer",
+                "ordinal": final["ordinal"],
+                "detail": "Final answer falls below scenario minimum",
             }
         )
     return {

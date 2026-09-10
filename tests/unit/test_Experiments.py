@@ -261,12 +261,19 @@ def test_documented_requests_validate_and_select_only_candidate_on_iteration():
     requests = [
         json.loads(path.read_text()) for path in (root / "runs/examples").glob("* Comparison.json")
     ]
-    assert len(requests) == 2
+    assert len(requests) == 3
     for document in requests:
         assert validate_experiment_request(document) == []
     candidate = next(document for document in requests if document["purpose"] == "candidate")
     assert [c["family"] for c in candidate["contenders"]] == ["studio-moser"]
     assert candidate["limits"]["max_sessions"] == 27
+    opus = next(document for document in requests if document["label"].startswith("Opus 5"))
+    assert [c["family"] for c in opus["contenders"]] == [
+        "nothing",
+        "studio-personality",
+        "studio-moser",
+    ]
+    assert opus["conditions"]["kickoff"]["model"] == "claude-opus-5"
 
 
 def test_runtime_images_use_contents_not_only_recipes(monkeypatch, tmp_path):
