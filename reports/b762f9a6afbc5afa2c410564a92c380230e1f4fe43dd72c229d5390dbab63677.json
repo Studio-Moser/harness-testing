@@ -1,0 +1,906 @@
+{
+  "admission_estimate_usd": 90.0,
+  "completed_jobs": 3,
+  "completed_trials": 3,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 3,
+  "expected_trials": 3,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:9c7a7f5607876ecb3c213ca3633b626aea7a39d7045cb1315b9352f82138c25d",
+      "hypothesis": "On a substantial TypeScript feature, Studio Moser Lite preserves or improves tested correctness and final code quality while reducing avoidable orchestration time and tokens; rubric-routed child work should make any added cost visible in whole-tree accounting.",
+      "rerun_reason": null,
+      "summary": "Replace the prior Studio Moser harness with the Lite direct-by-default design while retaining normal task-matched skills, personality guidance, and model-rubric routing."
+    },
+    "code_review": {
+      "evaluation_cost_usd": 8.673416,
+      "plan_id": "sha256:ca723c5a63634bbb4c72047abf7ff25e2ad17a3d11d8002d8b3a987b41d5d1cb",
+      "protocol_id": "sha256:4aff81b78039630eef63456679dc05a1fe71a365536985c19c898d0ae96ae99d",
+      "results_digest": "sha256:43d76c7778f5586c8522cbe8731f2460a2c214525480102ba3fc7dfa80319a7b",
+      "source_report_id": "sha256:120e8453d6b100235feb0e70725539ad243c1c38b24937efe818c4030ce2dbb9"
+    },
+    "comparison": {
+      "bootstrap": {
+        "draws": 20000,
+        "pair_count": 3,
+        "per_tail_probability": 0.004166666666666667,
+        "seed": "sha256:67c5188200ac5275b4b65a0f77f175e0a5450a7a97cccb283dba2dd105fc0854"
+      },
+      "contenders": [
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 5,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 3.155126,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:4aff81b78039630eef63456679dc05a1fe71a365536985c19c898d0ae96ae99d",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 1,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "nothing",
+          "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "label": "Nothing",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": 898.067048908,
+          "original_estimates": [
+            {
+              "cost_usd": 3.046074,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:441587addcf6dc6a8d5e9144aea131c560c3140c339595270cec2259dd2fb5fd"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "quill-shared-toolbar-focus": 0
+          },
+          "total_cost_usd": 3.046074,
+          "total_tokens": 1401885,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 3,
+              "P3": 1
+            },
+            "evaluation_cost_usd": 2.4381000000000004,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:4aff81b78039630eef63456679dc05a1fe71a365536985c19c898d0ae96ae99d",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 1,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+          "label": "Studio Moser \u2014 Lite direct-by-default",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": 870.6734533560002,
+          "original_estimates": [
+            {
+              "cost_usd": 4.841828,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:0f891eebf86e01a205935d816416da5a8cfc729b0565bce29933c7ae1c695f9a"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "quill-shared-toolbar-focus": 0
+          },
+          "total_cost_usd": 4.841828,
+          "total_tokens": 2726866,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 3,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 3.08019,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:4aff81b78039630eef63456679dc05a1fe71a365536985c19c898d0ae96ae99d",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 1,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "superpowers",
+          "id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "label": "Superpowers 6.3.0",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": 888.0131473220001,
+          "original_estimates": [
+            {
+              "cost_usd": 7.578208,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:73ff71872467ebd29024f52ef885a3a1ade1c9418ccd9466ffb2bf916a2941ce"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "quill-shared-toolbar-focus": 0
+          },
+          "total_cost_usd": 7.578208,
+          "total_tokens": 4628196,
+          "usage_complete": true
+        }
+      ],
+      "history": {
+        "hypothesis": "On a substantial TypeScript feature, Studio Moser Lite preserves or improves tested correctness and final code quality while reducing avoidable orchestration time and tokens; rubric-routed child work should make any added cost visible in whole-tree accounting.",
+        "predecessor_contenders": [],
+        "predecessor_ids": [],
+        "status": "first_version",
+        "summary": "No predecessor selected.",
+        "task_changes": []
+      },
+      "leaders": {
+        "observed_cost_ids": [],
+        "observed_time_ids": []
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "Intervals describe repetition variation within the selected fixed tasks; they do not cover model drift, provider load changes, new tasks, or broad software quality.",
+        "Three repetitions are the default minimum. Identical repetitions can yield narrow intervals without proving universal stability.",
+        "Historical time comparisons are observational; they do not establish causality.",
+        "The 10% advantage and noninferiority thresholds are product defaults, not research findings.",
+        "No clear change does not establish equivalence.",
+        "A completed code review records confirmed remaining defects; finding none does not prove the code is defect-free. Evaluation cost is separate from harness execution cost."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "left_report_id": null,
+          "right_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "left_report_id": null,
+          "right_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+          "left_report_id": null,
+          "right_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        }
+      ],
+      "policy_digest": "sha256:79ac6439a29ffbc0f4f08d0f508105a3144a95b176b256861443cf170ce17c54",
+      "policy_id": "development-comparison-v1",
+      "provisional": true,
+      "reasons": [
+        "code_review_defects",
+        "insufficient_task_coverage",
+        "insufficient_repetitions",
+        "incomplete_coverage",
+        "quality_ineligible",
+        "diagnostic_only",
+        "protected_state_unknown"
+      ],
+      "status": "insufficient_evidence",
+      "summary": "Selected evidence is insufficient for a recommendation.",
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:11c35401cdf05c1783254dabae35b26c8defcb1a09fbb7e2b432a2d21009e2b2",
+      "attempts": 1,
+      "authority_digest": "sha256:bd4fc09cf08e3dc38f8591756607b21672daa2e06d6151f9f1cc3918a968e276",
+      "concurrency": 1,
+      "decision_policy": "development-comparison-v1",
+      "evaluator_digest": "sha256:c74dba178792c9daacd8a002814553b18eb28288eed552fb9e4d0a6565a0f5a8",
+      "executor_inventory": [
+        {
+          "effort": "high",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "quill-shared-toolbar-focus:agent": "sha256:17c655b12c31b6c16d45b2d4b0aceebfc2b972ab1b86b708f4c86a81c4c402df",
+        "quill-shared-toolbar-focus:verifier": "sha256:f1893c441fd918238378ff6fef42173d1ba4813af626e7c2f856aed4de42d578"
+      },
+      "kickoff": {
+        "effort": "high",
+        "model": "gpt-6-astra",
+        "provider": "codex",
+        "runtime_version": "0.153.4"
+      },
+      "provider_recovery_seconds": 600,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:92f2490cb9b156cf9f95037225a02296e6f17224e34c7c9bb33c6ee8c1a64fe3",
+      "task_digests": {
+        "quill-shared-toolbar-focus": "sha256:3353c25c1bc9b0e984e35bf9cde0ed34b0ff3c31f1ce021013fd3b11962904f6"
+      },
+      "task_ids": [
+        "quill-shared-toolbar-focus"
+      ],
+      "task_variant": "deepswe",
+      "timeout_seconds": 3600
+    },
+    "contenders": [
+      {
+        "family": "nothing",
+        "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Nothing",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "superpowers",
+        "id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "inventory_digest": "sha256:a20271abbad23875b570a7b86b351cb7fac7460e3f1475a92a3e842e49572ae9",
+        "label": "Superpowers 6.3.0",
+        "rubric_digest": null,
+        "source_commits": [
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser \u2014 Lite direct-by-default",
+        "rubric_digest": "sha256:e99803bcee0c8823be04ddcf01a3506e39076bd1ce11dfdc8c1c7c0543ea557b",
+        "source_commits": [
+          "3fb970f32d2901b82e3d17c35dbe192604fc7762",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "Studio Moser Lite \u2014 Quill shared-toolbar pilot",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:ce85a44d25d3854db1c27bc81118541bf9dde1561569e4a2ec29242b674eedc3",
+    "supersedes_report_id": "sha256:120e8453d6b100235feb0e70725539ad243c1c38b24937efe818c4030ce2dbb9",
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 3.155126,
+          "duration_seconds": 533.0,
+          "findings": [
+            {
+              "category": "correctness",
+              "evidence_digest": "sha256:d7d41058d16f8e5ffdf65e1442dd6a6b89689058a76c749363dcc0281c35b4d0",
+              "file": "packages/quill/src/modules/toolbar.ts",
+              "id": "F1",
+              "line": 81,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Detached initialization permanently removes toolbar membership"
+            },
+            {
+              "category": "correctness",
+              "evidence_digest": "sha256:eece5b1e4b55b8f903ae9bb88f8083f946f19b647ff5ed282b9781cb87160b1f",
+              "file": "packages/quill/src/modules/toolbar.ts",
+              "id": "F2",
+              "line": 121,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Unsupported controls retain the previous editor's active state"
+            },
+            {
+              "category": "correctness",
+              "evidence_digest": "sha256:8cb63c819c6e1f9bc4aa7afe423c91ac07fecd763665b7f3c465fa7736ac7ca3",
+              "file": "packages/quill/src/themes/bubble.ts",
+              "id": "F3",
+              "line": 149,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Switching from Bubble to Snow leaves the toolbar inside a hidden tooltip"
+            },
+            {
+              "category": "accessibility",
+              "evidence_digest": "sha256:88c389d0bcf4897cf1b634f9ddf069a2abeeffbc87e899040591c988f8556491",
+              "file": "packages/quill/src/themes/base.ts",
+              "id": "F4",
+              "line": 151,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Recreating a toolbar group loses existing picker update subscriptions"
+            },
+            {
+              "category": "correctness",
+              "evidence_digest": "sha256:d568415867b500aafca1eecdc30c8fed0e3725405df1699d1c21689b643ca557",
+              "file": "packages/quill/src/modules/toolbar.ts",
+              "id": "F5",
+              "line": 168,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Immediately inserted buttons act on stale formatting state"
+            }
+          ],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 625664,
+              "cache_write_tokens": 0,
+              "input_tokens": 111166,
+              "model": "gpt-6-astra",
+              "output_tokens": 9304,
+              "provider": "openai"
+            },
+            {
+              "cache_read_tokens": 228992,
+              "cache_write_tokens": 0,
+              "input_tokens": 44736,
+              "model": "gpt-6-astra",
+              "output_tokens": 5525,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+          "protocol_id": "sha256:4aff81b78039630eef63456679dc05a1fe71a365536985c19c898d0ae96ae99d",
+          "status": "completed",
+          "target_digest": "sha256:7d68bf3caac6afec778fa38824b0098a916e7e691a7ec7993fc37aff970186ab",
+          "usage_complete": true
+        },
+        "contender_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "correctness": true,
+        "cost_usd": 3.046074,
+        "duration_seconds": 898.067048908,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 1311104,
+            "cache_write_tokens": 0,
+            "input_tokens": 70102,
+            "model": "gpt-6-astra",
+            "output_tokens": 20679,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": null,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 1311104,
+            "cache_write_tokens": 0,
+            "effort": "high",
+            "input_tokens": 70102,
+            "model": "gpt-6-astra",
+            "output_tokens": 20679,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "quill-shared-toolbar-focus",
+        "trial_id": "sha256:441587addcf6dc6a8d5e9144aea131c560c3140c339595270cec2259dd2fb5fd",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 1,
+        "code_review": {
+          "cost_usd": 3.08019,
+          "duration_seconds": 519.0,
+          "findings": [
+            {
+              "category": "correctness",
+              "evidence_digest": "sha256:9f257c441e5736bf2c1e58bb7e9aacc6444257caaee9b9e1376c3a01b671cf83",
+              "file": "packages/quill/src/modules/toolbar.ts",
+              "id": "F1",
+              "line": 351,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Preserve custom controls unrelated to Quill formats"
+            },
+            {
+              "category": "correctness",
+              "evidence_digest": "sha256:30dfd05a95475351e3c5d49af07ff20c749fd26d986c8d904ed2fce985a604f3",
+              "file": "packages/quill/src/modules/toolbar.ts",
+              "id": "F2",
+              "line": 266,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Preserve the alignment picker's default during initialization"
+            },
+            {
+              "category": "correctness",
+              "evidence_digest": "sha256:bf298d63a4aa10529b7168a12f8697c28a2e8a1abccd619f60fbbcc40e9e6ebc",
+              "file": "packages/quill/src/themes/bubble.ts",
+              "id": "F3",
+              "line": 140,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Restore Bubble toolbar visibility when re-enabling its editor"
+            }
+          ],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 939520,
+              "cache_write_tokens": 0,
+              "input_tokens": 71311,
+              "model": "gpt-6-astra",
+              "output_tokens": 8976,
+              "provider": "openai"
+            },
+            {
+              "cache_read_tokens": 300160,
+              "cache_write_tokens": 0,
+              "input_tokens": 42935,
+              "model": "gpt-6-astra",
+              "output_tokens": 4985,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+          "protocol_id": "sha256:4aff81b78039630eef63456679dc05a1fe71a365536985c19c898d0ae96ae99d",
+          "status": "completed",
+          "target_digest": "sha256:721bf7a571cff4e45b6e0d5e910f13880e1b3cf357aea3ce78d5b242f1dcb340",
+          "usage_complete": true
+        },
+        "contender_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "correctness": true,
+        "cost_usd": 7.578208,
+        "duration_seconds": 888.0131473220001,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 4432128,
+            "cache_write_tokens": 0,
+            "input_tokens": 166433,
+            "model": "gpt-6-astra",
+            "output_tokens": 29635,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": null,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 3821440,
+            "cache_write_tokens": 0,
+            "effort": "high",
+            "input_tokens": 121118,
+            "model": "gpt-6-astra",
+            "output_tokens": 24007,
+            "provider": "openai",
+            "session": "root"
+          },
+          {
+            "cache_read_tokens": 610688,
+            "cache_write_tokens": 0,
+            "effort": "high",
+            "input_tokens": 45315,
+            "model": "gpt-6-astra",
+            "output_tokens": 5628,
+            "provider": "openai",
+            "session": "child_1"
+          }
+        ],
+        "status": "completed",
+        "task_id": "quill-shared-toolbar-focus",
+        "trial_id": "sha256:73ff71872467ebd29024f52ef885a3a1ade1c9418ccd9466ffb2bf916a2941ce",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 2.4381000000000004,
+          "duration_seconds": 462.0,
+          "findings": [
+            {
+              "category": "correctness",
+              "evidence_digest": "sha256:70bb5d0406aaa5c9ceefd19dc421692d3f873598159bffa54019f17d35182d65",
+              "file": "packages/quill/src/modules/toolbar.ts",
+              "id": "F1",
+              "line": 289,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Detached initialization permanently unregisters the toolbar"
+            },
+            {
+              "category": "correctness",
+              "evidence_digest": "sha256:8c34f192863ba91776bb9ec8f35b9ae78a776ee8918bb8b78b352137d2d14d50",
+              "file": "packages/quill/src/modules/toolbar.ts",
+              "id": "F2",
+              "line": 330,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Switching format registries leaves stale active controls"
+            },
+            {
+              "category": "accessibility",
+              "evidence_digest": "sha256:a0db72829e78b3bf10222f0a48bd2f3ee8a92598423dcd763b0652ccb3d7d9d1",
+              "file": "packages/quill/src/modules/toolbar.ts",
+              "id": "F3",
+              "line": 338,
+              "severity": "P2",
+              "status": "confirmed",
+              "title": "Removing the last themed editor strands reused picker state"
+            },
+            {
+              "category": "correctness",
+              "evidence_digest": "sha256:60f1534d573e01caad8a1bf0300dd7c368673d007d14cb74d7bce4b10884bbc1",
+              "file": "packages/quill/src/modules/toolbar.ts",
+              "id": "F4",
+              "line": 265,
+              "severity": "P3",
+              "status": "confirmed",
+              "title": "Initial synchronization loses the alignment picker's fallback icon"
+            }
+          ],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 597376,
+              "cache_write_tokens": 0,
+              "input_tokens": 60322,
+              "model": "gpt-6-astra",
+              "output_tokens": 8070,
+              "provider": "openai"
+            },
+            {
+              "cache_read_tokens": 185984,
+              "cache_write_tokens": 0,
+              "input_tokens": 43482,
+              "model": "gpt-6-astra",
+              "output_tokens": 4264,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+          "protocol_id": "sha256:4aff81b78039630eef63456679dc05a1fe71a365536985c19c898d0ae96ae99d",
+          "status": "completed",
+          "target_digest": "sha256:62fc3e86cb6ff3775b85bab20ed020b83b6c0e5d4fe54218907e478297d164e4",
+          "usage_complete": true
+        },
+        "contender_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+        "correctness": true,
+        "cost_usd": 4.841828,
+        "duration_seconds": 870.6734533560002,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 2601088,
+            "cache_write_tokens": 0,
+            "input_tokens": 101204,
+            "model": "gpt-6-astra",
+            "output_tokens": 24574,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": null,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 2601088,
+            "cache_write_tokens": 0,
+            "effort": "high",
+            "input_tokens": 101204,
+            "model": "gpt-6-astra",
+            "output_tokens": 24574,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "quill-shared-toolbar-focus",
+        "trial_id": "sha256:0f891eebf86e01a205935d816416da5a8cfc729b0565bce29933c7ae1c695f9a",
+        "usage_complete": true
+      }
+    ]
+  },
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-10T21:07:09.958812Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V6b0b5c24b83e9a5f",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 3.0460739999999995,
+        "cached_tokens": 1311104,
+        "completion_tokens": 20679,
+        "prompt_tokens": 1381206
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-10T20:35:41.280323Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-3ad57f9d1d5d89660012-r1-codex-V6b0b5c24b83e9a5f-baseline-quill-shared-toolbar-focus",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 953.945461,
+      "series_key": "sha256:419ff896ad0c4715726f0ee0256a4d7e18fc5cb40d028cd97c08c9451e9641de",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-10T20:19:47.334862Z",
+      "status": "completed",
+      "task": "quill-shared-toolbar-focus",
+      "task_digest": "sha256:3353c25c1bc9b0e984e35bf9cde0ed34b0ff3c31f1ce021013fd3b11962904f6",
+      "task_pack": "research"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "Vffcf688e90c42843",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 1.3452380000000002,
+        "cached_tokens": 610688,
+        "completion_tokens": 5628,
+        "prompt_tokens": 656003
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-10T20:51:28.218106Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-3ad57f9d1d5d89660012-r1-codex-Vffcf688e90c42843-baseline-quill-shared-toolbar-focus",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 945.696406,
+      "series_key": "sha256:b2aab41f946be1b431bf9147f6b31a02f6fe26b9889e92d719722cd98d5a1ee1",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-10T20:35:42.521700Z",
+      "status": "completed",
+      "task": "quill-shared-toolbar-focus",
+      "task_digest": "sha256:3353c25c1bc9b0e984e35bf9cde0ed34b0ff3c31f1ce021013fd3b11962904f6",
+      "task_pack": "research"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V7567e595abce3b09",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 4.841828000000001,
+        "cached_tokens": 2601088,
+        "completion_tokens": 24574,
+        "prompt_tokens": 2702292
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-10T21:07:09.958812Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-3ad57f9d1d5d89660012-r1-codex-V7567e595abce3b09-candidate-quill-shared-toolbar-focus",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 940.542,
+      "series_key": "sha256:e679b4f59494296bbbd11ee415896c5eac49aedabbcbf95fdf2c7a4559029c43",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-10T20:51:29.416812Z",
+      "status": "completed",
+      "task": "quill-shared-toolbar-focus",
+      "task_digest": "sha256:3353c25c1bc9b0e984e35bf9cde0ed34b0ff3c31f1ce021013fd3b11962904f6",
+      "task_pack": "research"
+    }
+  ],
+  "manifest_digest": "sha256:8738719f0e8e9e0a2ea755d702af12a809e760684ae61ce8cc6e54486f1bc7d0",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 15.46611,
+  "pending_jobs": 0,
+  "profile": "research",
+  "report_id": "sha256:b762f9a6afbc5afa2c410564a92c380230e1f4fe43dd72c229d5390dbab63677",
+  "run_id": "run-3ad57f9d1d5d89660012",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-10T20:19:44.518656Z",
+  "status": "completed",
+  "updated_at": "2026-09-10T21:37:16.624815Z"
+}
