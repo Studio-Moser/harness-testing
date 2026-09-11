@@ -2,6 +2,7 @@
   "schema_version": "1",
   "label": "Next Studio Moser version",
   "purpose": "candidate",
+  "skill_evaluation": null,
   "contenders": [
     {
       "family": "studio-moser",

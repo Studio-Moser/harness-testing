@@ -2,6 +2,7 @@
   "schema_version": "1",
   "label": "First GPT-6 Astra harness comparison",
   "purpose": "baseline",
+  "skill_evaluation": null,
   "contenders": [
     {
       "family": "nothing",
