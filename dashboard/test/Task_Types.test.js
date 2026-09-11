@@ -48,6 +48,7 @@ test("maps frozen workflow and Quill tasks to their declared types", () => {
   assert.deepEqual(TASK_TYPES.map(({id}) => id), ["polish", "small", "grouped", "feature"]);
   assert.equal(taskType("react-accent-polish"), "polish");
   assert.equal(taskType("react-active-badge-count"), "small");
+  assert.equal(taskType("react-bulk-dashboard-updates"), "grouped");
   assert.equal(taskType("react-grouped-ui-updates"), "grouped");
   assert.equal(taskType("react-saved-view-feature"), "feature");
   assert.equal(taskType("rust-quoted-value-parser"), "small");

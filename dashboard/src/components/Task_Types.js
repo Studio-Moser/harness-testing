@@ -1,6 +1,7 @@
 const TASK_TYPE_IDS = {
   "react-accent-polish": "polish",
   "react-active-badge-count": "small",
+  "react-bulk-dashboard-updates": "grouped",
   "react-grouped-ui-updates": "grouped",
   "react-saved-view-feature": "feature",
   "rust-quoted-value-parser": "small",

@@ -32,7 +32,7 @@ def test_all_existing_comparison_tasks_have_frozen_valid_user_policy():
 
     root = Path(__file__).parents[2]
     tasks = list((root / "tasks/workflow").glob("*/task.toml"))
-    assert len(tasks) == 9
+    assert len(tasks) == 10
     for task in tasks:
         assert (task.parent / "Comparison Instruction.md").read_text().strip()
         validate_policy(json.loads((task.parent / "Scripted User.json").read_text()))

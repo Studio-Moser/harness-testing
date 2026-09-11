@@ -1,0 +1,36 @@
+{
+  "schema_version": "1",
+  "interaction_limit": 12,
+  "facts": {
+    "workspace": "Work in /app.",
+    "task": "Use the Harness `bulk` route for implementation. This task intentionally fixes the semantic route so the active model rubric, rather than the root agent's classification judgment, selects the child model.\n\nWork in `/app` and complete these dashboard updates:\n\n- Change `--accent` from `#2563eb` to `#6d28d9`.\n- Set the empty-state heading to `No projects yet`.\n- Change `--card-gap` from `20px` to `12px`.\n\nKeep edits limited to the requested source values.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n",
+    "authority": "Proceed with the original local development task within its stated scope. No additional spending, external publication, messages, or authority is approved.",
+    "handoff": "Keep the branch and workspace as-is. Do not merge, push, publish, discard changes, or remove the worktree. Report the local handoff and stop."
+  },
+  "rules": [
+    {
+      "id": "workspace",
+      "kind": "clarification",
+      "pattern": "(?:Where should I (?:work|make (?:the|these) changes)|What (?:is the )?working directory should I use)\\?",
+      "fact": "workspace"
+    },
+    {
+      "id": "task-scope",
+      "kind": "clarification",
+      "pattern": "(?:What (?:is|are) the (?:task|requirements)|What should I (?:build|change))\\?",
+      "fact": "task"
+    },
+    {
+      "id": "routine-plan",
+      "kind": "approval",
+      "matcher": "local-development-approval",
+      "fact": "authority"
+    },
+    {
+      "id": "local-handoff",
+      "kind": "clarification",
+      "matcher": "local-branch-handoff",
+      "fact": "handoff"
+    }
+  ]
+}

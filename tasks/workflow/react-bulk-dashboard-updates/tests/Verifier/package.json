@@ -1,0 +1,13 @@
+{
+  "name": "react-grouped-ui-updates-verifier",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "@vitejs/plugin-react": "6.1.0",
+    "happy-dom": "20.11.13",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
+  }
+}
