@@ -1,0 +1,716 @@
+{
+  "admission_estimate_usd": 12.0,
+  "completed_jobs": 2,
+  "completed_trials": 2,
+  "evidence": {
+    "limitations": [
+      "failed-run"
+    ],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 2,
+  "expected_trials": 2,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:89be3b49d1f2ee0a3f5f9192485250b1b58eb65a135ab68fa5854ffc751cd646",
+      "hypothesis": "The researched rubric selects a cheaper appropriate child model without reducing verified task success relative to a Sol-medium child.",
+      "rerun_reason": null,
+      "summary": "Compare researched child routing against a flat Sol-medium control under an explicit Harness execution request."
+    },
+    "comparison": {
+      "bootstrap": {
+        "draws": 20000,
+        "pair_count": 1,
+        "per_tail_probability": 0.0125,
+        "seed": "sha256:64fb2cd82c59c036ff3695dc72df9e74808016b2f6c400dafb9fcd17f2b9ea3d"
+      },
+      "contenders": [
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 1,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.570048,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:16d4a50291b08b3458ec1b790a6e8001a6f961657b507767e545d09fab200961",
+          "label": "Studio Moser Lite \u2014 researched rubric",
+          "mean_cost_usd": 0.570048,
+          "mean_duration_seconds": 136.683244687,
+          "original_estimates": [
+            {
+              "cost_usd": 0.570048,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:ba90e498c26f086acf52b97c926c5668461d1fd48cf29d0618583552bbb64933"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-saved-view-feature": 1
+          },
+          "total_cost_usd": 0.570048,
+          "total_tokens": 460060,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 1,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:fdc60c9ab8de55ddc768687d7f792a3c212fe79e1e5b4eec63dc4c28fa3e7f4b",
+          "label": "Studio Moser Lite \u2014 flat Sol-medium rubric",
+          "mean_cost_usd": 0.2245376,
+          "mean_duration_seconds": 77.72817399499999,
+          "original_estimates": [
+            {
+              "cost_usd": 0.2245376,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:dcb74d8a87938a69f6c6884f7caa9abd21dfd4d86dea82636ba2f93618d44d4e"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "react-saved-view-feature": 0
+          },
+          "total_cost_usd": 0.2245376,
+          "total_tokens": 180136,
+          "usage_complete": true
+        }
+      ],
+      "history": {
+        "hypothesis": "The researched rubric selects a cheaper appropriate child model without reducing verified task success relative to a Sol-medium child.",
+        "predecessor_contenders": [],
+        "predecessor_ids": [],
+        "status": "first_version",
+        "summary": "No predecessor selected.",
+        "task_changes": []
+      },
+      "leaders": {
+        "observed_cost_ids": [],
+        "observed_time_ids": []
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "Intervals describe repetition variation within the selected fixed tasks; they do not cover model drift, provider load changes, new tasks, or broad software quality.",
+        "Three repetitions are the default minimum. Identical repetitions can yield narrow intervals without proving universal stability.",
+        "Historical time comparisons are observational; they do not establish causality.",
+        "The 10% advantage and noninferiority thresholds are product defaults, not research findings.",
+        "No clear change does not establish equivalence.",
+        "A completed code review records confirmed remaining defects; finding none does not prove the code is defect-free. Evaluation cost is separate from harness execution cost."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": 0.3455104,
+          "cost_ratio": {
+            "estimate": 2.5387641089955535,
+            "lower": 2.5387641089955535,
+            "upper": 2.5387641089955535
+          },
+          "left_id": "sha256:16d4a50291b08b3458ec1b790a6e8001a6f961657b507767e545d09fab200961",
+          "left_report_id": null,
+          "right_id": "sha256:fdc60c9ab8de55ddc768687d7f792a3c212fe79e1e5b4eec63dc4c28fa3e7f4b",
+          "right_report_id": null,
+          "time_difference_seconds": 58.95507069200002,
+          "time_ratio": {
+            "estimate": 1.758477494862962,
+            "lower": 1.758477494862962,
+            "upper": 1.758477494862962
+          }
+        }
+      ],
+      "policy_digest": "sha256:79ac6439a29ffbc0f4f08d0f508105a3144a95b176b256861443cf170ce17c54",
+      "policy_id": "development-comparison-v1",
+      "provisional": true,
+      "reasons": [
+        "code_review_incomplete",
+        "insufficient_task_coverage",
+        "insufficient_repetitions",
+        "quality_ineligible",
+        "diagnostic_only"
+      ],
+      "status": "insufficient_evidence",
+      "summary": "Selected evidence is insufficient for a recommendation.",
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:3c2f6b2b856557d342427a79b24f9c29405c083858f96661537772950aed0391",
+      "attempts": 1,
+      "authority_digest": "sha256:feee736c04966681041eb4737fde7525b539c8a37140f46b90fc9a577843e53a",
+      "concurrency": 1,
+      "decision_policy": "development-comparison-v1",
+      "evaluator_digest": "sha256:cd86223992efee37189b417796989d6098e4d7ee0c38fba33150a9e96ba2ea9c",
+      "executor_inventory": [
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "node": "sha256:785504f71062e4e64e9e456da55f70b022aaa528a6ef316231ad7101ad019357",
+        "verifier": "sha256:c927bb64070139339c656a98c5bc6b6f88ed78990c0f727bcc934aea2d29f598"
+      },
+      "kickoff": {
+        "effort": "medium",
+        "model": "gpt-5.6-sol",
+        "provider": "codex",
+        "runtime_version": "0.153.4"
+      },
+      "provider_recovery_seconds": 600,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:38c9f646f37f8929d01cb88e29e46347cc96f5e812b4a4219bff327dee65309b",
+      "task_digests": {
+        "react-saved-view-feature": "sha256:595db7aa93cf41df29ea630fd3eaa717e7615018e8b09aece59307e52319f2b3"
+      },
+      "task_ids": [
+        "react-saved-view-feature"
+      ],
+      "task_variant": "comparison",
+      "timeout_seconds": 1800
+    },
+    "contenders": [
+      {
+        "family": "studio-moser",
+        "id": "sha256:16d4a50291b08b3458ec1b790a6e8001a6f961657b507767e545d09fab200961",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser Lite \u2014 researched rubric",
+        "rubric_digest": "sha256:c0195dc8cc731e0c47d738db285ec373e83f8857555cb199f6ff5899076a738f",
+        "source_commits": [
+          "3fb970f32d2901b82e3d17c35dbe192604fc7762",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:fdc60c9ab8de55ddc768687d7f792a3c212fe79e1e5b4eec63dc4c28fa3e7f4b",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser Lite \u2014 flat Sol-medium rubric",
+        "rubric_digest": "sha256:d507493d6d41b17d145d62fee43c9840b3bfb718b32379fe3d9807104f3a1619",
+        "source_commits": [
+          "3fb970f32d2901b82e3d17c35dbe192604fc7762",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "Sol Medium \u2014 model rubric activation on saved-view feature",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:14441b51379d47a1bae57e01caef28ff7b00b5f59c28ebc34c68be050081a793",
+    "supersedes_report_id": null,
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 1,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:f0c2409c187ca80e0b0671990e913a2a97f8cf91d4602763e098f666591d1645",
+          "metrics": {
+            "approval_request_count": 1,
+            "assistant_message_count": 4,
+            "assistant_tokens": 497,
+            "assistant_words": 293,
+            "average_progress_words": 44.667,
+            "average_update_gap_seconds": 43.604,
+            "bullet_count": 7,
+            "communication_to_model_output_ratio": 0.084798,
+            "final_answer_tokens": 307,
+            "final_answer_words": 159,
+            "formatting_density": 0.0717,
+            "heading_count": 0,
+            "maximum_progress_words": 45,
+            "maximum_update_gap_seconds": 74.414,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 3,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 599,
+            "total_visible_words": 363,
+            "unnecessary_approval_request_count": 1,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 0.333333,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 4
+              },
+              {
+                "detail": "Approval request exceeds scenario budget",
+                "kind": "unnecessary_approval_request",
+                "ordinal": 4
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "$harness:execute Work in `/app` and complete saved dashboard views for the `all`, `active`, and `archived` states. Persist the current view under `dashboard.saved-view`, restore it on reload, and fall back to `all` when storage is absent or invalid. Keep storage access behind the existing saved-view functions.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019m using `harness:execute` as requested. I\u2019m classifying this as a Small repository change: bounded dashboard state persistence with an existing storage seam and testable reload behavior. I\u2019ll resolve the Harness route, dispatch within `/app`, then independently reproduce the verification checks before accepting it.",
+              "elapsed_seconds": 5.811,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The route resolved to the primary `default` candidate (`gpt-5.6-sol`, medium effort) via the native child runtime. The checkout is clean, and the existing tests already define the required behavior; I\u2019m dispatching a fresh-context implementation constrained to `/app`, with project tests and configuration held unchanged.",
+              "elapsed_seconds": 36.52,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "The worker returned a one-file implementation and reports the full gate passing. I\u2019m now treating that as a claim: I\u2019ll inspect the exact diff, confirm protected files stayed untouched, record route health, and rerun the repository gate plus direct saved-view checks in the parent context.",
+              "elapsed_seconds": 110.934,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "Implemented saved dashboard views in [Saved_View.ts](/app/src/domain/Saved_View.ts). Valid views now restore correctly, invalid or absent values fall back to `all`, and selection persistence uses `dashboard.saved-view` through the existing storage functions.\n\n```yaml\nstatus: accepted\nroute:\n  requested: default\n  actual_model: gpt-5.6-sol\n  effort: medium\n  provider: openai\n  executor: native child\n  dispatch: delegated\n  resolution: primary\n  attempted:\n    - gpt-5.6-sol@medium\n  fallback_reason: \"\"\nartifacts:\n  files:\n    - src/domain/Saved_View.ts\n  report: \"\"\nevidence:\n  fixed_target: \"HEAD 5401759cf2ea9a015260f463ecf11453f2f967bc + working-tree diff SHA256 e8a8a1ddcb026f1f57a83c0a7a5102f7a7d6e3f1b7a7c4c1fba42ff9ca94bc0e\"\n  checks:\n    - \"npm run test:saved-view: 1 file passed, 5 tests passed\"\n    - \"npm test -- --run src/App.test.tsx: 1 file passed, 2 tests passed\"\n    - \"npm run gate: lint and typecheck passed; 3 test files passed, 8 tests passed\"\n    - \"git diff --check: passed\"\n    - \"Protected tests, metadata, build configuration, and scripts: unchanged\"\n  outcome: proven\ntelemetry:\n  attempts: 1\n  elapsed: \"\"\n  verification_failures: 0\n  token_or_quota_usage: \"\"\nshelby:\n  project_id: \"\"\n  run_id: \"\"\n  checkpoint_ids: []\nblockers: []\n```\n\nFinal gate output:\n\n```text\nTest Files  3 passed (3)\nTests       8 passed (8)\n```\n\nOnly `src/domain/Saved_View.ts` changed.",
+              "elapsed_seconds": 136.622,
+              "kind": "final",
+              "ordinal": 5,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:16d4a50291b08b3458ec1b790a6e8001a6f961657b507767e545d09fab200961",
+        "correctness": true,
+        "cost_usd": 0.570048,
+        "duration_seconds": 136.683244687,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 378880,
+            "cache_write_tokens": 0,
+            "input_tokens": 75319,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 5861,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 196608,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 39678,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 3826,
+            "provider": "openai",
+            "session": "root"
+          },
+          {
+            "cache_read_tokens": 182272,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 35641,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 2035,
+            "provider": "openai",
+            "session": "child_1"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:ba90e498c26f086acf52b97c926c5668461d1fd48cf29d0618583552bbb64933",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:f0c2409c187ca80e0b0671990e913a2a97f8cf91d4602763e098f666591d1645",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 4,
+            "assistant_tokens": 467,
+            "assistant_words": 300,
+            "average_progress_words": 50.0,
+            "average_update_gap_seconds": 23.935,
+            "bullet_count": 4,
+            "communication_to_model_output_ratio": 0.139071,
+            "final_answer_tokens": 272,
+            "final_answer_words": 150,
+            "formatting_density": 0.0533,
+            "heading_count": 0,
+            "maximum_progress_words": 59,
+            "maximum_update_gap_seconds": 42.168,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 3,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 569,
+            "total_visible_words": 370,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 3,
+            "useful_progress_update_rate": 1.0,
+            "violations": []
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "$harness:execute Work in `/app` and complete saved dashboard views for the `all`, `active`, and `archived` states. Persist the current view under `dashboard.saved-view`, restore it on reload, and fall back to `all` when storage is absent or invalid. Keep storage access behind the existing saved-view functions.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019m using `harness:execute` because you explicitly requested the managed execution route. I\u2019m classifying this as a Small change: bounded persistence/restore behavior with an existing test seam. I\u2019ll validate the Harness contract and routing first, then reproduce the implementation checks in `/app` before accepting the result.",
+              "elapsed_seconds": 5.875,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The baseline seam is clear: 4 of 8 tests fail, all at the existing saved-view boundary. The app already routes reads and writes through `loadSavedView` and `saveSavedView`, so the implementation can remain narrowly contained in that domain module without touching package or build configuration.",
+              "elapsed_seconds": 48.043,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Harness routing stopped before implementation: the configured rubric is internally invalid because `routing.independent` uses the same OpenAI provider as `routing.orchestrator`. The resolver fails closed on that inconsistency, even for this `bulk` request. The skill requires me not to bypass or alter the frozen rubric, so I\u2019m confirming the repository remained unchanged and returning the required blocked result.",
+              "elapsed_seconds": 70.066,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "Implementation is blocked before dispatch because the frozen Harness rubric is invalid: `routing.independent` selects the same provider as `routing.orchestrator`. Harness requires fail-closed routing and forbids bypassing or modifying that rubric without authorization.\n\n```yaml\nstatus: blocked\nroute:\n  requested: bulk\n  actual_model: \"\"\n  effort: \"\"\n  provider: \"\"\n  executor: \"\"\n  dispatch: \"\"\n  resolution: \"\"\n  attempted: []\n  fallback_reason: \"\"\nartifacts:\n  files: []\n  report: \"\"\nevidence:\n  fixed_target: \"\"\n  checks:\n    - command: npm test\n      result: \"Failed: 4 tests failed, 4 passed\"\n    - command: resolve-route.py select\n      result: \"Blocked: independent candidate gpt-5.6-sol@medium uses the orchestrator provider\"\n    - command: git status --short --branch && git diff --check\n      result: \"Repository unchanged on main; diff check clean\"\n  outcome: unproven\ntelemetry:\n  attempts: 0\n  elapsed: \"\"\n  verification_failures: 0\n  token_or_quota_usage: \"\"\nshelby:\n  project_id: \"\"\n  run_id: \"\"\n  checkpoint_ids: []\nblockers:\n  - \"The frozen model rubric assigns both orchestrator and independent routing to the OpenAI provider.\"\n```\n\nNo files, tests, package metadata, or configuration were changed. The rubric must be corrected or explicit authority granted to update it before this Harness execution can proceed.",
+              "elapsed_seconds": 77.68,
+              "kind": "final",
+              "ordinal": 5,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:fdc60c9ab8de55ddc768687d7f792a3c212fe79e1e5b4eec63dc4c28fa3e7f4b",
+        "correctness": false,
+        "cost_usd": 0.2245376,
+        "duration_seconds": 77.72817399499999,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 152704,
+            "cache_write_tokens": 0,
+            "input_tokens": 24074,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 3358,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 152704,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 24074,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 3358,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:dcb74d8a87938a69f6c6884f7caa9abd21dfd4d86dea82636ba2f93618d44d4e",
+        "usage_complete": true
+      }
+    ]
+  },
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-11T15:33:15.878602Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V16d4a50291b08b34",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.2561728,
+        "cached_tokens": 182272,
+        "completion_tokens": 2035,
+        "prompt_tokens": 217913
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-11T15:31:27.634556Z",
+      "harness_commit": null,
+      "model": "gpt-5.6-sol",
+      "name": "run-a748984f60598f17740b-r1-codex-V16d4a50291b08b34-candidate-react-saved-view-feature",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 168.191842,
+      "series_key": "sha256:e3a58c7773bafc12851378e0027c263e439d753bc5702410f1e255ac51691e16",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-11T15:28:39.442714Z",
+      "status": "completed",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:595db7aa93cf41df29ea630fd3eaa717e7615018e8b09aece59307e52319f2b3",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "Vfdc60c9ab8de55dd",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.2245376,
+        "cached_tokens": 152704,
+        "completion_tokens": 3358,
+        "prompt_tokens": 176778
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-11T15:33:15.878602Z",
+      "harness_commit": null,
+      "model": "gpt-5.6-sol",
+      "name": "run-a748984f60598f17740b-r1-codex-Vfdc60c9ab8de55dd-candidate-react-saved-view-feature",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 106.983793,
+      "series_key": "sha256:f68f69c5eaeb3ba20a7567e8a98c8af4aa246fa68ceba43857bc750ddba21f05",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-11T15:31:28.894809Z",
+      "status": "completed",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:595db7aa93cf41df29ea630fd3eaa717e7615018e8b09aece59307e52319f2b3",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:a2a419b144f71aeb3890f306597f1ca24cffc38a251a0d7d048e368e92297a68",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 0.7945856,
+  "pending_jobs": 0,
+  "profile": "calibration",
+  "report_id": "sha256:4913d6a08599283f3a27f96166f9b549ed0f566e660141851321f5a69b18b866",
+  "run_id": "run-a748984f60598f17740b",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-11T15:28:37.715511Z",
+  "status": "failed",
+  "updated_at": "2026-09-11T15:33:16.967627Z"
+}
