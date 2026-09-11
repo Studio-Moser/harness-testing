@@ -1,0 +1,598 @@
+{
+  "admission_estimate_usd": 12.0,
+  "completed_jobs": 2,
+  "completed_trials": 2,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 2,
+  "expected_trials": 2,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:1cafcd234c8b1b3fea9945be84f71d204bf8815fc010efd0644413d59050fc16",
+      "hypothesis": "The researched rubric still routes bulk work to Terra high and retains its cost advantage while both contenders now produce an observable passing final-gate workflow score.",
+      "rerun_reason": "The predecessor exposed a Harness acceptance-instruction defect: one parent omitted the required final gate and the other bundled it into a command whose individual status was unprovable.",
+      "summary": "Require the accepting parent to run the command-based verification seam in a dedicated tool call with an attributable exit status."
+    },
+    "comparison": {
+      "bootstrap": null,
+      "contenders": [],
+      "history": {
+        "hypothesis": "The researched rubric still routes bulk work to Terra high and retains its cost advantage while both contenders now produce an observable passing final-gate workflow score.",
+        "predecessor_contenders": [],
+        "predecessor_ids": [],
+        "status": "first_version",
+        "summary": "No predecessor selected.",
+        "task_changes": []
+      },
+      "leaders": {
+        "observed_cost_ids": [],
+        "observed_time_ids": []
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "Intervals describe repetition variation within the selected fixed tasks; they do not cover model drift, provider load changes, new tasks, or broad software quality.",
+        "Three repetitions are the default minimum. Identical repetitions can yield narrow intervals without proving universal stability.",
+        "Historical time comparisons are observational; they do not establish causality.",
+        "The 10% advantage and noninferiority thresholds are product defaults, not research findings.",
+        "No clear change does not establish equivalence.",
+        "A completed code review records confirmed remaining defects; finding none does not prove the code is defect-free. Evaluation cost is separate from harness execution cost."
+      ],
+      "pairs": [],
+      "policy_digest": "sha256:79ac6439a29ffbc0f4f08d0f508105a3144a95b176b256861443cf170ce17c54",
+      "policy_id": "development-comparison-v1",
+      "provisional": true,
+      "reasons": [
+        "non_neutral_tasks"
+      ],
+      "status": "incompatible_conditions",
+      "summary": "Neutral comparison tasks are required.",
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:879e2fae3c68c11869d50012e081d3fcd60258d8d3c4e3b2ee203fcddac5f0c5",
+      "attempts": 1,
+      "authority_digest": "sha256:feee736c04966681041eb4737fde7525b539c8a37140f46b90fc9a577843e53a",
+      "concurrency": 1,
+      "decision_policy": "development-comparison-v1",
+      "evaluator_digest": "sha256:d6910ad23bd21fcdbd7f230b5afe3b99da952c3a953cb17f0ffda2c7cc22d93c",
+      "executor_inventory": [
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "node": "sha256:785504f71062e4e64e9e456da55f70b022aaa528a6ef316231ad7101ad019357",
+        "verifier": "sha256:c927bb64070139339c656a98c5bc6b6f88ed78990c0f727bcc934aea2d29f598"
+      },
+      "kickoff": {
+        "effort": "medium",
+        "model": "gpt-5.6-sol",
+        "provider": "codex",
+        "runtime_version": "0.153.4"
+      },
+      "provider_recovery_seconds": 600,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:1e85d8f77026e39c75556d39c0a154f0f7b94c0945cbc05e9fbb421cd6d66492",
+      "task_digests": {
+        "react-bulk-dashboard-updates": "sha256:aec6ba82935da9477a171322def0a366f070b85736ebedde64617b0c32270ef7"
+      },
+      "task_ids": [
+        "react-bulk-dashboard-updates"
+      ],
+      "task_variant": "comparison",
+      "timeout_seconds": 1800
+    },
+    "contenders": [
+      {
+        "family": "studio-moser",
+        "id": "sha256:e352ed89a8db2ad38f4fc6f2809c635c665c2b0b1375148a41a41565eccd9da0",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser Lite \u2014 researched rubric",
+        "rubric_digest": "sha256:c0195dc8cc731e0c47d738db285ec373e83f8857555cb199f6ff5899076a738f",
+        "source_commits": [
+          "46a34b634b00c7498055b7cf156a935d2cb0c07f",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:0242cfe530d185dddfde189ad94b23b2bb9e694fba28e48d7ad2bb510fa1d98a",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser Lite \u2014 flat Sol-medium rubric",
+        "rubric_digest": "sha256:868170bf3a3ce6c6dd1cebbb8b8484bf243ddcb24982e70d0cb83a281e81374c",
+        "source_commits": [
+          "46a34b634b00c7498055b7cf156a935d2cb0c07f",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "Sol Medium \u2014 bulk-route rubric value with observable gate",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:f5d287ee0903cbc0835433f31d2c881d3748d16f436008dd098c1ce34717626d",
+    "supersedes_report_id": null,
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 1,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 160,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 3,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_grouped",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:8696c1e233cfac7fc8335500a7fe04fd3d60869662ad4ebb07af8b92d033d9bd",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 5,
+            "assistant_tokens": 484,
+            "assistant_words": 287,
+            "average_progress_words": 41.0,
+            "average_update_gap_seconds": 34.9,
+            "bullet_count": 12,
+            "communication_to_model_output_ratio": 0.08282,
+            "final_answer_tokens": 261,
+            "final_answer_words": 123,
+            "formatting_density": 0.0906,
+            "heading_count": 0,
+            "maximum_progress_words": 53,
+            "maximum_update_gap_seconds": 54.105,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 4,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 625,
+            "total_visible_words": 378,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 4,
+            "useful_progress_update_rate": 1.0,
+            "violations": [
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 5
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "$harness:execute Use the Harness `bulk` route for implementation. This task intentionally fixes the semantic route so the active model rubric, rather than the root agent's classification judgment, selects the child model.\n\nWork in `/app` and complete these dashboard updates:\n\n- Change `--accent` from `#2563eb` to `#6d28d9`.\n- Set the empty-state heading to `No projects yet`.\n- Change `--card-gap` from `20px` to `12px`.\n\nKeep edits limited to the requested source values.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019m using the Harness Execute workflow because you fixed the semantic route to `bulk`. I\u2019m classifying this as a Polish change, validating the Harness request and route first, then I\u2019ll reproduce the verification seam in the parent before accepting it.",
+              "elapsed_seconds": 5.96,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The request is valid and tightly bounded: only `src/index.css` and `src/App.tsx` need writes, with the existing tests/check scripts serving as the verification seam. The checkout is clean on `main`; per the repo\u2019s Polish rules, I\u2019m keeping this as an uncommitted source-only edit rather than adding branch/commit ceremony.",
+              "elapsed_seconds": 26.486,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Harness resolved `bulk` to `gpt-5.6-sol@medium` on the native executor, with delegated dispatch. I\u2019m now sending the bounded fresh-context handoff; its write ceiling is only the two requested source files, and it may not alter tests or configuration.",
+              "elapsed_seconds": 62.211,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "The worker reports the three substitutions and passing tests. I\u2019m treating that as a claim until I independently inspect the changed paths and rerun the repository gate against the returned working tree.",
+              "elapsed_seconds": 116.316,
+              "kind": "progress",
+              "ordinal": 5,
+              "role": "assistant"
+            },
+            {
+              "content": "Implemented the three requested source-only changes:\n\n- `--accent: #6d28d9`\n- `--card-gap: 12px`\n- Heading: `No projects yet`\n\nHarness `bulk` routed implementation to `gpt-5.6-sol@medium`. No tests, package metadata, build configuration, or check scripts changed.\n\n```yaml\nstatus: accepted\nroute:\n  requested: bulk\n  actual_model: gpt-5.6-sol\n  effort: medium\n  provider: openai\n  executor: native child\n  dispatch: delegated\n  resolution: primary\n  attempted:\n    - gpt-5.6-sol@medium\n  fallback_reason: \"\"\nartifacts:\n  files:\n    - src/App.tsx\n    - src/index.css\n  report: \"\"\nevidence:\n  fixed_target:\n    src/index.css: 2f05dec310273eba59d0da7f0a00110f13b2314c8e78a4aa715de8e96df7711a\n    src/App.tsx: 922669fed14f0ed5b61b222a901b00e4dfd186e56705d191dd2778f3bfa1b1fb\n  checks:\n    - \"npm run gate: exit 0\"\n    - \"ESLint passed\"\n    - \"TypeScript typecheck passed\"\n    - \"Vitest: 1 file passed, 3 tests passed\"\n    - \"git diff --check passed\"\n    - \"git status lists only src/App.tsx and src/index.css\"\n  outcome: proven\ntelemetry:\n  attempts: 1\n  elapsed: \"\"\n  verification_failures: 0\n  token_or_quota_usage: \"\"\nshelby:\n  project_id: \"\"\n  run_id: \"\"\n  checkpoint_ids: []\nblockers: []\n```",
+              "elapsed_seconds": 145.561,
+              "kind": "final",
+              "ordinal": 6,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:0242cfe530d185dddfde189ad94b23b2bb9e694fba28e48d7ad2bb510fa1d98a",
+        "correctness": true,
+        "cost_usd": 0.6681248,
+        "duration_seconds": 145.717108733,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 611712,
+            "cache_write_tokens": 0,
+            "input_tokens": 76640,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 5844,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 459264,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 51817,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 4598,
+            "provider": "openai",
+            "session": "root"
+          },
+          {
+            "cache_read_tokens": 152448,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 24823,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 1246,
+            "provider": "openai",
+            "session": "child_1"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-bulk-dashboard-updates",
+        "trial_id": "sha256:b4e29ddc6246f161f0b3b0e4c5d75607ecc65eda2706d06237d7f9cc250aa309",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 1,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 160,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 3,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_grouped",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:8696c1e233cfac7fc8335500a7fe04fd3d60869662ad4ebb07af8b92d033d9bd",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 5,
+            "assistant_tokens": 465,
+            "assistant_words": 274,
+            "average_progress_words": 37.0,
+            "average_update_gap_seconds": 32.136,
+            "bullet_count": 10,
+            "communication_to_model_output_ratio": 0.082461,
+            "final_answer_tokens": 250,
+            "final_answer_words": 126,
+            "formatting_density": 0.0912,
+            "heading_count": 0,
+            "maximum_progress_words": 47,
+            "maximum_update_gap_seconds": 54.064,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 4,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 606,
+            "total_visible_words": 365,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 0.25,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 3
+              },
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 4
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 5
+              },
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 5
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "$harness:execute Use the Harness `bulk` route for implementation. This task intentionally fixes the semantic route so the active model rubric, rather than the root agent's classification judgment, selects the child model.\n\nWork in `/app` and complete these dashboard updates:\n\n- Change `--accent` from `#2563eb` to `#6d28d9`.\n- Set the empty-state heading to `No projects yet`.\n- Change `--card-gap` from `20px` to `12px`.\n\nKeep edits limited to the requested source values.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Change class: Small. I\u2019m using `harness:execute` because you fixed the semantic `bulk` route; I\u2019ll validate the bounded request, let the active rubric select the worker, then independently reproduce the verification seam in `/app`.",
+              "elapsed_seconds": 4.549,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The request is valid and narrowly scoped: only `src/index.css` and `src/App.tsx` may change, with no approvals or metadata/config writes. The stable seam is the repository\u2019s existing `npm run gate`, plus direct checks of the three requested source values and the resulting diff.",
+              "elapsed_seconds": 31.202,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "The `bulk` route resolved to `gpt-5.6-terra` at high effort via a native delegated worker, with no fallback. The worker now has an exact two-file write ceiling and cannot commit, push, or alter project configuration.",
+              "elapsed_seconds": 57.426,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "The worker\u2019s diff is correctly limited to three one-line replacements across the two authorized files; `git diff --check` is clean. I\u2019m now reproducing the repository gate myself against the pinned working-tree snapshot.",
+              "elapsed_seconds": 111.49,
+              "kind": "progress",
+              "ordinal": 5,
+              "role": "assistant"
+            },
+            {
+              "content": "Implemented exactly the three requested source changes:\n\n- `--accent: #6d28d9`\n- `--card-gap: 12px`\n- Heading: `No projects yet`\n\n```yaml\nstatus: accepted\nroute:\n  requested: bulk\n  actual_model: gpt-5.6-terra\n  effort: high\n  provider: openai\n  executor: native child\n  dispatch: delegated\n  resolution: primary\n  attempted:\n    - gpt-5.6-terra@high\n  fallback_reason: \"\"\nartifacts:\n  files:\n    - src/index.css\n    - src/App.tsx\n  report: \"\"\nevidence:\n  fixed_target: \"HEAD 2a855d6cbe6487d2d79b47b53fe235356ed4b61e plus diff SHA-256 7682b57dc0f4963027aa5f59d4f12ddd55253666d6d78b118d0d88db9943c8eb\"\n  checks:\n    - \"git diff --check: passed\"\n    - \"Source inspection: all three exact requested values present\"\n    - \"git status --short: only src/App.tsx and src/index.css modified\"\n    - \"npm run gate: exit 0; lint passed, typecheck passed, 1 test file passed, 3 tests passed\"\n  outcome: proven\ntelemetry:\n  attempts: 1\n  elapsed: \"approximately 1 minute\"\n  verification_failures: 0\n  token_or_quota_usage: \"\"\nshelby:\n  project_id: \"\"\n  run_id: \"\"\n  checkpoint_ids: []\nblockers: []\n```\n\nNo tests, package metadata, build configuration, or check scripts were changed.",
+              "elapsed_seconds": 133.095,
+              "kind": "final",
+              "ordinal": 6,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:e352ed89a8db2ad38f4fc6f2809c635c665c2b0b1375148a41a41565eccd9da0",
+        "correctness": true,
+        "cost_usd": 0.3841624,
+        "duration_seconds": 133.137117852,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 274432,
+            "cache_write_tokens": 0,
+            "input_tokens": 24214,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 3830,
+            "provider": "openai"
+          },
+          {
+            "cache_read_tokens": 145408,
+            "cache_write_tokens": 0,
+            "input_tokens": 25072,
+            "model": "gpt-5.6-terra",
+            "output_tokens": 1809,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 274432,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 24214,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 3830,
+            "provider": "openai",
+            "session": "root"
+          },
+          {
+            "cache_read_tokens": 145408,
+            "cache_write_tokens": 0,
+            "effort": "high",
+            "input_tokens": 25072,
+            "model": "gpt-5.6-terra",
+            "output_tokens": 1809,
+            "provider": "openai",
+            "session": "child_1"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-bulk-dashboard-updates",
+        "trial_id": "sha256:e6d181132f93e5343a8f121de1e270e5799935e6c2bcac9e34716cac11d05d21",
+        "usage_complete": true
+      }
+    ]
+  },
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-11T17:36:11.279163Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V0242cfe530d185dd",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.1851912,
+        "cached_tokens": 152448,
+        "completion_tokens": 1246,
+        "prompt_tokens": 177271
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-11T17:33:28.466479Z",
+      "harness_commit": null,
+      "model": "gpt-5.6-sol",
+      "name": "run-c720ec96fe423c070260-r1-codex-V0242cfe530d185dd-candidate-react-bulk-dashboard-updates",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 175.534473,
+      "series_key": "sha256:b294c0744a91199d57b5d695754f8fd3dbe9e17b58d16773fe6f98cd0f425a75",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-11T17:30:32.932006Z",
+      "status": "completed",
+      "task": "react-bulk-dashboard-updates",
+      "task_digest": "sha256:aec6ba82935da9477a171322def0a366f070b85736ebedde64617b0c32270ef7",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "Ve352ed89a8db2ad3",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.1009336,
+        "cached_tokens": 145408,
+        "completion_tokens": 1809,
+        "prompt_tokens": 170480
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-11T17:36:11.279163Z",
+      "harness_commit": null,
+      "model": "gpt-5.6-sol",
+      "name": "run-c720ec96fe423c070260-r1-codex-Ve352ed89a8db2ad3-candidate-react-bulk-dashboard-updates",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 161.639835,
+      "series_key": "sha256:515d7ca73f6facae49baa86ac02deb05b3eaaa1f668d7f35b1b7b6e7a5c1fb5c",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-11T17:33:29.639328Z",
+      "status": "completed",
+      "task": "react-bulk-dashboard-updates",
+      "task_digest": "sha256:aec6ba82935da9477a171322def0a366f070b85736ebedde64617b0c32270ef7",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:b4278dc08c33184942f272fa25fd2d0131fea7559086d6fabdaf15c5e79aa410",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 1.0522871999999999,
+  "pending_jobs": 0,
+  "profile": "calibration",
+  "report_id": "sha256:98b5b9d1bfb30af8a36d49ceae370bae3926cccbc5fabc869fcd550a07709d86",
+  "run_id": "run-c720ec96fe423c070260",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-11T17:30:31.222915Z",
+  "status": "completed",
+  "updated_at": "2026-09-11T17:36:12.328115Z"
+}
