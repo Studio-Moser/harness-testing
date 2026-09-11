@@ -235,7 +235,9 @@ export async function loadPublicResults({
     localRuns.push(report);
   }
 
-  for (const entry of await resultEntries(resolve(runsDirectory, "../evidence"))) {
+  const evidenceEntries = (await resultEntries(resolve(runsDirectory, "../evidence")))
+    .filter((entry) => /^[0-9a-f]{64}\.json$/.test(entry.name));
+  for (const entry of evidenceEntries) {
     localRuns.push(await readRunReport(resolve(runsDirectory, "../evidence", entry.name), entry.name, validateRunReport, "local"));
   }
   const runReports = combinedRunReports(publishedRuns, localRuns);

@@ -195,7 +195,11 @@ def available_reference_reports(root: Path) -> list[dict]:
 
     paths = list((root / "dashboard-data/reports").glob("*.json"))
     paths += list((root / "runs/generated").glob("*/Run_Report.json"))
-    paths += list((root / "runs/evidence").glob("*.json"))
+    paths += [
+        path
+        for path in (root / "runs/evidence").glob("*.json")
+        if len(path.stem) == 64 and all(character in "0123456789abcdef" for character in path.stem)
+    ]
     reports = {}
     for path in sorted(paths):
         report = load_run_report(root, path)

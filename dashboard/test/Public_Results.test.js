@@ -102,6 +102,21 @@ test("loads safe local run reports separately from finalized public results", as
   assert.deepEqual(report.results, []);
 });
 
+test("ignores publication receipts beside retained evidence reports", async () => {
+  const root = await testRoot();
+  const evidenceDirectory = resolve(root, "runs", "evidence");
+  const reportId = "d73dda59bad84372f94499627e52325aa49bb01d81427eacf029c93a798e96ac";
+  const valid = JSON.parse(await readFile(resolve(runFixtureRoot, "Valid.json"), "utf8"));
+  await mkdir(evidenceDirectory);
+  await cp(resolve(runFixtureRoot, "Valid.json"), resolve(evidenceDirectory, `${reportId}.json`));
+  await writeFile(resolve(evidenceDirectory, `${reportId}.Publication.json`), "{}\n");
+
+  const report = await loadFrom(root);
+
+  assert.equal(report.local_runs.length, 1);
+  assert.equal(report.local_runs[0].report_id, valid.report_id);
+});
+
 test("loads data-branch reports and deduplicates local copies", async () => {
   const root = await testRoot();
   const digest = "d73dda59bad84372f94499627e52325aa49bb01d8141d8eccfbba0cc2375f05a";
