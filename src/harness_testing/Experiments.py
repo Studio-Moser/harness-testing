@@ -247,7 +247,7 @@ def plan_experiment(
     if errors:
         raise ValueError("invalid experiment request:\n" + "\n".join(errors))
     request = copy.deepcopy(document)
-    skill_evaluation = SkillEvaluation.from_document(request.pop("skill_evaluation"))
+    skill_evaluation = SkillEvaluation.from_document(request.pop("skill_evaluation", None))
     conditions, limits = request["conditions"], request["limits"]
     conditions.setdefault(
         "provider_recovery_seconds", 600 if conditions["kickoff"]["provider"] == "codex" else 0

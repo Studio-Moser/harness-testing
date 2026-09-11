@@ -112,6 +112,13 @@ def test_request_accepts_explicit_skill_capability_invocation():
     assert validate_experiment_request(document) == []
 
 
+def test_request_keeps_skill_evaluation_optional_for_version_one_inputs():
+    document = request_document()
+    document.pop("skill_evaluation")
+
+    assert validate_experiment_request(document) == []
+
+
 def test_startup_instructions_can_define_a_personality_only_contender():
     document = request_document()
     contender = document["contenders"][0]

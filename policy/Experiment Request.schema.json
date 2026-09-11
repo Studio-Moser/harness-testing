@@ -439,7 +439,6 @@
     "schema_version",
     "label",
     "purpose",
-    "skill_evaluation",
     "contenders",
     "conditions",
     "baseline_result_ids",
