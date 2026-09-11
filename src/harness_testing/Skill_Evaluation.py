@@ -12,7 +12,9 @@ _SKILL_NAME = re.compile(
     r"^[a-z0-9][a-z0-9-]*(?::[a-z0-9][a-z0-9-]*)?$"
 )
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
-_CELL = re.compile(r"^[a-z0-9]+-A[0-3]-(?:baseline|candidate|calibration)$")
+_CELL = re.compile(
+    r"^[a-z0-9]+-(?:A[0-3]|V[0-9a-f]{16})-(?:baseline|candidate|calibration)$"
+)
 _TASK = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 _MODES = frozenset({"capability", "discovery"})
 _PROVIDER_MARKERS = {"claude": "/", "codex": "$"}

@@ -151,3 +151,22 @@ def test_capability_report_classifies_explicit_without_inspecting_trajectory(
 
     assert report["aggregate"] == {"numerator": 1, "denominator": 1, "rate": 1.0}
     assert report["trials"][0]["invocation"] == "explicit"
+
+
+def test_capability_report_accepts_versioned_contender_cells(tmp_path: Path):
+    report = write_skill_evaluation_report(
+        tmp_path / "Skill_Evaluation.json",
+        manifest_digest=f"sha256:{'c' * 64}",
+        evaluation=SkillEvaluation("capability", "harness:execute"),
+        trials=(
+            {
+                "provider": "codex",
+                "cell": "codex-V16d4a50291b08b34-candidate",
+                "task": "react-saved-view-feature",
+                "attempt": 1,
+                "trajectory": tmp_path / "missing.json",
+            },
+        ),
+    )
+
+    assert report["trials"][0]["cell"] == "codex-V16d4a50291b08b34-candidate"
