@@ -50,7 +50,7 @@ def test_contract_validation_is_strict_and_content_addressed(tmp_path):
 def test_every_comparison_task_has_a_valid_contract():
     root = Path(__file__).parents[2]
     tasks = sorted((root / "tasks/workflow").glob("*/task.toml"))
-    assert len(tasks) == 9
+    assert len(tasks) == 10
     for task in tasks:
         loaded = communication_contract_for_task(root, task.parent.name)
         assert loaded["contract"]["schema_version"] == "1"
