@@ -13,6 +13,7 @@ from harness_testing.Results import compatibility_key, public_result_id
 from harness_testing.Validate import (
     affected_validation_commands,
     find_sensitive_keys,
+    validate_collaboration_policy,
     validate_markdown_links,
     validate_public_results,
     validate_repository,
@@ -22,6 +23,26 @@ from harness_testing.Validate import (
 )
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
+
+
+def test_collaboration_policy_and_opus_example_are_valid():
+    assert validate_collaboration_policy(REPOSITORY_ROOT) == ()
+
+
+def test_collaboration_policy_requires_each_workflow_task_contract(tmp_path):
+    shutil.copytree(REPOSITORY_ROOT / "policy", tmp_path / "policy")
+    examples = tmp_path / "runs" / "examples"
+    examples.mkdir(parents=True)
+    shutil.copy(
+        REPOSITORY_ROOT / "runs/examples/Opus Personality Comparison.json", examples
+    )
+    task = tmp_path / "tasks" / "workflow" / "missing-contract"
+    task.mkdir(parents=True)
+    (task / "task.toml").write_text("schema_version = '1.4'\n")
+
+    failures = validate_collaboration_policy(tmp_path)
+
+    assert any("Communication Contract.json" in str(failure) for failure in failures)
 
 
 def _write_task(root: Path, directory_name: str, package_name: str) -> Path:

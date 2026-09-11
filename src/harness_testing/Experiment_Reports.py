@@ -100,14 +100,16 @@ def _safe_trial(
             and type(recovery.get("transport_error_count")) is int
             and recovery["transport_error_count"] >= 0
             and type(recovery.get("extension_applied")) is bool
-            and (not recovery["extension_applied"] or (
-                recovery["allowance_seconds"] > 0 and recovery["transport_error_count"] > 0
-            ))
+            and (
+                not recovery["extension_applied"]
+                or (recovery["allowance_seconds"] > 0 and recovery["transport_error_count"] > 0)
+            )
         ):
             raise ValueError("invalid provider recovery evidence")
-        recovery = {key: recovery[key] for key in (
-            "allowance_seconds", "transport_error_count", "extension_applied"
-        )}
+        recovery = {
+            key: recovery[key]
+            for key in ("allowance_seconds", "transport_error_count", "extension_applied")
+        }
     status = native.get("status", "infrastructure_failure" if result else "pending")
     if status not in {
         "completed",
@@ -122,7 +124,8 @@ def _safe_trial(
     if (result or {}).get("exception_info"):
         exception = result["exception_info"].get("exception_type")
         status = (
-            "timeout" if exception == "AgentTimeoutError"
+            "timeout"
+            if exception == "AgentTimeoutError"
             and not (recovery and recovery["transport_error_count"])
             else "infrastructure_failure"
         )
@@ -184,6 +187,47 @@ def _safe_trial(
         and all(all(value is not None for value in row.values()) for row in model_usage)
     )
     cost, pricing_digest = _price_usage(root, model_usage)
+    collaboration = None
+    if task_variant == "comparison":
+        from harness_testing.Collaboration_Quality import (
+            calculate_communication_metrics,
+            validate_visible_transcript,
+        )
+        from harness_testing.Communication_Contracts import communication_contract_for_task
+
+        frozen = communication_contract_for_task(root, task)
+        base = {
+            "contract_digest": frozen["digest"],
+            "contract": frozen["contract"],
+        }
+        try:
+            transcript = validate_visible_transcript(native.get("transcript"))
+        except ValueError as error:
+            collaboration = {
+                "status": "unavailable",
+                "reasons": [str(error)],
+                **base,
+                "transcript": [],
+                "metrics": None,
+            }
+        else:
+            outputs = [row["output_tokens"] for row in model_usage]
+            output_tokens = (
+                sum(outputs) if outputs and all(value is not None for value in outputs) else None
+            )
+            prompt_path = root / "tasks" / "workflow" / task / "Comparison Instruction.md"
+            collaboration = {
+                "status": "complete",
+                "reasons": [],
+                **base,
+                "transcript": transcript,
+                "metrics": calculate_communication_metrics(
+                    transcript,
+                    frozen["contract"],
+                    task_text=prompt_path.read_text(),
+                    model_output_tokens=output_tokens,
+                ),
+            }
     return {
         "trial_id": contender_identity(
             {"contender": contender_id, "task": task, "attempt": attempt}
@@ -203,6 +247,7 @@ def _safe_trial(
         "interaction_count": native.get("interaction_count", 0),
         "child_count": native.get("child_count"),
         "incomplete_reasons": native.get("incomplete_reasons", []),
+        **({"collaboration": collaboration} if collaboration is not None else {}),
         **({"provider_recovery": recovery} if recovery is not None else {}),
     }
 

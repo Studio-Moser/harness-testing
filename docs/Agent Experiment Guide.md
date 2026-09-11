@@ -83,3 +83,56 @@ Compare confirmed **remaining** defects by severity, then execution cost and tim
 Optional internal review evidence records findings caught, fixed and left unresolved during the original coding run. Without evidence those counts remain unknown, including for Nothing: no harness does not mean no testing or iteration. Internal repair counts explain process and never replace the independent final-patch result.
 
 Evaluation cost is separate from original harness execution cost and includes review/confirmation work. Missing usage remains unknown. Record returns a new retained report revision, preserving the original test scores, costs and publication authority. A new review protocol needs new reviews of the retained baseline submissions; it does not itself require rerunning the coding agents. Preparing/recording is model-free; obtain explicit authorization for any additional benchmark review sessions using the exact prepared plan and its compute scope.
+
+## A7 — Evaluate collaboration quality
+
+Every workflow task has a versioned `Communication Contract.json`. The ten additional inexpensive patterns in [Communication Scenarios.json](../policy/Communication%20Scenarios.json) freeze prompts, follow-ups and expectations for repository questions, edits, ambiguity, status, corrections, disagreement, failure recovery, routine authority, consequential authority and completion. Add or change a contract before running; its digest becomes part of the trial evidence. Keep collaboration judgments separate from protected correctness and final-patch review.
+
+For Opus 5, start from [Opus Personality Comparison.json](../runs/examples/Opus%20Personality%20Comparison.json). It fixes one model and effort across Nothing, Studio personality-only and Studio Moser Lite. Copy `House Style.md` and the model rubric into ignored `runs/inputs/`, update the exact Studio commit when needed, plan the request, and obtain approval for that exact coding-run manifest. The template schedules 27 task sessions; use a smaller diagnostic copy first when that is enough.
+
+Completed trials already contain deterministic measures and a public-safe root transcript. Preparing blind grades starts no model:
+
+```bash
+uv run harness-test collaboration prepare \
+  --report 'runs/generated/DIGEST/Run_Report.json' \
+  --protocol 'policy/Collaboration Grading Protocol.json'
+```
+
+For a finalized, single-task version-3 report created before transcript capture, reuse the
+coding work only when its exact Harbor job directories still retain both
+`agent/trajectory.json` and `agent/Native_Requests.jsonl`. Apply one explicit current
+communication contract and the original frozen task instruction:
+
+```bash
+uv run harness-test collaboration backfill \
+  --report 'runs/evidence/SOURCE_REPORT.json' \
+  --jobs-dir 'jobs/raw' \
+  --contract 'tasks/workflow/TASK/Communication Contract.json' \
+  --instruction 'PATH/TO/FROZEN/instruction.md'
+```
+
+The command verifies the report-to-job mapping and task request, records source digests in
+ignored local evidence, and writes an immutable superseding report. Its comparison
+limitations explicitly say that the transcript was retrospectively reconstructed and
+evaluated with the current contract. It starts no model. Do not backfill when either raw
+artifact is absent; leave collaboration unavailable instead.
+
+The returned plan freezes randomized identity-blind packets and requires one fresh grader session per packet. Review that exact plan, session count, model, effort and time budget, then obtain explicit approval before starting any grader. Put the returned results in the checked schema shape and import them without another coding run:
+
+```bash
+uv run harness-test collaboration record \
+  --plan 'runs/collaboration/PLAN_DIGEST/Plan.json' \
+  --results 'runs/inputs/Collaboration Grades.json'
+```
+
+Calibrate the grader against Tim's preference with same-scenario A/B packets:
+
+```bash
+uv run harness-test collaboration calibration-prepare \
+  --report 'runs/evidence/REPORT_DIGEST.json'
+uv run harness-test collaboration calibration-record \
+  --plan 'runs/calibration/PLAN_DIGEST/Plan.json' \
+  --labels 'runs/inputs/Collaboration Labels.json'
+```
+
+Choose one side blindly and optionally record the concrete annoyance. Automated preference remains advisory until 15 choices are labeled. The dashboard uses Tim's calibrated preference when available; otherwise it labels a complete automated result as uncalibrated. Missing transcripts or grades remain unknown, and no collaboration result changes the engineering winner.

@@ -1113,6 +1113,95 @@ def _validate_public_boundary(root: Path) -> list[ValidationFailure]:
     return failures
 
 
+def validate_collaboration_policy(root: Path) -> tuple[ValidationFailure, ...]:
+    """Validate checked-in collaboration contracts, rubric, and example."""
+    from harness_testing.Communication_Contracts import (
+        load_communication_contract,
+        load_scenario_catalog,
+    )
+    from harness_testing.Experiments import validate_experiment_request
+
+    failures: list[ValidationFailure] = []
+    policy = root / "policy"
+    schema_names = (
+        "Communication Contract.schema.json",
+        "Collaboration Grading Protocol.schema.json",
+        "Collaboration Grading Results.schema.json",
+        "Collaboration Calibration Labels.schema.json",
+    )
+    schemas: dict[str, dict] = {}
+    for name in schema_names:
+        path = policy / name
+        try:
+            schema = json.loads(path.read_text())
+            Draft202012Validator.check_schema(schema)
+            schemas[name] = schema
+        except (OSError, json.JSONDecodeError, SchemaError) as error:
+            failures.append(_failure(path, f"invalid collaboration schema: {error}"))
+
+    protocol_path = policy / "Collaboration Grading Protocol.json"
+    protocol = None
+    try:
+        protocol = json.loads(protocol_path.read_text())
+        schema = schemas.get("Collaboration Grading Protocol.schema.json")
+        if schema is not None:
+            errors = sorted(
+                Draft202012Validator(schema).iter_errors(protocol),
+                key=lambda error: list(error.absolute_path),
+            )
+            failures.extend(
+                _failure(
+                    protocol_path,
+                    "invalid collaboration grading protocol: "
+                    f"{'.'.join(map(str, error.absolute_path)) or '$'}: {error.message}",
+                )
+                for error in errors
+            )
+    except (OSError, json.JSONDecodeError) as error:
+        failures.append(
+            _failure(protocol_path, f"invalid collaboration grading protocol: {error}")
+        )
+
+    catalog_path = policy / "Communication Scenarios.json"
+    try:
+        catalog = load_scenario_catalog(catalog_path)
+        contracts = [row["contract"] for row in catalog["scenarios"]]
+    except ValueError as error:
+        failures.append(_failure(catalog_path, str(error)))
+        contracts = []
+
+    workflow_contracts = [
+        task.parent / "Communication Contract.json"
+        for task in sorted((root / "tasks" / "workflow").glob("*/task.toml"))
+    ]
+    for path in workflow_contracts:
+        try:
+            contracts.append(load_communication_contract(path)["contract"])
+        except ValueError as error:
+            failures.append(_failure(path, str(error)))
+
+    if isinstance(protocol, dict) and isinstance(protocol.get("dimensions"), list):
+        for contract in contracts:
+            if contract["rubric"] != protocol["dimensions"]:
+                failures.append(
+                    _failure(
+                        protocol_path,
+                        f"{contract['scenario']} rubric must match the protocol dimensions",
+                    )
+                )
+
+    example_path = root / "runs" / "examples" / "Opus Personality Comparison.json"
+    try:
+        example = json.loads(example_path.read_text())
+        failures.extend(
+            _failure(example_path, f"invalid example request: {error}")
+            for error in validate_experiment_request(example)
+        )
+    except (OSError, json.JSONDecodeError) as error:
+        failures.append(_failure(example_path, f"invalid example request: {error}"))
+    return tuple(failures)
+
+
 def validate_repository(root: Path) -> tuple[ValidationFailure, ...]:
     versions_path = root / "Versions.toml"
     failures = list(validate_versions_file(versions_path))
@@ -1141,4 +1230,5 @@ def validate_repository(root: Path) -> tuple[ValidationFailure, ...]:
     failures.extend(validate_workflow_files(root, action_pins))
     failures.extend(_validate_checked_in_commands(root))
     failures.extend(_validate_public_boundary(root))
+    failures.extend(validate_collaboration_policy(root))
     return tuple(failures)

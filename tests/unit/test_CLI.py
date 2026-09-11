@@ -22,16 +22,19 @@ def test_task_qa_dispatches_one_named_deterministic_case(monkeypatch, capsys):
 
     monkeypatch.setattr("harness_testing.QA.run_task_qa", fake_run)
 
-    assert main(
-        [
-            "task",
-            "qa",
-            "--task",
-            "react-grouped-ui-updates",
-            "--case",
-            "oracle",
-        ]
-    ) == 0
+    assert (
+        main(
+            [
+                "task",
+                "qa",
+                "--task",
+                "react-grouped-ui-updates",
+                "--case",
+                "oracle",
+            ]
+        )
+        == 0
+    )
     assert calls[0][1:] == ("react-grouped-ui-updates", "oracle")
     assert capsys.readouterr().out == "reward=1 workflow=1 efficiency=1\n"
 
@@ -79,24 +82,27 @@ def test_run_plan_requires_and_forwards_billing_mode(monkeypatch, capsys):
     monkeypatch.setattr("harness_testing.Runs.plan_run", fake_plan)
     monkeypatch.setattr("harness_testing.Runs.format_plan", lambda manifest: "planned")
 
-    assert main(
-        [
-            "run",
-            "plan",
-            "--profile",
-            "smoke",
-            "--billing-mode",
-            "subscription",
-            "--cell",
-            "codex:A0:baseline",
-            "--task",
-            "react-grouped-ui-updates",
-            "--max-sessions",
-            "1",
-            "--max-budget-usd",
-            "0",
-        ]
-    ) == 0
+    assert (
+        main(
+            [
+                "run",
+                "plan",
+                "--profile",
+                "smoke",
+                "--billing-mode",
+                "subscription",
+                "--cell",
+                "codex:A0:baseline",
+                "--task",
+                "react-grouped-ui-updates",
+                "--max-sessions",
+                "1",
+                "--max-budget-usd",
+                "0",
+            ]
+        )
+        == 0
+    )
     assert calls[0][1]["billing_mode"] == "subscription"
     assert calls[0][1]["skill_evaluation"] is None
     assert capsys.readouterr().out == "planned\n"
@@ -125,9 +131,7 @@ def test_run_plan_requires_and_forwards_billing_mode(monkeypatch, capsys):
     ("flag", "mode"),
     (("--invoke-skill", "capability"), ("--observe-skill", "discovery")),
 )
-def test_run_plan_forwards_mutually_exclusive_skill_evaluation(
-    monkeypatch, capsys, flag, mode
-):
+def test_run_plan_forwards_mutually_exclusive_skill_evaluation(monkeypatch, capsys, flag, mode):
     from harness_testing.CLI import main
 
     calls = []
@@ -165,9 +169,7 @@ def test_run_plan_forwards_mutually_exclusive_skill_evaluation(
 def test_claude_auth_stores_token_with_redacted_success_message(monkeypatch, capsys):
     from harness_testing.CLI import main
 
-    monkeypatch.setattr(
-        "harness_testing.Credentials.store_claude_subscription_token", lambda: None
-    )
+    monkeypatch.setattr("harness_testing.Credentials.store_claude_subscription_token", lambda: None)
 
     assert main(["auth", "claude"]) == 0
     captured = capsys.readouterr()
@@ -193,3 +195,32 @@ def test_claude_auth_returns_redacted_failure_without_storage_output(monkeypatch
     assert "unexpected detail" not in captured.out + captured.err
     assert captured.out == "Enter the Claude subscription token in the Keychain prompt.\n"
     assert captured.err == "Claude subscription token could not be stored.\n"
+
+
+@pytest.mark.parametrize(
+    ("subcommand", "arguments", "target"),
+    [
+        ("prepare", ["--report", "Report.json", "--protocol", "Protocol.json"], "prepare_grading"),
+        ("record", ["--plan", "Plan.json", "--results", "Results.json"], "record_grading"),
+        ("calibration-prepare", ["--report", "Report.json"], "prepare_calibration"),
+        (
+            "calibration-record",
+            ["--plan", "Plan.json", "--labels", "Labels.json"],
+            "record_calibration",
+        ),
+    ],
+)
+def test_collaboration_commands_dispatch_without_starting_models(
+    monkeypatch, capsys, subcommand, arguments, target
+):
+    from harness_testing.CLI import main
+
+    calls = []
+    monkeypatch.setattr(
+        f"harness_testing.Collaboration_Grading.{target}",
+        lambda *args: calls.append(args) or {"status": "accepted"},
+    )
+    monkeypatch.setattr("harness_testing.Run_Reports.refresh_local_dashboard", lambda root: None)
+    assert main(["collaboration", subcommand, *arguments]) == 0
+    assert calls
+    assert '"status": "accepted"' in capsys.readouterr().out

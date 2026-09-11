@@ -114,7 +114,9 @@ uv run harness-test run execute \
 Execution writes `Run_Report.json` beside the approved manifest, updates it after each
 job, and rebuilds the ignored local dashboard once when the run completes or stops.
 This report contains only allowlisted status, scores, timestamps, token totals, and
-cost telemetry; it never copies raw prompts, trajectories, commands, or host paths.
+cost telemetry plus the normalized user-visible root conversation used for collaboration
+evaluation. It never copies hidden reasoning, tool output, raw trajectories, commands,
+session IDs, or host paths.
 
 After normal completion or a handled failure, execution makes one best-effort batch
 publication attempt for every pending report. Publication failure does not erase or
@@ -194,6 +196,14 @@ The dashboard has two evidence lanes:
   for diagnosing progress but is not automatically decision-grade.
 - Decision-grade results are still created only by the strict, unchanged
   `harness-test result sanitize` path described above.
+
+Collaboration evidence appears inside the development-history lane and remains separate
+from the engineering verdict. After a coding run, prepare identity-blind grades and Tim's
+same-scenario A/B labels with the commands in [Agent Experiment Guide](Agent%20Experiment%20Guide.md#a7--evaluate-collaboration-quality). Preparing and importing are model-free. Executing the grader packets is additional model work and needs explicit approval of the prepared plan and its exact session count.
+
+Older single-task comparison reports may be backfilled only from retained root ATIF and
+native-request artifacts with the documented `collaboration backfill` command. The new
+report preserves the source identity and visibly labels the evidence as retrospective.
 
 Reconstruct historical reports without opening raw job artifacts or starting a
 model session:

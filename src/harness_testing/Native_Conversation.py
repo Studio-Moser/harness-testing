@@ -295,6 +295,8 @@ class Conversation:
         self.background_tasks = ClaudeBackgroundTasks()
         self.text = ""
         self.decisions = []
+        self.transcript = []
+        self._visible_started = None
         self.models = []
         self.root_finished = False
         self.hook_trust = None
@@ -337,6 +339,7 @@ class Conversation:
 
     def turn(self, text):
         self.text = ""
+        self._record_visible("user", "user", text)
         if self.provider == "codex":
             return self.rpc(
                 "turn/start",
@@ -353,6 +356,23 @@ class Conversation:
             "message": {"role": "user", "content": text},
             "parent_tool_use_id": None,
         }
+
+    def _record_visible(self, role, kind, content):
+        text = content.strip() if isinstance(content, str) else ""
+        if not text:
+            return
+        now = time.monotonic()
+        if self._visible_started is None:
+            self._visible_started = now
+        self.transcript.append(
+            {
+                "ordinal": len(self.transcript) + 1,
+                "role": role,
+                "kind": kind,
+                "content": text,
+                "elapsed_seconds": round(now - self._visible_started, 3),
+            }
+        )
 
     def reply(self, text):
         result = select_reply(
@@ -394,6 +414,12 @@ class Conversation:
         )
 
     def finish_turn(self):
+        if not self.transcript or not (
+            self.transcript[-1]["role"] == "assistant"
+            and self.transcript[-1]["kind"] == "final"
+            and self.transcript[-1]["content"] == self.text.strip()
+        ):
+            self._record_visible("assistant", "final", self.text)
         reply = self.reply(self.text.strip())
         if reply["status"] == "reply":
             return [self.turn(reply["reply"])]
@@ -587,6 +613,13 @@ class Conversation:
             item = params.get("item", {})
             if item.get("type") == "agentMessage":
                 self.text = item.get("text", "")
+                phase = item.get("phase")
+                if phase in {"commentary", "final_answer"}:
+                    self._record_visible(
+                        "assistant",
+                        "progress" if phase == "commentary" else "final",
+                        self.text,
+                    )
         if method == "turn/completed":
             thread_id, turn = params.get("threadId"), params.get("turn", {})
             active = self.active_turns.get(thread_id) == turn.get("id")
@@ -664,10 +697,12 @@ class Conversation:
                 for item in event.get("message", {}).get("content", [])
                 if item.get("type") == "text"
             )
+            self._record_visible("assistant", "progress", self.text)
         if event.get("type") == "result":
             if event.get("is_error") or event.get("subtype") != "success":
                 return self.fail("native_turn_failed", "agent_failed")
             self.text = event.get("result") or self.text
+            self._record_visible("assistant", "final", self.text)
             return self.finish_turn()
         return []
 
@@ -961,6 +996,7 @@ def run_controller(config: dict) -> dict:
                 "interaction_count": state.interactions,
                 "child_count": max(0, len(evidence["sessions"]) - 1),
                 "provisioning_seconds": (trial_started or started) - started,
+                "transcript": state.transcript,
             }
         )
         if state.provider_recovery_configured or state.transport_error_count:

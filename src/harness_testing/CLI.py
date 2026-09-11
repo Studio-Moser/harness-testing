@@ -110,6 +110,37 @@ def main(argv: Sequence[str] | None = None) -> int:
     review_record_parser.add_argument("--plan", type=Path, required=True)
     review_record_parser.add_argument("--results", type=Path, required=True)
 
+    collaboration_parser = subparsers.add_parser(
+        "collaboration", help="prepare or import blinded collaboration evidence"
+    )
+    collaboration_subparsers = collaboration_parser.add_subparsers(dest="collaboration_command")
+    collaboration_backfill = collaboration_subparsers.add_parser(
+        "backfill", help="recover collaboration evidence from retained ATIF trajectories"
+    )
+    collaboration_backfill.add_argument("--report", type=Path, required=True)
+    collaboration_backfill.add_argument("--jobs-dir", type=Path, required=True)
+    collaboration_backfill.add_argument("--contract", type=Path, required=True)
+    collaboration_backfill.add_argument("--instruction", type=Path, required=True)
+    collaboration_prepare = collaboration_subparsers.add_parser(
+        "prepare", help="create blinded transcript grading packets"
+    )
+    collaboration_prepare.add_argument("--report", type=Path, required=True)
+    collaboration_prepare.add_argument("--protocol", type=Path, required=True)
+    collaboration_record = collaboration_subparsers.add_parser(
+        "record", help="import validated transcript grades"
+    )
+    collaboration_record.add_argument("--plan", type=Path, required=True)
+    collaboration_record.add_argument("--results", type=Path, required=True)
+    calibration_prepare = collaboration_subparsers.add_parser(
+        "calibration-prepare", help="create blinded same-scenario A/B packets"
+    )
+    calibration_prepare.add_argument("--report", type=Path, required=True)
+    calibration_record = collaboration_subparsers.add_parser(
+        "calibration-record", help="import Tim's blinded A/B labels"
+    )
+    calibration_record.add_argument("--plan", type=Path, required=True)
+    calibration_record.add_argument("--labels", type=Path, required=True)
+
     auth_parser = subparsers.add_parser("auth", help="store local subscription credentials")
     auth_subparsers = auth_parser.add_subparsers(dest="auth_command")
     auth_subparsers.add_parser("claude", help="store the Claude subscription token")
@@ -306,6 +337,42 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(error, file=sys.stderr)
             return 1
         print(json.dumps(outcome, indent=2, sort_keys=True))
+    elif arguments.command == "collaboration":
+        from harness_testing.Collaboration_Backfill import backfill_collaboration
+        from harness_testing.Collaboration_Grading import (
+            prepare_calibration,
+            prepare_grading,
+            record_calibration,
+            record_grading,
+        )
+        from harness_testing.Run_Reports import refresh_local_dashboard
+
+        try:
+            if arguments.collaboration_command == "backfill":
+                outcome = backfill_collaboration(
+                    _repository_root(),
+                    arguments.report,
+                    arguments.jobs_dir,
+                    arguments.contract,
+                    arguments.instruction,
+                )
+                refresh_local_dashboard(_repository_root())
+            elif arguments.collaboration_command == "prepare":
+                outcome = prepare_grading(_repository_root(), arguments.report, arguments.protocol)
+            elif arguments.collaboration_command == "record":
+                outcome = record_grading(_repository_root(), arguments.plan, arguments.results)
+                refresh_local_dashboard(_repository_root())
+            elif arguments.collaboration_command == "calibration-prepare":
+                outcome = prepare_calibration(_repository_root(), arguments.report)
+            elif arguments.collaboration_command == "calibration-record":
+                outcome = record_calibration(_repository_root(), arguments.plan, arguments.labels)
+                refresh_local_dashboard(_repository_root())
+            else:
+                parser.error("collaboration requires a subcommand")
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        print(json.dumps(outcome, indent=2, sort_keys=True, default=str))
     elif arguments.command == "auth" and arguments.auth_command == "claude":
         from harness_testing.Credentials import store_claude_subscription_token
 

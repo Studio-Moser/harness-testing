@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {codeReviewCountLabel, codeReviewCoverageLabel, comparisonReports, comparisonVerdict, internalReviewCoverageLabel, renderComparison, renderTaskTypes, renderEvidence, renderHistory, selectComparison, comparisonUrl, summarizeCodeReview, summarizeInternalReview, summarizeTests, versionHistory, sortNumericRows, trialLabel} from "../src/components/Comparisons.js";
+import {collaborationVerdict, renderCollaboration, summarizeCollaboration, transcriptAnchor} from "../src/components/Collaboration.js";
 
 function report(id, version, purpose = "candidate") {
   return {schema_version: "3", report_id: id, run_id: `run-${id}`, updated_at: `2026-09-05T12:00:0${id}Z`, experiment: {label: id, purpose, contenders: [{id: version, family: "studio-moser", label: version}], predecessor_result_ids: [], comparison: {status: "insufficient_evidence"}}};
@@ -248,6 +249,142 @@ function typedReport() {
 }
 
 function descendants(node) { return [node, ...node.children.flatMap(descendants)]; }
+
+function collaborationTrial(contenderId, {tokens = 100, workAgain = true, score = 4, violations = [], scenario = "clear_small_edit", communicationRatio = 0.2} = {}) {
+  return {
+    trial_id: `sha256:${contenderId.padEnd(64, "0")}`,
+    task_id: "react-active-badge-count",
+    contender_id: contenderId,
+    attempt: 1,
+    status: "completed",
+    correctness: true,
+    protected_state: true,
+    duration_seconds: 8,
+    cost_usd: 0.01,
+    usage_complete: true,
+    child_count: 0,
+    interaction_count: 0,
+    incomplete_reasons: [],
+    model_usage: [],
+    session_usage: [],
+    collaboration: {
+      status: "complete",
+      reasons: [],
+      contract: {scenario, expectations: {progress_updates: {maximum: 2}, questions: {maximum: 0}, approval_requests: {maximum: 0}, final_answer_words: {maximum: 100}}},
+      metrics: {
+        assistant_tokens: tokens,
+        final_answer_words: Math.round(tokens / 2),
+        progress_update_count: 1,
+        useful_progress_update_count: 1,
+        communication_to_model_output_ratio: communicationRatio,
+        unnecessary_question_count: 0,
+        unnecessary_approval_request_count: 0,
+        slop_phrase_count: 0,
+        violations
+      },
+      transcript: [
+        {ordinal: 1, role: "user", kind: "user", content: "Fix the count.", elapsed_seconds: 0},
+        {ordinal: 2, role: "assistant", kind: "progress", content: "I found the stale selector.", elapsed_seconds: 2},
+        {ordinal: 3, role: "assistant", kind: "final", content: "Fixed and tested.", elapsed_seconds: 8}
+      ],
+      grade: {
+        status: "completed",
+        would_work_again: workAgain,
+        dimensions: ["directness", "proportionality", "progress_usefulness", "autonomy", "candor", "warmth", "restraint", "completion_clarity"].map(name => ({name, score, rationale: `${name} was observable.`}))
+      }
+    }
+  };
+}
+
+test("collaboration summary names an automated leader only with complete blind grading", () => {
+  const contenders = [{id: "nothing", label: "Nothing"}, {id: "studio", label: "Studio Moser"}];
+  const trials = [
+    collaborationTrial("nothing", {tokens: 220, workAgain: false, score: 2}),
+    collaborationTrial("studio", {tokens: 90, workAgain: true, score: 5})
+  ];
+  const summaries = summarizeCollaboration(contenders, trials);
+  assert.equal(summaries[1].meanAssistantTokens, 90);
+  assert.equal(summaries[1].meanRubricScore, 5);
+  assert.equal(summaries[1].wouldWorkAgain, 1);
+  assert.match(collaborationVerdict({experiment: {}}, contenders, trials).heading, /Studio Moser is the automated collaboration leader/);
+  delete trials[1].collaboration.grade;
+  assert.equal(collaborationVerdict({experiment: {}}, contenders, trials).heading, "Collaboration grading is incomplete");
+});
+
+test("dashboard answers who is easier to work with and shows calibrated human preference", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag)};
+  try {
+    const current = typedReport();
+    current.experiment.contenders[0].family = "nothing";
+    current.experiment.contenders[1].family = "studio-moser";
+    current.experiment.comparison.contenders[0].family = "nothing";
+    current.experiment.comparison.contenders[1].family = "studio-moser";
+    current.experiment.conditions.kickoff = {model: "opus", effort: "high", provider: "claude", runtime_version: "1"};
+    current.experiment.conditions.decision_policy = "policy";
+    current.experiment.change = {summary: "Add personality guidance", hypothesis: "Reduce annoying responses", rerun_reason: null, diff_digest: "sha256:diff"};
+    Object.assign(current.experiment.comparison, {status: "insufficient_evidence", winner_id: null, summary: "No engineering winner.", reasons: [], provisional: true, policy_id: "policy", pairs: [], limitations: []});
+    current.experiment.trials = [
+      collaborationTrial("nothing", {tokens: 220, workAgain: false, score: 2, violations: [{kind: "long_final_answer", ordinal: 3, detail: "Too long"}]}),
+      collaborationTrial("studio", {tokens: 90, workAgain: true, score: 5})
+    ];
+    current.experiment.collaboration_calibration = {
+      calibrated: true,
+      labels: [
+        {preferred_contender_id: "studio", other_contender_id: "nothing", grader_agreement: true, scenario: "clear_small_edit", annoyance_reason: "Nothing kept talking."},
+        {preferred_contender_id: "studio", other_contender_id: "nothing", grader_agreement: true, scenario: "clear_small_edit", annoyance_reason: null}
+      ]
+    };
+    const view = renderCollaboration(current, current.experiment.comparison.contenders, current.experiment.trials);
+    assert.match(view.textContent, /Studio Moser was preferred in Tim’s blinded comparison/);
+    assert.match(view.textContent, /2 of 2 blinded choices/);
+    assert.match(view.textContent, /Visible assistant tokens/);
+    assert.match(view.textContent, /Would work again/);
+    assert.match(view.textContent, /Studio Moser was least talkative at 90 visible assistant tokens per trial/);
+    assert.match(view.textContent, /1 of 1 progress updates contained recognized new information/);
+    assert.match(view.textContent, /communication was 20\.0% of billed model output tokens/);
+    assert.match(view.textContent, /Compare conversation scenariosScenario.*Clear small edit/);
+    assert.match(view.textContent, /Nothing kept talking/);
+    const evidence = descendants(view).find(node => node.tag === "a" && node.textContent === "long final answer");
+    assert.equal(new URL(evidence.href, "https://example.invalid").hash, `#${transcriptAnchor(current.experiment.trials[0], 3)}`);
+  } finally { globalThis.document = previousDocument; }
+});
+
+test("dashboard isolates personality-only communication from the complete harness", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag)};
+  try {
+    const contenders = [
+      {id: "nothing", family: "nothing", label: "Nothing"},
+      {id: "personality", family: "studio-personality", label: "Studio personality only"},
+      {id: "studio", family: "studio-moser", label: "Studio Moser Lite"}
+    ];
+    const trials = [
+      collaborationTrial("nothing", {tokens: 220}),
+      collaborationTrial("personality", {tokens: 80}),
+      collaborationTrial("studio", {tokens: 110})
+    ];
+    const view = renderCollaboration({report_id: "comparison", experiment: {}}, contenders, trials);
+    assert.match(view.textContent, /Personality-only used 80 visible assistant tokens per trial, compared with 220 for no instructions and 110 for Studio Moser/);
+  } finally { globalThis.document = previousDocument; }
+});
+
+test("task evidence exposes the visible transcript and blind grader rationale at stable anchors", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag)};
+  try {
+    const current = typedReport();
+    current.experiment.trials = [collaborationTrial("nothing")];
+    current.experiment.trials[0].task_id = "quill-shared-toolbar-focus";
+    const view = renderEvidence([current], {comparison: "typed"});
+    assert.match(view.textContent, /User · 0\.0sFix the count/);
+    assert.match(view.textContent, /Progress · 2\.0sI found the stale selector/);
+    assert.match(view.textContent, /Would work together again: yes/);
+    assert.match(view.textContent, /Directness · 4 \/ 5directness was observable/);
+    const message = descendants(view).find(node => node.attributes?.id === transcriptAnchor(current.experiment.trials[0], 2));
+    assert.ok(message);
+  } finally { globalThis.document = previousDocument; }
+});
 
 test("task types show observed quality and efficiency with untested categories, never a category winner", () => {
   const previousDocument = globalThis.document;

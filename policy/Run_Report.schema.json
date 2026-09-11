@@ -1086,6 +1086,9 @@
             "transport_error_count",
             "extension_applied"
           ]
+        },
+        "collaboration": {
+          "$ref": "#/$defs/collaborationTrial"
         }
       },
       "required": [
@@ -1719,6 +1722,12 @@
         },
         "code_review": {
           "$ref": "#/$defs/codeReviewCampaign"
+        },
+        "collaboration_evaluation": {
+          "$ref": "#/$defs/collaborationCampaign"
+        },
+        "collaboration_calibration": {
+          "$ref": "#/$defs/collaborationCalibration"
         }
       },
       "required": [
@@ -2514,6 +2523,646 @@
         "confirmed",
         "unconfirmed",
         "evaluation_cost_usd"
+      ]
+    },
+    "transcriptMessage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ordinal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "user",
+            "progress",
+            "final"
+          ]
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1
+        },
+        "elapsed_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "ordinal",
+        "role",
+        "kind",
+        "content",
+        "elapsed_seconds"
+      ]
+    },
+    "communicationContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1"
+        },
+        "scenario": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "expectations": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "initial_update": {
+              "enum": [
+                "required",
+                "optional",
+                "forbidden"
+              ]
+            },
+            "progress_updates": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "minimum": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximum": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "require_new_information": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "minimum",
+                "maximum",
+                "require_new_information"
+              ]
+            },
+            "questions": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "minimum": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximum": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "minimum",
+                "maximum"
+              ]
+            },
+            "approval_requests": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "minimum": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximum": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "minimum",
+                "maximum"
+              ]
+            },
+            "final_answer_words": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "minimum": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximum": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "minimum",
+                "maximum"
+              ]
+            },
+            "prompt_restatement": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "initial_update",
+            "progress_updates",
+            "questions",
+            "approval_requests",
+            "final_answer_words",
+            "prompt_restatement"
+          ]
+        },
+        "rubric": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ]
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "scenario",
+        "expectations",
+        "rubric"
+      ]
+    },
+    "communicationMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policy_version": {
+          "const": "communication-metrics-v1"
+        },
+        "tokenizer_version": {
+          "const": "visible-lexical-v1"
+        },
+        "total_visible_words": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_visible_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "assistant_words": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "assistant_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "assistant_message_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "progress_update_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "average_progress_words": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "maximum_progress_words": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "final_answer_words": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "final_answer_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "question_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "approval_request_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unnecessary_question_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unnecessary_approval_request_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heading_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bullet_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "formatting_density": {
+          "type": "number",
+          "minimum": 0
+        },
+        "prompt_restatement": {
+          "type": "boolean"
+        },
+        "repeated_sentence_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "slop_phrase_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "slop_matches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "phrase": {
+                "type": "string",
+                "minLength": 1
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "phrase",
+              "count"
+            ]
+          }
+        },
+        "average_update_gap_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "maximum_update_gap_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "communication_to_model_output_ratio": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "useful_progress_update_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "useful_progress_update_rate": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ordinal": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "detail": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "kind",
+              "ordinal",
+              "detail"
+            ]
+          }
+        }
+      },
+      "required": [
+        "policy_version",
+        "tokenizer_version",
+        "total_visible_words",
+        "total_visible_tokens",
+        "assistant_words",
+        "assistant_tokens",
+        "assistant_message_count",
+        "progress_update_count",
+        "average_progress_words",
+        "maximum_progress_words",
+        "final_answer_words",
+        "final_answer_tokens",
+        "question_count",
+        "approval_request_count",
+        "unnecessary_question_count",
+        "unnecessary_approval_request_count",
+        "heading_count",
+        "bullet_count",
+        "formatting_density",
+        "prompt_restatement",
+        "repeated_sentence_count",
+        "slop_phrase_count",
+        "slop_matches",
+        "average_update_gap_seconds",
+        "maximum_update_gap_seconds",
+        "communication_to_model_output_ratio",
+        "useful_progress_update_count",
+        "useful_progress_update_rate",
+        "violations"
+      ]
+    },
+    "collaborationTrial": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "complete",
+            "unavailable"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "contract_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "contract": {
+          "$ref": "#/$defs/communicationContract"
+        },
+        "transcript": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/transcriptMessage"
+          }
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/communicationMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grade": {
+          "$ref": "#/$defs/collaborationGrade"
+        }
+      },
+      "required": [
+        "status",
+        "reasons",
+        "contract_digest",
+        "contract",
+        "transcript",
+        "metrics"
+      ]
+    },
+    "collaborationDimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "enum": [
+            "directness",
+            "proportionality",
+            "progress_usefulness",
+            "autonomy",
+            "candor",
+            "warmth",
+            "restraint",
+            "completion_clarity"
+          ]
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "name",
+        "score",
+        "rationale"
+      ]
+    },
+    "collaborationGrade": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "completed",
+            "blocked",
+            "incomplete"
+          ]
+        },
+        "protocol_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "rubric_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/collaborationDimension"
+          }
+        },
+        "would_work_again": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "duration_seconds": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "usage_complete": {
+          "type": "boolean"
+        },
+        "model_usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modelUsage"
+          }
+        },
+        "cost_usd": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "pricing_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "required": [
+        "status",
+        "protocol_id",
+        "rubric_version",
+        "dimensions",
+        "would_work_again",
+        "duration_seconds",
+        "usage_complete",
+        "model_usage",
+        "cost_usd",
+        "pricing_digest"
+      ]
+    },
+    "collaborationCampaign": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "plan_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "protocol_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "rubric_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_report_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "results_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "evaluation_cost_usd": {
+          "$ref": "#/$defs/nullableNumber"
+        }
+      },
+      "required": [
+        "plan_id",
+        "protocol_id",
+        "rubric_version",
+        "source_report_id",
+        "results_digest",
+        "evaluation_cost_usd"
+      ]
+    },
+    "calibrationLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pair_id": {
+          "type": "string",
+          "pattern": "^pair-[a-f0-9]{24}$"
+        },
+        "scenario": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preferred_contender_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "other_contender_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "annoyance_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        },
+        "grader_agreement": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "pair_id",
+        "scenario",
+        "preferred_contender_id",
+        "other_contender_id",
+        "annoyance_reason",
+        "grader_agreement"
+      ]
+    },
+    "collaborationCalibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1"
+        },
+        "plan_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "labels_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/calibrationLabel"
+          }
+        },
+        "calibrated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "plan_id",
+        "labels_digest",
+        "labels",
+        "calibrated"
       ]
     }
   }

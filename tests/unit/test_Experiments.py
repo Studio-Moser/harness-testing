@@ -82,6 +82,24 @@ def test_request_validation_is_strict_and_aggregates_errors():
     assert "max_sessions" in errors
 
 
+def test_startup_instructions_can_define_a_personality_only_contender():
+    document = request_document()
+    contender = document["contenders"][0]
+    contender["family"] = "studio-personality"
+    contender["sources"] = []
+    contender["startup_paths"] = ["runs/inputs/House Style.md"]
+    assert validate_experiment_request(document) == []
+
+
+def test_non_nothing_contender_requires_a_frozen_input():
+    document = request_document()
+    contender = document["contenders"][0]
+    contender["sources"] = []
+    assert any(
+        "sources or startup_paths" in error for error in validate_experiment_request(document)
+    )
+
+
 def test_only_common_conditions_change_comparison_compatibility():
     first = request_document()["conditions"]
     assert comparison_mismatches(first, copy.deepcopy(first)) == []
@@ -97,9 +115,7 @@ def test_provider_recovery_is_an_explicit_comparison_condition(allowance):
     document["conditions"]["provider_recovery_seconds"] = allowance
     assert validate_experiment_request(document) == []
     original = request_document()["conditions"]
-    assert comparison_mismatches(original, document["conditions"]) == [
-        "provider_recovery_seconds"
-    ]
+    assert comparison_mismatches(original, document["conditions"]) == ["provider_recovery_seconds"]
 
 
 @pytest.mark.parametrize("allowance", [-1, True, 0.5, 600.0, 3601, float("inf")])
@@ -245,12 +261,19 @@ def test_documented_requests_validate_and_select_only_candidate_on_iteration():
     requests = [
         json.loads(path.read_text()) for path in (root / "runs/examples").glob("* Comparison.json")
     ]
-    assert len(requests) == 2
+    assert len(requests) == 3
     for document in requests:
         assert validate_experiment_request(document) == []
     candidate = next(document for document in requests if document["purpose"] == "candidate")
     assert [c["family"] for c in candidate["contenders"]] == ["studio-moser"]
     assert candidate["limits"]["max_sessions"] == 27
+    opus = next(document for document in requests if document["label"].startswith("Opus 5"))
+    assert [c["family"] for c in opus["contenders"]] == [
+        "nothing",
+        "studio-personality",
+        "studio-moser",
+    ]
+    assert opus["conditions"]["kickoff"]["model"] == "claude-opus-5"
 
 
 def test_runtime_images_use_contents_not_only_recipes(monkeypatch, tmp_path):

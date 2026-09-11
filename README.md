@@ -1,6 +1,6 @@
 # Harness Testing
 
-Harness Testing asks whether a coding-agent harness helps: **does it complete the task correctly, and what does that cost in time, tokens and money?** It compares Nothing, Superpowers and Studio Moser's full Skills-n-Stuff collection, including its declared Superpowers dependency. The dashboard presents the answer, supporting evidence and uncertainty; agents prepare runs through the CLI.
+Harness Testing asks whether a coding-agent harness helps: **does it complete the task correctly, what does that cost in time, tokens and money, and is the agent easier to work with?** It compares Nothing, Superpowers and Studio Moser's full Skills-n-Stuff collection, including its declared Superpowers dependency. The dashboard presents the answers, supporting evidence and uncertainty; agents prepare runs through the CLI.
 
 ## Start here in a new conversation
 
@@ -15,6 +15,8 @@ The queued next step is **Q1 — a three-trial Quill shared-toolbar pilot**, one
 | Nothing | Provider-native runtime with no added harness |
 | Superpowers | Pinned Superpowers plugin |
 | Studio Moser | Every plugin and skill in the pinned Skills-n-Stuff collection, its declared dependencies and frozen rubric |
+
+An optional `studio-personality` diagnostic contender loads only a frozen startup-instruction file. Use it to isolate Studio's communication guidance from the full harness; it is not one of the three primary engineering baselines.
 
 Studio Moser means the full collection, not only its `harness` plugin. A future version can change the rubric, disable it or remove/replace Superpowers; declare and freeze those inputs explicitly.
 
@@ -55,7 +57,8 @@ Legacy A0–A3 arm commands, explicit skill invocation and discovery modes remai
 | `src/harness_testing/CLI.py` | CLI entry and supported flags |
 | `Experiments.py`, `Contenders.py`, `Comparison_Tasks.py` in that package | Request compilation, frozen harness versions and neutral task materialization |
 | `Runs.py`, provider agents, `Native_Conversation.py`, `Scripted_User.py` | Execution, authentication boundaries, turns and scripted replies |
-| `Trial_Evidence.py`, `Experiment_Reports.py`, `Comparisons.py` | Whole-tree accounting, safe evidence and comparison conclusions |
+| `Trial_Evidence.py`, `Experiment_Reports.py`, `Comparisons.py` | Whole-tree accounting, safe evidence and engineering conclusions |
+| `Communication_Contracts.py`, `Collaboration_Quality.py`, `Collaboration_Backfill.py`, `Collaboration_Grading.py` | Visible conversation contracts, deterministic metrics, retained-ATIF recovery, blinded grading and personal calibration |
 | `policy/`, `Versions.toml`, `runs/Profiles.toml` | Schemas, recommendation policy, pins and admission assumptions |
 | `tests/`, task-local `tests/` | Python unit/contract checks and protected model-free task QA |
 | `dashboard/` | Read-only Observable UI: harness comparison, version history and task evidence; earlier diagnostics are separate |
@@ -77,7 +80,9 @@ For new comparisons, inspect version-3 experiment trial/comparison evidence for 
 
 Passing tests does not mean the final code passed an independent review. Use [Code Review Evaluation](docs/Code%20Review%20Evaluation.md) to prepare blinded reviews of retained submissions and record confirmed remaining defects, unresolved claims and separate evaluation cost. The dashboard distinguishes this from test outcomes and internal review activity; older test-only results cannot establish reviewed-code superiority.
 
-Never copy raw execution transcripts (including model prompts, reasoning, commands and session IDs), credentials or host paths into tracked docs or dashboard assets. Public development-history reports are allowlisted summaries and may include failures; reviewed finalized `results/` remain a separate evidence lane. Publication is bound to the approved manifest destination: local-only runs stay local. See the [Runbook](docs/Runbook.md) before syncing or publishing anything.
+Collaboration quality is also separate from correctness. Each workflow task carries a communication contract, and complete runs retain the root session's user-visible messages. Use the [collaboration workflow](docs/Agent%20Experiment%20Guide.md#a7--evaluate-collaboration-quality) to generate blinded grades and Tim's A/B preference labels. The dashboard can then answer who was easier to work with, who talked most, which progress updates were useful, and which exact messages violated the contract.
+
+Never copy raw provider traces, hidden reasoning, commands, tool output, session IDs, credentials or host paths into tracked docs or dashboard assets. Collaboration reports may contain only the normalized user-visible root conversation after public-safety validation. Public development-history reports are allowlisted evidence and may include failures; reviewed finalized `results/` remain a separate evidence lane. Publication is bound to the approved manifest destination: local-only runs stay local. See the [Runbook](docs/Runbook.md) before syncing or publishing anything.
 
 ## Local development
 

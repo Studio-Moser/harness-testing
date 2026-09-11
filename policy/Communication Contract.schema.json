@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Communication Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "scenario", "expectations", "rubric"],
+  "properties": {
+    "schema_version": {"const": "1"},
+    "scenario": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "expectations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initial_update", "progress_updates", "questions", "approval_requests", "final_answer_words", "prompt_restatement"],
+      "properties": {
+        "initial_update": {"enum": ["required", "optional", "forbidden"]},
+        "progress_updates": {"$ref": "#/$defs/countExpectation"},
+        "questions": {"$ref": "#/$defs/countRange"},
+        "approval_requests": {"$ref": "#/$defs/countRange"},
+        "final_answer_words": {"$ref": "#/$defs/countRange"},
+        "prompt_restatement": {"type": "boolean"}
+      }
+    },
+    "rubric": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"enum": ["directness", "proportionality", "progress_usefulness", "autonomy", "candor", "warmth", "restraint", "completion_clarity"]}
+    }
+  },
+  "$defs": {
+    "countRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum", "maximum"],
+      "properties": {
+        "minimum": {"type": "integer", "minimum": 0},
+        "maximum": {"type": "integer", "minimum": 0}
+      }
+    },
+    "countExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum", "maximum", "require_new_information"],
+      "properties": {
+        "minimum": {"type": "integer", "minimum": 0},
+        "maximum": {"type": "integer", "minimum": 0},
+        "require_new_information": {"type": "boolean"}
+      }
+    }
+  }
+}

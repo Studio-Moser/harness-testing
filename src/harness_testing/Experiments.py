@@ -64,12 +64,9 @@ def validate_experiment_request(document: dict) -> list[str]:
     ):
         errors.append("conditions.provider_recovery_seconds: recovery requires the Codex protocol")
     if conditions["task_variant"] == "deepswe" and (
-        purpose != "diagnostic"
-        or conditions["task_ids"] != ["quill-shared-toolbar-focus"]
+        purpose != "diagnostic" or conditions["task_ids"] != ["quill-shared-toolbar-focus"]
     ):
-        errors.append(
-            "conditions: DeepSWE support is limited to the queued Quill diagnostic task"
-        )
+        errors.append("conditions: DeepSWE support is limited to the queued Quill diagnostic task")
     if purpose != "diagnostic" and conditions["task_variant"] != "comparison":
         errors.append(
             "conditions.task_variant: primary comparison requires neutral development tasks"
@@ -93,8 +90,12 @@ def validate_experiment_request(document: dict) -> list[str]:
             or contender["rubric"]["mode"] != "disabled"
         ):
             errors.append(f"{prefix}: Nothing must have no added harness inputs")
-        if contender["family"] != "nothing" and not contender["sources"]:
-            errors.append(f"{prefix}.sources: an added harness requires pinned sources")
+        if (
+            contender["family"] != "nothing"
+            and not contender["sources"]
+            and not contender["startup_paths"]
+        ):
+            errors.append(f"{prefix}: an added harness requires sources or startup_paths")
         rubric = contender["rubric"]
         if (rubric["mode"] == "enabled") != bool(rubric["path"]):
             errors.append(
