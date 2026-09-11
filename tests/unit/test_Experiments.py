@@ -36,6 +36,7 @@ def request_document():
         "schema_version": "1",
         "label": "Rubric iteration",
         "purpose": "candidate",
+        "skill_evaluation": None,
         "contenders": [
             {
                 "family": "studio-moser",
@@ -99,6 +100,16 @@ def test_request_validation_is_strict_and_aggregates_errors():
     assert "baseline_result_ids" in errors
     assert "unknown" in errors
     assert "max_sessions" in errors
+
+
+def test_request_accepts_explicit_skill_capability_invocation():
+    document = request_document()
+    document["skill_evaluation"] = {
+        "mode": "capability",
+        "name": "harness:execute",
+    }
+
+    assert validate_experiment_request(document) == []
 
 
 def test_startup_instructions_can_define_a_personality_only_contender():

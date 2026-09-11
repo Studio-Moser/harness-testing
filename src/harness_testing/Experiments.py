@@ -241,11 +241,13 @@ def plan_experiment(
     from harness_testing.Contenders import materialize_contender
     from harness_testing.Materialize import _file_digests, load_deepswe_dataset
     from harness_testing.Runs import RunCell, _agent_adapter_digests, _tree_digest, compile_run
+    from harness_testing.Skill_Evaluation import SkillEvaluation
 
     errors = validate_experiment_request(document)
     if errors:
         raise ValueError("invalid experiment request:\n" + "\n".join(errors))
     request = copy.deepcopy(document)
+    skill_evaluation = SkillEvaluation.from_document(request.pop("skill_evaluation"))
     conditions, limits = request["conditions"], request["limits"]
     conditions.setdefault(
         "provider_recovery_seconds", 600 if conditions["kickoff"]["provider"] == "codex" else 0
@@ -380,7 +382,14 @@ def plan_experiment(
     request["change"]["diff_digest"] = contender_identity({"changes": changes})
     request["contenders"] = public
     request.pop("request_id", None)
-    request["request_id"] = contender_identity(request)
+    request["request_id"] = contender_identity(
+        request
+        | {
+            "skill_evaluation": (
+                skill_evaluation.to_dict() if skill_evaluation is not None else None
+            )
+        }
+    )
     manifest = compile_run(
         root,
         profile="research" if conditions["task_variant"] == "deepswe" else "calibration",
@@ -392,6 +401,7 @@ def plan_experiment(
         attempts=conditions["attempts"],
         concurrency=conditions["concurrency"],
         agent_timeout_seconds=conditions["timeout_seconds"],
+        skill_evaluation=skill_evaluation,
         publish_report=request["publication"]["mode"] == "configured",
         experiment=request,
     )

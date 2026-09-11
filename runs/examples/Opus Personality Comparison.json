@@ -2,6 +2,7 @@
   "schema_version": "1",
   "label": "Opus 5 collaboration quality comparison",
   "purpose": "diagnostic",
+  "skill_evaluation": null,
   "contenders": [
     {
       "family": "nothing",

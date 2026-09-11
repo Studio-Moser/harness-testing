@@ -22,6 +22,29 @@
         "diagnostic"
       ]
     },
+    "skill_evaluation": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "capability",
+            "discovery"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*(?::[a-z0-9][a-z0-9-]*)?$"
+        }
+      },
+      "required": [
+        "mode",
+        "name"
+      ],
+      "additionalProperties": false
+    },
     "contenders": {
       "type": "array",
       "items": {
@@ -416,6 +439,7 @@
     "schema_version",
     "label",
     "purpose",
+    "skill_evaluation",
     "contenders",
     "conditions",
     "baseline_result_ids",
