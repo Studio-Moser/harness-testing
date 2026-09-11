@@ -5,11 +5,30 @@ from pathlib import Path
 import pytest
 
 from harness_testing.Experiments import (
+    available_reference_reports,
     comparison_mismatches,
     contender_identity,
     resolve_reference_reports,
     validate_experiment_request,
 )
+
+
+def test_reference_discovery_ignores_publication_receipts(tmp_path, monkeypatch):
+    report_id = "a" * 64
+    evidence = tmp_path / "runs" / "evidence"
+    evidence.mkdir(parents=True)
+    (evidence / f"{report_id}.json").write_text("{}")
+    (evidence / f"{report_id}.Publication.json").write_text("{}")
+    loaded = []
+
+    def load_report(_root, path):
+        loaded.append(path.name)
+        return {"report_id": path.stem}
+
+    monkeypatch.setattr("harness_testing.Run_Reports.load_run_report", load_report)
+
+    assert available_reference_reports(tmp_path) == [{"report_id": report_id}]
+    assert loaded == [f"{report_id}.json"]
 
 
 def request_document():
