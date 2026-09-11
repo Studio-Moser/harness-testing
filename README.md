@@ -58,7 +58,7 @@ Legacy A0–A3 arm commands, explicit skill invocation and discovery modes remai
 | `Experiments.py`, `Contenders.py`, `Comparison_Tasks.py` in that package | Request compilation, frozen harness versions and neutral task materialization |
 | `Runs.py`, provider agents, `Native_Conversation.py`, `Scripted_User.py` | Execution, authentication boundaries, turns and scripted replies |
 | `Trial_Evidence.py`, `Experiment_Reports.py`, `Comparisons.py` | Whole-tree accounting, safe evidence and engineering conclusions |
-| `Communication_Contracts.py`, `Collaboration_Quality.py`, `Collaboration_Grading.py` | Visible conversation contracts, deterministic metrics, blinded grading and personal calibration |
+| `Communication_Contracts.py`, `Collaboration_Quality.py`, `Collaboration_Backfill.py`, `Collaboration_Grading.py` | Visible conversation contracts, deterministic metrics, retained-ATIF recovery, blinded grading and personal calibration |
 | `policy/`, `Versions.toml`, `runs/Profiles.toml` | Schemas, recommendation policy, pins and admission assumptions |
 | `tests/`, task-local `tests/` | Python unit/contract checks and protected model-free task QA |
 | `dashboard/` | Read-only Observable UI: harness comparison, version history and task evidence; earlier diagnostics are separate |

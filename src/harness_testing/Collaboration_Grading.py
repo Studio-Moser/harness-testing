@@ -88,6 +88,16 @@ def _eligible_trials(report: dict) -> list[dict]:
     ]
 
 
+def _task_instruction(root: Path, trial: dict) -> str:
+    path = root / "tasks" / "workflow" / trial["task_id"] / "Comparison Instruction.md"
+    if path.exists():
+        return path.read_text()
+    for row in trial["collaboration"]["transcript"]:
+        if row.get("role") == "user":
+            return row["content"]
+    raise ValueError("collaboration grading requires a visible task instruction")
+
+
 def prepare_grading(root: Path, report_path: Path, protocol_path: Path) -> dict:
     """Freeze randomized packets that contain no contender or model identity."""
     root = root.resolve()
@@ -102,12 +112,11 @@ def prepare_grading(root: Path, report_path: Path, protocol_path: Path) -> dict:
     for trial in trials:
         collaboration = trial["collaboration"]
         packet_id = "collaboration-" + secrets.token_hex(12)
-        task_path = root / "tasks" / "workflow" / trial["task_id"] / "Comparison Instruction.md"
         packet = {
             "schema_version": "1",
             "packet_id": packet_id,
             "task": {
-                "instruction": task_path.read_text(),
+                "instruction": _task_instruction(root, trial),
                 "scenario": collaboration["contract"]["scenario"],
                 "outcome": {
                     "status": trial["status"],

@@ -201,6 +201,10 @@ Collaboration evidence appears inside the development-history lane and remains s
 from the engineering verdict. After a coding run, prepare identity-blind grades and Tim's
 same-scenario A/B labels with the commands in [Agent Experiment Guide](Agent%20Experiment%20Guide.md#a7--evaluate-collaboration-quality). Preparing and importing are model-free. Executing the grader packets is additional model work and needs explicit approval of the prepared plan and its exact session count.
 
+Older single-task comparison reports may be backfilled only from retained root ATIF and
+native-request artifacts with the documented `collaboration backfill` command. The new
+report preserves the source identity and visibly labels the evidence as retrospective.
+
 Reconstruct historical reports without opening raw job artifacts or starting a
 model session:
 

@@ -114,6 +114,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         "collaboration", help="prepare or import blinded collaboration evidence"
     )
     collaboration_subparsers = collaboration_parser.add_subparsers(dest="collaboration_command")
+    collaboration_backfill = collaboration_subparsers.add_parser(
+        "backfill", help="recover collaboration evidence from retained ATIF trajectories"
+    )
+    collaboration_backfill.add_argument("--report", type=Path, required=True)
+    collaboration_backfill.add_argument("--jobs-dir", type=Path, required=True)
+    collaboration_backfill.add_argument("--contract", type=Path, required=True)
+    collaboration_backfill.add_argument("--instruction", type=Path, required=True)
     collaboration_prepare = collaboration_subparsers.add_parser(
         "prepare", help="create blinded transcript grading packets"
     )
@@ -331,6 +338,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
         print(json.dumps(outcome, indent=2, sort_keys=True))
     elif arguments.command == "collaboration":
+        from harness_testing.Collaboration_Backfill import backfill_collaboration
         from harness_testing.Collaboration_Grading import (
             prepare_calibration,
             prepare_grading,
@@ -340,7 +348,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         from harness_testing.Run_Reports import refresh_local_dashboard
 
         try:
-            if arguments.collaboration_command == "prepare":
+            if arguments.collaboration_command == "backfill":
+                outcome = backfill_collaboration(
+                    _repository_root(),
+                    arguments.report,
+                    arguments.jobs_dir,
+                    arguments.contract,
+                    arguments.instruction,
+                )
+                refresh_local_dashboard(_repository_root())
+            elif arguments.collaboration_command == "prepare":
                 outcome = prepare_grading(_repository_root(), arguments.report, arguments.protocol)
             elif arguments.collaboration_command == "record":
                 outcome = record_grading(_repository_root(), arguments.plan, arguments.results)

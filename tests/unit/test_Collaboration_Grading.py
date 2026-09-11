@@ -191,3 +191,21 @@ def test_calibration_never_pairs_different_tasks_with_the_same_scenario(tmp_path
     outcome = prepare_calibration(root, report_path)
 
     assert len(outcome["packets"]) == 1
+
+
+def test_grading_uses_the_visible_user_instruction_for_a_research_task(tmp_path):
+    root, report_path, _ = prepared_root(tmp_path)
+    report = json.loads(report_path.read_text())
+    report["experiment"]["trials"][0]["task_id"] = "research-feature"
+    report["experiment"]["trials"] = report["experiment"]["trials"][:1]
+    report["report_id"] = run_report_id(report)
+    report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+
+    outcome = prepare_grading(
+        root,
+        report_path,
+        root / "policy/Collaboration Grading Protocol.json",
+    )
+
+    packet = json.loads(outcome["packets"][0].read_text())
+    assert packet["task"]["instruction"] == "Fix the count."

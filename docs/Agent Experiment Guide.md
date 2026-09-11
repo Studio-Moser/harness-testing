@@ -98,6 +98,25 @@ uv run harness-test collaboration prepare \
   --protocol 'policy/Collaboration Grading Protocol.json'
 ```
 
+For a finalized, single-task version-3 report created before transcript capture, reuse the
+coding work only when its exact Harbor job directories still retain both
+`agent/trajectory.json` and `agent/Native_Requests.jsonl`. Apply one explicit current
+communication contract and the original frozen task instruction:
+
+```bash
+uv run harness-test collaboration backfill \
+  --report 'runs/evidence/SOURCE_REPORT.json' \
+  --jobs-dir 'jobs/raw' \
+  --contract 'tasks/workflow/TASK/Communication Contract.json' \
+  --instruction 'PATH/TO/FROZEN/instruction.md'
+```
+
+The command verifies the report-to-job mapping and task request, records source digests in
+ignored local evidence, and writes an immutable superseding report. Its comparison
+limitations explicitly say that the transcript was retrospectively reconstructed and
+evaluated with the current contract. It starts no model. Do not backfill when either raw
+artifact is absent; leave collaboration unavailable instead.
+
 The returned plan freezes randomized identity-blind packets and requires one fresh grader session per packet. Review that exact plan, session count, model, effort and time budget, then obtain explicit approval before starting any grader. Put the returned results in the checked schema shape and import them without another coding run:
 
 ```bash

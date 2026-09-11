@@ -22,6 +22,7 @@ runs/history/
 runs/evidence/
 runs/reviews/
 runs/collaboration/
+runs/collaboration-backfill/
 runs/calibration/
 
 # Dashboard dependencies and output
