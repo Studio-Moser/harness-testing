@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 import shlex
 from collections.abc import Iterable
 from datetime import datetime, timedelta
@@ -23,14 +22,6 @@ from harness_testing.Native_Conversation import (
     validate_conversation,
 )
 from harness_testing.Skill_Evaluation import explicit_instruction, validate_skill_name
-
-_POTENTIAL_SHELL_MUTATION = re.compile(
-    r"(^|\s)(?:sed\s+-i|perl\s+-pi|touch|mkdir|mv|cp|rm)\s|"
-    r"(?:>|>>|\btee\b)\s*\S+|"
-    r"(?:write_text|write_bytes|writeFile|writeFileSync|appendFile|appendFileSync|"
-    r"unlink|unlinkSync|remove|rename|renameSync|mkdir|mkdirSync|rmdir|replace)|"
-    r'''open\s*\([^)]*,\s*['"][wax+]'''
-)
 
 
 def _raw_events(session_file: Path) -> list[dict[str, Any]]:
@@ -146,24 +137,18 @@ def _duration_seconds(item: dict[str, Any]) -> float | None:
         return None
     seconds = duration.get("secs")
     nanoseconds = duration.get("nanos")
-    if not isinstance(seconds, int) or not isinstance(nanoseconds, int):
+    if (
+        type(seconds) is not int
+        or seconds < 0
+        or type(nanoseconds) is not int
+        or not 0 <= nanoseconds < 1_000_000_000
+    ):
         return None
     return seconds + nanoseconds / 1_000_000_000
 
 
 def _timestamp(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
-
-def _mutation_priority(step: Any) -> int:
-    for call in step.tool_calls or []:
-        if call.function_name in {"Edit", "Write", "apply_patch"}:
-            return 1
-        if call.function_name == "shell":
-            command = call.arguments.get("cmd") or call.arguments.get("command")
-            if isinstance(command, str) and _POTENTIAL_SHELL_MUTATION.search(command):
-                return 1
-    return 0
 
 
 def _output(item: dict[str, Any]) -> str | None:
@@ -371,13 +356,20 @@ class HarnessCodex(Codex):
                         call, result = native
                         timestamp = item.get("_event_timestamp")
                         duration = _duration_seconds(item)
-                        command = _command_text(item)
-                        mutates = command is not None and _POTENTIAL_SHELL_MUTATION.search(command)
-                        if isinstance(timestamp, str) and duration is not None and not mutates:
+                        native_step = step.model_copy(deep=True)
+                        if call.function_name == "shell":
+                            if not isinstance(timestamp, str) or duration is None:
+                                self.logger.warning(
+                                    "A retained Codex command has incomplete timing"
+                                )
+                                return None
                             completed = _timestamp(timestamp)
                             started = completed - timedelta(seconds=duration)
+                            native_step.extra = {
+                                **(native_step.extra or {}),
+                                "command_completed_at": timestamp,
+                            }
                             timestamp = started.isoformat().replace("+00:00", "Z")
-                        native_step = step.model_copy(deep=True)
                         native_step.timestamp = timestamp if isinstance(timestamp, str) else None
                         native_step.message = ""
                         native_step.reasoning_content = None
@@ -391,9 +383,7 @@ class HarnessCodex(Codex):
                 step.observation = Observation(results=results)
         trajectory.steps.extend(native_steps)
         if all(step.timestamp is not None for step in trajectory.steps):
-            trajectory.steps.sort(
-                key=lambda step: (_timestamp(step.timestamp), _mutation_priority(step))
-            )
+            trajectory.steps.sort(key=lambda step: _timestamp(step.timestamp))
             for index, step in enumerate(trajectory.steps, start=1):
                 step.step_id = index
         return Trajectory.model_validate(trajectory.model_dump())
@@ -448,7 +438,7 @@ class HarnessCodex(Codex):
             for step in item.steps:
                 step.extra = {**(step.extra or {}), "session_id": item.session_id}
                 steps.append(step)
-        steps.sort(key=lambda step: (_timestamp(step.timestamp), _mutation_priority(step)))
+        steps.sort(key=lambda step: _timestamp(step.timestamp))
         for index, step in enumerate(steps, start=1):
             step.step_id = index
         trajectory.steps = steps

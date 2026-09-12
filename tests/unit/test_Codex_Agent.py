@@ -6,7 +6,7 @@ import pytest
 
 from harness_testing.Codex_Agent import HarnessCodex
 from harness_testing.Trajectory_Events import result_success
-from harness_testing.Workflow_Criteria import command_after_last_mutation
+from harness_testing.Workflow_Criteria import command_after_last_mutation, no_testing_churn
 
 
 def test_codex_inventory_is_recorded_after_effective_config_upload(tmp_path: Path):
@@ -486,3 +486,75 @@ def test_native_cleanup_still_rejects_credential_removal_failure(tmp_path, monke
         asyncio.run(agent.run("No model call", Environment(), object()))
     assert len(calls) == 2
     assert calls[-1] == "rm -rf -- /tmp/Harness_Native_Conversation"
+
+
+@pytest.mark.parametrize(
+    "command", ["npm run gate", "npm run gate > /dev/null", "touch src/other.ts && npm run gate"]
+)
+@pytest.mark.parametrize("gate_duration, expected", [(2, False), (1, False), (0, True)])
+@pytest.mark.parametrize("child_shell", [False, True])
+def test_codex_gate_must_start_after_child_edit(
+    tmp_path, monkeypatch, command, gate_duration, expected, child_shell
+):
+    sessions = tmp_path / "sessions"
+    _write_session(sessions)
+    root = next(sessions.glob("*.jsonl"))
+    events = [json.loads(line) for line in root.read_text().splitlines()]
+    for event in events:
+        item = event.get("payload", {}).get("item", {})
+        if item.get("type") == "CommandExecution":
+            item.update(command=command, exit_code=0, duration={"secs": gate_duration, "nanos": 0})
+    child = json.loads(json.dumps(events))
+    child[0]["payload"].update(id="child", parent_thread_id="session-1")
+    child = [
+        event
+        for event in child
+        if event.get("payload", {}).get("item", {}).get("type") != "CommandExecution"
+    ]
+    if child_shell:
+        for event in child:
+            if event.get("payload", {}).get("item", {}).get("type") == "FileChange":
+                event["payload"]["item"] = {
+                    "type": "CommandExecution", "id": "child-edit", "status": "completed",
+                    "command": "touch src/App.tsx", "exit_code": 0,
+                    "duration": {"secs": 2, "nanos": 0},
+                }
+    events = [
+        event
+        for event in events
+        if event.get("payload", {}).get("item", {}).get("type") != "FileChange"
+    ]
+    root.write_text("".join(json.dumps(event) + "\n" for event in events))
+    (sessions / "child.jsonl").write_text("".join(json.dumps(event) + "\n" for event in child))
+    (tmp_path / "Trial_Evidence.json").write_text(json.dumps({"root_session_id": "session-1"}))
+    agent = HarnessCodex(logs_dir=tmp_path, model_name="openai/gpt-5.6-sol", version="0.153.4")
+    trajectory = agent._convert_events_to_trajectory(sessions)
+    assert trajectory is not None
+    path = tmp_path / "trajectory.json"
+    path.write_text(trajectory.model_dump_json())
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(path))
+    assert command_after_last_mutation("npm run gate") is expected
+    assert no_testing_churn() is expected
+
+
+@pytest.mark.parametrize(
+    "duration",
+    [
+        None,
+        {"secs": -1, "nanos": 0},
+        {"secs": True, "nanos": 0},
+        {"secs": 0, "nanos": 1_000_000_000},
+    ],
+)
+def test_codex_rejects_incomplete_command_timing(tmp_path, duration):
+    sessions = tmp_path / "sessions"
+    _write_session(sessions)
+    path = next(sessions.glob("*.jsonl"))
+    events = [json.loads(line) for line in path.read_text().splitlines()]
+    for event in events:
+        item = event.get("payload", {}).get("item", {})
+        if item.get("type") == "CommandExecution":
+            item["duration"] = duration
+    path.write_text("".join(json.dumps(event) + "\n" for event in events))
+    agent = HarnessCodex(logs_dir=tmp_path, model_name="openai/gpt-5.6-sol", version="0.153.4")
+    assert agent._convert_events_to_trajectory(sessions) is None

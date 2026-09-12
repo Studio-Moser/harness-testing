@@ -10,6 +10,8 @@ import shlex
 import subprocess
 import tempfile
 from collections.abc import Sequence
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -211,13 +213,46 @@ def _normalize(command: str) -> str:
     return normalize_command(command, _IGNORED_FLAGS, _REMOVABLE_PREFIXES)
 
 
-def _events() -> list[tuple[str, str | None, bool | None]]:
+@dataclass(frozen=True)
+class _WorkflowEvent:
+    kind: str
+    command: str | None
+    success: bool | None
+    call: int
+    position: int
+    started: datetime | None
+    completed: datetime | None
+    interval: bool
+
+
+def _before(left: _WorkflowEvent, right: _WorkflowEvent) -> bool:
+    if left.call == right.call or not (left.interval or right.interval):
+        return left.position < right.position
+    return (left.completed is not None and right.started is not None
+            and left.completed < right.started)
+
+
+def _events() -> list[_WorkflowEvent]:
     try:
         trajectory = json.loads(_trajectory_path().read_text())
     except (OSError, json.JSONDecodeError):
         return []
-    events: list[tuple[str, str | None, bool | None]] = []
+    events: list[_WorkflowEvent] = []
+
+    def emit(event: tuple[str, str | None, bool | None]) -> None:
+        events.append(_WorkflowEvent(*event, call_position, len(events), started, completed,
+                                     interval))
+
     for step in trajectory.get("steps", []):
+        extra = step.get("extra") or {}
+        interval = "command_completed_at" in extra
+        start = step.get("timestamp")
+        end = extra.get("command_completed_at", start)
+        try:
+            started = datetime.fromisoformat(start.replace("Z", "+00:00")) if start else None
+            completed = datetime.fromisoformat(end.replace("Z", "+00:00")) if end else None
+        except (ValueError, AttributeError):
+            started = completed = None
         observation = step.get("observation") or {}
         results = {
             result.get("source_call_id"): result
@@ -225,6 +260,7 @@ def _events() -> list[tuple[str, str | None, bool | None]]:
             if result.get("source_call_id") is not None
         }
         for call in step.get("tool_calls") or []:
+            call_position = len(events)
             name = call.get("function_name")
             arguments = call.get("arguments")
             if not isinstance(arguments, dict):
@@ -240,9 +276,9 @@ def _events() -> list[tuple[str, str | None, bool | None]]:
                 if success is not False and any(
                     _RELEVANT_PATH.search(path.removeprefix("/app/")) for path in paths
                 ):
-                    events.append(("mutation", None, None))
+                    emit(("mutation", None, None))
                 elif success is not False and not paths:
-                    events.append(("unknown_mutation", None, None))
+                    emit(("unknown_mutation", None, None))
                 continue
             if name not in _SHELL_TOOLS:
                 continue
@@ -258,11 +294,11 @@ def _events() -> list[tuple[str, str | None, bool | None]]:
                     _RELEVANT_PATH_PATTERNS,
                 )
                 if mutation == "relevant" and component_success is True:
-                    events.append(("mutation", None, None))
+                    emit(("mutation", None, None))
                 elif mutation in {"relevant", "unknown"} and component_success is not False:
-                    events.append(("unknown_mutation", None, None))
-                events.append(("command", _normalize(component.command), component_success))
-            events.append(("duplicate", _normalize(command), success))
+                    emit(("unknown_mutation", None, None))
+                emit(("command", _normalize(component.command), component_success))
+            emit(("duplicate", _normalize(command), success))
     return events
 
 
@@ -270,21 +306,12 @@ def command_after_last_mutation(command: str) -> bool:
     """Return true when the required command succeeds after all relevant edits."""
 
     events = _events()
-    last_mutation = max(
-        (
-            index
-            for index, (kind, _, _) in enumerate(events)
-            if kind in {"mutation", "unknown_mutation"}
-        ),
-        default=-1,
-    )
+    mutations = [event for event in events if event.kind in {"mutation", "unknown_mutation"}]
     required = _normalize(command)
     return any(
-        index > last_mutation
-        and kind == "command"
-        and observed == required
-        and success is True
-        for index, (kind, observed, success) in enumerate(events)
+        event.kind == "command" and event.command == required and event.success is True
+        and all(_before(mutation, event) for mutation in mutations)
+        for event in events
     )
 
 
@@ -293,8 +320,8 @@ def command_succeeded(command: str) -> bool:
 
     required = _normalize(command)
     return any(
-        kind == "command" and observed == required and success is True
-        for kind, observed, success in _events()
+        event.kind == "command" and event.command == required and event.success is True
+        for event in _events()
     )
 
 
@@ -303,11 +330,11 @@ def cargo_packages_succeeded(packages: Sequence[str]) -> bool:
 
     required = set(packages)
     selected: set[str] = set()
-    for kind, command, success in _events():
-        if kind != "command" or command is None or success is not True:
+    for event in _events():
+        if event.kind != "command" or event.command is None or event.success is not True:
             continue
         try:
-            arguments = shlex.split(command)
+            arguments = shlex.split(event.command)
         except ValueError:
             continue
         if arguments[:2] != ["cargo", "test"]:
@@ -322,31 +349,30 @@ def no_comprehensive_commands() -> bool:
     """Return false for any observed comprehensive command."""
 
     return not any(
-        kind == "command" and command in _COMPREHENSIVE_COMMANDS
-        for kind, command, _ in _events()
+        event.kind == "command" and event.command in _COMPREHENSIVE_COMMANDS
+        for event in _events()
     )
 
 
 def no_testing_churn() -> bool:
     """Reject premature comprehensive checks and duplicate successful commands."""
 
-    successful_since_mutation: set[str] = set()
-    pending_comprehensive = False
-    for kind, command, success in _events():
-        if kind == "unknown_mutation":
-            return False
-        if kind == "mutation":
-            if pending_comprehensive:
-                return False
-            pending_comprehensive = False
-            successful_since_mutation.clear()
+    events = _events()
+    mutations = [event for event in events if event.kind in {"mutation", "unknown_mutation"}]
+    if any(event.kind == "unknown_mutation" for event in mutations):
+        return False
+    previous: dict[str, _WorkflowEvent] = {}
+    for event in events:
+        if event.success is not True or event.command is None:
             continue
-        if success is not True or command is None:
-            continue
-        if kind == "duplicate":
-            if command in successful_since_mutation:
+        if event.kind == "command" and event.command in _COMPREHENSIVE_COMMANDS:
+            if not all(_before(mutation, event) for mutation in mutations):
                 return False
-            successful_since_mutation.add(command)
-        elif kind == "command" and command in _COMPREHENSIVE_COMMANDS:
-            pending_comprehensive = True
+        elif event.kind == "duplicate":
+            earlier = previous.get(event.command)
+            if earlier is not None and not any(
+                _before(earlier, mutation) and _before(mutation, event) for mutation in mutations
+            ):
+                return False
+            previous[event.command] = event
     return True
