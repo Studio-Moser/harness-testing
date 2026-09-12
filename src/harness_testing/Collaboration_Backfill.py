@@ -49,6 +49,16 @@ def extract_atif_transcript(
         raise ValueError("retained ATIF trajectory is invalid")
     instruction = task_instruction.strip()
     steps = document["steps"]
+    if any(isinstance(step, dict) and "session_id" in (step.get("extra") or {}) for step in steps):
+        root_session = document.get("session_id")
+        if not isinstance(root_session, str) or not root_session:
+            raise ValueError("retained ATIF trajectory has no root session identity")
+        steps = [
+            step
+            for step in steps
+            if isinstance(step, dict)
+            and (step.get("extra") or {}).get("session_id") == root_session
+        ]
     first_agent = next(
         (
             index

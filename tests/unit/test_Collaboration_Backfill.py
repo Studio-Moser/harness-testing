@@ -161,3 +161,36 @@ def test_backfill_reuses_the_report_for_identical_retained_evidence(tmp_path):
 
     assert second == first
     assert len(list((tmp_path / "runs/evidence").glob("*.json"))) == 1
+
+
+@pytest.mark.parametrize("include_task", [True, False])
+def test_atif_backfill_excludes_child_messages(include_task):
+    document = _steps(include_task=include_task)
+    expected = extract_atif_transcript(
+        document, "Implement the substantial feature.", verified_missing_task=not include_task
+    )
+    for step in document["steps"]:
+        step["extra"] = {"session_id": document["session_id"]}
+    document["steps"].extend(
+        [
+            {
+                "source": "user",
+                "message": "Internal child assignment",
+                "timestamp": "2026-09-10T20:00:06Z",
+                "extra": {"session_id": "child"},
+            },
+            {
+                "source": "agent",
+                "message": "Internal child report",
+                "timestamp": "2026-09-10T20:00:10Z",
+                "extra": {"session_id": "child"},
+            },
+        ]
+    )
+    document["steps"].sort(key=lambda step: step["timestamp"])
+    assert (
+        extract_atif_transcript(
+            document, "Implement the substantial feature.", verified_missing_task=not include_task
+        )
+        == expected
+    )

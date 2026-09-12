@@ -646,7 +646,7 @@ export function renderEvidence(reports, state = {}) {
     for (const trial of selected) {
       const title = `${names.get(trial.contender_id) ?? "Harness"} · trial ${trial.attempt} · ${trialLabel(trial)}`;
       const content = el("div");
-      content.append(el("p", `Execution: ${trial.status.replaceAll("_", " ")} · ${seconds(trial.duration_seconds)} · ${money(trial.cost_usd)}`));
+      content.append(el("p", `Whole-tree execution: ${trial.status.replaceAll("_", " ")} · ${seconds(trial.duration_seconds)} · ${money(trial.cost_usd)}`));
       content.append(el("p", `${trial.usage_complete ? "Complete recorded usage" : "Usage incomplete"} · ${trial.child_count ?? "Unknown"} child agents · ${trial.interaction_count} user replies`));
       if (trial.provider_recovery) {
         const recovery = trial.provider_recovery;
@@ -655,7 +655,7 @@ export function renderEvidence(reports, state = {}) {
       if (trial.status === "infrastructure_failure" && trial.incomplete_reasons?.includes("provider_transport_interrupted")) content.append(el("p", "Provider connectivity interrupted this trial; it is excluded from harness quality judgments. Partial work and recorded usage are retained."));
       if (trial.incomplete_reasons?.length) content.append(list(trial.incomplete_reasons.map(value => value.replaceAll("_", " "))));
       if (trial.model_usage?.length) content.append(list(trial.model_usage.map(row => `${row.model}: ${row.input_tokens ?? "unknown"} input + ${row.cache_read_tokens ?? "unknown"} cache read + ${row.cache_write_tokens ?? "unknown"} cache write + ${row.output_tokens ?? "unknown"} output tokens`)));
-      if (trial.session_usage?.length) content.append(detail("Agent model and effort breakdown", list(trial.session_usage.map(row => `${row.session === "root" ? "Orchestrator" : row.session.replace("child_", "Child ")}: ${row.model} · ${row.effort ?? "unreported"} effort · ${row.input_tokens ?? "unknown"} input / ${row.output_tokens ?? "unknown"} output tokens`))));
+      if (trial.session_usage?.length) content.append(detail("Orchestrator and child usage", list(trial.session_usage.map(row => `${row.session === "root" ? "Orchestrator" : row.session.replace("child_", "Child ")}: ${row.model} · ${row.effort ?? "unreported"} effort · ${row.input_tokens ?? "unknown"} input + ${row.cache_read_tokens ?? "unknown"} cache read + ${row.cache_write_tokens ?? "unknown"} cache write + ${row.output_tokens ?? "unknown"} output tokens`))));
       content.append(renderCollaborationEvidence(trial));
       content.append(trialReview(trial.code_review));
       section.append(detail(title, content));
