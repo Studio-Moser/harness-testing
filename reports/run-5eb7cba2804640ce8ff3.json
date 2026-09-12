@@ -1,0 +1,67 @@
+{
+  "admission_estimate_usd": 16.0,
+  "completed_jobs": 1,
+  "completed_trials": 5,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 1,
+  "expected_trials": 5,
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-03T20:01:00Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "A2",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 5,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.05,
+        "cached_tokens": 200,
+        "completion_tokens": 100,
+        "prompt_tokens": 500
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 5,
+      "finished_at": "2026-09-03T20:01:00Z",
+      "harness_commit": "7d10451164adc54e91519a1dbc23b64312ba17a9",
+      "model": "gpt-5.6-terra",
+      "name": "run-5eb7cba2804640ce8ff3-codex-A2-candidate-task-one",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 60.0,
+      "series_key": "sha256:c5d93ca61d4c503589de060807e89f2091636e27bfc57ca43f8f7859bbc26115",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-03T20:00:00Z",
+      "status": "completed",
+      "task": "task-one",
+      "task_digest": "sha256:07f8e51795cbfd5ce2171772787e85ad8525274f9a978c05b6e8e26e78d8a73b",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:88ee5a614b0ab0a071870d2981aab0f9f179c1b5f2561f03b3dac6cbb7ff60a7",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 0.05,
+  "pending_jobs": 0,
+  "profile": "smoke",
+  "report_id": "sha256:da4bb155073f41a8cc814b84192d3d094026195efc6bff9356c2338826255ebf",
+  "run_id": "run-5eb7cba2804640ce8ff3",
+  "schema_version": "2",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-12T00:08:17.144406Z",
+  "status": "completed",
+  "updated_at": "2026-09-12T00:08:17.352985Z"
+}
