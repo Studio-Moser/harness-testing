@@ -558,3 +558,32 @@ def test_codex_rejects_incomplete_command_timing(tmp_path, duration):
     path.write_text("".join(json.dumps(event) + "\n" for event in events))
     agent = HarnessCodex(logs_dir=tmp_path, model_name="openai/gpt-5.6-sol", version="0.153.4")
     assert agent._convert_events_to_trajectory(sessions) is None
+
+
+@pytest.mark.parametrize("missing", [None, "child", "grandchild"])
+def test_codex_requires_every_recorded_descendant_transcript(tmp_path, missing):
+    sessions = tmp_path / "sessions"
+    _write_session(sessions)
+    events = [json.loads(line) for line in next(sessions.glob("*.jsonl")).read_text().splitlines()]
+    recorded = [{"session_id": "session-1", "parent_session_id": None}]
+    for session, parent in [("child", "session-1"), ("grandchild", "child")]:
+        recorded.append({"session_id": session, "parent_session_id": parent})
+        if session == missing:
+            continue
+        child_events = json.loads(json.dumps(events))
+        child_events[0]["payload"].update(id=session, parent_thread_id=parent)
+        (sessions / f"{session}.jsonl").write_text(
+            "".join(json.dumps(event) + "\n" for event in child_events)
+        )
+    (tmp_path / "Trial_Evidence.json").write_text(
+        json.dumps({"root_session_id": "session-1", "sessions": recorded})
+    )
+    agent = HarnessCodex(logs_dir=tmp_path, model_name="openai/gpt-5.6-sol", version="0.153.4")
+    trajectory = agent._convert_events_to_trajectory(sessions)
+    if missing:
+        assert trajectory is None
+    else:
+        assert trajectory is not None
+        assert {step.extra["session_id"] for step in trajectory.steps} == {
+            "session-1", "child", "grandchild"
+        }

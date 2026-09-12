@@ -414,6 +414,13 @@ class HarnessCodex(Codex):
                 if children <= selected_sessions:
                     break
                 selected_sessions |= children
+            evidence = json.loads((self.logs_dir / "Trial_Evidence.json").read_text())
+            recorded_sessions = {
+                session["session_id"] for session in evidence.get("sessions", [])
+            }
+            if not recorded_sessions <= selected_sessions:
+                self.logger.warning("A recorded Codex session is missing from the retained tree")
+                return None
             session_files = [
                 paths[session] for session in sorted(selected_sessions) if session in paths
             ]
