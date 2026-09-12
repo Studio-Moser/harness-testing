@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import re
 import shlex
 from collections.abc import Iterable
+from datetime import datetime, timedelta
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any, override
 from urllib.parse import unquote, urlparse
 
@@ -21,13 +24,18 @@ from harness_testing.Native_Conversation import (
 )
 from harness_testing.Skill_Evaluation import explicit_instruction, validate_skill_name
 
+_POTENTIAL_SHELL_MUTATION = re.compile(
+    r"(^|\s)(?:sed\s+-i|perl\s+-pi|touch|mkdir|mv|cp|rm)\s|"
+    r"(?:>|>>|\btee\b)\s*\S+|"
+    r"(?:write_text|write_bytes|writeFile|writeFileSync|appendFile|appendFileSync|"
+    r"unlink|unlinkSync|remove|rename|renameSync|mkdir|mkdirSync|rmdir|replace)|"
+    r'''open\s*\([^)]*,\s*['"][wax+]'''
+)
 
-def _raw_events(session_dir: Path) -> list[dict[str, Any]]:
-    session_files = list(session_dir.glob("*.jsonl"))
-    if not session_files:
-        return []
+
+def _raw_events(session_file: Path) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
-    for line in max(session_files).read_text().splitlines():
+    for line in session_file.read_text().splitlines():
         try:
             event = json.loads(line)
         except json.JSONDecodeError:
@@ -35,6 +43,46 @@ def _raw_events(session_dir: Path) -> list[dict[str, Any]]:
         if isinstance(event, dict):
             events.append(event)
     return events
+
+
+def _session_id(session_file: Path) -> str | None:
+    for event in _raw_events(session_file):
+        if event.get("type") != "session_meta":
+            continue
+        payload = event.get("payload")
+        value = payload.get("id") if isinstance(payload, dict) else None
+        return value if isinstance(value, str) else None
+    return None
+
+
+def _session_parent(session_file: Path) -> str | None:
+    for event in _raw_events(session_file):
+        if event.get("type") != "session_meta":
+            continue
+        payload = event.get("payload")
+        if not isinstance(payload, dict):
+            return None
+        direct = payload.get("parent_thread_id")
+        if isinstance(direct, str):
+            return direct
+        source = payload.get("source")
+        if not isinstance(source, dict):
+            return None
+        subagent = source.get("subagent", source.get("subAgent"))
+        spawn = subagent.get("thread_spawn") if isinstance(subagent, dict) else None
+        parent = spawn.get("parent_thread_id") if isinstance(spawn, dict) else None
+        return parent if isinstance(parent, str) else None
+    return None
+
+
+def _recorded_root_session(logs_dir: Path) -> str | None:
+    path = logs_dir / "Trial_Evidence.json"
+    try:
+        evidence = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    value = evidence.get("root_session_id") if isinstance(evidence, dict) else None
+    return value if isinstance(value, str) and value else None
 
 
 def _native_actions(events: Iterable[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
@@ -63,7 +111,9 @@ def _native_actions(events: Iterable[dict[str, Any]]) -> dict[str, list[dict[str
             and isinstance(item, dict)
             and item.get("type") in {"CommandExecution", "FileChange"}
         ):
-            actions[next(iter(pending_exec_calls))].append(item)
+            actions[next(iter(pending_exec_calls))].append(
+                {**item, "_event_timestamp": event.get("timestamp")}
+            )
     return actions
 
 
@@ -99,6 +149,21 @@ def _duration_seconds(item: dict[str, Any]) -> float | None:
     if not isinstance(seconds, int) or not isinstance(nanoseconds, int):
         return None
     return seconds + nanoseconds / 1_000_000_000
+
+
+def _timestamp(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def _mutation_priority(step: Any) -> int:
+    for call in step.tool_calls or []:
+        if call.function_name in {"Edit", "Write", "apply_patch"}:
+            return 1
+        if call.function_name == "shell":
+            command = call.arguments.get("cmd") or call.arguments.get("command")
+            if isinstance(command, str) and _POTENTIAL_SHELL_MUTATION.search(command):
+                return 1
+    return 0
 
 
 def _output(item: dict[str, Any]) -> str | None:
@@ -283,29 +348,109 @@ class HarnessCodex(Codex):
             env={"CODEX_HOME": self._REMOTE_CODEX_HOME.as_posix()},
         )
 
-    @override
-    def _convert_events_to_trajectory(self, session_dir: Path) -> Trajectory | None:
-        trajectory = super()._convert_events_to_trajectory(session_dir)
+    def _convert_session_file(self, selected: Path) -> Trajectory | None:
+        with TemporaryDirectory() as temporary:
+            isolated = Path(temporary)
+            (isolated / selected.name).symlink_to(selected)
+            trajectory = super()._convert_events_to_trajectory(isolated)
         if trajectory is None:
             return None
-        actions_by_call = _native_actions(_raw_events(session_dir))
+        actions_by_call = _native_actions(_raw_events(selected))
+        native_steps = []
         for step in trajectory.steps:
             if not step.tool_calls:
                 continue
             original_calls = list(step.tool_calls)
             results = list(step.observation.results) if step.observation else []
-            expanded_calls: list[ToolCall] = []
             for outer_call in original_calls:
-                expanded_calls.append(outer_call)
                 for index, item in enumerate(
                     actions_by_call.get(outer_call.tool_call_id, []), start=1
                 ):
                     native = _native_call(outer_call.tool_call_id, item, index)
                     if native is not None:
                         call, result = native
-                        expanded_calls.append(call)
-                        results.append(result)
-            step.tool_calls = expanded_calls
+                        timestamp = item.get("_event_timestamp")
+                        duration = _duration_seconds(item)
+                        command = _command_text(item)
+                        mutates = command is not None and _POTENTIAL_SHELL_MUTATION.search(command)
+                        if isinstance(timestamp, str) and duration is not None and not mutates:
+                            completed = _timestamp(timestamp)
+                            started = completed - timedelta(seconds=duration)
+                            timestamp = started.isoformat().replace("+00:00", "Z")
+                        native_step = step.model_copy(deep=True)
+                        native_step.timestamp = timestamp if isinstance(timestamp, str) else None
+                        native_step.message = ""
+                        native_step.reasoning_content = None
+                        native_step.tool_calls = [call]
+                        native_step.observation = Observation(results=[result])
+                        native_step.metrics = None
+                        native_step.llm_call_count = None
+                        native_steps.append(native_step)
+            step.tool_calls = original_calls
             if results:
                 step.observation = Observation(results=results)
+        trajectory.steps.extend(native_steps)
+        if all(step.timestamp is not None for step in trajectory.steps):
+            trajectory.steps.sort(
+                key=lambda step: (_timestamp(step.timestamp), _mutation_priority(step))
+            )
+            for index, step in enumerate(trajectory.steps, start=1):
+                step.step_id = index
+        return Trajectory.model_validate(trajectory.model_dump())
+
+    @override
+    def _convert_events_to_trajectory(self, session_dir: Path) -> Trajectory | None:
+        session_files = list(session_dir.glob("*.jsonl"))
+        root_session = _recorded_root_session(self.logs_dir)
+        if root_session is not None:
+            session_files = list((self.logs_dir / "sessions").rglob("*.jsonl"))
+        if not session_files:
+            return None
+        selected = next(
+            (path for path in session_files if _session_id(path) == root_session),
+            None,
+        )
+        if root_session is not None and selected is None:
+            self.logger.warning("Recorded Codex root session is missing from retained sessions")
+            return None
+        if root_session is not None:
+            paths = {_session_id(path): path for path in session_files}
+            parents = {session: _session_parent(path) for session, path in paths.items()}
+            selected_sessions = {root_session}
+            while True:
+                children = {
+                    session for session, parent in parents.items() if parent in selected_sessions
+                }
+                if children <= selected_sessions:
+                    break
+                selected_sessions |= children
+            session_files = [
+                paths[session] for session in sorted(selected_sessions) if session in paths
+            ]
+        selected = selected or max(session_files)
+        trajectory = self._convert_session_file(selected)
+        if trajectory is None or root_session is None:
+            return trajectory
+        converted = [trajectory]
+        for child in session_files:
+            if child == selected:
+                continue
+            child_trajectory = self._convert_session_file(child)
+            if child_trajectory is None:
+                self.logger.warning("A retained Codex child session could not be converted")
+                return None
+            converted.append(child_trajectory)
+        if any(step.timestamp is None for item in converted for step in item.steps):
+            self.logger.warning("A retained Codex tree step has no timestamp")
+            return None
+        steps = []
+        for item in converted:
+            for step in item.steps:
+                step.extra = {**(step.extra or {}), "session_id": item.session_id}
+                steps.append(step)
+        steps.sort(key=lambda step: (_timestamp(step.timestamp), _mutation_priority(step)))
+        for index, step in enumerate(steps, start=1):
+            step.step_id = index
+        trajectory.steps = steps
+        trajectory.final_metrics = None
         return Trajectory.model_validate(trajectory.model_dump())

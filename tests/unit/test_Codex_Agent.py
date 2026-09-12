@@ -6,6 +6,7 @@ import pytest
 
 from harness_testing.Codex_Agent import HarnessCodex
 from harness_testing.Trajectory_Events import result_success
+from harness_testing.Workflow_Criteria import command_after_last_mutation
 
 
 def test_codex_inventory_is_recorded_after_effective_config_upload(tmp_path: Path):
@@ -231,18 +232,21 @@ def test_codex_adapter_exposes_native_code_mode_actions_and_exit_status(
     trajectory = agent._convert_events_to_trajectory(session_dir)
 
     assert trajectory is not None
-    step = next(step for step in trajectory.steps if step.tool_calls)
-    assert [call.function_name for call in step.tool_calls] == [
-        "exec",
-        "apply_patch",
-        "shell",
-    ]
-    assert step.tool_calls[1].arguments["patch"].startswith("*** Update File: /app/src/App.tsx\n")
-    assert step.tool_calls[2].arguments == {
+    calls = [call for step in trajectory.steps for call in step.tool_calls or []]
+    by_name = {call.function_name: call for call in calls}
+    assert set(by_name) == {"exec", "apply_patch", "shell"}
+    assert by_name["apply_patch"].arguments["patch"].startswith(
+        "*** Update File: /app/src/App.tsx\n"
+    )
+    assert by_name["shell"].arguments == {
         "cmd": "npm run gate",
         "workdir": "/app",
     }
-    results = {result.source_call_id: result for result in step.observation.results}
+    results = {
+        result.source_call_id: result
+        for step in trajectory.steps
+        for result in (step.observation.results if step.observation else [])
+    }
     assert result_success(results["native-command"]) is False
     assert results["native-command"].extra == {
         "codex_native": {
@@ -251,6 +255,87 @@ def test_codex_adapter_exposes_native_code_mode_actions_and_exit_status(
             "status": "completed",
         }
     }
+
+
+def test_codex_adapter_uses_recorded_root_session_instead_of_newest_child(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    session_dir = tmp_path / "sessions" / "2026" / "08" / "29"
+    _write_session(session_dir)
+    root = next(session_dir.glob("*.jsonl"))
+    root.write_text(
+        root.read_text()
+        .replace("session-1", "root-session")
+        .replace('"exit_code": 7', '"exit_code": 0')
+        .replace('"secs": 1, "nanos": 250000000', '"secs": 0, "nanos": 500000000')
+    )
+    newest_session_dir = tmp_path / "sessions" / "2026" / "08" / "30"
+    newest_session_dir.mkdir()
+    child = newest_session_dir / "zzzz-child-session.jsonl"
+    child.write_text(
+        root.read_text()
+        .replace("root-session", "child-session")
+        .replace(
+            '"id": "child-session", "cli_version"',
+            '"id": "child-session", "parent_thread_id": "root-session", "cli_version"',
+        )
+        .replace("2026-08-29T", "2026-08-30T")
+        .replace("npm run gate", "npm test")
+    )
+    unrelated = newest_session_dir / "unrelated-session.jsonl"
+    unrelated.write_text(
+        root.read_text()
+        .replace("root-session", "unrelated-session")
+        .replace("2026-08-29T", "2026-08-31T")
+        .replace("npm run gate", "npm run unrelated")
+    )
+    (tmp_path / "Trial_Evidence.json").write_text(
+        json.dumps({"root_session_id": "root-session"})
+    )
+    agent = HarnessCodex(
+        logs_dir=tmp_path,
+        model_name="openai/gpt-5.6-sol",
+        version="0.153.4",
+    )
+
+    trajectory = agent._convert_events_to_trajectory(newest_session_dir)
+
+    assert trajectory is not None
+    assert trajectory.session_id == "root-session"
+    commands = [
+        call.arguments.get("cmd")
+        for step in trajectory.steps
+        for call in step.tool_calls or []
+        if call.function_name == "shell"
+    ]
+    assert commands == ["npm run gate", "npm test"]
+    assert {
+        step.extra.get("session_id")
+        for step in trajectory.steps
+        if step.extra
+    } == {"root-session", "child-session"}
+    trajectory_path = tmp_path / "trajectory.json"
+    trajectory_path.write_text(trajectory.model_dump_json())
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory_path))
+    assert command_after_last_mutation("npm run gate") is False
+
+
+def test_codex_adapter_fails_closed_when_recorded_root_session_is_missing(
+    tmp_path: Path,
+):
+    session_dir = tmp_path / "sessions" / "2026" / "08" / "29"
+    _write_session(session_dir)
+    (tmp_path / "Trial_Evidence.json").write_text(
+        json.dumps({"root_session_id": "missing-root"})
+    )
+    agent = HarnessCodex(
+        logs_dir=tmp_path,
+        model_name="openai/gpt-5.6-sol",
+        version="0.153.4",
+    )
+
+    assert agent._convert_events_to_trajectory(session_dir) is None
 
 
 @pytest.mark.parametrize("setup_failure", [False, True])

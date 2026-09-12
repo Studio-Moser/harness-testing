@@ -243,10 +243,24 @@ function typedReport() {
       status: "completed", correctness: true, protected_state: null, usage_complete: true,
       pricing_digest: "pricing-v1", cost_usd: i + 1, duration_seconds: (i + 1) * 60, interaction_count: 0,
       model_usage: [{input_tokens: 10, output_tokens: 2, cache_read_tokens: 0, cache_write_tokens: 0}],
+      session_usage: [{session: "root", model: "sol", effort: "medium", input_tokens: 7, cache_read_tokens: 3, cache_write_tokens: 1, output_tokens: 2}],
       code_review: {status: "completed", protocol_id: "same", findings: [{status: "confirmed", severity: "P2"}]}
     }))
   }};
 }
+
+test("task evidence distinguishes whole-tree totals from session ownership", () => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag)};
+  try {
+    const text = renderEvidence([typedReport()], {comparison: "typed"}).textContent;
+    assert.match(text, /Whole-tree execution: completed · 1m 0s · \$1\.00/);
+    assert.match(text, /Orchestrator and child usage/);
+    assert.match(text, /Orchestrator: sol · medium effort · 7 input \+ 3 cache read \+ 1 cache write \+ 2 output tokens/);
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
 
 function descendants(node) { return [node, ...node.children.flatMap(descendants)]; }
 
