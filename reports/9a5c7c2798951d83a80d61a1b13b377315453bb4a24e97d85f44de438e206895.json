@@ -1,0 +1,1092 @@
+{
+  "admission_estimate_usd": 90.0,
+  "completed_jobs": 1,
+  "completed_trials": 2,
+  "evidence": {
+    "limitations": [
+      "partial-run",
+      "failed-run",
+      "infrastructure-failure"
+    ],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 6,
+  "expected_trials": 6,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:92376348db6062086435bc3853238bcbc567c1e34a4aa455c5bc94ab14e53b89",
+      "hypothesis": "All three contenders deliver correct protected outputs with complete root and child evidence; full-collection overhead is measured without asserting an overall winner",
+      "rerun_reason": "New adapter and collection identities require fresh comparison conditions; historical runs remain separate",
+      "summary": "Fresh diagnostic baselines after Codex transcript completeness and Harness resolver path fixes"
+    },
+    "comparison": {
+      "bootstrap": {
+        "draws": 20000,
+        "pair_count": 3,
+        "per_tail_probability": 0.004166666666666667,
+        "seed": "sha256:6a8342c92e10114c6d5b1f894e68fa7f9c253f80b6089326b75c876de6fc97d9"
+      },
+      "contenders": [
+        {
+          "attempted": 0,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 2,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 2,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 0,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 0,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 2,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
+          "label": "Studio Moser full collection \u2014 0004abb",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": null,
+          "original_estimates": [],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 2,
+          "success_fraction": {
+            "denominator": 2,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "react-accent-polish": 0,
+            "react-saved-view-feature": 0
+          },
+          "total_cost_usd": null,
+          "total_tokens": null,
+          "usage_complete": false
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 2,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 2,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.173844,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 1,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "nothing",
+          "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "label": "Nothing",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": 29.430089972000133,
+          "original_estimates": [
+            {
+              "cost_usd": 0.173844,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:d031a7d34a77462ac56a8041611011882ab3c1724143623dfefda25390e81800"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 2,
+          "success_fraction": {
+            "denominator": 2,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-accent-polish": 1,
+            "react-saved-view-feature": 0
+          },
+          "total_cost_usd": 0.173844,
+          "total_tokens": 65850,
+          "usage_complete": true
+        },
+        {
+          "attempted": 0,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 2,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 2,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 0,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 0,
+            "infrastructure_failure": 1,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 1,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "superpowers",
+          "id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "label": "Superpowers",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": null,
+          "original_estimates": [],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 2,
+          "success_fraction": {
+            "denominator": 2,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "react-accent-polish": 0,
+            "react-saved-view-feature": 0
+          },
+          "total_cost_usd": null,
+          "total_tokens": null,
+          "usage_complete": false
+        }
+      ],
+      "history": {
+        "hypothesis": "All three contenders deliver correct protected outputs with complete root and child evidence; full-collection overhead is measured without asserting an overall winner",
+        "predecessor_contenders": [],
+        "predecessor_ids": [],
+        "status": "first_version",
+        "summary": "No predecessor selected.",
+        "task_changes": []
+      },
+      "leaders": {
+        "observed_cost_ids": [],
+        "observed_time_ids": []
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "Intervals describe repetition variation within the selected fixed tasks; they do not cover model drift, provider load changes, new tasks, or broad software quality.",
+        "Three repetitions are the default minimum. Identical repetitions can yield narrow intervals without proving universal stability.",
+        "Historical time comparisons are observational; they do not establish causality.",
+        "The 10% advantage and noninferiority thresholds are product defaults, not research findings.",
+        "No clear change does not establish equivalence.",
+        "A completed code review records confirmed remaining defects; finding none does not prove the code is defect-free. Evaluation cost is separate from harness execution cost."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
+          "left_report_id": null,
+          "right_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
+          "left_report_id": null,
+          "right_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "left_report_id": null,
+          "right_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        }
+      ],
+      "policy_digest": "sha256:79ac6439a29ffbc0f4f08d0f508105a3144a95b176b256861443cf170ce17c54",
+      "policy_id": "development-comparison-v1",
+      "provisional": true,
+      "reasons": [
+        "code_review_incomplete",
+        "insufficient_task_coverage",
+        "insufficient_repetitions",
+        "incomplete_coverage",
+        "quality_ineligible",
+        "usage_incomplete",
+        "pricing_unavailable",
+        "duration_unavailable",
+        "diagnostic_only"
+      ],
+      "status": "insufficient_evidence",
+      "summary": "Selected evidence is insufficient for a recommendation.",
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:0faf65fbd5e0e123bf90b81d0d84945d1c9dcfd99df720fe2ad3c5c4716d7586",
+      "attempts": 1,
+      "authority_digest": "sha256:88716682620e422348a52a247feee09edff0ebe66789f668d00e6dcf9324f398",
+      "concurrency": 1,
+      "decision_policy": "development-comparison-v1",
+      "evaluator_digest": "sha256:fb16d5e76b60f889305f824f7390e10545ae0d7848e7f7749b9bab02969dfa12",
+      "executor_inventory": [
+        {
+          "effort": "high",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "node": "sha256:b5f1ab077d0f8f2b826a47078ca35edf29297f74d58062e76f7386213e6ca265",
+        "verifier": "sha256:2ac7df3f4129de803d4c8f665b8d8939b7cb15f6867fa5d98f8ff67ad2aae08c"
+      },
+      "kickoff": {
+        "effort": "high",
+        "model": "gpt-6-astra",
+        "provider": "codex",
+        "runtime_version": "0.153.4"
+      },
+      "provider_recovery_seconds": 600,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:0bd4472683b92b733ef5b49842088752180b81eebc72250c16080ed3f70dabe6",
+      "task_digests": {
+        "react-accent-polish": "sha256:c60b977af77f23ee084f77d3cc496f8b3aeeba13caeb7e07d24aedd1779fb365",
+        "react-saved-view-feature": "sha256:595db7aa93cf41df29ea630fd3eaa717e7615018e8b09aece59307e52319f2b3"
+      },
+      "task_ids": [
+        "react-accent-polish",
+        "react-saved-view-feature"
+      ],
+      "task_variant": "comparison",
+      "timeout_seconds": 1800
+    },
+    "contenders": [
+      {
+        "family": "nothing",
+        "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Nothing",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "superpowers",
+        "id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "inventory_digest": "sha256:a20271abbad23875b570a7b86b351cb7fac7460e3f1475a92a3e842e49572ae9",
+        "label": "Superpowers",
+        "rubric_digest": null,
+        "source_commits": [
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser full collection \u2014 0004abb",
+        "rubric_digest": "sha256:e99803bcee0c8823be04ddcf01a3506e39076bd1ce11dfdc8c1c7c0543ea557b",
+        "source_commits": [
+          "0004abb6180d82b90b342f88244998fd618963f0",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "Post-review six-trial canary",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:18a78391e6d171564c135cf3919922038a7b0208c20381fc87f38c0660ba7d23",
+    "supersedes_report_id": null,
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 91,
+            "assistant_words": 53,
+            "average_progress_words": 12.0,
+            "average_update_gap_seconds": 24.406,
+            "bullet_count": 0,
+            "communication_to_model_output_ratio": 0.182731,
+            "final_answer_tokens": 74,
+            "final_answer_words": 41,
+            "formatting_density": 0.0566,
+            "heading_count": 0,
+            "maximum_progress_words": 12,
+            "maximum_update_gap_seconds": 24.406,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 159,
+            "total_visible_words": 98,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll find the source value, update it, and run the existing checks.",
+              "elapsed_seconds": 4.94,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "Updated `--cta-background` from `#2563eb` to `#6d28d9` in [src/index.css](/app/src/index.css:10). Only this source value changed; component behavior and project configuration remain intact.\n\nVerified: CTA check, lint, typecheck, both existing tests, build, and diff check all passed.",
+              "elapsed_seconds": 29.346,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "correctness": true,
+        "cost_usd": 0.173844,
+        "duration_seconds": 29.430089972000133,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 56064,
+            "cache_write_tokens": 0,
+            "input_tokens": 9288,
+            "model": "gpt-6-astra",
+            "output_tokens": 498,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 56064,
+            "cache_write_tokens": 0,
+            "effort": "high",
+            "input_tokens": 9288,
+            "model": "gpt-6-astra",
+            "output_tokens": 498,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-accent-polish",
+        "trial_id": "sha256:d031a7d34a77462ac56a8041611011882ab3c1724143623dfefda25390e81800",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": false,
+        "session_usage": [],
+        "status": "infrastructure_failure",
+        "task_id": "react-accent-polish",
+        "trial_id": "sha256:05aff8eadb548e3d043bda8bbe72edfcee07cc415c63914ba981410ee95cde14",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "react-accent-polish",
+        "trial_id": "sha256:78c64bfe3ce116da8ff1ebabae212ad926b426fb6e78928e81cabee6e9a7b20f",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:f0c2409c187ca80e0b0671990e913a2a97f8cf91d4602763e098f666591d1645",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:b320aaf032bbf8658bd80391669b2d071aa88065e82425f0f682b155e6103fcf",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:f0c2409c187ca80e0b0671990e913a2a97f8cf91d4602763e098f666591d1645",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:955390944940433292aa5a08316c4c4d28de2867c9a381b144373ef0aacd9d68",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:f0c2409c187ca80e0b0671990e913a2a97f8cf91d4602763e098f666591d1645",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:fc8f0c99cb5d8283e8286409667519cae4cb11b4b12dda8a090fa0cd8a2d1a91",
+        "usage_complete": false
+      }
+    ]
+  },
+  "failed_jobs": 1,
+  "failed_trials": 2,
+  "finished_at": "2026-09-12T04:30:16.133838Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V6b0b5c24b83e9a5f",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-12T04:30:16.133838Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-4abef4a73ecd66bcc7ae-r1-codex-V6b0b5c24b83e9a5f-baseline-react-accent-polish",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 66.95077,
+      "series_key": "sha256:56226a8e852191baed476d315f6b0fcf3b481afd46850557298176414a6c1929",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-12T04:29:09.183068Z",
+      "status": "completed",
+      "task": "react-accent-polish",
+      "task_digest": "sha256:c60b977af77f23ee084f77d3cc496f8b3aeeba13caeb7e07d24aedd1779fb365",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "Vffcf688e90c42843",
+      "cancelled_trials": 1,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "high",
+      "errored_trials": 1,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-4abef4a73ecd66bcc7ae-r1-codex-Vffcf688e90c42843-baseline-react-accent-polish",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": null,
+      "series_key": "sha256:d2748ed79088c631589bc780bccd70d8687398c828c957f7622d5993d07985dc",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-12T04:30:18.894031Z",
+      "status": "failed",
+      "task": "react-accent-polish",
+      "task_digest": "sha256:c60b977af77f23ee084f77d3cc496f8b3aeeba13caeb7e07d24aedd1779fb365",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V45e8190c8e8d3577",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-4abef4a73ecd66bcc7ae-r1-codex-V45e8190c8e8d3577-candidate-react-accent-polish",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": null,
+      "series_key": "sha256:e145ebea1b406f3f29351e8b3abacaad2c7c96673679688ca86c0ce1c7f31eac",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "react-accent-polish",
+      "task_digest": "sha256:c60b977af77f23ee084f77d3cc496f8b3aeeba13caeb7e07d24aedd1779fb365",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "Vffcf688e90c42843",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-4abef4a73ecd66bcc7ae-r1-codex-Vffcf688e90c42843-baseline-react-saved-view-feature",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": null,
+      "series_key": "sha256:59d2b3bb4dedeaacc7dd65123033c9704cdc272cb1a4dc4948042c48521d4dca",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:595db7aa93cf41df29ea630fd3eaa717e7615018e8b09aece59307e52319f2b3",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V45e8190c8e8d3577",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-4abef4a73ecd66bcc7ae-r1-codex-V45e8190c8e8d3577-candidate-react-saved-view-feature",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": null,
+      "series_key": "sha256:5298823ebb5f60b12e0223c960f27f6a43ef4ed936453bcd37d1522de5f2a4aa",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:595db7aa93cf41df29ea630fd3eaa717e7615018e8b09aece59307e52319f2b3",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V6b0b5c24b83e9a5f",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "high",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-4abef4a73ecd66bcc7ae-r1-codex-V6b0b5c24b83e9a5f-baseline-react-saved-view-feature",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": null,
+      "series_key": "sha256:27bba29d4f86def0ca8b6fd1e2271de4ac82764c06ef952ce74a5954f0eeed4c",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:595db7aa93cf41df29ea630fd3eaa717e7615018e8b09aece59307e52319f2b3",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:f0962eed65aa9f1e45548f91d28c45fcb31a332f3b87c13285ede3b1b839dcb1",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": null,
+  "pending_jobs": 4,
+  "profile": "calibration",
+  "report_id": "sha256:9a5c7c2798951d83a80d61a1b13b377315453bb4a24e97d85f44de438e206895",
+  "run_id": "run-4abef4a73ecd66bcc7ae",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-12T04:29:07.454754Z",
+  "status": "failed",
+  "updated_at": "2026-09-12T04:30:47.168106Z"
+}
