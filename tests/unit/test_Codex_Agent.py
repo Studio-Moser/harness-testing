@@ -218,13 +218,16 @@ def _write_session(session_dir: Path) -> None:
     )
 
 
+@pytest.mark.parametrize("relative_logs", [False, True])
 def test_codex_adapter_exposes_native_code_mode_actions_and_exit_status(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch, relative_logs
 ):
-    session_dir = tmp_path / "sessions" / "2026" / "08" / "29"
+    monkeypatch.chdir(tmp_path)
+    logs_dir = Path("logs") if relative_logs else tmp_path / "logs"
+    session_dir = logs_dir / "sessions" / "2026" / "08" / "29"
     _write_session(session_dir)
     agent = HarnessCodex(
-        logs_dir=tmp_path,
+        logs_dir=logs_dir,
         model_name="openai/gpt-5.6-terra",
         version="0.150.1",
     )
