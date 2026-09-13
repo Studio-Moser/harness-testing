@@ -1,9 +1,10 @@
 import json
 import os
+import socket
 import subprocess
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -286,3 +287,9 @@ def test_harness_stub_records_locally_rejected_json(tmp_path):
     assert [(event["action"], event["matched"]) for event in events] == [
         ("dispatch", False)
     ]
+
+
+def test_server_buffers_a_concurrent_burst_before_accepting():
+    with ScenarioServer(("127.0.0.1", 0), Handler) as server, ExitStack() as clients:
+        for _ in range(12):
+            clients.enter_context(socket.create_connection(server.server_address, timeout=1))

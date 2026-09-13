@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import socket
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -13,6 +14,7 @@ from harness_testing.Harness_Result import load_harness_result_schema
 
 
 class ScenarioServer(ThreadingHTTPServer):
+    request_queue_size = socket.SOMAXCONN
     scenario: dict[str, Any]
     events_path: Path
     events_lock: threading.Lock
