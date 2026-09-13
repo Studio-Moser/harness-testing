@@ -336,7 +336,7 @@ class HarnessCodex(Codex):
     def _convert_session_file(self, selected: Path) -> Trajectory | None:
         with TemporaryDirectory() as temporary:
             isolated = Path(temporary)
-            (isolated / selected.name).symlink_to(selected)
+            (isolated / selected.name).symlink_to(selected.resolve())
             trajectory = super()._convert_events_to_trajectory(isolated)
         if trajectory is None:
             return None
