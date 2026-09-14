@@ -1,0 +1,487 @@
+{
+  "admission_estimate_usd": 24.0,
+  "completed_jobs": 2,
+  "completed_trials": 2,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 2,
+  "expected_trials": 2,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:838c7ad4278d7045a72ed79c30709d03c047ea54568f86f16f1e7e727ee733a9",
+      "hypothesis": "Both contenders implement the shared toolbar correctly; the larger task may exercise normal delegation and reveal quality or whole-tree overhead differences that the small fixtures did not measure.",
+      "rerun_reason": "Fresh Sol Medium baselines on a different task; earlier fixture results and historical Quill evidence remain unchanged.",
+      "summary": "Evaluate Nothing and the same Harness Lite collection on the larger Quill shared-toolbar task"
+    },
+    "comparison": {
+      "bootstrap": {
+        "draws": 20000,
+        "pair_count": 1,
+        "per_tail_probability": 0.0125,
+        "seed": "sha256:832bd1adbc0a1eb1d00c833cc528374a37ac993f4de93a6621e1278fffd1758d"
+      },
+      "contenders": [
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 1,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 1,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
+          "label": "Harness Lite \u2014 full Skills-n-Stuff collection",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": 739.246558752,
+          "original_estimates": [
+            {
+              "cost_usd": 1.8547952,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:d1765227b277cf8a05790e8b443d092f0a96e15faaf588cd92740a384fb6fa0e"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "quill-shared-toolbar-focus": 0
+          },
+          "total_cost_usd": 1.8547952,
+          "total_tokens": 2650670,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 1,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 1,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "nothing",
+          "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "label": "Nothing",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": 877.011422693,
+          "original_estimates": [
+            {
+              "cost_usd": 1.8773864000000002,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:441587addcf6dc6a8d5e9144aea131c560c3140c339595270cec2259dd2fb5fd"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "quill-shared-toolbar-focus": 0
+          },
+          "total_cost_usd": 1.8773864,
+          "total_tokens": 2587769,
+          "usage_complete": true
+        }
+      ],
+      "history": {
+        "hypothesis": "Both contenders implement the shared toolbar correctly; the larger task may exercise normal delegation and reveal quality or whole-tree overhead differences that the small fixtures did not measure.",
+        "predecessor_contenders": [],
+        "predecessor_ids": [],
+        "status": "first_version",
+        "summary": "No predecessor selected.",
+        "task_changes": []
+      },
+      "leaders": {
+        "observed_cost_ids": [],
+        "observed_time_ids": []
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "Intervals describe repetition variation within the selected fixed tasks; they do not cover model drift, provider load changes, new tasks, or broad software quality.",
+        "Three repetitions are the default minimum. Identical repetitions can yield narrow intervals without proving universal stability.",
+        "Historical time comparisons are observational; they do not establish causality.",
+        "The 10% advantage and noninferiority thresholds are product defaults, not research findings.",
+        "No clear change does not establish equivalence.",
+        "A completed code review records confirmed remaining defects; finding none does not prove the code is defect-free. Evaluation cost is separate from harness execution cost."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
+          "left_report_id": null,
+          "right_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        }
+      ],
+      "policy_digest": "sha256:79ac6439a29ffbc0f4f08d0f508105a3144a95b176b256861443cf170ce17c54",
+      "policy_id": "development-comparison-v1",
+      "provisional": true,
+      "reasons": [
+        "code_review_incomplete",
+        "insufficient_task_coverage",
+        "insufficient_repetitions",
+        "incomplete_coverage",
+        "quality_ineligible",
+        "diagnostic_only",
+        "protected_state_unknown"
+      ],
+      "status": "insufficient_evidence",
+      "summary": "Selected evidence is insufficient for a recommendation.",
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:cb276b7bf52b5454848b3d526ad10dd65e1a5d8b596c62aa892193655ddcfe6b",
+      "attempts": 1,
+      "authority_digest": "sha256:40fcd45eee7778c1a7069a52346c9da964df487e71432e4a8dc87deeb188226b",
+      "concurrency": 1,
+      "decision_policy": "development-comparison-v1",
+      "evaluator_digest": "sha256:c74dba178792c9daacd8a002814553b18eb28288eed552fb9e4d0a6565a0f5a8",
+      "executor_inventory": [
+        {
+          "effort": "high",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "quill-shared-toolbar-focus:agent": "sha256:8d3a821a9734525eb6d47731bb2fad0ea8666f021075a1d7914d566e36215fd0",
+        "quill-shared-toolbar-focus:verifier": "sha256:229eb95e0909a83001a084407aeb9c64ebf5d45acbfaf023baf850bcf05f0a89"
+      },
+      "kickoff": {
+        "effort": "medium",
+        "model": "gpt-5.6-sol",
+        "provider": "codex",
+        "runtime_version": "0.153.4"
+      },
+      "provider_recovery_seconds": 600,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 8192
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:92f2490cb9b156cf9f95037225a02296e6f17224e34c7c9bb33c6ee8c1a64fe3",
+      "task_digests": {
+        "quill-shared-toolbar-focus": "sha256:3300b3f61c925abdffe0c2a26384523f93e2bcc4104908b5cfb63dd2ab547086"
+      },
+      "task_ids": [
+        "quill-shared-toolbar-focus"
+      ],
+      "task_variant": "deepswe",
+      "timeout_seconds": 3600
+    },
+    "contenders": [
+      {
+        "family": "nothing",
+        "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Nothing",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Harness Lite \u2014 full Skills-n-Stuff collection",
+        "rubric_digest": "sha256:e99803bcee0c8823be04ddcf01a3506e39076bd1ce11dfdc8c1c7c0543ea557b",
+        "source_commits": [
+          "0004abb6180d82b90b342f88244998fd618963f0",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "Sol Medium Quill Nothing versus Harness Lite pilot",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:47c17b7a7e4c45253d702f67aba2894b9b8fc61616b9dfad5840398929eecddc",
+    "supersedes_report_id": null,
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "contender_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "correctness": false,
+        "cost_usd": 1.8773864000000002,
+        "duration_seconds": 877.011422693,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 2445056,
+            "cache_write_tokens": 0,
+            "input_tokens": 122181,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 20532,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": null,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 2445056,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 122181,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 20532,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "quill-shared-toolbar-focus",
+        "trial_id": "sha256:441587addcf6dc6a8d5e9144aea131c560c3140c339595270cec2259dd2fb5fd",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "contender_id": "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
+        "correctness": false,
+        "cost_usd": 1.8547952,
+        "duration_seconds": 739.246558752,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 2542208,
+            "cache_write_tokens": 0,
+            "input_tokens": 83208,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 25254,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": null,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 2542208,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 83208,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 25254,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "quill-shared-toolbar-focus",
+        "trial_id": "sha256:d1765227b277cf8a05790e8b443d092f0a96e15faaf588cd92740a384fb6fa0e",
+        "usage_complete": true
+      }
+    ]
+  },
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-14T16:36:34.777782Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V6b0b5c24b83e9a5f",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-14T16:23:23.332753Z",
+      "harness_commit": null,
+      "model": "gpt-5.6-sol",
+      "name": "run-2fb4ac2c7bb4b645d2bc-r1-codex-V6b0b5c24b83e9a5f-baseline-quill-shared-toolbar-focus",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 928.193372,
+      "series_key": "sha256:3c0f72745a48065acf5a186b4d246178663350f0c13a21118ecaead414a835d9",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-14T16:07:55.139381Z",
+      "status": "completed",
+      "task": "quill-shared-toolbar-focus",
+      "task_digest": "sha256:3300b3f61c925abdffe0c2a26384523f93e2bcc4104908b5cfb63dd2ab547086",
+      "task_pack": "research"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V45e8190c8e8d3577",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 0.0,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-14T16:36:34.777782Z",
+      "harness_commit": null,
+      "model": "gpt-5.6-sol",
+      "name": "run-2fb4ac2c7bb4b645d2bc-r1-codex-V45e8190c8e8d3577-candidate-quill-shared-toolbar-focus",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 790.539419,
+      "series_key": "sha256:dbda3936bc82cc33d2e9e3f1e900e4139b32fb71c348337732e917e235fefb39",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-14T16:23:24.238363Z",
+      "status": "completed",
+      "task": "quill-shared-toolbar-focus",
+      "task_digest": "sha256:3300b3f61c925abdffe0c2a26384523f93e2bcc4104908b5cfb63dd2ab547086",
+      "task_pack": "research"
+    }
+  ],
+  "manifest_digest": "sha256:3735d3ac7da691a9e8d4fe12d9e9084f4b77ca1504339051e65cd50a1ddd2cc6",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 3.7321816000000005,
+  "pending_jobs": 0,
+  "profile": "research",
+  "report_id": "sha256:e29e30ae53014e1fd28e0f79ef1a06d746be59546597bb6abe2c150891f3df96",
+  "run_id": "run-2fb4ac2c7bb4b645d2bc",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-14T16:07:53.894780Z",
+  "status": "completed",
+  "updated_at": "2026-09-14T16:36:35.353634Z"
+}
