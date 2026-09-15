@@ -24,22 +24,15 @@ export function filterTests(tests, selection) {
 }
 
 export function facetCounts(tests, selection) {
-  const atSelectedLevel = tests.filter((entry) =>
-    selection.level === "all" || entry.level === selection.level
-  );
-  const atSelectedType = tests.filter((entry) =>
-    selection.type === "all" || entry.type === selection.type
-  );
-
   return {
     overlap: filterTests(tests, selection).length,
     types: Object.fromEntries([
-      ["all", atSelectedLevel.length],
-      ...TYPES.map((type) => [type, atSelectedLevel.filter((entry) => entry.type === type).length])
+      ["all", tests.length],
+      ...TYPES.map((type) => [type, tests.filter((entry) => entry.type === type).length])
     ]),
     levels: Object.fromEntries([
-      ["all", atSelectedType.length],
-      ...LEVELS.map((level) => [level, atSelectedType.filter((entry) => entry.level === level).length])
+      ["all", tests.length],
+      ...LEVELS.map((level) => [level, tests.filter((entry) => entry.level === level).length])
     ])
   };
 }
@@ -201,17 +194,16 @@ function renderCard(test) {
 
 function filterButton({dimension, value, label, count, selected, onSelect, registry}) {
   const button = element("button", "toolbox-filter");
-  const countNode = element("span", "toolbox-filter-count", count);
   button.setAttribute("type", "button");
   button.setAttribute("data-filter", dimension);
   button.setAttribute("data-value", String(value));
   button.setAttribute("aria-pressed", String(selected));
   button.append(
     element("span", "toolbox-filter-label", label),
-    countNode
+    element("span", "toolbox-filter-count", count)
   );
   button.addEventListener("click", () => onSelect(value));
-  registry.set(String(value), {button, countNode});
+  registry.set(String(value), button);
   return button;
 }
 
@@ -254,8 +246,7 @@ function renderResults(tests, selection) {
     const section = element("section", "toolbox-level-group");
     const heading = element("div", "toolbox-level-heading");
     heading.append(
-      element("span", "toolbox-level-kicker", `L${group.level}`),
-      element("h2", "", LEVEL_LABELS[group.level].replace(`L${group.level} `, "")),
+      element("h2", "", LEVEL_LABELS[group.level]),
       element("span", "toolbox-level-count", `${group.tests.length} ${group.tests.length === 1 ? "test" : "tests"}`)
     );
     const grid = element("div", "toolbox-grid");
@@ -279,7 +270,6 @@ export function renderToolbox(tests, {
 
   const intro = element("header", "toolbox-intro");
   intro.append(
-    element("p", "toolbox-kicker", "Harness Test Toolbox"),
     element("h1", "", `${tests.length} Harness Tests`),
     element("p", "toolbox-intro-copy", "Explore the work profiles used to compare harnesses: what each test asks, how it is built, what process it expects, and what it can teach us.")
   );
@@ -335,17 +325,16 @@ export function renderToolbox(tests, {
     update();
   }
 
-  function updateButtons(registry, counts, selected) {
-    for (const [value, {button, countNode}] of registry) {
+  function updateButtons(registry, selected) {
+    for (const [value, button] of registry) {
       button.setAttribute("aria-pressed", String(String(selected) === value));
-      countNode.textContent = counts[value];
     }
   }
 
   function update() {
     const counts = facetCounts(tests, selection);
-    updateButtons(typeButtons, counts.types, selection.type);
-    updateButtons(levelButtons, counts.levels, selection.level);
+    updateButtons(typeButtons, selection.type);
+    updateButtons(levelButtons, selection.level);
     summaryText.textContent = `${counts.overlap} matching ${counts.overlap === 1 ? "test" : "tests"} · ${TYPE_LABELS[selection.type]} × ${LEVEL_LABELS[selection.level]}`;
     if (selection.type === "all" && selection.level === "all") clear.setAttribute("disabled", "");
     else clear.removeAttribute("disabled");

@@ -25,12 +25,12 @@ test("type and level filters combine as an intersection", () => {
   assert.deepEqual(filterTests(tests, {type: "polish", level: 2}), []);
 });
 
-test("facet counts respond to the other dimension and preserve zero coverage", () => {
+test("facet counts stay global while the overlap responds to the selection", () => {
   const counts = facetCounts(tests, {type: "polish", level: 2});
 
   assert.equal(counts.overlap, 0);
-  assert.deepEqual(counts.types, {all: 2, polish: 0, "bug-fix": 2, feature: 0});
-  assert.deepEqual(counts.levels, {all: 1, 1: 1, 2: 0, 3: 0, 4: 0});
+  assert.deepEqual(counts.types, {all: 4, polish: 1, "bug-fix": 2, feature: 1});
+  assert.deepEqual(counts.levels, {all: 4, 1: 1, 2: 2, 3: 0, 4: 1});
 });
 
 test("query parameters round-trip and invalid values fall back to All", () => {
@@ -149,7 +149,7 @@ test("rendered Toolbox exposes accessible filters and all structured card sectio
     assert.deepEqual(pressed.map((node) => node.attributes["data-value"]), ["bug-fix", "2"]);
     assert.match(root.textContent, /2 Harness Tests/);
     assert.match(root.textContent, /1 matching test/);
-    assert.match(root.textContent, /L2Focused/);
+    assert.match(root.textContent, /L2 Focused/);
     assert.deepEqual(
       nodes.filter((node) => node.tag === "summary").map((node) => node.textContent),
       ["What it tests", "Task brief", "Test setup", "Expected agent process", "Verification", "What we learn"]
@@ -192,6 +192,9 @@ test("filter clicks update state, cards, and the bookmarkable URL", () => {
     });
     const liveRegion = descendants(root).find((node) => node.attributes["aria-live"] === "polite");
     const feature = descendants(root).find((node) => node.attributes["data-value"] === "feature");
+    const filterLabels = descendants(root)
+      .filter((node) => node.attributes["data-filter"])
+      .map((node) => node.textContent);
     feature.focus();
     feature.click();
 
@@ -200,6 +203,12 @@ test("filter clicks update state, cards, and the bookmarkable URL", () => {
     assert.equal(
       descendants(root).find((node) => node.attributes["aria-live"] === "polite"),
       liveRegion
+    );
+    assert.deepEqual(
+      descendants(root)
+        .filter((node) => node.attributes["data-filter"])
+        .map((node) => node.textContent),
+      filterLabels
     );
     assert.match(root.textContent, /Upstream test/);
     assert.doesNotMatch(root.textContent, /Controlled test/);
