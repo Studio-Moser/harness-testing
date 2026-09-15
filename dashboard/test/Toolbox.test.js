@@ -135,7 +135,8 @@ test("rendered Toolbox exposes accessible filters and all structured card sectio
     const nodes = descendants(root);
     const pressed = nodes.filter((node) => node.attributes["aria-pressed"] === "true");
 
-    assert.equal(root.tag, "main");
+    assert.equal(root.tag, "section");
+    assert.equal(root.attributes["aria-label"], "Harness Test Toolbox");
     assert.deepEqual(pressed.map((node) => node.attributes["data-value"]), ["bug-fix", "2"]);
     assert.match(root.textContent, /2 Harness Tests/);
     assert.match(root.textContent, /1 matching test/);

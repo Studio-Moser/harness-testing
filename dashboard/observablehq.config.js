@@ -1,19 +1,18 @@
 export default {
   root: "src",
   output: "dist",
-  title: "Harness Testing",
-  home: "Harness Testing",
+  title: "Harness Test Toolbox",
+  home: "Toolbox",
   preserveExtension: true,
-  pages: [
-    {name: "Harness comparison", path: "/Comparisons"},
-    {name: "Version history", path: "/Version_History"},
-    {name: "Task evidence", path: "/Run_Detail"},
-    {name: "Earlier diagnostics", pages: [
-      {name: "Run evidence", path: "/Legacy_Run_Detail"},
-      {name: "Trends", path: "/Trends"},
-      {name: "Task matrix", path: "/Task_Matrix"},
-      {name: "Quality and efficiency", path: "/Quality_Versus_Efficiency"}
-    ]}
+  sidebar: false,
+  pager: false,
+  pages: [],
+  globalStylesheets: [
+    "https://cdn.jsdelivr.net/npm/@tabler/core@1.5.1/dist/css/tabler.min.css"
   ],
-  footer: "Studio Moser Harness Testing · sanitized summaries only"
+  header: `<nav class="toolbox-site-nav" aria-label="Primary">
+    <a class="toolbox-site-brand" href="/">Studio Moser <span>Harness Testing</span></a>
+    <span class="toolbox-site-current" aria-current="page">Toolbox</span>
+  </nav>`,
+  footer: "Studio Moser Harness Testing · test definitions only"
 };

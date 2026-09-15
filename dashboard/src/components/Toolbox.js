@@ -255,7 +255,8 @@ export function renderToolbox(tests, {
   location = globalThis.location,
   history = globalThis.history
 } = {}) {
-  const root = element("main", "toolbox");
+  const root = element("section", "toolbox");
+  root.setAttribute("aria-label", "Harness Test Toolbox");
   let selection = selectionFromSearch(location?.search ?? "");
 
   function updateLocation() {
