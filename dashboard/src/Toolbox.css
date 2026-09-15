@@ -170,7 +170,7 @@ a:hover {
 
 .toolbox-filter {
   display: inline-flex;
-  min-height: 34px;
+  min-height: 44px;
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
@@ -417,7 +417,7 @@ a:hover {
 
 .toolbox-detail-summary {
   position: relative;
-  min-height: 40px;
+  min-height: 44px;
   margin: 4px 8px;
   padding: 9px 34px 9px 12px;
   color: var(--toolbox-ink);
