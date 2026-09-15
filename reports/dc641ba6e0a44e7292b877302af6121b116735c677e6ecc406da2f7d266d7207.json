@@ -1,0 +1,715 @@
+{
+  "admission_estimate_usd": 12.0,
+  "completed_jobs": 2,
+  "completed_trials": 2,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 2,
+  "expected_trials": 2,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:ad95d24ac613d1eb25a58ba6951ffb223ad6f7c7b0af6b440691f3934b0a8213",
+      "hypothesis": "Explicit file boundaries allow both contenders to add regression coverage without modifying protected tests. Two trials diagnose prompt compliance and correctness, not overall harness superiority.",
+      "rerun_reason": "Validate prompt fix 23d0c27 on the affected task only, one repetition for Nothing and Lite; same Sol Medium kickoff, contender versions, rubric, resources and publication scope.",
+      "summary": "Clarify the active-badge comparison prompt: add regression coverage in a new file and keep existing test files byte-for-byte unchanged. Protection and correctness scoring remain unchanged. Historical diagnostic report sha256:00ab7fc92e740240b950fa6ad3437c3a612e74b14aab7393860654cec7e5465a remains immutable; changed prompt is not a compatible baseline."
+    },
+    "comparison": {
+      "bootstrap": {
+        "draws": 20000,
+        "pair_count": 1,
+        "per_tail_probability": 0.0125,
+        "seed": "sha256:0d02af947713ff16681c893934ee7f6becf94e3d916873b39534cfac0790ac0f"
+      },
+      "contenders": [
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 1,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.08557120000000001,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "nothing",
+          "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "label": "Nothing",
+          "mean_cost_usd": 0.08557120000000001,
+          "mean_duration_seconds": 32.94204801400002,
+          "original_estimates": [
+            {
+              "cost_usd": 0.08557120000000001,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:ee496c7aad1eb092af2dae88715e724113de5eb9d788859cbf28ca6d35036df3"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-active-badge-count": 1
+          },
+          "total_cost_usd": 0.08557120000000001,
+          "total_tokens": 108464,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 1,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.1233448,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:fe632a155dbeb1028e319e725c115bb468dedbd8ccef659ec9514745deacb0cc",
+          "label": "Harness Lite \u2014 full Skills-n-Stuff collection",
+          "mean_cost_usd": 0.1233448,
+          "mean_duration_seconds": 39.16432426899996,
+          "original_estimates": [
+            {
+              "cost_usd": 0.1233448,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:8f47a547aa34b5261c6aeffd4c11041f1f17b9425b1d5cedccee65186c6fde5a"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-active-badge-count": 1
+          },
+          "total_cost_usd": 0.1233448,
+          "total_tokens": 142397,
+          "usage_complete": true
+        }
+      ],
+      "history": {
+        "hypothesis": "Explicit file boundaries allow both contenders to add regression coverage without modifying protected tests. Two trials diagnose prompt compliance and correctness, not overall harness superiority.",
+        "predecessor_contenders": [],
+        "predecessor_ids": [],
+        "status": "first_version",
+        "summary": "No predecessor selected.",
+        "task_changes": []
+      },
+      "leaders": {
+        "observed_cost_ids": [],
+        "observed_time_ids": []
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "Intervals describe repetition variation within the selected fixed tasks; they do not cover model drift, provider load changes, new tasks, or broad software quality.",
+        "Three repetitions are the default minimum. Identical repetitions can yield narrow intervals without proving universal stability.",
+        "Historical time comparisons are observational; they do not establish causality.",
+        "The 10% advantage and noninferiority thresholds are product defaults, not research findings.",
+        "No clear change does not establish equivalence.",
+        "A completed code review records confirmed remaining defects; finding none does not prove the code is defect-free. Evaluation cost is separate from harness execution cost."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": -0.03777359999999999,
+          "cost_ratio": {
+            "estimate": 0.6937560399789858,
+            "lower": 0.6937560399789858,
+            "upper": 0.6937560399789858
+          },
+          "left_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "left_report_id": null,
+          "right_id": "sha256:fe632a155dbeb1028e319e725c115bb468dedbd8ccef659ec9514745deacb0cc",
+          "right_report_id": null,
+          "time_difference_seconds": -6.22227625499994,
+          "time_ratio": {
+            "estimate": 0.8411238704831911,
+            "lower": 0.8411238704831911,
+            "upper": 0.8411238704831911
+          }
+        }
+      ],
+      "policy_digest": "sha256:79ac6439a29ffbc0f4f08d0f508105a3144a95b176b256861443cf170ce17c54",
+      "policy_id": "development-comparison-v1",
+      "provisional": true,
+      "reasons": [
+        "code_review_incomplete",
+        "insufficient_task_coverage",
+        "insufficient_repetitions",
+        "quality_ineligible",
+        "diagnostic_only"
+      ],
+      "status": "insufficient_evidence",
+      "summary": "Selected evidence is insufficient for a recommendation.",
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:cb276b7bf52b5454848b3d526ad10dd65e1a5d8b596c62aa892193655ddcfe6b",
+      "attempts": 1,
+      "authority_digest": "sha256:88716682620e422348a52a247feee09edff0ebe66789f668d00e6dcf9324f398",
+      "concurrency": 1,
+      "decision_policy": "development-comparison-v1",
+      "evaluator_digest": "sha256:8aa7e520cc28d9acb6c157a2c774a9ffd71b2ff33a0e6b0824aa0ae77eb23e9e",
+      "executor_inventory": [
+        {
+          "effort": "high",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "node": "sha256:b5f1ab077d0f8f2b826a47078ca35edf29297f74d58062e76f7386213e6ca265",
+        "verifier": "sha256:3f014eef92a2265a4ca3752d854c352e8b5d5bdf727826afefbeb5492d73c2b0"
+      },
+      "kickoff": {
+        "effort": "medium",
+        "model": "gpt-5.6-sol",
+        "provider": "codex",
+        "runtime_version": "0.153.4"
+      },
+      "provider_recovery_seconds": 600,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:33b25611b9aab09fe8c1029d8cda5c47a3c00e41efc11cde7590536eb7594136",
+      "task_digests": {
+        "react-active-badge-count": "sha256:e4b95a514fb0ad6737d0d3585939b9bd72e6a48b7339d3b61de9a605f2fce19e"
+      },
+      "task_ids": [
+        "react-active-badge-count"
+      ],
+      "task_variant": "comparison",
+      "timeout_seconds": 1800
+    },
+    "contenders": [
+      {
+        "family": "nothing",
+        "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Nothing",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:fe632a155dbeb1028e319e725c115bb468dedbd8ccef659ec9514745deacb0cc",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Harness Lite \u2014 full Skills-n-Stuff collection",
+        "rubric_digest": "sha256:e99803bcee0c8823be04ddcf01a3506e39076bd1ce11dfdc8c1c7c0543ea557b",
+        "source_commits": [
+          "f989eb1b6cef1248fefa89f8de3f3c6349f330f2",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "Sol Medium active-badge explicit test boundary diagnostic",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:01912f02d02e3688da73c868d939b0463aa53d87e6ed5b9ac7e65ea6ad3681a6",
+    "supersedes_report_id": null,
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 140,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 3,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_small",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:3d10890c0efe98beb233c6978ff75bcc8344936c47eda3d2024c2a48d391c70b",
+          "metrics": {
+            "approval_request_count": 1,
+            "assistant_message_count": 4,
+            "assistant_tokens": 194,
+            "assistant_words": 135,
+            "average_progress_words": 29.667,
+            "average_update_gap_seconds": 9.294,
+            "bullet_count": 4,
+            "communication_to_model_output_ratio": 0.19151,
+            "final_answer_tokens": 81,
+            "final_answer_words": 46,
+            "formatting_density": 0.0519,
+            "heading_count": 0,
+            "maximum_progress_words": 35,
+            "maximum_update_gap_seconds": 11.982,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 3,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 287,
+            "total_visible_words": 207,
+            "unnecessary_approval_request_count": 1,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 3,
+            "useful_progress_update_rate": 1.0,
+            "violations": [
+              {
+                "detail": "Approval request exceeds scenario budget",
+                "kind": "unnecessary_approval_request",
+                "ordinal": 4
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and fix `selectActiveCount` so archived projects never contribute to the active badge, even when their `active` field is true. Add regression coverage in a new test file for this behavior. Keep the production change limited to active counting.\n\nLeave existing test files byte-for-byte unchanged, including when adding regression coverage. Preserve package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll inspect the repository guidance and the selector implementation, then add an isolated regression test without touching existing tests or configuration.",
+              "elapsed_seconds": 5.024,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The defect is exactly in the selector predicate: it currently checks only `active`. I\u2019ll narrow that predicate to require \u201cactive and not archived,\u201d and place the regression in a separate domain test file as requested.",
+              "elapsed_seconds": 14.107,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "The focused code and new regression file are in place. I\u2019m running the repository\u2019s unchanged gate now, then I\u2019ll inspect the final diff to confirm no existing test or metadata/config file changed.",
+              "elapsed_seconds": 20.923,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "Implemented and verified.\n\n- `selectActiveCount` now counts only active, non-archived projects.\n- Added regression coverage in new [Active_Count.regression.test.ts](/app/src/domain/Active_Count.regression.test.ts).\n- Existing tests, package metadata, build configuration, and check scripts remain unchanged.\n- `npm run gate` passes: 2 test files, 3 tests.",
+              "elapsed_seconds": 32.905,
+              "kind": "final",
+              "ordinal": 5,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "correctness": true,
+        "cost_usd": 0.08557120000000001,
+        "duration_seconds": 32.94204801400002,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 101248,
+            "cache_write_tokens": 0,
+            "input_tokens": 6203,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 1013,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 101248,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 6203,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 1013,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-active-badge-count",
+        "trial_id": "sha256:ee496c7aad1eb092af2dae88715e724113de5eb9d788859cbf28ca6d35036df3",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 140,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 3,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_small",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:3d10890c0efe98beb233c6978ff75bcc8344936c47eda3d2024c2a48d391c70b",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 4,
+            "assistant_tokens": 280,
+            "assistant_words": 183,
+            "average_progress_words": 38.333,
+            "average_update_gap_seconds": 11.182,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.213252,
+            "final_answer_tokens": 125,
+            "final_answer_words": 68,
+            "formatting_density": 0.071,
+            "heading_count": 0,
+            "maximum_progress_words": 42,
+            "maximum_update_gap_seconds": 13.709,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 3,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 373,
+            "total_visible_words": 255,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 3,
+            "useful_progress_update_rate": 1.0,
+            "violations": []
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and fix `selectActiveCount` so archived projects never contribute to the active badge, even when their `active` field is true. Add regression coverage in a new test file for this behavior. Keep the production change limited to active counting.\n\nLeave existing test files byte-for-byte unchanged, including when adding regression coverage. Preserve package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll treat this as a Small bug fix. I\u2019ll inspect the selector and test setup, then make the narrow production change and add a separate regression test without touching existing tests or configuration.",
+              "elapsed_seconds": 5.538,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The defect is isolated to the selector\u2019s predicate. An existing app test already describes the desired result, but I\u2019ll leave it untouched and add dedicated selector regression coverage in a new file, including the contradictory `active: true` / `archived: true` case.",
+              "elapsed_seconds": 16.543,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "The new regression test failed before the fix (`2` received versus `1` expected), confirming it exercises the bug. I\u2019ve now narrowed the production change to the active-count filter; next I\u2019m running the repository\u2019s configured gate and checking the final diff for scope.",
+              "elapsed_seconds": 30.252,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "Fixed `selectActiveCount` so projects count only when active and not archived.\n\nChanges:\n\n- Updated [Active_Count.ts](/app/src/domain/Active_Count.ts:7).\n- Added dedicated regression coverage in [Active_Count.regression.test.ts](/app/src/domain/Active_Count.regression.test.ts:1).\n- Existing tests, package metadata, build configuration, and scripts remain unchanged.\n\nVerification:\n\n```text\nTest Files  2 passed (2)\nTests       3 passed (3)\n```\n\n`npm run gate` and `git diff --check` both passed.",
+              "elapsed_seconds": 39.084,
+              "kind": "final",
+              "ordinal": 5,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:fe632a155dbeb1028e319e725c115bb468dedbd8ccef659ec9514745deacb0cc",
+        "correctness": true,
+        "cost_usd": 0.1233448,
+        "duration_seconds": 39.16432426899996,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 129792,
+            "cache_write_tokens": 0,
+            "input_tokens": 11292,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 1313,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 129792,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 11292,
+            "model": "gpt-5.6-sol",
+            "output_tokens": 1313,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-active-badge-count",
+        "trial_id": "sha256:8f47a547aa34b5261c6aeffd4c11041f1f17b9425b1d5cedccee65186c6fde5a",
+        "usage_complete": true
+      }
+    ]
+  },
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-15T16:27:47.945784Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V6b0b5c24b83e9a5f",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-15T16:26:38.756264Z",
+      "harness_commit": null,
+      "model": "gpt-5.6-sol",
+      "name": "run-4357360b188fa8ce3c7b-r1-codex-V6b0b5c24b83e9a5f-baseline-react-active-badge-count",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 62.006667,
+      "series_key": "sha256:617b0481ee027ba9e59acc90a0968ab7b81557ad97301202e21a9c8ee783a536",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-15T16:25:36.749597Z",
+      "status": "completed",
+      "task": "react-active-badge-count",
+      "task_digest": "sha256:e4b95a514fb0ad6737d0d3585939b9bd72e6a48b7339d3b61de9a605f2fce19e",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "Vfe632a155dbeb102",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-15T16:27:47.945784Z",
+      "harness_commit": null,
+      "model": "gpt-5.6-sol",
+      "name": "run-4357360b188fa8ce3c7b-r1-codex-Vfe632a155dbeb102-candidate-react-active-badge-count",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 67.946948,
+      "series_key": "sha256:b9b326441b7ef59187cdb8f60d8267c1fdd8b8e9f5822fc833090fe7778d94e0",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-15T16:26:39.998836Z",
+      "status": "completed",
+      "task": "react-active-badge-count",
+      "task_digest": "sha256:e4b95a514fb0ad6737d0d3585939b9bd72e6a48b7339d3b61de9a605f2fce19e",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:e882eabb3f9f29faf0194252aaaed8301432e35c29bcf79cf0e4ca01989c6c24",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 0.20891600000000002,
+  "pending_jobs": 0,
+  "profile": "calibration",
+  "report_id": "sha256:dc641ba6e0a44e7292b877302af6121b116735c677e6ecc406da2f7d266d7207",
+  "run_id": "run-4357360b188fa8ce3c7b",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-15T16:25:33.984437Z",
+  "status": "completed",
+  "updated_at": "2026-09-15T16:27:48.819598Z"
+}
