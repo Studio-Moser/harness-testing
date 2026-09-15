@@ -82,11 +82,8 @@ function detail(title, ...content) {
   return node;
 }
 
-function statusLabels(state) {
-  const labels = ["Defined"];
-  labels.push(state.materialized ? "Materialized" : "Not materialized");
-  if (state.queued) labels.push("Queued");
-  return labels;
+export function readinessLabel(state) {
+  return state.materialized ? "Ready" : "Draft";
 }
 
 function renderBrief(test) {
@@ -148,47 +145,59 @@ function renderVerification(test) {
   return list(items);
 }
 
+function renderWhatItTests(test) {
+  const body = element("div", "toolbox-detail-body toolbox-what-tests");
+  const context = element("div", "toolbox-test-context");
+  const provenance = element("p", "toolbox-context-source");
+  provenance.append(
+    element("span", "toolbox-context-kind", test.sourceKind === "controlled" ? "Controlled fixture" : "Real repository"),
+    element("span", "", test.source.label)
+  );
+  context.append(
+    element("p", "toolbox-context-stack", test.stack.join(" · ")),
+    provenance,
+    element("p", "toolbox-context-id", test.id)
+  );
+  body.append(
+    element("p", "toolbox-detail-lede", test.purpose),
+    list(test.expectedHarnessBehavior, "toolbox-what-tests-list"),
+    context
+  );
+  return body;
+}
+
 function renderCard(test) {
-  const card = element("article", "toolbox-card card");
+  const card = element("article", `toolbox-card toolbox-card-level-${test.level} card`);
   card.setAttribute("data-test-id", test.id);
 
   const header = element("header", "toolbox-card-header");
-  const eyebrow = element("div", "toolbox-eyebrow");
-  eyebrow.append(
-    element("span", `toolbox-badge toolbox-badge-${test.type}`, TYPE_LABELS[test.type]),
+  const labels = element("div", "toolbox-card-labels");
+  labels.append(
+    element("span", "toolbox-badge toolbox-badge-type", TYPE_LABELS[test.type]),
     element("span", "toolbox-badge toolbox-badge-level", LEVEL_LABELS[test.level]),
-    element("span", "toolbox-badge toolbox-badge-source", test.sourceKind === "controlled" ? "Controlled" : "Real repository")
+    element("span", `toolbox-readiness toolbox-readiness-${readinessLabel(test.setupState).toLowerCase()}`, readinessLabel(test.setupState))
+  );
+  const learning = element("div", "toolbox-learning");
+  learning.append(
+    element("p", "toolbox-learning-label", "What we’ll learn"),
+    element("p", "toolbox-learning-goal", test.learningGoal)
   );
   header.append(
-    eyebrow,
+    labels,
     element("h3", "toolbox-card-title", test.title),
-    element("p", "toolbox-purpose", test.purpose)
+    learning
   );
-
-  const metadata = element("div", "toolbox-card-metadata");
-  metadata.append(
-    element("p", "toolbox-stack", test.stack.join(" · ")),
-    element("p", "toolbox-source", test.source.label),
-    element("p", "toolbox-id", test.id)
-  );
-  const statuses = element("div", "toolbox-statuses");
-  for (const label of statusLabels(test.setupState)) {
-    statuses.append(element("span", "toolbox-status", label));
-  }
-  metadata.append(statuses);
 
   const details = element("div", "toolbox-details");
   details.append(
-    detail("What it tests", element("div", "toolbox-detail-body", ""), list(test.expectedHarnessBehavior)),
+    detail("What it tests", renderWhatItTests(test)),
     detail("Task brief", renderBrief(test)),
     detail("Test setup", renderSetup(test)),
     detail("Expected agent process", list(test.expectedProcess)),
-    detail("Verification", renderVerification(test)),
-    detail("What we learn", element("p", "toolbox-detail-body", test.learningGoal))
+    detail("Verification", renderVerification(test))
   );
-  details.children[0].children[1].append(element("p", "toolbox-detail-lede", test.purpose));
 
-  card.append(header, metadata, details);
+  card.append(header, details);
   return card;
 }
 

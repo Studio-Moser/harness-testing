@@ -5,6 +5,7 @@ import {
   facetCounts,
   filterTests,
   groupTests,
+  readinessLabel,
   renderToolbox,
   selectionFromSearch,
   selectionUrl
@@ -47,6 +48,12 @@ test("groups are level-ascending with alphabetical cards", () => {
     [2, ["b", "d"]],
     [4, ["c"]]
   ]);
+});
+
+test("readiness is based on whether the test apparatus is materialized", () => {
+  assert.equal(readinessLabel({defined: true, materialized: true, queued: false}), "Ready");
+  assert.equal(readinessLabel({defined: true, materialized: true, queued: true}), "Ready");
+  assert.equal(readinessLabel({defined: true, materialized: false, queued: false}), "Draft");
 });
 
 class FakeElement {
@@ -152,12 +159,21 @@ test("rendered Toolbox exposes accessible filters and all structured card sectio
     assert.match(root.textContent, /L2 Focused/);
     assert.deepEqual(
       nodes.filter((node) => node.tag === "summary").map((node) => node.textContent),
-      ["What it tests", "Task brief", "Test setup", "Expected agent process", "Verification", "What we learn"]
+      ["What it tests", "Task brief", "Test setup", "Expected agent process", "Verification"]
     );
+    const card = nodes.find((node) => node.attributes["data-test-id"] === "controlled-test");
+    const header = card.children.find((node) => node.tag === "header");
+    const firstDetail = descendants(card).find((node) => node.tag === "details");
+    assert.match(header.textContent, /What we’ll learnLearning goal/);
+    assert.match(firstDetail.textContent, /PurposeChoose a focused workflow/);
+    assert.match(firstDetail.textContent, /Controlled fixtureStudio Moser fixture/);
+    assert.match(firstDetail.textContent, /controlled-test/);
+    assert.doesNotMatch(card.textContent, /Defined|Materialized|Queued/);
+    assert.match(header.textContent, /Ready/);
     assert.match(root.textContent, /Exact local task brief\./);
     assert.equal(root.textContent.match(/(?:Five|5)-case verifier QA/g)?.length, 1);
     assert.match(root.textContent, /Verifier isolationseparate/);
-    assert.equal(nodes.filter((node) => node.tag === "details").length, 6);
+    assert.equal(nodes.filter((node) => node.tag === "details").length, 5);
   } finally {
     globalThis.document = previousDocument;
   }
