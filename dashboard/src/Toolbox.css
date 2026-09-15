@@ -259,6 +259,7 @@ a:hover {
   font: inherit;
   font-size: 0.84rem;
   font-weight: 650;
+  white-space: nowrap;
   cursor: pointer;
 }
 
