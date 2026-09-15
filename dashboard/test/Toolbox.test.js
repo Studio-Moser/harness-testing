@@ -86,7 +86,7 @@ function toolboxFixture() {
     existingTests: ["Existing test"],
     expectedProcess: ["Inspect", "Test"],
     expectedHarnessBehavior: ["Choose a focused workflow"],
-    verification: ["Verifier"],
+    verification: ["Verifier", "Five-case verifier QA"],
     learningGoal: "Learning goal",
     limits: {agentTimeoutSeconds: 900, verifierTimeoutSeconds: 180, network: "No internet"},
     apparatus: {
@@ -146,6 +146,7 @@ test("rendered Toolbox exposes accessible filters and all structured card sectio
       ["What it tests", "Task brief", "Test setup", "Expected agent process", "Verification", "What we learn"]
     );
     assert.match(root.textContent, /Exact local task brief\./);
+    assert.equal(root.textContent.match(/(?:Five|5)-case verifier QA/g)?.length, 1);
     assert.equal(nodes.filter((node) => node.tag === "details").length, 6);
   } finally {
     globalThis.document = previousDocument;

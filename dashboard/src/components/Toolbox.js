@@ -137,7 +137,8 @@ function renderSetup(test) {
 
 function renderVerification(test) {
   const items = [...test.verification];
-  if (test.apparatus.qaCaseCount !== null) {
+  const alreadyNamesQa = items.some((item) => /(?:five|5)-case verifier QA/i.test(item));
+  if (test.apparatus.qaCaseCount !== null && !alreadyNamesQa) {
     items.push(`${test.apparatus.qaCaseCount}-case verifier QA`);
   }
   return list(items);
