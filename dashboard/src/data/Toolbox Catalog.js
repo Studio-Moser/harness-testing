@@ -3,6 +3,23 @@ import {constants} from "node:fs";
 import {join} from "node:path";
 
 const DEEP_SWE_COMMIT = "8cae5984d5dd0ee37445beff0e928dc10c331116";
+const APPROVED_IDS = new Set([
+  "react-accent-polish",
+  "static-pricing-copy-polish",
+  "react-active-badge-count",
+  "rust-quoted-value-parser",
+  "static-accessible-disclosure",
+  "react-grouped-ui-updates",
+  "static-grouped-page-updates",
+  "react-saved-view-feature",
+  "rust-workspace-warning-summary",
+  "happy-dom-abort-pending-body-reads",
+  "quill-shared-toolbar-focus",
+  "yjs-map-conflict-detection",
+  "katex-multicolumn-array-spans",
+  "wasmi-trap-coredumps",
+  "pest-character-class-coalescing"
+]);
 const TYPES = new Set(["polish", "bug-fix", "feature"]);
 const LEVELS = new Set([1, 2, 3, 4]);
 const REQUIRED_TEXT = [
@@ -302,6 +319,7 @@ export function validateCatalog(entries) {
     const id = entry?.id || "unknown";
     if (ids.has(id)) throw new Error(`${id}: duplicate id`);
     ids.add(id);
+    if (!APPROVED_IDS.has(id)) throw new Error(`${id}: not in the Toolbox allowlist`);
     if (!TYPES.has(entry.type)) throw new Error(`${id}: unsupported type`);
     if (!LEVELS.has(entry.level)) throw new Error(`${id}: unsupported level`);
     for (const field of REQUIRED_TEXT) {
@@ -314,11 +332,22 @@ export function validateCatalog(entries) {
         throw new Error(`${id}: missing ${field}`);
       }
     }
-    if (entry.sourceKind === "controlled" && !entry.taskPath) {
-      throw new Error(`${id}: missing taskPath`);
+    if (!new Set(["controlled", "deep-swe"]).has(entry.sourceKind)) {
+      throw new Error(`${id}: unsupported sourceKind`);
     }
-    if (entry.sourceKind === "deep-swe" && entry.deepSweCommit !== DEEP_SWE_COMMIT) {
-      throw new Error(`${id}: DeepSWE commit is not pinned`);
+    for (const field of ["sourceLabel", "repository", "baseCommit"]) {
+      if (typeof entry[field] !== "string" || entry[field].trim() === "") {
+        throw new Error(`${id}: missing ${field}`);
+      }
+    }
+    if (entry.sourceKind === "controlled") {
+      if (!entry.taskPath) throw new Error(`${id}: missing taskPath`);
+    } else {
+      if (entry.deepSweCommit !== DEEP_SWE_COMMIT) {
+        throw new Error(`${id}: DeepSWE commit is not pinned`);
+      }
+      const expectedUrl = `https://github.com/datacurve-ai/deep-swe/blob/${DEEP_SWE_COMMIT}/tasks/${id}/instruction.md`;
+      if (entry.promptUrl !== expectedUrl) throw new Error(`${id}: missing pinned promptUrl`);
     }
   }
 }
@@ -328,6 +357,20 @@ function numberInSection(toml, section, key) {
   const valueMatch = sectionMatch?.[1].match(new RegExp(`^${key}\\s*=\\s*([0-9.]+)`, "m"));
   if (!valueMatch) throw new Error(`task.toml: missing ${section}.${key}`);
   return Number(valueMatch[1]);
+}
+
+function stringInSection(toml, section, key) {
+  const sectionMatch = toml.match(new RegExp(`\\[${section}\\]([\\s\\S]*?)(?=\\n\\[|$)`));
+  const valueMatch = sectionMatch?.[1].match(new RegExp(`^${key}\\s*=\\s*"([^"]*)"`, "m"));
+  if (!valueMatch) throw new Error(`task.toml: missing ${section}.${key}`);
+  return valueMatch[1];
+}
+
+function arrayInSection(toml, section, key) {
+  const sectionMatch = toml.match(new RegExp(`\\[${section}\\]([\\s\\S]*?)(?=\\n\\[|$)`));
+  const valueMatch = sectionMatch?.[1].match(new RegExp(`^${key}\\s*=\\s*(\\[[^\\n]*\\])`, "m"));
+  if (!valueMatch) throw new Error(`task.toml: missing ${section}.${key}`);
+  return JSON.parse(valueMatch[1]);
 }
 
 async function exists(path) {
@@ -366,7 +409,11 @@ async function enrichControlled(entry, repositoryRoot) {
   return {
     ...entry,
     prompt: {kind: "local", exact: prompt, url: null},
-    source: {label: entry.sourceLabel, repository: entry.repository, baseCommit: entry.baseCommit},
+    source: {
+      label: entry.sourceLabel,
+      repository: entry.repository,
+      baseCommit: stringInSection(taskToml, "metadata", "fixture_digest")
+    },
     apparatus: {
       protectedFiles: Object.keys(protectedFiles.files ?? {}).sort(),
       mutableFiles: Object.keys(protectedFiles.mutable_files ?? {}).sort(),
@@ -380,6 +427,21 @@ async function enrichControlled(entry, repositoryRoot) {
       agentTimeoutSeconds: numberInSection(taskToml, "agent", "timeout_sec"),
       verifierTimeoutSeconds: numberInSection(taskToml, "verifier", "timeout_sec"),
       network: "No external network hosts allowed"
+    },
+    environment: {
+      workdir: stringInSection(taskToml, "environment", "workdir"),
+      verifierIsolation: stringInSection(taskToml, "verifier", "environment_mode"),
+      agent: {
+        cpus: numberInSection(taskToml, "environment", "cpus"),
+        memoryMb: numberInSection(taskToml, "environment", "memory_mb"),
+        storageMb: numberInSection(taskToml, "environment", "storage_mb")
+      },
+      verifier: {
+        cpus: numberInSection(taskToml, "verifier.environment", "cpus"),
+        memoryMb: numberInSection(taskToml, "verifier.environment", "memory_mb"),
+        storageMb: numberInSection(taskToml, "verifier.environment", "storage_mb")
+      },
+      mcpServers: arrayInSection(taskToml, "environment", "mcp_servers")
     },
     setupState: {defined: true, materialized: true, queued: entry.queued}
   };
@@ -403,6 +465,13 @@ async function enrichDeepSwe(entry, repositoryRoot) {
       agentTimeoutSeconds: 5400,
       verifierTimeoutSeconds: 1800,
       network: "No internet access"
+    },
+    environment: {
+      workdir: "/app",
+      verifierIsolation: "separate",
+      agent: {cpus: 2, memoryMb: 8192, storageMb: 20480},
+      verifier: {cpus: 2, memoryMb: 8192, storageMb: 20480},
+      mcpServers: []
     },
     setupState: {
       defined: true,

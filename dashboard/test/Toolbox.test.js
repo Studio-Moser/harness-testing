@@ -71,6 +71,7 @@ class FakeElement {
   removeAttribute(name) { delete this.attributes[name]; }
   addEventListener(name, listener) { this.listeners[name] = listener; }
   click() { this.listeners.click?.({currentTarget: this}); }
+  focus() { globalThis.document.activeElement = this; }
 }
 
 function descendants(node) {
@@ -89,6 +90,13 @@ function toolboxFixture() {
     verification: ["Verifier", "Five-case verifier QA"],
     learningGoal: "Learning goal",
     limits: {agentTimeoutSeconds: 900, verifierTimeoutSeconds: 180, network: "No internet"},
+    environment: {
+      workdir: "/app",
+      verifierIsolation: "separate",
+      agent: {cpus: 2, memoryMb: 4096, storageMb: 10240},
+      verifier: {cpus: 2, memoryMb: 4096, storageMb: 10240},
+      mcpServers: []
+    },
     apparatus: {
       protectedFiles: ["package.json"],
       mutableFiles: ["src/index.js"],
@@ -121,6 +129,7 @@ function toolboxFixture() {
       sourceKind: "deep-swe",
       source: {label: "DeepSWE real repository", repository: "https://github.com/example/repo", baseCommit: "abc123"},
       prompt: {kind: "upstream", exact: null, url: "https://github.com/example/repo/blob/abc123/instruction.md"},
+      apparatus: {...common.apparatus, protectedFiles: [], mutableFiles: [], qaCaseCount: null},
       setupState: {defined: true, materialized: false, queued: false}
     }
   ];
@@ -147,6 +156,7 @@ test("rendered Toolbox exposes accessible filters and all structured card sectio
     );
     assert.match(root.textContent, /Exact local task brief\./);
     assert.equal(root.textContent.match(/(?:Five|5)-case verifier QA/g)?.length, 1);
+    assert.match(root.textContent, /Verifier isolationseparate/);
     assert.equal(nodes.filter((node) => node.tag === "details").length, 6);
   } finally {
     globalThis.document = previousDocument;
@@ -180,12 +190,20 @@ test("filter clicks update state, cards, and the bookmarkable URL", () => {
       location,
       history: {replaceState(_state, _title, url) { replaced.push(url); }}
     });
+    const liveRegion = descendants(root).find((node) => node.attributes["aria-live"] === "polite");
     const feature = descendants(root).find((node) => node.attributes["data-value"] === "feature");
+    feature.focus();
     feature.click();
 
     assert.equal(replaced.at(-1), "/toolbox?type=feature#catalog");
+    assert.equal(globalThis.document.activeElement, feature);
+    assert.equal(
+      descendants(root).find((node) => node.attributes["aria-live"] === "polite"),
+      liveRegion
+    );
     assert.match(root.textContent, /Upstream test/);
     assert.doesNotMatch(root.textContent, /Controlled test/);
+    assert.match(root.textContent, /Protected filesUnknown \/ not reported upstream/);
     const link = descendants(root).find((node) => node.tag === "a" && node.attributes.href);
     assert.equal(link.attributes.href, "https://github.com/example/repo/blob/abc123/instruction.md");
     assert.equal(link.attributes.rel, "noreferrer");

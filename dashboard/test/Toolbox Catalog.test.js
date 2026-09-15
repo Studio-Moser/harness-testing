@@ -61,6 +61,21 @@ test("catalog validation rejects duplicate IDs and unsupported classifications",
     index === 0 ? {...entry, level: 5} : entry
   );
   assert.throws(() => validateCatalog(invalidLevel), /react-accent-polish.*level/);
+
+  const replacementId = TOOLBOX_CATALOG.map((entry, index) =>
+    index === 0 ? {...entry, id: "unapproved-replacement"} : entry
+  );
+  assert.throws(() => validateCatalog(replacementId), /unapproved-replacement.*allowlist/);
+
+  const missingDeepSweSource = TOOLBOX_CATALOG.map((entry) =>
+    entry.id === "quill-shared-toolbar-focus"
+      ? {...entry, repository: "", baseCommit: "", promptUrl: ""}
+      : entry
+  );
+  assert.throws(
+    () => validateCatalog(missingDeepSweSource),
+    /quill-shared-toolbar-focus.*repository/
+  );
 });
 
 test("controlled tests are enriched from their tracked task apparatus", async () => {
@@ -78,6 +93,17 @@ test("controlled tests are enriched from their tracked task apparatus", async ()
   assert.equal(accent.limits.agentTimeoutSeconds, 900);
   assert.equal(accent.limits.verifierTimeoutSeconds, 180);
   assert.equal(accent.limits.network, "No external network hosts allowed");
+  assert.equal(
+    accent.source.baseCommit,
+    "sha256:7d414f0629b2f310caa50d564e0ff6da5fb70f88a6d868ad6c4841f4a6234579"
+  );
+  assert.deepEqual(accent.environment, {
+    workdir: "/app",
+    verifierIsolation: "separate",
+    agent: {cpus: 2, memoryMb: 4096, storageMb: 10240},
+    verifier: {cpus: 2, memoryMb: 4096, storageMb: 10240},
+    mcpServers: []
+  });
 });
 
 test("DeepSWE entries expose summaries and pinned links without copied prompts", async () => {
@@ -111,6 +137,6 @@ test("the Observable loader resolves the repository from its own location", asyn
   const {stdout} = await execFileAsync(process.execPath, [loader]);
   const output = JSON.parse(stdout);
 
-  assert.equal(output.schemaVersion, 1);
+  assert.equal(output.schemaVersion, 2);
   assert.equal(output.tests.length, 15);
 });

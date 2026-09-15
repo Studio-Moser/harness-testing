@@ -118,14 +118,25 @@ function renderSetup(test) {
   body.append(element("p", "toolbox-detail-lede", test.setupSummary));
 
   const facts = element("dl", "toolbox-facts");
+  const protectedBoundary = test.apparatus.protectedFiles.length
+    ? test.apparatus.protectedFiles.join(", ")
+    : test.sourceKind === "deep-swe"
+      ? "Unknown / not reported upstream"
+      : "None";
+  const resourceLabel = ({cpus, memoryMb, storageMb}) =>
+    `${cpus} CPU · ${memoryMb / 1024} GB memory · ${storageMb / 1024} GB storage`;
   const rows = [
     ["Base", test.source.repository],
     ["Pinned at", test.source.baseCommit],
     ["Existing tests", test.existingTests.join(", ")],
+    ["Agent environment", `${test.environment.workdir} · ${resourceLabel(test.environment.agent)}`],
+    ["Verifier isolation", test.environment.verifierIsolation],
+    ["Verifier environment", resourceLabel(test.environment.verifier)],
+    ["MCP servers", test.environment.mcpServers.length ? test.environment.mcpServers.join(", ") : "None"],
     ["Network", test.limits.network],
     ["Agent limit", `${test.limits.agentTimeoutSeconds / 60} minutes`],
     ["Verifier limit", `${test.limits.verifierTimeoutSeconds / 60} minutes`],
-    ["Protected files", test.apparatus.protectedFiles.length ? test.apparatus.protectedFiles.join(", ") : "Defined by the upstream task image and verifier"],
+    ["Protected files", protectedBoundary],
     ["Mutable files", test.apparatus.mutableFiles.length ? test.apparatus.mutableFiles.join(", ") : "Repository patch scope"]
   ];
   for (const [term, value] of rows) {
@@ -188,21 +199,23 @@ function renderCard(test) {
   return card;
 }
 
-function filterButton({dimension, value, label, count, selected, onSelect}) {
+function filterButton({dimension, value, label, count, selected, onSelect, registry}) {
   const button = element("button", "toolbox-filter");
+  const countNode = element("span", "toolbox-filter-count", count);
   button.setAttribute("type", "button");
   button.setAttribute("data-filter", dimension);
   button.setAttribute("data-value", String(value));
   button.setAttribute("aria-pressed", String(selected));
   button.append(
     element("span", "toolbox-filter-label", label),
-    element("span", "toolbox-filter-count", count)
+    countNode
   );
   button.addEventListener("click", () => onSelect(value));
+  registry.set(String(value), {button, countNode});
   return button;
 }
 
-function renderFilterRow({label, dimension, values, labels, counts, selected, onSelect}) {
+function renderFilterRow({label, dimension, values, labels, counts, selected, onSelect, registry}) {
   const row = element("section", "toolbox-filter-row");
   row.setAttribute("aria-label", `${label} filters`);
   row.append(element("h2", "toolbox-filter-heading", label));
@@ -216,7 +229,8 @@ function renderFilterRow({label, dimension, values, labels, counts, selected, on
       label: labels[value],
       count: counts[value],
       selected: selected === value,
-      onSelect
+      onSelect,
+      registry
     }));
   }
   row.append(controls);
@@ -259,6 +273,55 @@ export function renderToolbox(tests, {
   const root = element("section", "toolbox");
   root.setAttribute("aria-label", "Harness Test Toolbox");
   let selection = selectionFromSearch(location?.search ?? "");
+  const initialCounts = facetCounts(tests, selection);
+  const typeButtons = new Map();
+  const levelButtons = new Map();
+
+  const intro = element("header", "toolbox-intro");
+  intro.append(
+    element("p", "toolbox-kicker", "Harness Test Toolbox"),
+    element("h1", "", `${tests.length} Harness Tests`),
+    element("p", "toolbox-intro-copy", "Explore the work profiles used to compare harnesses: what each test asks, how it is built, what process it expects, and what it can teach us.")
+  );
+
+  const filters = element("nav", "toolbox-filters");
+  filters.setAttribute("aria-label", "Harness Test filters");
+  filters.append(
+    renderFilterRow({
+      label: "Type",
+      dimension: "type",
+      values: ["all", ...TYPES],
+      labels: TYPE_LABELS,
+      counts: initialCounts.types,
+      selected: selection.type,
+      onSelect: (value) => select("type", value),
+      registry: typeButtons
+    }),
+    renderFilterRow({
+      label: "Level",
+      dimension: "level",
+      values: ["all", ...LEVELS],
+      labels: LEVEL_LABELS,
+      counts: initialCounts.levels,
+      selected: selection.level,
+      onSelect: (value) => select("level", value),
+      registry: levelButtons
+    })
+  );
+
+  const summary = element("div", "toolbox-selection-summary");
+  const summaryText = element("p", "");
+  summaryText.setAttribute("aria-live", "polite");
+  const clear = element("button", "toolbox-clear", "Clear filters");
+  clear.setAttribute("type", "button");
+  clear.addEventListener("click", () => {
+    selection = {type: "all", level: "all"};
+    updateLocation();
+    update();
+  });
+  summary.append(summaryText, clear);
+  const results = element("div", "toolbox-results");
+  root.append(intro, filters, summary, results);
 
   function updateLocation() {
     const query = selectionUrl(selection);
@@ -269,61 +332,27 @@ export function renderToolbox(tests, {
   function select(dimension, value) {
     selection = {...selection, [dimension]: value};
     updateLocation();
-    render();
+    update();
   }
 
-  function render() {
+  function updateButtons(registry, counts, selected) {
+    for (const [value, {button, countNode}] of registry) {
+      button.setAttribute("aria-pressed", String(String(selected) === value));
+      countNode.textContent = counts[value];
+    }
+  }
+
+  function update() {
     const counts = facetCounts(tests, selection);
-    const intro = element("header", "toolbox-intro");
-    intro.append(
-      element("p", "toolbox-kicker", "Harness Test Toolbox"),
-      element("h1", "", `${tests.length} Harness Tests`),
-      element("p", "toolbox-intro-copy", "Explore the work profiles used to compare harnesses: what each test asks, how it is built, what process it expects, and what it can teach us.")
-    );
-
-    const filters = element("nav", "toolbox-filters");
-    filters.setAttribute("aria-label", "Harness Test filters");
-    filters.append(
-      renderFilterRow({
-        label: "Type",
-        dimension: "type",
-        values: ["all", ...TYPES],
-        labels: TYPE_LABELS,
-        counts: counts.types,
-        selected: selection.type,
-        onSelect: (value) => select("type", value)
-      }),
-      renderFilterRow({
-        label: "Level",
-        dimension: "level",
-        values: ["all", ...LEVELS],
-        labels: LEVEL_LABELS,
-        counts: counts.levels,
-        selected: selection.level,
-        onSelect: (value) => select("level", value)
-      })
-    );
-
-    const summary = element("div", "toolbox-selection-summary");
-    const summaryText = element(
-      "p",
-      "",
-      `${counts.overlap} matching ${counts.overlap === 1 ? "test" : "tests"} · ${TYPE_LABELS[selection.type]} × ${LEVEL_LABELS[selection.level]}`
-    );
-    summaryText.setAttribute("aria-live", "polite");
-    const clear = element("button", "toolbox-clear", "Clear filters");
-    clear.setAttribute("type", "button");
-    clear.addEventListener("click", () => {
-      selection = {type: "all", level: "all"};
-      updateLocation();
-      render();
-    });
+    updateButtons(typeButtons, counts.types, selection.type);
+    updateButtons(levelButtons, counts.levels, selection.level);
+    summaryText.textContent = `${counts.overlap} matching ${counts.overlap === 1 ? "test" : "tests"} · ${TYPE_LABELS[selection.type]} × ${LEVEL_LABELS[selection.level]}`;
     if (selection.type === "all" && selection.level === "all") clear.setAttribute("disabled", "");
-    summary.append(summaryText, clear);
-
-    root.replaceChildren(intro, filters, summary, renderResults(tests, selection));
+    else clear.removeAttribute("disabled");
+    const nextResults = renderResults(tests, selection);
+    results.replaceChildren(...Array.from(nextResults.children));
   }
 
-  render();
+  update();
   return root;
 }
