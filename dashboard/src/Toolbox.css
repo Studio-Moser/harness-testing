@@ -85,14 +85,31 @@ a:hover {
   font-weight: 500;
 }
 
-.toolbox-site-current {
+.toolbox-site-links {
+  align-self: stretch;
+  display: flex;
+  align-items: stretch;
+  gap: 22px;
+}
+
+.toolbox-site-link {
   align-self: stretch;
   display: inline-flex;
   align-items: center;
-  border-bottom: 2px solid var(--toolbox-blue);
-  color: var(--toolbox-blue);
+  border-bottom: 2px solid transparent;
+  color: var(--toolbox-muted);
   font-size: 0.86rem;
   font-weight: 650;
+  text-decoration: none;
+}
+
+.toolbox-site-link:hover {
+  color: var(--toolbox-ink);
+}
+
+.toolbox-site-link[aria-current="page"] {
+  border-bottom-color: var(--toolbox-blue);
+  color: var(--toolbox-blue);
 }
 
 .toolbox {
@@ -580,6 +597,334 @@ a:hover {
   color: var(--toolbox-muted);
 }
 
+.harnesses {
+  width: 100%;
+  padding-bottom: 72px;
+}
+
+.harnesses-intro,
+.harness-group {
+  width: min(1680px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+.harnesses-intro {
+  position: relative;
+}
+
+.harness-count {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 24px;
+  color: var(--toolbox-muted);
+  border-top: 1px solid var(--toolbox-steel);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.harness-group + .harness-group {
+  margin-top: 58px;
+}
+
+.harness-group-heading {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.36fr) minmax(280px, 0.64fr);
+  gap: 32px;
+  align-items: baseline;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--toolbox-steel-dark);
+}
+
+.harness-group-heading h2,
+.harness-group-heading p {
+  margin: 0;
+}
+
+.harness-group-heading h2 {
+  color: var(--toolbox-ink);
+  font-size: 1.18rem;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+}
+
+.harness-group-heading p {
+  color: var(--toolbox-muted);
+  font-size: 0.86rem;
+}
+
+.harness-family + .harness-family {
+  margin-top: 46px;
+}
+
+.harness-family-heading {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.28fr) minmax(260px, 0.72fr) minmax(260px, 0.72fr);
+  gap: 22px;
+  align-items: start;
+  margin-bottom: 15px;
+}
+
+.harness-family-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.harness-family-title h3,
+.harness-family-heading p {
+  margin: 0;
+}
+
+.harness-family-title h3 {
+  color: var(--toolbox-ink);
+  font-size: 1.02rem;
+  font-weight: 720;
+  letter-spacing: -0.018em;
+}
+
+.harness-family-count {
+  color: var(--toolbox-muted);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.harness-family-purpose,
+.harness-family-question {
+  color: var(--toolbox-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.harness-family-question {
+  padding-left: 18px;
+  border-left: 2px solid var(--harness-family-accent, var(--toolbox-steel));
+}
+
+.harness-family-nothing {
+  --harness-family-accent: #718096;
+}
+
+.harness-family-superpowers {
+  --harness-family-accent: #206bc4;
+}
+
+.harness-family-studio-moser {
+  --harness-family-accent: #7048b8;
+}
+
+.harness-family-studio-personality {
+  --harness-family-accent: #3a8f7b;
+}
+
+.harness-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 18px;
+}
+
+.harness-grid-single {
+  grid-template-columns: minmax(0, calc((100% - 36px) / 3));
+}
+
+.harness-card.card {
+  --harness-accent: var(--toolbox-blue);
+  --toolbox-level-soft: var(--toolbox-blue-soft);
+  overflow: hidden;
+  min-width: 0;
+  color: var(--toolbox-ink);
+  background: var(--toolbox-paper);
+  border: 1px solid var(--toolbox-steel);
+  border-top: 3px solid var(--harness-accent);
+  border-radius: var(--toolbox-radius);
+  box-shadow: var(--toolbox-shadow);
+}
+
+.harness-card-family-nothing {
+  --harness-accent: #718096;
+  --toolbox-level-soft: #f1f4f7;
+}
+
+.harness-card-family-superpowers {
+  --harness-accent: #206bc4;
+  --toolbox-level-soft: #e9f2ff;
+}
+
+.harness-card-family-studio-moser {
+  --harness-accent: #7048b8;
+  --toolbox-level-soft: #f1ecfb;
+}
+
+.harness-card-family-studio-personality {
+  --harness-accent: #3a8f7b;
+  --toolbox-level-soft: #eaf7f3;
+}
+
+.harness-card-header {
+  min-height: 318px;
+  padding: 18px 20px 20px;
+}
+
+.harness-role {
+  color: var(--toolbox-ink);
+}
+
+.harness-version-badge {
+  color: var(--harness-accent);
+  background: var(--toolbox-level-soft);
+  border-color: color-mix(in srgb, var(--harness-accent) 28%, var(--toolbox-steel));
+}
+
+.harness-state {
+  margin-left: auto;
+}
+
+.harness-state-ready {
+  color: oklch(0.43 0.11 150);
+  background: oklch(0.96 0.03 150);
+  border-color: oklch(0.86 0.06 150);
+}
+
+.harness-state-draft {
+  color: oklch(0.48 0.1 70);
+  background: oklch(0.97 0.035 70);
+  border-color: oklch(0.87 0.07 70);
+}
+
+.harness-latest {
+  margin-left: 0;
+  color: oklch(0.43 0.11 150);
+  background: oklch(0.96 0.03 150);
+  border-color: oklch(0.86 0.06 150);
+}
+
+.harness-card-title {
+  margin-top: 20px;
+  font-size: 1.28rem;
+}
+
+.harness-card-subtitle {
+  margin: 3px 0 0;
+  color: var(--harness-accent);
+  font-size: 0.78rem;
+  font-weight: 680;
+}
+
+.harness-change {
+  margin-top: 19px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--harness-accent) 20%, var(--toolbox-steel));
+}
+
+.harness-change-label,
+.harness-change-summary,
+.harness-change-list {
+  margin: 0;
+}
+
+.harness-change-label {
+  color: var(--harness-accent);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.harness-change-summary {
+  margin-top: 5px;
+  color: var(--toolbox-ink);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.harness-change-list {
+  margin-top: 9px;
+  padding-left: 18px;
+  color: var(--toolbox-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.harness-change-list li + li {
+  margin-top: 3px;
+}
+
+.harness-list {
+  margin: 10px 0 0;
+  padding-left: 19px;
+}
+
+.harness-list li + li {
+  margin-top: 6px;
+}
+
+.harness-layer-list {
+  display: grid;
+  gap: 9px;
+}
+
+.harness-layer {
+  padding: 11px 12px;
+  background: #f6f8fb;
+  border: 1px solid var(--toolbox-steel);
+  border-radius: 7px;
+}
+
+.harness-layer-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  color: var(--toolbox-ink);
+  font-size: 0.76rem;
+}
+
+.harness-layer-heading span {
+  color: var(--toolbox-muted);
+}
+
+.harness-layer p {
+  margin: 6px 0 0;
+}
+
+.harness-facts {
+  margin-top: 13px;
+  padding: 0;
+}
+
+.harness-identity-facts {
+  margin-top: 0;
+}
+
+.harness-pins {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.harness-pin {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.harness-pin code {
+  overflow: hidden;
+  color: #7c8795;
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.harness-identity-note {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  color: var(--toolbox-muted);
+  background: #f6f8fb;
+  border: 1px solid var(--toolbox-steel);
+  border-radius: 7px;
+}
+
 button:focus-visible,
 a:focus-visible,
 summary:focus-visible {
@@ -588,8 +933,21 @@ summary:focus-visible {
 }
 
 @media (max-width: 1179px) {
-  .toolbox-grid {
+  .toolbox-grid,
+  .harness-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .harness-grid-single {
+    grid-template-columns: minmax(0, calc((100% - 18px) / 2));
+  }
+
+  .harness-family-heading {
+    grid-template-columns: minmax(150px, 0.3fr) minmax(0, 1fr);
+  }
+
+  .harness-family-question {
+    grid-column: 2;
   }
 }
 
@@ -606,7 +964,9 @@ summary:focus-visible {
   .toolbox-intro,
   .toolbox-filters,
   .toolbox-selection-summary,
-  .toolbox-results {
+  .toolbox-results,
+  .harnesses-intro,
+  .harness-group {
     width: min(100% - 28px, 1680px);
   }
 
@@ -641,8 +1001,35 @@ summary:focus-visible {
     padding-bottom: 28px;
   }
 
-  .toolbox-grid {
+  .toolbox-grid,
+  .harness-grid {
     grid-template-columns: 1fr;
+  }
+
+  .harness-group-heading {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .harness-family-heading {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .harness-family-question {
+    grid-column: auto;
+    margin-top: 4px !important;
+    padding: 8px 0 0;
+    border-top: 1px solid var(--toolbox-steel);
+    border-left: 0;
+  }
+
+  .harness-grid-single {
+    grid-template-columns: 1fr;
+  }
+
+  .harness-card-header {
+    min-height: 0;
   }
 
   .toolbox-card-header {
