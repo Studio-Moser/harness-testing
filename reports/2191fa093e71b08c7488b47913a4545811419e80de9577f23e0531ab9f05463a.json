@@ -257,7 +257,8 @@
         "Historical time comparisons are observational; they do not establish causality.",
         "The 10% advantage and noninferiority thresholds are product defaults, not research findings.",
         "No clear change does not establish equivalence.",
-        "A completed code review records confirmed remaining defects; finding none does not prove the code is defect-free. Evaluation cost is separate from harness execution cost."
+        "A completed code review records confirmed remaining defects; finding none does not prove the code is defect-free. Evaluation cost is separate from harness execution cost.",
+        "Privacy-only revision: one container-local provider path was redacted from the visible transcript; original measurements and evaluations are unchanged."
       ],
       "pairs": [
         {
@@ -426,7 +427,7 @@
     "predecessor_result_ids": [],
     "purpose": "diagnostic",
     "request_id": "sha256:eafdbe8f7156e3c529dec0b8689813ad1e6bdacd7de5c364be9900ad56067692",
-    "supersedes_report_id": null,
+    "supersedes_report_id": "sha256:75be854efd5691c12e7daee3129e0c6e2ca1e35bcf7ecc9061749741d8e82e65",
     "trials": [
       {
         "attempt": 1,
@@ -1068,7 +1069,7 @@
               "role": "assistant"
             },
             {
-              "content": "The existing structure already has the right boundaries: `App` loads and saves only through `loadSavedView` and `saveSavedView`, while filtering already supports all three states. I\u2019ll keep the change confined to [Saved_View.ts](/app/src/domain/Saved_View.ts): validate stored values against `all`, `active`, and `archived`; return `all` for `null` or anything else; and write selections to `dashboard.saved-view`. The existing domain and app tests cover restoration, invalid fallback, persistence, and filtering, so I\u2019ll use their current failure as the red TDD step, implement the minimal fix, then run the full `npm run gate` and build.\n\nMay I proceed with that design?\n\nThe approval pause is required by [brainstorming/SKILL.md](/tmp/codex-home/plugins/cache/experiment-superpowers/superpowers/6.3.0/skills/brainstorming/SKILL.md): \u201cDo NOT \u2026 write any code \u2026 until you have told your human partner what you intend and they have approved it.\u201d This applies because the task changes application behavior.",
+              "content": "The existing structure already has the right boundaries: `App` loads and saves only through `loadSavedView` and `saveSavedView`, while filtering already supports all three states. I\u2019ll keep the change confined to [Saved_View.ts](/app/src/domain/Saved_View.ts): validate stored values against `all`, `active`, and `archived`; return `all` for `null` or anything else; and write selections to `dashboard.saved-view`. The existing domain and app tests cover restoration, invalid fallback, persistence, and filtering, so I\u2019ll use their current failure as the red TDD step, implement the minimal fix, then run the full `npm run gate` and build.\n\nMay I proceed with that design?\n\nThe approval pause is required by [brainstorming/SKILL.md]([container-local path redacted] \u201cDo NOT \u2026 write any code \u2026 until you have told your human partner what you intend and they have approved it.\u201d This applies because the task changes application behavior.",
               "elapsed_seconds": 34.767,
               "kind": "progress",
               "ordinal": 4,
@@ -1672,7 +1673,7 @@
   "observed_api_equivalent_cost_usd": null,
   "pending_jobs": 0,
   "profile": "calibration",
-  "report_id": "sha256:75be854efd5691c12e7daee3129e0c6e2ca1e35bcf7ecc9061749741d8e82e65",
+  "report_id": "sha256:2191fa093e71b08c7488b47913a4545811419e80de9577f23e0531ab9f05463a",
   "run_id": "run-13683c1fe710e42917c6",
   "schema_version": "3",
   "source": {
@@ -1681,5 +1682,5 @@
   },
   "started_at": "2026-09-13T21:03:20.434073Z",
   "status": "completed",
-  "updated_at": "2026-09-13T21:09:41.562550Z"
+  "updated_at": "2026-09-16T20:13:52.197960Z"
 }
