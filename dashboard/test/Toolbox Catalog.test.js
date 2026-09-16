@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import {execFile} from "node:child_process";
+import {mkdir, mkdtemp, rm, symlink, writeFile} from "node:fs/promises";
+import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
-import {dirname, resolve} from "node:path";
+import {dirname, join, resolve} from "node:path";
 import test from "node:test";
 import {promisify} from "node:util";
 
@@ -107,18 +109,39 @@ test("controlled tests are enriched from their tracked task apparatus", async ()
 });
 
 test("DeepSWE entries expose summaries and pinned links without copied prompts", async () => {
-  const tests = await enrichCatalog(TOOLBOX_CATALOG, {repositoryRoot});
-  const quill = tests.find(({id}) => id === "quill-shared-toolbar-focus");
-
-  assert.equal(quill.prompt.kind, "upstream");
-  assert.equal(quill.prompt.exact, null);
-  assert.equal(
-    quill.prompt.url,
-    "https://github.com/datacurve-ai/deep-swe/blob/8cae5984d5dd0ee37445beff0e928dc10c331116/tasks/quill-shared-toolbar-focus/instruction.md"
+  const fixtureRoot = await mkdtemp(join(tmpdir(), "toolbox-catalog-"));
+  const quillTask = join(
+    fixtureRoot,
+    ".cache",
+    "deepswe",
+    "datasets",
+    "fixture",
+    "tasks",
+    "quill-shared-toolbar-focus"
   );
-  assert.equal(quill.setupState.defined, true);
-  assert.equal(quill.setupState.materialized, true);
-  assert.equal(quill.setupState.queued, true);
+
+  try {
+    await symlink(resolve(repositoryRoot, "tasks"), join(fixtureRoot, "tasks"), "dir");
+    await mkdir(quillTask, {recursive: true});
+    await writeFile(join(quillTask, "task.toml"), "");
+
+    const tests = await enrichCatalog(TOOLBOX_CATALOG, {repositoryRoot: fixtureRoot});
+    const quill = tests.find(({id}) => id === "quill-shared-toolbar-focus");
+    const happyDom = tests.find(({id}) => id === "happy-dom-abort-pending-body-reads");
+
+    assert.equal(quill.prompt.kind, "upstream");
+    assert.equal(quill.prompt.exact, null);
+    assert.equal(
+      quill.prompt.url,
+      "https://github.com/datacurve-ai/deep-swe/blob/8cae5984d5dd0ee37445beff0e928dc10c331116/tasks/quill-shared-toolbar-focus/instruction.md"
+    );
+    assert.equal(quill.setupState.defined, true);
+    assert.equal(quill.setupState.materialized, true);
+    assert.equal(quill.setupState.queued, true);
+    assert.equal(happyDom.setupState.materialized, false);
+  } finally {
+    await rm(fixtureRoot, {recursive: true, force: true});
+  }
 });
 
 test("enrichment stops when a controlled task source is missing", async () => {
