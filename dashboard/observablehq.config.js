@@ -16,7 +16,8 @@ export default {
     <div class="toolbox-site-links">
       <a class="toolbox-site-link" data-nav="toolbox" href="/">Toolbox</a>
       <a class="toolbox-site-link" data-nav="harnesses" href="/Harnesses">Harnesses</a>
+      <a class="toolbox-site-link" data-nav="results" href="/Results">Results</a>
     </div>
   </nav>`,
-  footer: "Studio Moser Harness Testing · test and harness definitions only"
+  footer: "Studio Moser Harness Testing · public-safe benchmark evidence"
 };

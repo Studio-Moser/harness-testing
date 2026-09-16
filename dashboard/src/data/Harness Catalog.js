@@ -167,7 +167,16 @@ export const HARNESS_CATALOG = Object.freeze([
     commit: "f989eb1b6cef1248fefa89f8de3f3c6349f330f2",
     identity: "sha256:fe632a155dbeb1028e319e725c115bb468dedbd8ccef659ec9514745deacb0cc",
     changeSummary: "Deliver verification selection in startup instructions.",
-    changeDetails: ["Moves the verification rule into the baseline agent instructions", "Makes the rule available before skill selection", "Updates Lite-mode contract coverage"],
+    changeDetails: ["Moves the verification rule into the baseline agent instructions", "Makes the rule available before skill selection", "Updates Lite-mode contract coverage"]
+  }),
+  studioVersion({
+    id: "studio-moser-v5",
+    versionOrder: 5,
+    predecessorId: "studio-moser-v4",
+    commit: "3fb970f32d2901b82e3d17c35dbe192604fc7762",
+    identity: "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+    changeSummary: "Adopt the Lite direct-by-default harness used by the Quill pilot.",
+    changeDetails: ["Defaults ordinary work to direct execution", "Retains task-matched specialist skills and personality guidance", "Keeps the frozen model-routing rubric available"],
     latest: true
   }),
   Object.freeze({
