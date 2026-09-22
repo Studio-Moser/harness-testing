@@ -1198,8 +1198,11 @@ a:hover {
 
 .results-coverage-cell small,
 .results-quality-cell small {
+  max-width: 32ch;
   margin-top: 2px;
+  margin-left: auto;
   color: var(--toolbox-muted);
+  white-space: normal;
 }
 
 .results-quality-cell strong {
@@ -1264,10 +1267,13 @@ a:hover {
 }
 
 .results-cell-evidence {
+  max-width: 32ch;
   margin-top: 3px;
+  margin-left: auto;
   color: #9a5b13;
   font-size: 0.62rem;
   font-weight: 650;
+  white-space: normal;
 }
 
 .results-matrix-empty {
@@ -1346,7 +1352,6 @@ a:hover {
 .results-tradeoff-chart svg {
   display: block;
   width: 100%;
-  min-width: 500px;
   max-height: 340px;
 }
 
