@@ -13,6 +13,7 @@ import {
   behaviorFromTrial,
   defaultCohort,
   defaultModel,
+  harnessRead,
   normalizeResults,
   qualityFromGrade,
   renderResults
@@ -405,49 +406,7 @@ test("pending infrastructure and review/protected-state gaps stay visible withou
   assert.equal(row.gaps.unreviewed, 2);
 });
 
-test("trade-off charts put higher quality and lower resource use toward the top right", () => {
-  const harnesses = HARNESS_CATALOG.filter(harness => harness.identity).slice(0, 3);
-  const previousDocument = globalThis.document;
-  globalThis.document = {createElement: tag => new FakeElement(tag), createElementNS: (_, tag) => new FakeElement(tag)};
-  try {
-    for (const values of [[0, 50, 100], [0, 0, 0], [100, 105, 110], [100, 100, 100]]) {
-      const source = report("axis-direction", harnesses.map((harness, i) => trial(harness, "react-active-badge-count", 1, {
-        duration_seconds: values[i], cost_usd: values[i],
-        model_usage: [{input_tokens: values[i], output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0}],
-        collaboration: {grade: completedGrade(5 - i)}
-      })));
-      const root = renderResults({tests: TOOLBOX_CATALOG, harnesses, reports: [source]});
-      const charts = descendants(root).filter(node => node.tag === "svg");
-      assert.match(root.className, /\bcontainer-xl\b/);
-      assert.ok(descendants(root).filter(node => node.tag === "table").every(node => node.className.includes("card-table")));
-      assert.ok(descendants(root).filter(node => node.attributes["aria-pressed"] === "true").every(node => node.className.includes("nav-link active")));
-      assert.ok(descendants(root).filter(node => node.className.includes("results-filter-group")).every(node => node.className.includes("nav nav-pills")));
-      assert.equal(charts.length, 3);
-      assert.match(root.textContent, /Better is toward the top right/);
-      for (const chart of charts) {
-        assert.match(chart.attributes["aria-label"], /Higher Quality is up; lower .* is right/);
-        const points = harnesses.map(harness => descendants(chart).find(node => node.tag === "circle" && node.attributes.class.endsWith(`results-chart-${harness.family}`)));
-        const xs = points.map(point => Number(point.attributes.cx));
-        const ys = points.map(point => Number(point.attributes.cy));
-        assert.ok(xs.every(Number.isFinite) && ys.every(Number.isFinite));
-        assert.ok(ys[0] < ys[1] && ys[1] < ys[2]);
-        if (values[0] !== values[2]) assert.ok(xs[0] > xs[1] && xs[1] > xs[2]);
-        else assert.ok(xs.every(x => x === xs[0]));
-        const ticks = descendants(chart).filter(node => node.tag === "text" && node.attributes["text-anchor"] === "middle");
-        assert.equal(ticks.length, 3);
-        assert.ok(Number(ticks[0].attributes.x) < Number(ticks[2].attributes.x));
-        if (values[0] > 0) {
-          assert.doesNotMatch(ticks[2].textContent, /^(0s|0|\$0\.00)$/);
-          assert.ok(xs.every(x => x > 48 && x < 496));
-          if (values[0] !== values[2]) assert.ok(xs[0] - xs[2] > 448 * 0.8, "clustered values use most of the plot width");
-          else assert.ok(xs.every(x => Math.abs(x - 272) < 0.001), "identical values are centered");
-        } else assert.match(ticks[2].textContent, /^(0s|0|\$0\.00)$/);
-      }
-    }
-  } finally {globalThis.document = previousDocument;}
-});
-
-test("Results page separates an empty decision-grade view from exploratory detail", () => {
+test("Results page shows the read, per-task results and behavior for exploratory evidence", () => {
   const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
   const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
   const diagnostic = report("diagnostic-ui", [
@@ -470,21 +429,18 @@ test("Results page separates an empty decision-grade view from exploratory detai
   try {
     const root = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: [diagnostic]});
     assert.equal(root.attributes["aria-label"], "Harness results");
-    assert.match(root.textContent, /No decision-grade ranking/);
-    assert.match(root.textContent, /2 exploratory observations/);
+    assert.match(root.textContent, /The read/);
+    assert.match(root.textContent, /No completed trials in this scope yet/);
     assert.match(root.textContent, /Old policy/);
-    assert.match(root.textContent, /communication · automated/);
-    assert.match(root.textContent, /protected state unknown/);
-    assert.match(root.textContent, /not code-reviewed/);
     assert.match(root.textContent, /1 agent failure/);
     assert.match(root.textContent, /Studio Moser v5/);
     assert.match(root.textContent, /React active badge count/);
+    assert.match(root.textContent, /Difficulty 2 · Bug fixes/);
     assert.doesNotMatch(root.textContent, /All models/i);
-    assert.doesNotMatch(root.textContent, /recommend/i);
 
     const nodes = descendants(root);
-    assert.equal(nodes.filter((node) => node.tag === "select").length, 2);
-    assert.equal(nodes.filter((node) => node.className === "results-chart-legend").length, 1);
+    assert.equal(nodes.filter((node) => node.tag === "select").length, 1);
+    assert.equal(nodes.filter((node) => node.className === "results-chart-legend").length, 0);
   } finally {
     globalThis.document = previousDocument;
   }
@@ -576,44 +532,6 @@ test("annoyance counters read the assistant's visible messages only", () => {
   assert.deepEqual(annoyanceFromTranscript([{role: "user", content: "hi!"}]), {});
 });
 
-test("campaign verdict card names the recommended harness per lane and renders on the page", () => {
-  const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
-  const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
-  const contender = (harness, cost, reviewed = true, unconfirmed = 0) => ({
-    id: harness.identity, successes: 19, scheduled: 19, eligible: true, reviewed,
-    mean_cost_usd: cost, mean_duration_seconds: 70, code_review: {unconfirmed}
-  });
-  const campaign = {
-    campaign_digest: DIGEST, status: "recommended", winner_id: nothing.identity, reasons: [],
-    lanes: {
-      comparison: {limitations: ["Some slots were rerun."], comparison: {
-        status: "recommended", winner_id: nothing.identity, reasons: ["practical_advantage_supported"],
-        unsolved_tasks: [], contenders: [contender(nothing, 0.29, true, 5), contender(studio, 0.56, false)]
-      }},
-      deepswe: {limitations: [], comparison: {status: "no_clear_winner", winner_id: null, reasons: [], unsolved_tasks: ["pest"], contenders: []}}
-    }
-  };
-  const verdict = campaignVerdict(campaign, HARNESS_CATALOG);
-  assert.equal(verdict.winner, "Nothing v1");
-  assert.equal(verdict.lanes[0].winner, "Nothing v1");
-  assert.equal(verdict.lanes[0].contenders[1].reviewed, false);
-  assert.equal(verdict.lanes[1].winner, null);
-  assert.equal(campaignVerdict(null, HARNESS_CATALOG), null);
-  const previousDocument = globalThis.document;
-  globalThis.document = {createElement: tag => new FakeElement(tag), createElementNS: (_, tag) => new FakeElement(tag)};
-  try {
-    const root = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: [], campaign});
-    const text = root.textContent;
-    assert.match(text, /Campaign verdict: Nothing v1 recommended/);
-    assert.match(text, /Comparison lane · Nothing v1 recommended/);
-    assert.match(text, /5 unconfirmed claims/);
-    assert.match(text, /incomplete/);
-    assert.match(text, /Unsolved by every harness: pest/);
-    const without = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: []});
-    assert.doesNotMatch(without.textContent, /Campaign verdict/);
-  } finally {globalThis.document = previousDocument;}
-});
-
 test("the stitched campaign is the default decision cohort and excludes superseded trials", () => {
   const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
   const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
@@ -645,4 +563,42 @@ test("the stitched campaign is the default decision cohort and excludes supersed
   assert.equal(rows.find(({id}) => id === studio.id).correctness, 0);
   assert.ok(rows[0].eligible && rows[0].cohortComplete);
   assert.deepEqual(applyCampaignCohort(observations, null), observations);
+});
+
+test("the read turns the numbers into pros, cons and one recommendation", () => {
+  const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
+  const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
+  const tasks = ["react-active-badge-count", "react-accent-polish"];
+  const source = report("read", tasks.flatMap((task) => [
+    trial(nothing, task, 1, {cost_usd: 0.10, duration_seconds: 30, collaboration: {metrics: metrics({assistant_words: 100}), grade: completedGrade(5)}}),
+    trial(studio, task, 1, {cost_usd: 0.25, duration_seconds: 60, collaboration: {metrics: metrics({assistant_words: 300, unnecessary_approval_request_count: 1}), grade: completedGrade(4)}})
+  ]), {experiment: {conditions: conditions({task_ids: tasks, task_digests: Object.fromEntries(tasks.map((task) => [task, DIGEST]))})}});
+  const observations = normalizeResults([source], TOOLBOX_CATALOG, HARNESS_CATALOG);
+  const rows = aggregateHarnesses(observations, HARNESS_CATALOG, {cohort: "read"});
+  const behavior = aggregateBehavior(observations, HARNESS_CATALOG);
+  const read = harnessRead(rows, behavior);
+  assert.match(read.recommendation, /^Use Nothing v1: /);
+  assert.equal(read.cards[0].label, "Nothing v1");
+  assert.ok(read.cards[0].pros.some((text) => /Cheapest per task/.test(text)));
+  assert.ok(read.cards[0].pros.some((text) => /Says the least/.test(text)));
+  const studioCard = read.cards.find((card) => card.label === "Studio Moser v5");
+  assert.ok(studioCard.cons.some((text) => /Costs 2\.5× the cheapest/.test(text)));
+  assert.ok(studioCard.cons.some((text) => /Takes 2\.0× the fastest/.test(text)));
+  assert.ok(studioCard.cons.some((text) => /Talks 3\.0× more/.test(text)));
+  assert.ok(studioCard.cons.some((text) => /unneeded approvals/.test(text)));
+  assert.ok(studioCard.cons.some((text) => /Lower work-quality grade/.test(text)));
+  assert.ok(studioCard.pros.some((text) => /Same correctness as the others/.test(text)));
+  assert.equal(harnessRead([], []), null);
+  const verdict = campaignVerdict({status: "recommended", winner_id: studio.identity, lanes: {}}, HARNESS_CATALOG);
+  assert.match(harnessRead(rows, behavior, verdict).recommendation, /^Use Studio Moser v5: /);
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag), createElementNS: (_, tag) => new FakeElement(tag)};
+  try {
+    const root = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: [source]});
+    assert.match(root.textContent, /The readUse Nothing v1/);
+    assert.match(root.textContent, /Results by task/);
+    assert.match(root.textContent, /\$0\.10 · 30s/);
+    assert.match(root.textContent, /Difficulty 1 · Polish/);
+    assert.doesNotMatch(root.textContent, /Decision-grade ranking|Quality trade-offs|Evidence cohort/);
+  } finally {globalThis.document = previousDocument;}
 });

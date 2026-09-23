@@ -157,7 +157,7 @@ test("rendered Toolbox exposes accessible filters and all structured card sectio
     assert.equal(nodes.find(node => node.tag === "h1").textContent, "Toolbox");
     assert.match(nodes.find(node => node.tag === "h1").className, /page-title fs-1/);
     assert.match(root.textContent, /1 matching test/);
-    assert.match(root.textContent, /L2 Focused/);
+    assert.match(root.textContent, /Difficulty 2 · Focused/);
     assert.deepEqual(
       nodes.filter((node) => node.tag === "summary").map((node) => node.textContent),
       ["What it tests", "Task brief", "Test setup", "Expected agent process", "Verification"]

@@ -47,7 +47,7 @@ npm --prefix dashboard test
 npm --prefix dashboard run build
 ```
 
-Without a `dashboard-data/reports` directory the build reads `runs/evidence` directly, skipping files that are not public-safe run reports. The Results page shows the ranking, the quality trade-offs, and a Behavior section with transcript metrics and automated grades for every kickoff model and harness version side by side.
+Without a `dashboard-data/reports` directory the build reads `runs/evidence` directly, skipping files that are not public-safe run reports. The Results page opens with a plain-language read of each harness (pros, cons, one recommendation), then the per-task results by type and difficulty, then a Behavior section with transcript metrics, annoyance counts and automated grades for every kickoff model and harness version side by side.
 
 ## Repository map
 

@@ -141,3 +141,11 @@ summary:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid var(--t
 
 .results-verdict { margin: 1rem 0; }
 .results-verdict-lane { margin-top: 1rem; }
+
+.results-read { margin: 1rem 0; }
+.results-read-recommendation { font-size: 1.05rem; font-weight: 600; margin: .25rem 0 0; }
+.results-read-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+.results-read-card .card-title { display: flex; align-items: center; gap: .5rem; }
+.results-read-list-title { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--tblr-secondary); margin: .75rem 0 .25rem; }
+.results-read-list { margin: 0; padding-left: 1.1rem; }
+.results-read-none { color: var(--tblr-secondary); list-style: none; margin-left: -1.1rem; }

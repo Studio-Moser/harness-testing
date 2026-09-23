@@ -56,11 +56,11 @@ const TYPE_LABELS = {
 };
 
 const LEVEL_LABELS = {
-  all: "All levels",
-  1: "L1 Atomic",
-  2: "L2 Focused",
-  3: "L3 Coordinated",
-  4: "L4 Complex"
+  all: "All difficulties",
+  1: "Difficulty 1 · Atomic",
+  2: "Difficulty 2 · Focused",
+  3: "Difficulty 3 · Coordinated",
+  4: "Difficulty 4 · Complex"
 };
 
 function element(tag, className, text) {
@@ -301,7 +301,7 @@ export function renderToolbox(tests, {
       registry: typeButtons
     }),
     renderFilterRow({
-      label: "Level",
+      label: "Difficulty",
       dimension: "level",
       values: ["all", ...LEVELS],
       labels: LEVEL_LABELS,
