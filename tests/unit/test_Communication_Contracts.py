@@ -6,7 +6,6 @@ import pytest
 from harness_testing.Communication_Contracts import (
     communication_contract_for_task,
     load_communication_contract,
-    load_scenario_catalog,
 )
 
 
@@ -55,20 +54,3 @@ def test_every_comparison_task_has_a_valid_contract():
         loaded = communication_contract_for_task(root, task.parent.name)
         assert loaded["contract"]["schema_version"] == "1"
 
-
-def test_catalog_freezes_all_ten_named_scenarios():
-    root = Path(__file__).parents[2]
-    catalog = load_scenario_catalog(root / "policy/Communication Scenarios.json")
-    assert [row["id"] for row in catalog["scenarios"]] == [
-        "simple_repository_question",
-        "clear_small_edit",
-        "ambiguous_feature",
-        "mid_task_status",
-        "user_correction",
-        "technical_disagreement",
-        "recoverable_failure",
-        "authorized_routine_action",
-        "consequential_action",
-        "completed_implementation",
-    ]
-    assert all(row["contract"]["scenario"] == row["id"] for row in catalog["scenarios"])

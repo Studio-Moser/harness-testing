@@ -411,6 +411,8 @@ def prepare_grading(root: Path, report_path: Path, protocol_path: Path) -> dict:
     report = load_run_report(root, report_path.resolve())
     protocol, protocol_bytes = _read(protocol_path.resolve(), "collaboration grading protocol")
     _validate(root, "Collaboration Grading Protocol.schema.json", protocol)
+    if protocol.get("rubric_version") != RUBRIC_VERSION:
+        raise ValueError(f"grading uses the {RUBRIC_VERSION} rubric only")
     if report["experiment"]["conditions"]["decision_policy"] == "benchmark-readiness-v2":
         from harness_testing.Code_Reviews import _manifest_for_report, evaluation_protocol
 
@@ -447,8 +449,7 @@ def prepare_grading(root: Path, report_path: Path, protocol_path: Path) -> dict:
                 "dimensions": protocol["dimensions"],
             },
         }
-        if protocol["rubric_version"] == RUBRIC_VERSION:
-            packet["work_evidence"] = _work_evidence(root, report, trial)
+        packet["work_evidence"] = _work_evidence(root, report, trial)
         packet_bytes = json.dumps(packet, indent=2, sort_keys=True).encode() + b"\n"
         prepared.append((packet_id, packet, trial["trial_id"], _sha256(packet_bytes)))
     secrets.SystemRandom().shuffle(prepared)
@@ -631,35 +632,34 @@ def record_grading(root: Path, plan_path: Path, results_path: Path) -> dict:
         planned[packet_id]["trial_id"]: _grade_summary(root, returned[packet_id], plan)
         for packet_id in planned
     }
-    if plan["protocol"]["rubric_version"] == RUBRIC_VERSION:
-        for packet_id, mapping in planned.items():
-            packet, _ = _read(directory / "Packets" / f"{packet_id}.json", "grading packet")
-            visuals = packet["work_evidence"].get("visual_evidence")
-            if (
-                visuals
-                and visuals["status"] != "complete"
-                and any(
-                    row["name"] == "requirements_fit" and row["score"] is not None
-                    for row in summaries[mapping["trial_id"]]["dimensions"]
-                )
-            ):
-                raise ValueError("visual requirements scores require rendered evidence")
-            unavailable = packet["work_evidence"].get(
-                "unavailable_dimensions",
-                []
-                if packet["work_evidence"]["status"] == "complete"
-                else [
-                    "self_verification",
-                    "regression_coverage",
-                    "requirements_fit",
-                    "research_depth",
-                ],
-            )
-            if any(
-                row["score"] is not None and row["name"] in unavailable
+    for packet_id, mapping in planned.items():
+        packet, _ = _read(directory / "Packets" / f"{packet_id}.json", "grading packet")
+        visuals = packet["work_evidence"].get("visual_evidence")
+        if (
+            visuals
+            and visuals["status"] != "complete"
+            and any(
+                row["name"] == "requirements_fit" and row["score"] is not None
                 for row in summaries[mapping["trial_id"]]["dimensions"]
-            ):
-                raise ValueError("process scores require retained work evidence")
+            )
+        ):
+            raise ValueError("visual requirements scores require rendered evidence")
+        unavailable = packet["work_evidence"].get(
+            "unavailable_dimensions",
+            []
+            if packet["work_evidence"]["status"] == "complete"
+            else [
+                "self_verification",
+                "regression_coverage",
+                "requirements_fit",
+                "research_depth",
+            ],
+        )
+        if any(
+            row["score"] is not None and row["name"] in unavailable
+            for row in summaries[mapping["trial_id"]]["dimensions"]
+        ):
+            raise ValueError("process scores require retained work evidence")
     revised = copy.deepcopy(source)
     # Retired human-preference fields stay in the immutable source only.
     for key in (

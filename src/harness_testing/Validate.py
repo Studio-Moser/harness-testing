@@ -934,10 +934,7 @@ def _validate_public_boundary(root: Path) -> list[ValidationFailure]:
 
 def validate_collaboration_policy(root: Path) -> tuple[ValidationFailure, ...]:
     """Validate checked-in collaboration contracts, rubric, and example."""
-    from harness_testing.Communication_Contracts import (
-        load_communication_contract,
-        load_scenario_catalog,
-    )
+    from harness_testing.Communication_Contracts import load_communication_contract
     from harness_testing.Experiments import validate_experiment_request
 
     failures: list[ValidationFailure] = []
@@ -957,7 +954,7 @@ def validate_collaboration_policy(root: Path) -> tuple[ValidationFailure, ...]:
         except (OSError, json.JSONDecodeError, SchemaError) as error:
             failures.append(_failure(path, f"invalid collaboration schema: {error}"))
 
-    protocol_path = policy / "Collaboration Grading Protocol.json"
+    protocol_path = policy / "Quality Grading Protocol.json"
     protocol = None
     try:
         protocol = json.loads(protocol_path.read_text())
@@ -980,14 +977,7 @@ def validate_collaboration_policy(root: Path) -> tuple[ValidationFailure, ...]:
             _failure(protocol_path, f"invalid collaboration grading protocol: {error}")
         )
 
-    catalog_path = policy / "Communication Scenarios.json"
-    try:
-        catalog = load_scenario_catalog(catalog_path)
-        contracts = [row["contract"] for row in catalog["scenarios"]]
-    except ValueError as error:
-        failures.append(_failure(catalog_path, str(error)))
-        contracts = []
-
+    contracts = []
     workflow_contracts = [
         task.parent / "Communication Contract.json"
         for task in sorted((root / "tasks" / "workflow").glob("*/task.toml"))
@@ -998,15 +988,6 @@ def validate_collaboration_policy(root: Path) -> tuple[ValidationFailure, ...]:
         except ValueError as error:
             failures.append(_failure(path, str(error)))
 
-    if isinstance(protocol, dict) and isinstance(protocol.get("dimensions"), list):
-        for contract in contracts:
-            if contract["rubric"] != protocol["dimensions"]:
-                failures.append(
-                    _failure(
-                        protocol_path,
-                        f"{contract['scenario']} rubric must match the protocol dimensions",
-                    )
-                )
 
     example_path = root / "runs" / "examples" / "Opus Personality Comparison.json"
     try:

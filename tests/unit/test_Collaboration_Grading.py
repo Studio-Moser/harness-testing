@@ -95,14 +95,10 @@ def prepared_root(tmp_path):
     return tmp_path, report_path, contenders
 
 
-@pytest.mark.parametrize("quality", [False, True])
-def test_grading_packets_are_identity_blind_and_results_attach_to_new_report(tmp_path, quality):
+def test_grading_packets_are_identity_blind_and_results_attach_to_new_report(tmp_path):
+    quality = True
     root, report_path, contenders = prepared_root(tmp_path)
-    protocol_path = (
-        root
-        / "policy"
-        / ("Quality Grading Protocol.json" if quality else "Collaboration Grading Protocol.json")
-    )
+    protocol_path = root / "policy" / "Quality Grading Protocol.json"
     outcome = prepare_grading(root, report_path, protocol_path)
     assert len(outcome["packets"]) == 2
     for path in outcome["packets"]:
@@ -177,9 +173,8 @@ def test_grading_packets_are_identity_blind_and_results_attach_to_new_report(tmp
     imported = record_grading(root, outcome["plan"], results_path)
     report = load_run_report(root, imported["report"])
     assert report["experiment"]["supersedes_report_id"] != report["report_id"]
-    assert report["experiment"]["collaboration_evaluation"]["rubric_version"] == (
-        "tim-work-quality-v2" if quality else "tim-collaboration-v1"
-    )
+    evaluation = report["experiment"]["collaboration_evaluation"]
+    assert evaluation["rubric_version"] == "tim-work-quality-v2"
     assert all(
         trial["collaboration"]["grade"]["status"] == "completed"
         for trial in report["experiment"]["trials"]
@@ -198,7 +193,7 @@ def test_grading_uses_the_visible_user_instruction_for_a_research_task(tmp_path)
     outcome = prepare_grading(
         root,
         report_path,
-        root / "policy/Collaboration Grading Protocol.json",
+        root / "policy/Quality Grading Protocol.json",
     )
 
     packet = json.loads(outcome["packets"][0].read_text())

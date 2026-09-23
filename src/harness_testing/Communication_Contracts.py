@@ -52,36 +52,3 @@ def communication_contract_for_task(root: Path, task_id: str) -> dict:
         root / "tasks" / "workflow" / task_id / "Communication Contract.json"
     )
 
-
-def load_scenario_catalog(path: Path) -> dict:
-    """Load the ten inexpensive scenarios and validate each embedded contract."""
-    try:
-        document = json.loads(path.read_text())
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise ValueError(f"invalid communication scenario catalog: {error}") from error
-    if not isinstance(document, dict) or set(document) != {"schema_version", "scenarios"}:
-        raise ValueError("invalid communication scenario catalog shape")
-    scenarios = document.get("scenarios")
-    if document.get("schema_version") != "1" or not isinstance(scenarios, list):
-        raise ValueError("invalid communication scenario catalog version")
-    identifiers = []
-    for index, scenario in enumerate(scenarios):
-        if not isinstance(scenario, dict) or set(scenario) != {
-            "id", "prompt", "follow_ups", "contract"
-        }:
-            raise ValueError(f"invalid communication scenario at index {index}")
-        if (
-            not isinstance(scenario["id"], str)
-            or not isinstance(scenario["prompt"], str)
-            or not scenario["prompt"].strip()
-            or not isinstance(scenario["follow_ups"], list)
-            or not all(isinstance(turn, str) and turn.strip() for turn in scenario["follow_ups"])
-        ):
-            raise ValueError(f"invalid communication scenario content at index {index}")
-        contract = _validate_contract(scenario["contract"], f"scenario {scenario['id']}")
-        if contract["scenario"] != scenario["id"]:
-            raise ValueError("communication scenario and contract identifiers differ")
-        identifiers.append(scenario["id"])
-    if len(identifiers) != 10 or len(set(identifiers)) != len(identifiers):
-        raise ValueError("communication scenario catalog requires ten unique scenarios")
-    return document
