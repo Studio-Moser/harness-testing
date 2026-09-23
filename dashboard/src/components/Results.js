@@ -68,6 +68,13 @@ function element(tag, className = "", text = "") {
 }
 
 
+function svgElement(tag, attributes = {}, text = "") {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [name, value] of Object.entries(attributes)) node.setAttribute(name, value);
+  if (text !== "") node.textContent = text;
+  return node;
+}
+
 function mean(values) {
   const available = values.filter((value) => Number.isFinite(value));
   return available.length ? available.reduce((sum, value) => sum + value, 0) / available.length : null;
@@ -92,6 +99,12 @@ function formatRuntime(value) {
   return `${(value / 60).toFixed(1)}m`;
 }
 
+
+function formatTokens(value) {
+  if (value == null) return "—";
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}m`;
+  return value >= 1000 ? `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k` : `${Math.round(value)}`;
+}
 
 function formatCost(value) {
   if (value == null) return "—";
@@ -953,7 +966,99 @@ export function harnessRead(rows, behaviorColumns, verdict = null) {
   };
 }
 
-function renderHarnessRead(read) {
+function renderTradeoffChart(rows, {field, title, formatter, ariaLabel}) {
+  const panel = element("article", "results-tradeoff-chart card");
+  const header = element("header", "card-header");
+  header.append(element("h3", "card-title", title));
+  panel.append(header);
+  const points = rows.flatMap((row) => {
+    const tradeoff = row.tradeoffs[field];
+    return tradeoff.quality != null && tradeoff.value != null ? [{row, tradeoff}] : [];
+  });
+  if (points.length === 0) {
+    panel.append(element("p", "results-empty", `No decision-grade Quality and ${title.split(" vs ")[1].toLowerCase()} measurements share the same trials in this cohort.`));
+    return panel;
+  }
+
+  const width = 520;
+  const height = 300;
+  const margin = {top: 20, right: 24, bottom: 42, left: 48};
+  const observedMaximum = Math.max(...points.map(({tradeoff}) => tradeoff.value));
+  const observedMinimum = Math.min(...points.map(({tradeoff}) => tradeoff.value));
+  const padding = (observedMaximum - observedMinimum || observedMaximum || 1) * 0.1;
+  const minValue = Math.max(0, observedMinimum - padding);
+  const maxValue = observedMaximum + padding;
+  const valueRange = maxValue - minValue;
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+  const svg = svgElement("svg", {viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": `${ariaLabel}. Higher Quality is up; lower ${field} is right.`});
+  for (const score of [0, 0.25, 0.5, 0.75, 1]) {
+    const y = margin.top + (1 - score) * plotHeight;
+    svg.append(
+      svgElement("line", {x1: margin.left, x2: margin.left + plotWidth, y1: y, y2: y, class: "results-chart-grid"}),
+      svgElement("text", {x: margin.left - 9, y: y + 4, class: "results-chart-axis", "text-anchor": "end"}, formatPercent(score))
+    );
+  }
+  for (const ratio of [0, 0.5, 1]) {
+    const x = margin.left + ratio * plotWidth;
+    svg.append(svgElement("text", {x, y: height - 14, class: "results-chart-axis", "text-anchor": "middle"}, formatter(maxValue - valueRange * ratio)));
+  }
+  points.forEach(({row, tradeoff}) => {
+    const x = margin.left + (maxValue - tradeoff.value) / valueRange * plotWidth;
+    const y = margin.top + (1 - tradeoff.quality) * plotHeight;
+    const point = svgElement("circle", {
+      cx: x,
+      cy: y,
+      r: 7,
+      class: `results-chart-point results-chart-${row.family}`,
+      role: "img",
+      "aria-label": `${row.label}: ${formatPercent(tradeoff.quality)} Quality, ${formatter(tradeoff.value)}, ${plural(tradeoff.observations, "matched trial")}`
+    });
+    svg.append(point);
+  });
+  const scroll = element("div", "results-chart-scroll");
+  scroll.setAttribute("tabindex", "0");
+  scroll.setAttribute("aria-label", ariaLabel);
+  scroll.append(svg);
+  panel.append(element("p", "results-scroll-cue", "Swipe horizontally to inspect every harness point."), scroll);
+  return panel;
+}
+
+function renderTradeoffCharts(rows) {
+  const section = element("div", "results-tradeoffs");
+  const qualityRows = rows.filter(row => row.quality != null || row.communicationQuality != null || row.tradeoffs.runtime.quality != null);
+  const legend = element("div", "results-chart-legend");
+  legend.setAttribute("aria-label", "Harness color key");
+  for (const row of qualityRows) {
+    const item = element("span", "results-chart-legend-item");
+    item.append(
+      element("span", `results-chart-legend-dot results-harness-${row.family}`),
+      element("span", "", row.label)
+    );
+    legend.append(item);
+  }
+  const mobileSummary = element("div", "results-mobile-efficiency");
+  for (const row of qualityRows) {
+    const item = element("div", "results-mobile-efficiency-row");
+    item.append(
+      element("span", `results-harness-mark results-harness-${row.family}`),
+      element("strong", "", row.label),
+      element("span", "", formatPercent(row.quality ?? row.communicationQuality)),
+      element("span", "", `${formatRuntime(row.runtime)} · ${formatTokens(row.tokens)} · ${formatCost(row.cost)}`)
+    );
+    mobileSummary.append(item);
+  }
+  const charts = element("div", "results-tradeoff-grid");
+  charts.append(
+    renderTradeoffChart(rows, {field: "runtime", title: "Quality vs runtime", formatter: formatRuntime, ariaLabel: "Quality versus average runtime by harness on matched trials"}),
+    renderTradeoffChart(rows, {field: "tokens", title: "Quality vs tokens", formatter: formatTokens, ariaLabel: "Quality versus average tokens by harness on matched trials"}),
+    renderTradeoffChart(rows, {field: "cost", title: "Quality vs cost", formatter: formatCost, ariaLabel: "Quality versus estimated API-equivalent cost by harness on matched trials"})
+  );
+  section.append(legend, mobileSummary, charts);
+  return section;
+}
+
+function renderHarnessRead(read, rows) {
   const section = element("section", "results-panel results-read card card-body");
   const heading = element("header", "results-section-heading");
   heading.append(element("h2", "card-title", "The read"));
@@ -982,6 +1087,12 @@ function renderHarnessRead(read) {
     grid.append(article);
   }
   section.append(grid);
+  const charts = element("div", "results-read-charts");
+  charts.append(
+    element("p", "results-scope-note", "Quality against runtime, tokens and cost. Better is toward the top right. Each point uses matched trials under the selected model; more runs add more points."),
+    renderTradeoffCharts(rows)
+  );
+  section.append(charts);
   return section;
 }
 
@@ -1043,7 +1154,7 @@ export function renderResults({tests, harnesses, reports, campaign = null}) {
     const rows = aggregateHarnesses(observations, harnesses, effective);
     const behavior = aggregateBehavior(observations, harnesses, effective);
     body.replaceChildren(
-      renderHarnessRead(harnessRead(rows, behavior.filter((column) => column.modelKey === effective.model), verdict)),
+      renderHarnessRead(harnessRead(rows, behavior.filter((column) => column.modelKey === effective.model), verdict), rows),
       renderMatrix(observations, tests, harnesses, effective),
       renderBehavior(behavior)
     );

@@ -149,3 +149,5 @@ summary:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid var(--t
 .results-read-list-title { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--tblr-secondary); margin: .75rem 0 .25rem; }
 .results-read-list { margin: 0; padding-left: 1.1rem; }
 .results-read-none { color: var(--tblr-secondary); list-style: none; margin-left: -1.1rem; }
+
+.results-read-charts { margin-top: 1.25rem; }

@@ -602,3 +602,45 @@ test("the read turns the numbers into pros, cons and one recommendation", () => 
     assert.doesNotMatch(root.textContent, /Decision-grade ranking|Quality trade-offs|Evidence cohort/);
   } finally {globalThis.document = previousDocument;}
 });
+
+test("trade-off charts put higher quality and lower resource use toward the top right", () => {
+  const harnesses = HARNESS_CATALOG.filter(harness => harness.identity).slice(0, 3);
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag), createElementNS: (_, tag) => new FakeElement(tag)};
+  try {
+    for (const values of [[0, 50, 100], [0, 0, 0], [100, 105, 110], [100, 100, 100]]) {
+      const source = report("axis-direction", harnesses.map((harness, i) => trial(harness, "react-active-badge-count", 1, {
+        duration_seconds: values[i], cost_usd: values[i],
+        model_usage: [{input_tokens: values[i], output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0}],
+        collaboration: {grade: completedGrade(5 - i)}
+      })));
+      const root = renderResults({tests: TOOLBOX_CATALOG, harnesses, reports: [source]});
+      const charts = descendants(root).filter(node => node.tag === "svg");
+      assert.match(root.className, /\bcontainer-xl\b/);
+      assert.ok(descendants(root).filter(node => node.tag === "table").every(node => node.className.includes("card-table")));
+      assert.ok(descendants(root).filter(node => node.attributes["aria-pressed"] === "true").every(node => node.className.includes("nav-link active")));
+      assert.ok(descendants(root).filter(node => node.className.includes("results-filter-group")).every(node => node.className.includes("nav nav-pills")));
+      assert.equal(charts.length, 3);
+      assert.match(root.textContent, /Better is toward the top right/);
+      for (const chart of charts) {
+        assert.match(chart.attributes["aria-label"], /Higher Quality is up; lower .* is right/);
+        const points = harnesses.map(harness => descendants(chart).find(node => node.tag === "circle" && node.attributes.class.endsWith(`results-chart-${harness.family}`)));
+        const xs = points.map(point => Number(point.attributes.cx));
+        const ys = points.map(point => Number(point.attributes.cy));
+        assert.ok(xs.every(Number.isFinite) && ys.every(Number.isFinite));
+        assert.ok(ys[0] < ys[1] && ys[1] < ys[2]);
+        if (values[0] !== values[2]) assert.ok(xs[0] > xs[1] && xs[1] > xs[2]);
+        else assert.ok(xs.every(x => x === xs[0]));
+        const ticks = descendants(chart).filter(node => node.tag === "text" && node.attributes["text-anchor"] === "middle");
+        assert.equal(ticks.length, 3);
+        assert.ok(Number(ticks[0].attributes.x) < Number(ticks[2].attributes.x));
+        if (values[0] > 0) {
+          assert.doesNotMatch(ticks[2].textContent, /^(0s|0|\$0\.00)$/);
+          assert.ok(xs.every(x => x > 48 && x < 496));
+          if (values[0] !== values[2]) assert.ok(xs[0] - xs[2] > 448 * 0.8, "clustered values use most of the plot width");
+          else assert.ok(xs.every(x => Math.abs(x - 272) < 0.001), "identical values are centered");
+        } else assert.match(ticks[2].textContent, /^(0s|0|\$0\.00)$/);
+      }
+    }
+  } finally {globalThis.document = previousDocument;}
+});
