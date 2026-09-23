@@ -20,6 +20,7 @@ arms/materialized/
 runs/generated/
 runs/history/
 runs/evidence/
+runs/evaluations/
 runs/reviews/
 runs/collaboration/
 runs/collaboration-backfill/
@@ -37,3 +38,10 @@ dashboard/dist/
 runs/inputs/
 output/playwright/
 .playwright-cli/
+
+# Playwright MCP screenshots and snapshots
+.playwright-mcp/
+
+# Local campaign plans and summaries; Superpowers plugin state
+runs/campaigns/
+.superpowers/

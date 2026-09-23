@@ -21,7 +21,6 @@ from harness_testing.Native_Conversation import (
     stage_controller,
     validate_conversation,
 )
-from harness_testing.Skill_Evaluation import explicit_instruction, validate_skill_name
 
 
 def _raw_events(session_file: Path) -> list[dict[str, Any]]:
@@ -230,13 +229,9 @@ class HarnessCodex(Codex):
     def __init__(
         self,
         *args: Any,
-        skill_invocation: str | None = None,
         conversation: dict | None = None,
         **kwargs: Any,
     ) -> None:
-        self._skill_invocation = (
-            validate_skill_name(skill_invocation) if skill_invocation is not None else None
-        )
         self._conversation = conversation
         self._conversation_instruction = None
         super().__init__(*args, **kwargs)
@@ -245,8 +240,6 @@ class HarnessCodex(Codex):
     async def run(
         self, instruction: str, environment: BaseEnvironment, context: AgentContext
     ) -> None:
-        if self._skill_invocation is not None:
-            instruction = explicit_instruction("codex", self._skill_invocation, instruction)
         if self._conversation is None:
             await super().run(instruction, environment, context)
             return

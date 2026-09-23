@@ -54,28 +54,83 @@ def test_codex_turns_always_address_explicit_root_after_child():
     assert outbound[0]["params"]["input"][0]["text"] == "Proceed"
 
 
+@pytest.mark.parametrize("provider", ["codex", "claude"])
+def test_frozen_correction_runs_once_after_completion_in_same_root(provider):
+    settings = config(provider)
+    settings["policy"]["facts"]["correction"] = "Use RangeError, not TypeError."
+    settings["policy"]["follow_ups"] = [{"id": "correction", "fact": "correction"}]
+    state = Conversation(settings)
+    state.root = "root"
+    state.text = "Ready to proceed?"
+    assert state.finish_turn()  # Approval is answered before injecting the correction.
+    assert state.follow_up_index == 0
+    state.text = "Implemented the feature."
+    outbound = state.finish_turn()
+    assert len(outbound) == 1
+    assert state.root_finished is False
+    assert state.follow_up_index == 1
+    assert state.interactions == 2
+    assert state.transcript[-1]["role"] == "user"
+    assert state.transcript[-1]["content"] == "Use RangeError, not TypeError."
+    if provider == "codex":
+        assert outbound[0]["params"]["threadId"] == "root"
+    else:
+        assert outbound[0]["session_id"] == "root"
+    state.text = "Applied the correction."
+    assert state.finish_turn() == []
+    assert state.root_finished is True
+    assert state.interactions == 2
+
+
+def test_frozen_correction_respects_interaction_limit_and_unanswered_questions():
+    settings = config("codex")
+    settings["policy"]["follow_ups"] = [{"id": "correction", "fact": "go"}]
+    for text, used in [("Done.", 4), ("What unsupported product choice?", 0)]:
+        state = Conversation(settings)
+        state.text, state.interactions = text, used
+        assert state.finish_turn() == []
+        assert state.status == "task_definition_gap"
+        assert state.follow_up_index == 0
+
+
 def test_codex_records_only_root_visible_messages_with_kinds_and_elapsed_time(monkeypatch):
     ticks = iter([10.0, 11.0, 12.5, 13.0])
     monkeypatch.setattr("harness_testing.Native_Conversation.time.monotonic", lambda: next(ticks))
     state = Conversation(config("codex"))
     state.root = "root"
     state.turn("Do the task")
-    state.handle({
-        "method": "item/completed",
-        "params": {"threadId": "child", "item": {"type": "agentMessage", "text": "hidden"}},
-    })
-    state.handle({
-        "method": "item/completed",
-        "params": {"threadId": "root", "item": {
-            "type": "agentMessage", "text": "I found the cause.", "phase": "commentary"
-        }},
-    })
-    state.handle({
-        "method": "item/completed",
-        "params": {"threadId": "root", "item": {
-            "type": "agentMessage", "text": "Fixed and tested.", "phase": "final_answer"
-        }},
-    })
+    state.handle(
+        {
+            "method": "item/completed",
+            "params": {"threadId": "child", "item": {"type": "agentMessage", "text": "hidden"}},
+        }
+    )
+    state.handle(
+        {
+            "method": "item/completed",
+            "params": {
+                "threadId": "root",
+                "item": {
+                    "type": "agentMessage",
+                    "text": "I found the cause.",
+                    "phase": "commentary",
+                },
+            },
+        }
+    )
+    state.handle(
+        {
+            "method": "item/completed",
+            "params": {
+                "threadId": "root",
+                "item": {
+                    "type": "agentMessage",
+                    "text": "Fixed and tested.",
+                    "phase": "final_answer",
+                },
+            },
+        }
+    )
     assert [(row["role"], row["kind"], row["content"]) for row in state.transcript] == [
         ("user", "user", "Do the task"),
         ("assistant", "progress", "I found the cause."),
@@ -89,10 +144,12 @@ def test_claude_records_progress_and_final_without_duplicate_result():
     state = Conversation(config("claude"))
     state.root = "root"
     state.turn("Do the task")
-    state.handle({
-        "type": "assistant",
-        "message": {"content": [{"type": "text", "text": "Checking the failing test."}]},
-    })
+    state.handle(
+        {
+            "type": "assistant",
+            "message": {"content": [{"type": "text", "text": "Checking the failing test."}]},
+        }
+    )
     state.handle({"type": "result", "subtype": "success", "result": "Done."})
     assert [row["kind"] for row in state.transcript] == ["user", "progress", "final"]
     assert state.transcript[-1]["content"] == "Done."
@@ -192,7 +249,7 @@ def test_terminal_approval_requests_keep_report_status_and_reason(text, interact
         "Design:\n\nPlease confirm this design and I\u2019ll continue.",
         "Please approve this plan so I can branch and implement.",
         "Please approve this plan so I can update src/lib.rs.",
-        "Please approve this plan before I release v1.2.",
+        "Reply “yes” to approve this treatment and I’ll implement it.",
     ],
 )
 def test_frozen_routine_approval_continues_the_native_root(text):
@@ -210,6 +267,40 @@ def test_frozen_routine_approval_continues_the_native_root(text):
     assert outbound[0]["method"] == "turn/start"
     assert outbound[0]["params"]["threadId"] == "root"
     assert outbound[0]["params"]["input"][0]["text"].startswith("Proceed with the original")
+    assert len(outbound) == state.interactions == 1
+    state.text = "Implemented the approved plan; all checks passed."
+    assert state.finish_turn() == []
+    assert state.status == "completed"
+    assert state.interactions == 1
+
+
+def test_quill_frozen_clarification_resumes_same_root_then_accepts_completion():
+    from harness_testing.Comparison_Tasks import research_scripted_user_policy
+
+    policy = research_scripted_user_policy(["quill-shared-toolbar-focus"]) | {
+        "interaction_limit": 12
+    }
+    state = Conversation({**config("codex"), "policy": policy})
+    state.root = "quill-root"
+    state.text = (
+        "This is an architectural change because Quill currently has per-editor toolbar "
+        "listeners/theme UI and no editor destruction API.\n\n"
+        "One clarification before I propose the design: does “removing the active editor” "
+        "mean removing its `.ql-container` from the DOM, or should this change also "
+        "introduce an explicit `quill.destroy()` lifecycle API?"
+    )
+    outbound = state.finish_turn()
+    assert len(outbound) == state.interactions == 1
+    assert outbound[0]["params"]["threadId"] == "quill-root"
+    assert "removing its container from the DOM" in outbound[0]["params"]["input"][0]["text"]
+    assert state.decisions[-1]["rule_id"] == "editor-removal"
+    state.text = "Reply yes to approve this plan and I’ll implement it."
+    assert state.finish_turn()[0]["params"]["threadId"] == "quill-root"
+    assert state.interactions == 2
+    state.text = "Implemented and verified the shared toolbar."
+    assert state.finish_turn() == []
+    assert state.status == "completed"
+    assert state.interactions == 2
 
 
 @pytest.mark.parametrize(
@@ -221,7 +312,7 @@ def test_frozen_routine_approval_continues_the_native_root(text):
         "Design:\n\nPlease confirm this design and I\u2019ll continue.",
         "Please approve this plan so I can branch and implement.",
         "Please approve this plan so I can update src/lib.rs.",
-        "Please approve this plan before I release v1.2.",
+        "Reply “yes” to approve this treatment and I’ll implement it.",
     ],
 )
 def test_terminal_routine_approval_is_a_routine_request(text):
@@ -234,6 +325,10 @@ def test_terminal_routine_approval_is_a_routine_request(text):
         ("Implemented the approved plan.", None),
         ("I no longer need you to approve this plan.", None),
         ("Please approve this plan so I can deploy.", "external"),
+        ("Please approve this plan before I release v1.2.", "external"),
+        ("Reply “yes” to approve this treatment and I’ll publish it.", "external"),
+        ("Reply yes to grant access.", "ambiguous"),
+        ("The previous message said: Reply “yes” to approve this treatment.", None),
         ("Please approve this approach and publish it.", "external"),
         ("Please approve this plan for publication.", "external"),
         ("Please approve this plan so I can upload logs.", "external"),
@@ -253,8 +348,7 @@ def test_expanded_authority_approval_stays_blocked_without_an_interaction():
     from pathlib import Path
 
     policy_path = (
-        Path(__file__).parents[2]
-        / "tasks/workflow/react-saved-view-feature/Scripted User.json"
+        Path(__file__).parents[2] / "tasks/workflow/react-saved-view-feature/Scripted User.json"
     )
     state = Conversation({**config("codex"), "policy": json.loads(policy_path.read_text())})
     state.root = "root"
@@ -444,9 +538,7 @@ def test_codex_transport_error_requires_active_typed_provider_event():
                 "turnId": "turn",
                 "willRetry": False,
                 "error": {
-                    "codexErrorInfo": {
-                        "responseStreamDisconnected": {"httpStatusCode": None}
-                    }
+                    "codexErrorInfo": {"responseStreamDisconnected": {"httpStatusCode": None}}
                 },
             },
         }
@@ -466,9 +558,7 @@ def test_codex_transport_error_requires_active_typed_provider_event():
                 "turnId": "turn",
                 "willRetry": True,
                 "error": {
-                    "codexErrorInfo": {
-                        "responseStreamDisconnected": {"httpStatusCode": 401}
-                    }
+                    "codexErrorInfo": {"responseStreamDisconnected": {"httpStatusCode": 401}}
                 },
             },
         }
@@ -489,9 +579,7 @@ def test_codex_transport_error_requires_active_typed_provider_event():
                     "turnId": "turn",
                     "willRetry": retry,
                     "error": {
-                        "codexErrorInfo": {
-                            "responseStreamDisconnected": {"httpStatusCode": None}
-                        }
+                        "codexErrorInfo": {"responseStreamDisconnected": {"httpStatusCode": None}}
                     },
                 },
             }
@@ -550,11 +638,29 @@ def test_codex_transport_error_requires_active_typed_provider_event():
     assert state.transport_error_count == 1
 
 
-def test_controller_runs_two_native_wire_turns_and_preserves_timeout_usage(tmp_path):
+@pytest.mark.parametrize("ambiguous", [False, True])
+def test_controller_runs_two_native_wire_turns_and_preserves_timeout_usage(tmp_path, ambiguous):
     import json
     import sys
 
+    from test_Submission import git
+
     from harness_testing.Native_Conversation import run_controller
+
+    workspace = tmp_path / "Workspace"
+    workspace.mkdir()
+    git(workspace, "init", "-q")
+    git(workspace, "config", "user.name", "Test")
+    git(workspace, "config", "user.email", "test@example.invalid")
+    (workspace / "File.txt").write_text("base\n")
+    git(workspace, "add", ".")
+    git(workspace, "commit", "-qm", "base")
+    base = git(workspace, "rev-parse", "HEAD").decode().strip()
+    linked = tmp_path / "Linked"
+    git(workspace, "worktree", "add", "-qb", "feature", str(linked))
+    (linked / "File.txt").write_text("uncommitted submission\n")
+    if ambiguous:
+        (workspace / "File.txt").write_text("different submission\n")
 
     server = tmp_path / "Fixture_Server.py"
     server.write_text("""import json, sys, time
@@ -591,14 +697,25 @@ for line in sys.stdin:
         settings = {
             **config("codex"),
             "command": [sys.executable, str(server)] + (["timeout"] if timeout else []),
-            "cwd": str(tmp_path),
+            "cwd": str(workspace),
             "log_dir": str(logs),
             "timeout_seconds": 0.4 if timeout else 5,
+            "artifact_patch_base_commit": base,
+            "submission_protocol": "worktree-snapshot-v1",
         }
         evidence = run_controller(settings)
-        assert evidence["status"] == ("timeout" if timeout else "completed")
+        expected = "timeout" if timeout else "infrastructure_failure" if ambiguous else "completed"
+        assert evidence["status"] == expected
         assert sum(row["output_tokens"] for row in evidence["model_usage"]) == 4
-        assert evidence["usage_complete"] is not timeout
+        assert evidence["usage_complete"] is (not timeout and not ambiguous)
+        receipt = json.loads((logs / "Submission/Submission.json").read_text())
+        patch = logs.parent / "artifacts/model.patch"
+        assert receipt["status"] == ("failed" if ambiguous else "captured")
+        if ambiguous:
+            assert "submission_ambiguous_worktrees" in evidence["incomplete_reasons"]
+            assert not patch.exists()
+        else:
+            assert b"+uncommitted submission" in patch.read_bytes()
         requests = [
             json.loads(line) for line in (logs / "Native_Requests.jsonl").read_text().splitlines()
         ]

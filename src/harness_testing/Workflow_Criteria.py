@@ -7,6 +7,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import tempfile
 from collections.abc import Sequence
@@ -53,10 +54,10 @@ _REMOVABLE_PREFIXES = (("uv", "run"),)
 _SHELL_MUTATION_PATTERNS = (
     r"(^|\s)(?:sed\s+-i|perl\s+-pi|touch|mkdir|mv|cp|rm)\s",
     r"(?:>|>>|\btee\b)\s*\S+",
-    r'''^(?:python(?:3)?|node)\s+(?:-c|-e)\b.*'''
-    r'''(?:write_text|write_bytes|writeFile|writeFileSync|appendFile|appendFileSync|'''
-    r'''unlink|unlinkSync|remove|rename|renameSync|mkdir|mkdirSync|rmdir|replace|'''
-    r'''open\s*\([^)]*,\s*['"][wax+])''',
+    r"""^(?:python(?:3)?|node)\s+(?:-c|-e)\b.*"""
+    r"""(?:write_text|write_bytes|writeFile|writeFileSync|appendFile|appendFileSync|"""
+    r"""unlink|unlinkSync|remove|rename|renameSync|mkdir|mkdirSync|rmdir|replace|"""
+    r"""open\s*\([^)]*,\s*['"][wax+])""",
 )
 _RELEVANT_PATH_PATTERNS = (
     r"(^|/)(?:src|app|lib|tests|crates|packages)(?:/|$)",
@@ -66,6 +67,20 @@ _RELEVANT_PATH_PATTERNS = (
 
 def _trajectory_path() -> Path:
     return Path(os.environ.get("HARNESS_TEST_TRAJECTORY", "/logs/agent/trajectory.json"))
+
+
+def verification_config_path(path: Path) -> bool:
+    """Runner/build inputs cannot be introduced by a benchmark submission."""
+    return bool(
+        re.fullmatch(
+            r".*\.(?:config|workspace)\.[^.]+|tsconfig.*\.json|package(?:-lock)?\.json|"
+            r"Cargo\.(?:toml|lock)|build\.rs|rust-toolchain(?:\.toml)?|"
+            r"yarn\.lock|pnpm-(?:lock\.yaml|workspace\.yaml)|bun\.lockb?|"
+            r"deno\.jsonc?|test\.sh|\..*",
+            path.name,
+        )
+        or {".cargo", ".git", ".github", "node_modules"} & set(path.parts)
+    )
 
 
 def protected_files_intact(workspace: Path, manifest_path: Path) -> bool:
@@ -79,6 +94,19 @@ def protected_files_intact(workspace: Path, manifest_path: Path) -> bool:
         return False
     if not isinstance(entries, dict) or not isinstance(mutable_entries, dict):
         return False
+    # New source/tests are legitimate; new loader/build configuration is not.
+    for path in workspace.rglob("*"):
+        relative = path.relative_to(workspace)
+        if relative.parts[0] in {".git", "target", "node_modules"}:
+            continue
+        if path.is_symlink():
+            return False
+        if (
+            path.is_file()
+            and relative.as_posix() not in entries
+            and verification_config_path(relative)
+        ):
+            return False
     for relative_path, expected in entries.items():
         path = workspace / relative_path
         if not path.is_file() or path.is_symlink():
@@ -123,7 +151,9 @@ def node_test_correctness(
     workspace: Path,
     manifest_path: Path,
     dependencies: Path,
-    command: Sequence[str] = ("npm", "test", "--", "--reporter=dot"),
+    *,
+    test_files: Sequence[str] | None = None,
+    expect_assertion_failure: bool = False,
 ) -> bool:
     """Run a frozen Node behavior suite without installing into the workspace."""
 
@@ -132,18 +162,78 @@ def node_test_correctness(
     node_modules = workspace / "node_modules"
     if not dependencies.is_dir() or node_modules.exists() or node_modules.is_symlink():
         return False
+    manifest = json.loads(manifest_path.read_text())
+    required = (
+        list(test_files)
+        if test_files is not None
+        else [
+            name for name in manifest["files"] if re.search(r"\.(?:test|spec)\.[cm]?[jt]sx?$", name)
+        ]
+    )
+    if not required:
+        return False
     cleanup_failed = False
+    passed = False
     node_modules.symlink_to(dependencies, target_is_directory=True)
     try:
-        result = subprocess.run(
-            list(command),
-            cwd=workspace,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
-    except (OSError, subprocess.TimeoutExpired) as error:
+        with tempfile.TemporaryDirectory(prefix="harness-node-verifier-") as temporary:
+            report_path = Path(temporary) / "result.json"
+            config = workspace / "vite.config.ts"
+            if "vite.config.ts" not in manifest["files"]:
+                config = Path(temporary) / "vitest.config.mjs"
+                config.write_text("export default {};\n")
+            result = subprocess.run(
+                [
+                    "node",
+                    str(dependencies / "vitest/vitest.mjs"),
+                    "run",
+                    *required,
+                    "--config",
+                    str(config),
+                    "--reporter=json",
+                    "--outputFile",
+                    str(report_path),
+                ],
+                cwd=workspace,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            if result.returncode in {0, 1} and report_path.is_file():
+                report = json.loads(report_path.read_text())
+                suites = {Path(row["name"]).resolve(): row for row in report.get("testResults", [])}
+                valid_inventory = all(
+                    (suite := suites.get((workspace / name).resolve())) is not None
+                    and suite.get("assertionResults")
+                    and all(
+                        test.get("status") in {"passed", "failed"}
+                        for test in suite["assertionResults"]
+                    )
+                    for name in required
+                )
+                failed = any(
+                    test.get("status") == "failed"
+                    for name in required
+                    for test in suites.get((workspace / name).resolve(), {}).get(
+                        "assertionResults", []
+                    )
+                )
+                passed = valid_inventory and (
+                    result.returncode == 1 and report.get("success") is False and failed
+                    if expect_assertion_failure
+                    else result.returncode == 0
+                    and report.get("success") is True
+                    and not failed
+                    and all(
+                        suites[(workspace / name).resolve()].get("status") == "passed"
+                        for name in required
+                    )
+                )
+            if not passed:
+                print(result.stdout)
+                print(result.stderr)
+    except (OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired) as error:
         print(error)
         return False
     finally:
@@ -151,10 +241,43 @@ def node_test_correctness(
             node_modules.unlink()
         except OSError:
             cleanup_failed = True
-    if result.returncode != 0:
-        print(result.stdout)
-        print(result.stderr)
-    return result.returncode == 0 and not cleanup_failed
+    return bool(passed) and not cleanup_failed and protected_files_intact(workspace, manifest_path)
+
+
+def regression_tests_effective(workspace: Path, manifest_path: Path, dependencies: Path) -> bool:
+    """Agent-added tests must pass the fix and fail the original implementation."""
+    try:
+        manifest = json.loads(manifest_path.read_text())
+        regression = json.loads(manifest_path.with_name("Regression.json").read_text())
+        added = [
+            p.relative_to(workspace).as_posix()
+            for p in workspace.rglob("*")
+            if p.is_file()
+            and re.search(r"\.(?:test|spec)\.[cm]?[jt]sx?$", p.name)
+            and p.relative_to(workspace).as_posix() not in manifest["files"]
+        ]
+        if not added or not node_test_correctness(
+            workspace, manifest_path, dependencies, test_files=added
+        ):
+            return False
+        with tempfile.TemporaryDirectory(prefix="harness-regression-") as temporary:
+            baseline = Path(temporary) / "workspace"
+            shutil.copytree(
+                workspace, baseline, ignore=shutil.ignore_patterns(".git", "node_modules", "target")
+            )
+            path = Path(regression["path"])
+            if path.is_absolute() or ".." in path.parts:
+                return False
+            (baseline / path).write_text(regression["original"])
+            return node_test_correctness(
+                baseline,
+                manifest_path,
+                dependencies,
+                test_files=added,
+                expect_assertion_failure=True,
+            )
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
 
 
 def cargo_test_correctness(
@@ -171,6 +294,15 @@ def cargo_test_correctness(
     """Run frozen Cargo behavior tests in a fresh build directory."""
 
     if not protected_files_intact(workspace, manifest_path):
+        return False
+    manifest = json.loads(manifest_path.read_text())
+    required = {
+        name
+        for path in manifest["files"]
+        if path.endswith(".rs")
+        for name in re.findall(r"#\[test\]\s*fn\s+(\w+)", (workspace / path).read_text())
+    }
+    if not required:
         return False
     try:
         with tempfile.TemporaryDirectory(prefix="harness-cargo-target-") as target:
@@ -191,7 +323,12 @@ def cargo_test_correctness(
     if result.returncode != 0:
         print(result.stdout)
         print(result.stderr)
-    return result.returncode == 0
+    observed = set(re.findall(r"^test (?:\w+::)*(\w+) \.\.\. ok$", result.stdout, re.MULTILINE))
+    return (
+        result.returncode == 0
+        and required <= observed
+        and protected_files_intact(workspace, manifest_path)
+    )
 
 
 def _tool_paths(call: dict[str, Any]) -> tuple[str, ...]:
@@ -199,9 +336,7 @@ def _tool_paths(call: dict[str, Any]) -> tuple[str, ...]:
     if not isinstance(arguments, dict):
         return ()
     paths = [
-        value
-        for key in ("file_path", "path")
-        if isinstance((value := arguments.get(key)), str)
+        value for key in ("file_path", "path") if isinstance((value := arguments.get(key)), str)
     ]
     patch = arguments.get("patch") or arguments.get("input")
     if isinstance(patch, str):
@@ -228,8 +363,9 @@ class _WorkflowEvent:
 def _before(left: _WorkflowEvent, right: _WorkflowEvent) -> bool:
     if left.call == right.call or not (left.interval or right.interval):
         return left.position < right.position
-    return (left.completed is not None and right.started is not None
-            and left.completed < right.started)
+    return (
+        left.completed is not None and right.started is not None and left.completed < right.started
+    )
 
 
 def _events() -> list[_WorkflowEvent]:
@@ -240,8 +376,9 @@ def _events() -> list[_WorkflowEvent]:
     events: list[_WorkflowEvent] = []
 
     def emit(event: tuple[str, str | None, bool | None]) -> None:
-        events.append(_WorkflowEvent(*event, call_position, len(events), started, completed,
-                                     interval))
+        events.append(
+            _WorkflowEvent(*event, call_position, len(events), started, completed, interval)
+        )
 
     for step in trajectory.get("steps", []):
         extra = step.get("extra") or {}
@@ -309,7 +446,9 @@ def command_after_last_mutation(command: str) -> bool:
     mutations = [event for event in events if event.kind in {"mutation", "unknown_mutation"}]
     required = _normalize(command)
     return any(
-        event.kind == "command" and event.command == required and event.success is True
+        event.kind == "command"
+        and event.command == required
+        and event.success is True
         and all(_before(mutation, event) for mutation in mutations)
         for event in events
     )
@@ -322,6 +461,45 @@ def command_succeeded(command: str) -> bool:
     return any(
         event.kind == "command" and event.command == required and event.success is True
         for event in _events()
+    )
+
+
+def python_script_after_last_mutation(script: str) -> bool:
+    """Recognize equivalent Python invocations of a required workspace check."""
+    events = _events()
+    mutations = [event for event in events if event.kind in {"mutation", "unknown_mutation"}]
+    for event in events:
+        if event.kind != "command" or event.success is not True or not event.command:
+            continue
+        try:
+            arguments = shlex.split(event.command)
+        except ValueError:
+            continue
+        if (
+            len(arguments) == 2
+            and re.fullmatch(r"python(?:3(?:\.\d+)?)?", Path(arguments[0]).name)
+            and arguments[1] in {script, f"./{script}", f"/app/{script}"}
+            and all(_before(mutation, event) for mutation in mutations)
+        ):
+            return True
+    return False
+
+
+def verification_after_last_mutation() -> bool:
+    """Accept equivalent successful test runners instead of a hidden filename."""
+    events = _events()
+    mutations = [event for event in events if event.kind in {"mutation", "unknown_mutation"}]
+    return any(
+        event.kind == "command"
+        and event.success is True
+        and event.command is not None
+        and re.match(
+            r"^(?:(?:npm|pnpm|yarn) (?:run )?test(?:\s|$)|npx vitest run(?:\s|$)|"
+            r"cargo test(?:\s|$)|node --test(?:\s|$))",
+            event.command,
+        )
+        and all(_before(mutation, event) for mutation in mutations)
+        for event in events
     )
 
 
@@ -349,8 +527,7 @@ def no_comprehensive_commands() -> bool:
     """Return false for any observed comprehensive command."""
 
     return not any(
-        event.kind == "command" and event.command in _COMPREHENSIVE_COMMANDS
-        for event in _events()
+        event.kind == "command" and event.command in _COMPREHENSIVE_COMMANDS for event in _events()
     )
 
 

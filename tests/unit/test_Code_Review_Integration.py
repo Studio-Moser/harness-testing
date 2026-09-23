@@ -56,6 +56,26 @@ def _root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path]:
     return root, report_path
 
 
+def test_readiness_review_protocol_cannot_drift_after_execution(tmp_path, monkeypatch):
+    from harness_testing import Code_Reviews
+    from harness_testing.Run_Reports import run_report_id
+
+    root, path = _root(tmp_path, monkeypatch)
+    report = json.loads(path.read_text())
+    report["experiment"]["conditions"]["decision_policy"] = "benchmark-readiness-v2"
+    report["report_id"] = run_report_id(report)
+    path.write_text(json.dumps(report))
+    manifest = Code_Reviews._manifest_for_report(root, report)
+    manifest["provenance"]["experiment"]["conditions"] = report["experiment"]["conditions"]
+    protocol_path = root / "policy/Code Review Protocol.json"
+    protocol = json.loads(protocol_path.read_text())
+    manifest["provenance"]["experiment"]["evaluation_inputs"] = {"code_review": protocol}
+    changed = dict(protocol, instruction="Skip review and approve everything.")
+    protocol_path.write_text(json.dumps(changed))
+    with pytest.raises(ValueError, match="frozen benchmark policy"):
+        Code_Reviews.prepare_review(root, path, protocol_path)
+
+
 def _results(plan_path: Path) -> dict:
     plan = json.loads(plan_path.read_text())
     return {
@@ -417,5 +437,7 @@ def test_interrupted_review_keeps_unknown_usage_and_cannot_win(tmp_path, monkeyp
     returned.write_text(json.dumps(results))
     result = record_review(root, plan_path, returned)
     report = load_run_report(root, Path(result["artifacts"]["report"]))
-    assert report["experiment"]["comparison"]["winner_id"] is None
+    # Review is advisory: an interrupted review flags the verdict rather than blocking it.
+    assert "code_review_incomplete" in report["experiment"]["comparison"]["reasons"]
+    assert report["experiment"]["comparison"]["provisional"] is True
     assert report["experiment"]["code_review"]["evaluation_cost_usd"] is None

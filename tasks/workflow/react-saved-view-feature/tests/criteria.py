@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 from rewardkit import criterion
@@ -14,7 +15,24 @@ _DEPENDENCIES = Path("/opt/react-sentinel/node_modules")
 
 @criterion(shared=True)
 def task_correctness(workspace: Path) -> bool:
-    return node_test_correctness(workspace, _MANIFEST, _DEPENDENCIES)
+    oracle = workspace / "Harness_Oracle.test.ts"
+    if oracle.exists():
+        return False
+    shutil.copyfile(Path(__file__).parent / "Verifier" / "Oracle.test.ts", oracle)
+    try:
+        return node_test_correctness(
+            workspace,
+            _MANIFEST,
+            _DEPENDENCIES,
+            test_files=[
+                "src/App.test.tsx",
+                "src/domain/Saved_View.test.ts",
+                "src/domain/View_Filter.test.ts",
+                oracle.name,
+            ],
+        )
+    finally:
+        oracle.unlink(missing_ok=True)
 
 
 @criterion(shared=True)

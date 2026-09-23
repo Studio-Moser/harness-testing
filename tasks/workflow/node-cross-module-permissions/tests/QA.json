@@ -1,0 +1,71 @@
+{
+  "schema_version": "1",
+  "cases": {
+    "oracle": {
+      "commands": [
+        "npm test"
+      ],
+      "expected": {
+        "efficiency": 1.0,
+        "reward": 1.0,
+        "workflow": 1.0
+      },
+      "mutation_paths": [
+        "src/Permissions.js",
+        "test/Revocation.test.js"
+      ],
+      "script": "solution/solve.sh"
+    },
+    "nop": {
+      "commands": [],
+      "expected": {
+        "efficiency": 1.0,
+        "reward": 0.0,
+        "workflow": 0.0
+      },
+      "mutation_paths": [],
+      "script": "@shared/Nop.sh"
+    },
+    "near-miss": {
+      "commands": [],
+      "expected": {
+        "efficiency": 1.0,
+        "reward": 0.0,
+        "workflow": 0.0
+      },
+      "mutation_paths": [
+        "src/Permissions.js"
+      ],
+      "script": "tests/QA/Near_Miss.sh"
+    },
+    "adversarial": {
+      "commands": [
+        "npm test"
+      ],
+      "expected": {
+        "efficiency": 1.0,
+        "reward": 0.0,
+        "workflow": 0.0
+      },
+      "mutation_paths": [
+        "test/Behavior.test.js"
+      ],
+      "script": "tests/QA/Adversarial.sh"
+    },
+    "source-tamper": {
+      "commands": [
+        "npm test"
+      ],
+      "expected": {
+        "efficiency": 1.0,
+        "reward": 0.0,
+        "workflow": 0.0
+      },
+      "mutation_paths": [
+        "README.md"
+      ],
+      "script": "tests/QA/Source_Tamper.sh",
+      "run_oracle_first": true
+    }
+  }
+}

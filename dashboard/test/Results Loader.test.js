@@ -1,0 +1,103 @@
+import assert from "node:assert/strict";
+import {spawnSync} from "node:child_process";
+import {afterEach, test} from "node:test";
+import {cp, mkdir, mkdtemp, readFile, rm, writeFile} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import {dirname, join, resolve} from "node:path";
+import {fileURLToPath} from "node:url";
+
+import {loadPublishedReports, safetyErrors} from "../src/data/Published Results.json.js";
+
+const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const temporaries = [];
+
+test("Python and dashboard share the public path acceptance cases", async () => {
+  const cases = JSON.parse(await readFile(resolve(repositoryRoot, "policy/Public Safety Cases.json"), "utf8"));
+  for (const {text, safe} of cases) assert.equal(safetyErrors(text).length === 0, safe, text);
+});
+
+afterEach(async () => {
+  await Promise.all(temporaries.splice(0).map((path) => rm(path, {recursive: true})));
+});
+
+async function temporaryReports() {
+  const root = await mkdtemp(join(tmpdir(), "harness-results-"));
+  temporaries.push(root);
+  await mkdir(resolve(root, "reports"));
+  return root;
+}
+
+test("published results loader validates and sorts current run reports", async () => {
+  const root = await temporaryReports();
+  await cp(
+    resolve(repositoryRoot, "tests", "Fixtures", "Run_Reports", "Comparison.json"),
+    resolve(root, "reports", "comparison.json")
+  );
+
+  const reports = await loadPublishedReports({
+    reportsDirectory: resolve(root, "reports"),
+    schemaPath: resolve(repositoryRoot, "policy", "Run_Report.schema.json")
+  });
+
+  assert.equal(reports.length, 1);
+  assert.equal(reports[0].schema_version, "3");
+  assert.equal(reports[0].jobs[0].task, "react-saved-view-feature");
+});
+
+test("published results loader counts one canonical snapshot per run", async () => {
+  const root = await temporaryReports();
+  const fixture = resolve(repositoryRoot, "tests", "Fixtures", "Run_Reports", "Comparison.json");
+  await cp(fixture, resolve(root, "reports", "first.json"));
+  await cp(fixture, resolve(root, "reports", "duplicate.json"));
+
+  const reports = await loadPublishedReports({
+    reportsDirectory: resolve(root, "reports"),
+    schemaPath: resolve(repositoryRoot, "policy", "Run_Report.schema.json")
+  });
+
+  assert.equal(reports.length, 1);
+});
+
+test("published results loader fails closed on malformed reports", async () => {
+  const root = await temporaryReports();
+  await writeFile(resolve(root, "reports", "bad.json"), "{}\n");
+
+  await assert.rejects(
+    loadPublishedReports({
+      reportsDirectory: resolve(root, "reports"),
+      schemaPath: resolve(repositoryRoot, "policy", "Run_Report.schema.json")
+    }),
+    /schema validation failed/
+  );
+});
+
+test("build preflight rejects unsafe source data before Observable can reuse stale output", async () => {
+  const root = await temporaryReports();
+  const report = JSON.parse(await readFile(resolve(repositoryRoot, "tests/Fixtures/Run_Reports/Comparison.json"), "utf8"));
+  report.experiment.change.summary = "Read /Volumes/example/private/file";
+  await writeFile(resolve(root, "reports", "unsafe.json"), JSON.stringify(report));
+  const result = spawnSync(process.execPath, [resolve(repositoryRoot, "dashboard/Validate Results.js")], {
+    env: {...process.env, HARNESS_PUBLISHED_REPORTS_DIRECTORY: resolve(root, "reports")}, encoding: "utf8"
+  });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /sensitive or local-only string/);
+  assert.doesNotMatch(result.stderr, /Volumes\/example/);
+});
+
+test("build preflight invalidates result and toolbox loader caches", async () => {
+  const root = await temporaryReports();
+  await mkdir(resolve(root, "src/data"), {recursive: true});
+  await mkdir(resolve(root, "src/.observablehq/cache/data"), {recursive: true});
+  await writeFile(resolve(root, "package.json"), JSON.stringify({type: "module"}));
+  await writeFile(resolve(root, "src/data/Published Results.json.js"), "export async function loadPublishedReports() { return []; } export function safetyErrors() { return []; }");
+  await writeFile(resolve(root, "src/data/Campaign Summary.json.js"), "export async function loadCampaignSummary() { return null; }");
+  await cp(resolve(repositoryRoot, "dashboard/Validate Results.js"), resolve(root, "Validate Results.js"));
+  for (const name of ["Published Results.json", "Toolbox.json", "Campaign Summary.json"]) {
+    await writeFile(resolve(root, "src/.observablehq/cache/data", name), "stale");
+  }
+  const result = spawnSync(process.execPath, [resolve(root, "Validate Results.js")], {encoding: "utf8"});
+  assert.equal(result.status, 0, result.stderr);
+  for (const name of ["Published Results.json", "Toolbox.json", "Campaign Summary.json"]) {
+    await assert.rejects(readFile(resolve(root, "src/.observablehq/cache/data", name)), {code: "ENOENT"});
+  }
+});

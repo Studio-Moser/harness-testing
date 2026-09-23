@@ -1,0 +1,21 @@
+{
+  "schema_version": "1",
+  "files": {
+    ".dockerignore": "sha256:16d30e4462189fb14dd611bdb708c510630c576a1f35b9383e89a4352da36c97",
+    "Dockerfile": "sha256:ea4bc9c7122d15de303872b6380ff4b3c6f3e44c1fdebc4760c1c769be1cb043",
+    "Interactions.js": "sha256:92a1a4dd1cc2a3e01dbc9e763f3b3aeca5cebba9f4bb1b63f68d342f895aa396",
+    "README.md": "sha256:537828a0c9a8754c237afcdd9493083097d83faa32ab4805662267de6384ec24",
+    "Visual Review.md": "sha256:9339ebd4e78a24e2465dc89dff00e7b80cb6f221f18ab41fa50f677968fd87d6",
+    "Visual Views.json": "sha256:a482bda40d99e9089ed155e5d8a3fc0daba0d0f6748a097cc2b516856aa6f4c7",
+    "Visual_Check.py": "sha256:7f41a9b0445f16991a450848a91550aa888c01861f3c2fdf0dd29316f2de823e",
+    "activity.html": "sha256:9a87e7305a82e4b5ab6c0825f5233bf8adaa9842857a61f7337cae0602422f29",
+    "overview.html": "sha256:9a67f5879ed4dd8a396393a68d356f39ca975bbbfe69588e0ae161790dcc3864",
+    "package-lock.json": "sha256:62a18dbce933a92b90c2bed9a4d448f7378fac976face556143edb1eec580e04",
+    "package.json": "sha256:c378774c4ecc64604f44f898f873ece2e81b3670be78a55ef44d74a000b09703",
+    "projects.html": "sha256:162d267eb0cad9016ceb88963d02cebd4d9d6ef4c4ed4fc05bc9c5975b89c723",
+    "settings.html": "sha256:cc2f52a30cbd1b448530cebe8e753de386b0ecfb9802699bef925512d105bea9",
+    "test/Behavior.test.js": "sha256:9b5dba495a1a9bf5fa29cb9d7673aacda537ffca72b93c8241e70e7e24fe3f14",
+    "Visual_Contrast.js": "sha256:62ef03776de8816457b5e28f4394e8a4619bc9c2e31ecd8f07ce86d0c29073b7"
+  },
+  "mutable_files": {}
+}

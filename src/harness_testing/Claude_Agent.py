@@ -18,7 +18,6 @@ from harness_testing.Native_Conversation import (
     stage_controller,
     validate_conversation,
 )
-from harness_testing.Skill_Evaluation import explicit_instruction, validate_skill_name
 
 _OAUTH_TOKEN_PATH = PurePosixPath("/tmp/Harness_Claude_OAuth_Token")
 
@@ -34,7 +33,6 @@ class HarnessClaude(ClaudeCode):
         self,
         *args: Any,
         plugin_dirs: list[str] | None = None,
-        skill_invocation: str | None = None,
         conversation: dict | None = None,
         **kwargs: Any,
     ) -> None:
@@ -52,9 +50,6 @@ class HarnessClaude(ClaudeCode):
                 "plugin_dirs must be unique direct children of /harness-arm/claude/plugins"
             )
         self._plugin_dirs = paths
-        self._skill_invocation = (
-            validate_skill_name(skill_invocation) if skill_invocation is not None else None
-        )
         self._conversation = conversation
         self._conversation_instruction = None
         self._oauth_token_path: PurePosixPath | None = None
@@ -218,8 +213,6 @@ class HarnessClaude(ClaudeCode):
     async def run(
         self, instruction: str, environment: BaseEnvironment, context: AgentContext
     ) -> None:
-        if self._skill_invocation is not None:
-            instruction = explicit_instruction("claude", self._skill_invocation, instruction)
         if self._conversation is not None:
             validate_conversation(self._conversation, "claude")
             if self._resume or self._load:

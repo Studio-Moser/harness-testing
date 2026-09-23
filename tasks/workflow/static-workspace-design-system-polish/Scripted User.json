@@ -1,0 +1,36 @@
+{
+  "schema_version": "1",
+  "interaction_limit": 12,
+  "facts": {
+    "workspace": "Work in /app.",
+    "task": "Polish this existing four-page workspace application into one coherent visual system. Edit Styles.css and Pages.css only; preserve all HTML, copy, routes, scripts and interactions. Audit all four routes (overview, projects, settings, activity), shared navigation and page-specific components rather than treating this as one page. At 320, 768 and 1440px, maintain readable hierarchy, consistent spacing, text contrast >=4.5:1, body >=16px and page heading >=28px. Keep every navigation link and form/button/select target >=44px high (buttons also >=44px wide), visible keyboard focus >=2px, and no page-wide overflow. At 320px stack the metrics, form fields and activity columns; at 1440px use three metric columns, two form columns, and two activity columns. Dense project tables may scroll only inside their labeled keyboard-focusable region. Every route must retain at least 16px main padding, panels at least 16px padding, and grids at least 16px gaps. Preserve active-route indication, project filtering, form submission feedback and review actions. Choose the typography, palette, proportions and surface treatment. Use the supplied visual review rubric and capture every route; passing automated checks alone is not proof of a polished system. Use solid-color backgrounds only. Gradients, background images, CSS filters/backdrop filters, masks, clipping paths and blend modes are outside this fixture's supported paint contract; typography, palette, spacing, borders and responsive layout remain your design choices.",
+    "authority": "Proceed with the original local development task within its stated scope. No additional spending, external publication, messages, or authority is approved.",
+    "handoff": "Keep the branch and workspace as-is. Do not merge, push, publish, discard changes, or remove the worktree. Report the local handoff and stop."
+  },
+  "rules": [
+    {
+      "id": "workspace",
+      "kind": "clarification",
+      "pattern": "(?:Where should I (?:work|make (?:the|these) changes)|What (?:is the )?working directory should I use)\\?",
+      "fact": "workspace"
+    },
+    {
+      "id": "task-scope",
+      "kind": "clarification",
+      "pattern": "(?:What (?:is|are) the (?:task|requirements)|What should I (?:build|change))\\?",
+      "fact": "task"
+    },
+    {
+      "id": "routine-plan",
+      "kind": "approval",
+      "matcher": "local-development-approval",
+      "fact": "authority"
+    },
+    {
+      "id": "local-handoff",
+      "kind": "clarification",
+      "matcher": "local-branch-handoff",
+      "fact": "handoff"
+    }
+  ]
+}

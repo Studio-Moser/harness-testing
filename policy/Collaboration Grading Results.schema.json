@@ -46,11 +46,11 @@
       "required": ["name", "score", "rationale"],
       "properties": {
         "name": {"$ref": "#/$defs/dimensionName"},
-        "score": {"type": "integer", "minimum": 1, "maximum": 5},
+        "score": {"type": ["integer", "null"], "minimum": 1, "maximum": 5},
         "rationale": {"type": "string", "minLength": 1, "maxLength": 500}
       }
     },
-    "dimensionName": {"enum": ["directness", "proportionality", "progress_usefulness", "autonomy", "candor", "warmth", "restraint", "completion_clarity"]},
+    "dimensionName": {"enum": ["directness", "proportionality", "progress_usefulness", "autonomy", "candor", "warmth", "restraint", "completion_clarity", "plain_language", "appropriate_autonomy", "self_verification", "regression_coverage", "requirements_fit", "research_depth"]},
     "conditions": {
       "type": "object", "additionalProperties": false,
       "required": ["provider", "model", "effort", "executor", "runtime_version"],

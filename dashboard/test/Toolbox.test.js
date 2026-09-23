@@ -154,7 +154,8 @@ test("rendered Toolbox exposes accessible filters and all structured card sectio
     assert.equal(root.tag, "section");
     assert.equal(root.attributes["aria-label"], "Harness Test Toolbox");
     assert.deepEqual(pressed.map((node) => node.attributes["data-value"]), ["bug-fix", "2"]);
-    assert.match(root.textContent, /2 Harness Tests/);
+    assert.equal(nodes.find(node => node.tag === "h1").textContent, "Toolbox");
+    assert.match(nodes.find(node => node.tag === "h1").className, /page-title fs-1/);
     assert.match(root.textContent, /1 matching test/);
     assert.match(root.textContent, /L2 Focused/);
     assert.deepEqual(
@@ -163,6 +164,10 @@ test("rendered Toolbox exposes accessible filters and all structured card sectio
     );
     const card = nodes.find((node) => node.attributes["data-test-id"] === "controlled-test");
     const header = card.children.find((node) => node.tag === "header");
+    assert.match(root.className, /\bcontainer-xl\b/);
+    assert.match(header.className, /\bcard-body\b/);
+    assert.ok(nodes.filter(node => node.tag === "summary").every(node => node.className.includes("accordion-button")));
+    assert.ok(pressed.every(node => node.className.includes("nav-link active")));
     const firstDetail = descendants(card).find((node) => node.tag === "details");
     assert.match(header.textContent, /What we’ll learnLearning goal/);
     assert.match(firstDetail.textContent, /PurposeChoose a focused workflow/);
@@ -213,6 +218,8 @@ test("filter clicks update state, cards, and the bookmarkable URL", () => {
       .map((node) => node.textContent);
     feature.focus();
     feature.click();
+    assert.match(feature.className, /\bnav-link active\b/);
+    assert.ok(descendants(root).filter(node => node.attributes["aria-pressed"] === "false").every(node => node.className.includes("nav-link") && !node.className.includes("active")));
 
     assert.equal(replaced.at(-1), "/toolbox?type=feature#catalog");
     assert.equal(globalThis.document.activeElement, feature);

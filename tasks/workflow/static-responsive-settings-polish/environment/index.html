@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Workspace settings</title><link rel="stylesheet" href="Styles.css"></head>
+<body><main><header><h1>Workspace settings</h1><p>Manage the details your team uses every day.</p></header><section class="cards" aria-label="Settings">
+<article><h2>Team profile</h2><p>Keep your workspace name and team information up to date.</p><button>Update profile</button></article>
+<article><h2>Notifications</h2><p>Choose which changes need your attention.</p><button>Edit notifications</button></article>
+<article><h2>Access</h2><p>Review who can see and manage this workspace.</p><button>Manage access</button></article>
+</section><p id="status" role="status"></p></main><script>for(const b of document.querySelectorAll('button'))b.addEventListener('click',()=>document.querySelector('#status').textContent=b.textContent+' selected');</script></body></html>

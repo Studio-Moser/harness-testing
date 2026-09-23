@@ -288,11 +288,7 @@ def _series_key(
             "effort": cell.effort,
             "arm": cell.arm,
             "role": cell.role,
-            "skill_evaluation": (
-                manifest.skill_evaluation.to_dict()
-                if manifest.skill_evaluation is not None
-                else None
-            ),
+            "skill_evaluation": None,
             "task_digest": task_digest,
             "image_input_digests": dict(image_input_digests),
             "agent_adapter_digest": adapter_digest,
@@ -541,6 +537,53 @@ def write_run_report(
             raise ValueError("immutable report revision conflicts with its content identity")
         snapshot.write_text(contents)
     return report_path
+
+
+def recover_failed_run_report(root: Path, manifest: RunManifest) -> Path:
+    """Quarantine the last valid progress snapshot without rescoring frozen work.
+
+    Raw jobs may be newer than this snapshot. Never represent this fallback as a
+    complete reconstruction, or change a terminal result into a different outcome.
+    """
+    path = manifest.path.parent / "Run_Report.json"
+    report = load_run_report(root, path)
+    if report["manifest_digest"] != manifest.digest or report["status"] != "running":
+        raise ValueError("recovery requires this manifest's running progress snapshot")
+    originals = path.parent / "Recovery"
+    originals.mkdir(exist_ok=True)
+    original = originals / (report["report_id"].removeprefix("sha256:") + ".json")
+    contents = path.read_bytes()
+    if original.exists():
+        if original.read_bytes() != contents:
+            raise ValueError("recovery snapshot conflicts with retained original")
+    else:
+        with original.open("xb") as stream:
+            stream.write(contents)
+    previous_id = report["report_id"]
+    report.update(status="failed", updated_at=_now(), finished_at=_now())
+    report["evidence"] = {
+        "review_state": "quarantined",
+        "limitations": list(dict.fromkeys([
+            *report["evidence"]["limitations"], "partial-run", "failed-run",
+            "infrastructure-failure",
+        ])),
+    }
+    if "experiment" in report:
+        report["experiment"]["supersedes_report_id"] = previous_id
+    report["report_id"] = run_report_id(report)
+    errors = validate_run_report(root, report)
+    if errors:
+        raise ValueError("invalid recovery report: " + "; ".join(errors))
+    contents = (json.dumps(report, indent=2, sort_keys=True) + "\n").encode()
+    evidence = root / "runs/evidence"
+    evidence.mkdir(parents=True, exist_ok=True)
+    snapshot = evidence / (report["report_id"].removeprefix("sha256:") + ".json")
+    with snapshot.open("xb") as stream:
+        stream.write(contents)
+    temporary = path.with_name(".Run_Report.json.tmp")
+    temporary.write_bytes(contents)
+    os.replace(temporary, path)
+    return path
 
 
 def refresh_local_dashboard(

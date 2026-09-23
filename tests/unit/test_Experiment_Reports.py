@@ -11,6 +11,64 @@ from harness_testing.Run_Reports import run_report_id, validate_run_report
 ROOT = Path(__file__).parents[2]
 
 
+@pytest.mark.parametrize(
+    "filename, new, expected",
+    [
+        ("src/feature.ts", False, True),
+        ("tests/Extra.test.ts", True, True),
+        ("tests/Existing.test.ts", False, False),
+        ("vitest.config.ts", True, False),
+        ("packages/quill/vitest.workspace.ts", True, False),
+        ("package.json", False, False),
+        (".cargo/config.toml", True, False),
+        ("crates/example/Cargo.toml", False, False),
+    ],
+)
+def test_research_reward_does_not_bypass_protected_runner(tmp_path, filename, new, expected):
+    from harness_testing.Experiment_Reports import _research_protected_state
+
+    task = tmp_path / "task"
+    (task / "tests").mkdir(parents=True)
+    (task / "tests/config.json").write_text(
+        json.dumps({"f2p_node_ids": ["new"], "p2p_node_ids": ["old"]})
+    )
+    directory = tmp_path / "trial"
+    artifact = directory / "artifacts/logs/artifacts/model.patch"
+    artifact.parent.mkdir(parents=True)
+    artifact.write_text(
+        f"diff --git a/{filename} b/{filename}\n"
+        + ("new file mode 100644\n" if new else "index aaa..bbb 100644\n")
+        + "@@ -1 +1 @@\n-old\n+new\n"
+    )
+    rewards = {"f2p_total": 1, "f2p_passed": 1, "p2p_total": 1, "p2p_passed": 1}
+    assert _research_protected_state(task, rewards, directory) is expected
+    assert _research_protected_state(task, rewards, None) is None
+    rewards["f2p_total"] = 0
+    assert _research_protected_state(task, rewards, directory) is False
+
+
+def test_research_missing_inventory_cannot_establish_protection(tmp_path):
+    from harness_testing.Experiment_Reports import _research_protected_state
+
+    assert _research_protected_state(tmp_path, {"reward": 1}, None) is None
+
+
+def test_research_success_must_reconcile_with_whitelist_counts(tmp_path):
+    from harness_testing.Experiment_Reports import _research_protected_state
+
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests/config.json").write_text(
+        json.dumps({"f2p_node_ids": ["new"], "p2p_node_ids": []})
+    )
+    patch = tmp_path / "artifacts/logs/artifacts/model.patch"
+    patch.parent.mkdir(parents=True)
+    patch.write_text("")
+    rewards = {"reward": 1, "f2p_total": 1, "f2p_passed": 0, "p2p_total": 0, "p2p_passed": 0}
+    assert _research_protected_state(tmp_path, rewards, tmp_path) is False
+    rewards["reward"] = 0
+    assert _research_protected_state(tmp_path, rewards, tmp_path) is True
+
+
 def test_empty_comparison_stays_insufficient_and_sanitized(tmp_path):
     request = request_document()
     request["purpose"] = "diagnostic"
@@ -295,6 +353,74 @@ def test_safe_trial_marks_missing_transcript_unavailable_without_inventing_zero(
         "transcript": [],
         "metrics": None,
     }
+
+
+@pytest.mark.parametrize(
+    "message, status, reasons",
+    [
+        ("Verified. [Phone](/tmp/proof/phone.png)", "complete", ["local_paths_omitted"]),
+        ("Saved to /tmp/private/proof.png", "complete", ["local_paths_omitted"]),
+        ("password=fixture-value", "unavailable", ["private_transcript_content"]),
+    ],
+)
+def test_private_visible_content_never_breaks_safe_trial_reporting(
+    tmp_path, message, status, reasons
+):
+    from harness_testing.Experiment_Reports import _safe_trial
+    from harness_testing.Public_Safety import public_safety_errors
+
+    (tmp_path / "agent").mkdir()
+    path = tmp_path / "agent/Trial_Evidence.json"
+    raw = json.dumps(
+        {
+            "status": "completed",
+            "transcript": [
+                {
+                    "ordinal": 1,
+                    "role": "user",
+                    "kind": "user",
+                    "content": "Do the task.",
+                    "elapsed_seconds": 0,
+                },
+                {
+                    "ordinal": 2,
+                    "role": "assistant",
+                    "kind": "final",
+                    "content": message,
+                    "elapsed_seconds": 1,
+                },
+            ],
+        }
+    )
+    path.write_text(raw)
+    trial = _safe_trial(ROOT, "react-active-badge-count", "fixture", 1, tmp_path)
+    assert trial["status"] == "completed"
+    assert trial["collaboration"]["status"] == status
+    assert trial["collaboration"]["reasons"] == reasons
+    assert public_safety_errors(trial) == ()
+    assert path.read_text() == raw
+    if status == "unavailable":
+        assert trial["collaboration"]["metrics"] is None
+        assert trial["collaboration"]["transcript"] == []
+
+
+def test_protected_local_tree_failure_is_not_a_functional_verdict(tmp_path, monkeypatch):
+    from harness_testing.Experiment_Reports import _safe_trial
+
+    (tmp_path / "artifacts/workspace").mkdir(parents=True)
+    (tmp_path / "verifier").mkdir()
+    (tmp_path / "verifier/reward.json").write_text('{"reward": 0}')
+    monkeypatch.setattr(
+        "harness_testing.Experiment_Reports.protected_files_intact", lambda *a: False
+    )
+    trial = _safe_trial(ROOT, "react-active-badge-count", "fixture", 1, tmp_path)
+    assert trial["protected_state"] is False
+    assert trial["correctness"] is None
+    monkeypatch.setattr(
+        "harness_testing.Experiment_Reports.protected_files_intact", lambda *a: True
+    )
+    trial = _safe_trial(ROOT, "react-active-badge-count", "fixture", 1, tmp_path)
+    assert trial["correctness"] is False
 
 
 def test_safe_trial_keeps_research_protected_state_unknown(tmp_path: Path):

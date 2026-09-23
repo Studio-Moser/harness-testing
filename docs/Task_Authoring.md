@@ -2,9 +2,11 @@
 
 ## Authoring goal
 
-Each task should isolate one behavior that can distinguish harness quality without depending on a live repository, mutable service, or subjective grader. Prefer the smallest frozen project that makes the desired behavior real: one React component, one static page, one Rust crate, or one local Harness contract.
+Each task should isolate one behavior that can distinguish harness quality without depending on a live repository, mutable service, or subjective grader. Prefer the smallest frozen project that makes the desired behavior real: one React component, one static page, or one Rust crate.
 
-Add workflow tasks under `tasks/workflow/` and Harness surface-contract tasks under `tasks/contract/`. Do not add a stack merely for breadth; add it only when it exercises a behavior the existing projects cannot.
+For visual-polish tasks, separate deterministic rendered acceptance from subjective design quality. Use the pinned browser, exercise multiple viewports and keyboard interaction, retain screenshots and a frozen visual rubric, and require image inspection in the independent review. An automated browser pass is not a design endorsement. The responsive-settings fixture is the current example.
+
+Add workflow tasks under `tasks/workflow/`. Do not add a stack merely for breadth; add it only when it exercises a behavior the existing projects cannot.
 
 ## Required shape
 
@@ -29,7 +31,7 @@ task-id/
     efficiency/
 ```
 
-Contract tasks also carry protected expected calls/results, exact evidence-prefix requirements, and a deterministic local sidecar scenario. `harness-stub describe` exposes the universal result schema and task-specific public actions, including required payload fields, but never protected answers, responses, or expected results. Every required field must be protected-matched or listed in the call's protected `shape_only` array; use `shape_only` only for caller-authored prose. Required values must match the protected JSON type and nonempty shape, and protected lists compare as unordered sets. Mark only contiguous independent calls with the same protected `unordered_group`. Invalid calls are recorded without consuming the next required workflow step. Rust tasks use the frozen crate and lockfile instead of the Node verifier subset.
+Rust tasks use the frozen crate and lockfile instead of the Node verifier subset.
 
 The task configuration must preserve these boundaries:
 
@@ -82,7 +84,7 @@ At the checkpoint, run the full deterministic gates once, including the pack’s
 ```bash
 uv run harness-test task qa --pack workflow --all-cases
 # or
-uv run harness-test task qa --pack contract --all-cases
+
 ```
 
 Do not run the pack between task edits. If only a criterion or classifier changes after a recorded model run, regrade the retained workspace and trajectory instead of starting another agent session.

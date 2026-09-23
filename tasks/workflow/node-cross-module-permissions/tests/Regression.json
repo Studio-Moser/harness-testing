@@ -1,0 +1,4 @@
+{
+  "path": "src/Permissions.js",
+  "original": "export class Permissions {\n  constructor(store) { this.store = store; this.cache = new Map(); }\n  can(user, workspace, action) {\n    if (!this.cache.has(user)) this.cache.set(user, this.store.role(user, workspace));\n    return this.cache.get(user) === 'owner' || (action === 'read' && this.cache.get(user) === 'viewer');\n  }\n}\n"
+}

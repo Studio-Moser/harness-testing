@@ -9,7 +9,6 @@ import subprocess
 import sys
 import tomllib
 from collections.abc import Sequence
-from decimal import Decimal
 from pathlib import Path
 
 
@@ -44,16 +43,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     build_parser.add_argument("--verifier", action="store_true")
     build_parser.add_argument("--all", action="store_true")
 
-    arm_parser = subparsers.add_parser("arm", help="materialize provider-native arms")
-    arm_subparsers = arm_parser.add_subparsers(dest="arm_command")
-    materialize_parser = arm_subparsers.add_parser(
-        "materialize", help="materialize one immutable provider arm"
-    )
-    materialize_parser.add_argument("--provider", choices=("claude", "codex"), required=True)
-    materialize_parser.add_argument("--arm", choices=("A0", "A1", "A2", "A3"), required=True)
-    materialize_parser.add_argument("--harness-source")
-    materialize_parser.add_argument("--harness-commit")
-
     deepswe_parser = subparsers.add_parser(
         "deepswe", help="manage the manual DeepSWE capability lane"
     )
@@ -64,36 +53,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     deepswe_materialize_parser.add_argument("--confirm-download", action="store_true")
     deepswe_materialize_parser.add_argument("--task", action="append", default=[])
 
-    regrade_parser = subparsers.add_parser(
-        "regrade", help="re-run Harbor verification without an agent phase"
-    )
-    regrade_parser.add_argument("--job", type=Path, required=True)
-    regrade_parser.add_argument("--tasks", type=Path, required=True)
-
-    result_parser = subparsers.add_parser(
-        "result", help="construct fail-closed public result files"
-    )
-    result_subparsers = result_parser.add_subparsers(dest="result_command")
-    sanitize_parser = result_subparsers.add_parser(
-        "sanitize", help="validate and write one allowlisted result"
-    )
-    sanitize_parser.add_argument("--job", type=Path, required=True)
-    sanitize_parser.add_argument("--output", type=Path, required=True)
-
-    report_parser = subparsers.add_parser(
-        "report", help="backfill or publish public-safe run reports"
-    )
-    report_subparsers = report_parser.add_subparsers(dest="report_command")
-    backfill_parser = report_subparsers.add_parser(
-        "backfill", help="reconstruct reports from model-free historical artifacts"
-    )
-    backfill_parser.add_argument("--source-root", type=Path, action="append", required=True)
-    backfill_parser.add_argument("--mapping", type=Path, required=True)
-    backfill_parser.add_argument("--output", type=Path, required=True)
-    report_subparsers.add_parser(
-        "sync", help="publish all pending reports in one data-branch update"
-    )
-
     review_parser = subparsers.add_parser(
         "review", help="freeze or import model-free final-patch review evidence"
     )
@@ -103,7 +62,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     review_prepare_parser.add_argument("--report", type=Path, required=True)
     review_prepare_parser.add_argument("--protocol", type=Path, required=True)
-    review_prepare_parser.add_argument("--references", type=Path)
     review_record_parser = review_subparsers.add_parser(
         "record", help="validate and import returned review evidence"
     )
@@ -114,13 +72,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         "collaboration", help="prepare or import blinded collaboration evidence"
     )
     collaboration_subparsers = collaboration_parser.add_subparsers(dest="collaboration_command")
-    collaboration_backfill = collaboration_subparsers.add_parser(
-        "backfill", help="recover collaboration evidence from retained ATIF trajectories"
-    )
-    collaboration_backfill.add_argument("--report", type=Path, required=True)
-    collaboration_backfill.add_argument("--jobs-dir", type=Path, required=True)
-    collaboration_backfill.add_argument("--contract", type=Path, required=True)
-    collaboration_backfill.add_argument("--instruction", type=Path, required=True)
     collaboration_prepare = collaboration_subparsers.add_parser(
         "prepare", help="create blinded transcript grading packets"
     )
@@ -131,41 +82,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     collaboration_record.add_argument("--plan", type=Path, required=True)
     collaboration_record.add_argument("--results", type=Path, required=True)
-    calibration_prepare = collaboration_subparsers.add_parser(
-        "calibration-prepare", help="create blinded same-scenario A/B packets"
-    )
-    calibration_prepare.add_argument("--report", type=Path, required=True)
-    calibration_record = collaboration_subparsers.add_parser(
-        "calibration-record", help="import Tim's blinded A/B labels"
-    )
-    calibration_record.add_argument("--plan", type=Path, required=True)
-    calibration_record.add_argument("--labels", type=Path, required=True)
 
     auth_parser = subparsers.add_parser("auth", help="store local subscription credentials")
     auth_subparsers = auth_parser.add_subparsers(dest="auth_command")
     auth_subparsers.add_parser("claude", help="store the Claude subscription token")
 
     run_parser = subparsers.add_parser("run", help="plan or execute guarded Harbor runs")
+    campaign_parser = subparsers.add_parser(
+        "campaign", help="coordinate frozen full-toolbox lanes without executing models"
+    )
+    campaign_commands = campaign_parser.add_subparsers(dest="campaign_command", required=True)
+    campaign_plan_parser = campaign_commands.add_parser("plan")
+    campaign_plan_parser.add_argument("--manifest", type=Path, action="append", required=True)
+    campaign_summary_parser = campaign_commands.add_parser("summarize")
+    campaign_summary_parser.add_argument("--plan", type=Path, required=True)
+    campaign_summary_parser.add_argument("--report", type=Path, action="append", required=True)
     run_subparsers = run_parser.add_subparsers(dest="run_command")
     plan_parser = run_subparsers.add_parser("plan", help="compile a dry-run manifest")
-    plan_parser.add_argument("--request", type=Path)
-    plan_parser.add_argument(
-        "--profile",
-        choices=("smoke", "checkpoint", "release", "calibration", "research"),
-        required=False,
-    )
-    plan_parser.add_argument("--billing-mode", choices=("subscription", "api"))
-    plan_parser.add_argument("--cell", action="append", default=[])
-    plan_parser.add_argument("--task", action="append", default=[])
-    plan_parser.add_argument("--max-sessions", type=int)
-    plan_parser.add_argument("--max-budget-usd", type=Decimal)
-    plan_parser.add_argument("--attempts", type=int)
-    plan_parser.add_argument("--concurrency", type=int)
-    plan_parser.add_argument("--agent-timeout-seconds", type=int)
-    plan_parser.add_argument("--local-report-only", action="store_true")
-    skill_evaluation = plan_parser.add_mutually_exclusive_group()
-    skill_evaluation.add_argument("--invoke-skill")
-    skill_evaluation.add_argument("--observe-skill")
+    plan_parser.add_argument("--request", type=Path, required=True)
     execute_parser = run_subparsers.add_parser("execute", help="execute an exact approved manifest")
     execute_parser.add_argument("--manifest", type=Path, required=True)
     execute_parser.add_argument("--approve", required=True)
@@ -175,7 +109,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     qa_parser = task_subparsers.add_parser("qa", help="run model-free task QA cases")
     qa_selection = qa_parser.add_mutually_exclusive_group(required=True)
     qa_selection.add_argument("--task")
-    qa_selection.add_argument("--pack", choices=("workflow", "contract"))
+    qa_selection.add_argument("--pack", choices=("workflow",))
     qa_cases = qa_parser.add_mutually_exclusive_group(required=True)
     qa_cases.add_argument(
         "--case",
@@ -215,18 +149,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             print("No image selected; pass a specific image flag or --all.", file=sys.stderr)
             return 2
         build_images(_repository_root(), selected)
-    elif arguments.command == "arm" and arguments.arm_command == "materialize":
-        from harness_testing.Materialize import materialize_arm
-
-        materialized = materialize_arm(
-            _repository_root(),
-            arguments.provider,
-            arguments.arm,
-            harness_source=arguments.harness_source,
-            harness_commit=arguments.harness_commit,
-        )
-        print(f"{materialized.provider}:{materialized.arm} {materialized.digest}")
-        print(materialized.path)
     elif arguments.command == "deepswe" and arguments.deepswe_command == "materialize":
         from harness_testing.Materialize import (
             deepswe_materialization_plan,
@@ -249,79 +171,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(f"Materialized dataset: {materialized.digest}")
         print(materialized.path)
-    elif arguments.command == "regrade":
-        from harness_testing.Results import regrade_job
-
-        try:
-            record = regrade_job(
-                _repository_root(),
-                arguments.job,
-                arguments.tasks,
-            )
-        except ValueError as error:
-            print(error, file=sys.stderr)
-            return 1
-        print(f"Source job: {record.source_job_id} {record.source_job_digest}")
-        print(f"Regrade job: {record.regrade_job_path}")
-    elif arguments.command == "result" and arguments.result_command == "sanitize":
-        from harness_testing.Results import sanitize_public_result
-
-        try:
-            result = sanitize_public_result(
-                _repository_root(),
-                arguments.job,
-                arguments.output,
-            )
-        except ValueError as error:
-            print(error, file=sys.stderr)
-            return 1
-        print(f"Sanitized result: {result['result_id']}")
-        print(arguments.output)
-    elif arguments.command == "report" and arguments.report_command == "backfill":
-        from harness_testing.Run_History import backfill_run_reports
-        from harness_testing.Run_Reports import load_run_report
-
-        try:
-            reports = backfill_run_reports(
-                _repository_root(),
-                tuple(arguments.source_root),
-                arguments.mapping,
-                arguments.output,
-            )
-            job_count = sum(
-                len(load_run_report(_repository_root(), report, published=True)["jobs"])
-                for report in reports
-            )
-        except ValueError as error:
-            print(error, file=sys.stderr)
-            return 1
-        for report in reports:
-            print(f"Historical run report: {report}")
-        print(f"Backfilled {len(reports)} reports with {job_count} job summaries.")
-    elif arguments.command == "report" and arguments.report_command == "sync":
-        from harness_testing.Report_Publication import (
-            load_publication_target,
-            sync_pending_reports,
-        )
-
-        try:
-            target = load_publication_target(_repository_root())
-            receipts = sync_pending_reports(_repository_root(), target)
-        except ValueError as error:
-            print(error, file=sys.stderr)
-            return 1
-        if receipts:
-            print(f"Published {len(receipts)} run report(s) to {target.repository}.")
-        else:
-            print("No public run reports are pending.")
     elif arguments.command == "review" and arguments.review_command == "prepare":
         from harness_testing.Code_Reviews import prepare_review
 
         try:
-            options = {"references_path": arguments.references} if arguments.references else {}
-            outcome = prepare_review(
-                _repository_root(), arguments.report, arguments.protocol, **options
-            )
+            outcome = prepare_review(_repository_root(), arguments.report, arguments.protocol)
         except ValueError as error:
             print(error, file=sys.stderr)
             return 1
@@ -338,34 +192,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
         print(json.dumps(outcome, indent=2, sort_keys=True))
     elif arguments.command == "collaboration":
-        from harness_testing.Collaboration_Backfill import backfill_collaboration
-        from harness_testing.Collaboration_Grading import (
-            prepare_calibration,
-            prepare_grading,
-            record_calibration,
-            record_grading,
-        )
+        from harness_testing.Collaboration_Grading import prepare_grading, record_grading
         from harness_testing.Run_Reports import refresh_local_dashboard
 
         try:
-            if arguments.collaboration_command == "backfill":
-                outcome = backfill_collaboration(
-                    _repository_root(),
-                    arguments.report,
-                    arguments.jobs_dir,
-                    arguments.contract,
-                    arguments.instruction,
-                )
-                refresh_local_dashboard(_repository_root())
-            elif arguments.collaboration_command == "prepare":
+            if arguments.collaboration_command == "prepare":
                 outcome = prepare_grading(_repository_root(), arguments.report, arguments.protocol)
             elif arguments.collaboration_command == "record":
                 outcome = record_grading(_repository_root(), arguments.plan, arguments.results)
-                refresh_local_dashboard(_repository_root())
-            elif arguments.collaboration_command == "calibration-prepare":
-                outcome = prepare_calibration(_repository_root(), arguments.report)
-            elif arguments.collaboration_command == "calibration-record":
-                outcome = record_calibration(_repository_root(), arguments.plan, arguments.labels)
                 refresh_local_dashboard(_repository_root())
             else:
                 parser.error("collaboration requires a subcommand")
@@ -383,70 +217,26 @@ def main(argv: Sequence[str] | None = None) -> int:
             print("Claude subscription token could not be stored.", file=sys.stderr)
             return 1
         print("Claude subscription token stored in Keychain.")
+    elif arguments.command == "campaign":
+        from harness_testing.Campaigns import campaign_plan, campaign_summary
+
+        try:
+            outcome = (
+                campaign_plan(_repository_root(), arguments.manifest)
+                if arguments.campaign_command == "plan"
+                else campaign_summary(_repository_root(), arguments.plan, arguments.report)
+            )
+        except (ValueError, KeyError, OSError) as error:
+            parser.error(str(error))
+        print(json.dumps(outcome, indent=2, sort_keys=True))
+        return 0
     elif arguments.command == "run" and arguments.run_command == "plan":
-        from harness_testing.Runs import format_plan, plan_run
-        from harness_testing.Skill_Evaluation import SkillEvaluation
+        from harness_testing.Experiments import plan_experiment
+        from harness_testing.Runs import format_plan
 
-        if arguments.request is not None:
-            from harness_testing.Experiments import plan_experiment
-
-            conflicts = (
-                arguments.profile,
-                arguments.billing_mode,
-                arguments.cell,
-                arguments.task,
-                arguments.max_sessions,
-                arguments.max_budget_usd,
-                arguments.attempts,
-                arguments.concurrency,
-                arguments.agent_timeout_seconds,
-                arguments.local_report_only,
-                arguments.invoke_skill,
-                arguments.observe_skill,
-            )
-            if any(value is not None and value is not False and value != [] for value in conflicts):
-                parser.error(
-                    "--request cannot be combined with legacy run selection or limit flags"
-                )
-            manifest = plan_experiment(
-                _repository_root(), json.loads(arguments.request.read_text())
-            )
-            print(format_plan(manifest))
-            return 0
-        missing = [
-            name
-            for name in ("profile", "billing_mode", "max_sessions", "max_budget_usd")
-            if getattr(arguments, name) is None
-        ]
-        if missing:
-            parser.error(
-                "required without --request: "
-                + ", ".join("--" + name.replace("_", "-") for name in missing)
-            )
-
-        evaluation = (
-            SkillEvaluation("capability", arguments.invoke_skill)
-            if arguments.invoke_skill is not None
-            else SkillEvaluation("discovery", arguments.observe_skill)
-            if arguments.observe_skill is not None
-            else None
-        )
-
-        manifest = plan_run(
-            _repository_root(),
-            profile=arguments.profile,
-            billing_mode=arguments.billing_mode,
-            cell_specifications=tuple(arguments.cell),
-            task_ids=tuple(arguments.task),
-            max_sessions=arguments.max_sessions,
-            max_budget_usd=arguments.max_budget_usd,
-            attempts=arguments.attempts,
-            concurrency=arguments.concurrency,
-            agent_timeout_seconds=arguments.agent_timeout_seconds,
-            skill_evaluation=evaluation,
-            publish_report=not arguments.local_report_only,
-        )
+        manifest = plan_experiment(_repository_root(), json.loads(arguments.request.read_text()))
         print(format_plan(manifest))
+        return 0
     elif arguments.command == "run" and arguments.run_command == "execute":
         from harness_testing.Runs import execute_run
 

@@ -8,7 +8,7 @@
     },
     "near-miss": {
       "commands": ["npm test -- src/domain/Active_Count.test.ts"],
-      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 0.0},
+      "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 1.0},
       "mutation_paths": ["src/domain/Active_Count.test.ts"],
       "script": "tests/QA/Near_Miss.sh"
     },

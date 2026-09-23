@@ -1,0 +1,56 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+]
+
+[task]
+name = "studio-moser/node-toggle-completion"
+version = "1.0.0"
+description = "Immutable completion toggle"
+authors = [{ name = "Studio Moser" }]
+keywords = ["javascript", "atomic", "testing"]
+
+[metadata]
+difficulty = "easy"
+category = "workflow"
+tags = ["javascript", "atomic", "testing"]
+change_class = "small"
+verification_envelope = "small"
+fixture_digest = "sha256:3270b7c5b1c01acf2743ccabbfbd9a5cd5f60f87214b498bb029ecfc4ae62e0c"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

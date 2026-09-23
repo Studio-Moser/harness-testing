@@ -1,9 +1,7 @@
 {
   "policy_id": "development-comparison-v1",
   "required_task_count": 9,
-  "minimum_repetitions": 3,
-  "bootstrap_draws": 20000,
-  "family_error_rate": 0.05,
+  "minimum_repetitions": 1,
   "advantage_ratio": 0.9,
   "noninferiority_ratio": 1.1,
   "pricing": null,

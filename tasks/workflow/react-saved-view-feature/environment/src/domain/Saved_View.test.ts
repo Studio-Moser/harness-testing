@@ -1,18 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  loadSavedView,
-  parseSavedView,
-  SAVED_VIEW_KEY,
-  saveSavedView,
-  type ViewStorage,
-} from './Saved_View.ts'
-
-function memoryStorage(initial: string | null = null): ViewStorage & {
+function memoryStorage(initial: Record<string, string> = {}): {
   values: Map<string, string>
+  getItem(key: string): string | null
+  setItem(key: string, value: string): void
 } {
-  const values = new Map<string, string>()
-  if (initial !== null) values.set(SAVED_VIEW_KEY, initial)
+  const values = new Map(Object.entries(initial))
   return {
     values,
     getItem: (key) => values.get(key) ?? null,
@@ -20,20 +13,16 @@ function memoryStorage(initial: string | null = null): ViewStorage & {
   }
 }
 
-describe('saved dashboard view', () => {
-  it.each(['all', 'active', 'archived'] as const)('accepts %s', (view) => {
-    expect(parseSavedView(view)).toBe(view)
+describe('memory storage test helper', () => {
+  it('returns initial values and null for missing keys', () => {
+    const storage = memoryStorage({ existing: 'value' })
+    expect(storage.getItem('existing')).toBe('value')
+    expect(storage.getItem('missing')).toBeNull()
   })
 
-  it('falls back to all for absent or invalid values', () => {
-    expect(parseSavedView(null)).toBe('all')
-    expect(parseSavedView('unexpected')).toBe('all')
-  })
-
-  it('persists and restores the selected view', () => {
+  it('stores values by key', () => {
     const storage = memoryStorage()
-    saveSavedView('archived', storage)
-    expect(storage.values.get(SAVED_VIEW_KEY)).toBe('archived')
-    expect(loadSavedView(storage)).toBe('archived')
+    storage.setItem('chosen', 'value')
+    expect(storage.values.get('chosen')).toBe('value')
   })
 })

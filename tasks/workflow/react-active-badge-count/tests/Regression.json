@@ -1,0 +1,4 @@
+{
+  "path": "src/domain/Active_Count.ts",
+  "original": "export interface ProjectSummary {\n  id: string\n  active: boolean\n  archived: boolean\n}\n\nexport function selectActiveCount(projects: ProjectSummary[]): number {\n  return projects.filter((project) => project.active).length\n}\n"
+}

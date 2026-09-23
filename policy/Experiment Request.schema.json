@@ -311,6 +311,46 @@
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"
         },
+        "simulated_user": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "protocol": {
+              "const": "semantic-user-v1"
+            },
+            "provider": {
+              "const": "codex"
+            },
+            "runtime_version": {
+              "const": "0.153.4"
+            },
+            "model": {
+              "const": "gpt-5.6-sol"
+            },
+            "effort": {
+              "const": "medium"
+            },
+            "timeout_seconds": {
+              "const": 90
+            },
+            "max_context_chars": {
+              "const": 64000
+            },
+            "protocol_digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "protocol",
+            "provider",
+            "runtime_version",
+            "model",
+            "effort",
+            "timeout_seconds",
+            "max_context_chars"
+          ]
+        },
         "scripted_user_digest": {
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"

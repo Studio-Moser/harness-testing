@@ -861,6 +861,46 @@
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"
         },
+        "simulated_user": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "protocol": {
+              "const": "semantic-user-v1"
+            },
+            "provider": {
+              "const": "codex"
+            },
+            "runtime_version": {
+              "const": "0.153.4"
+            },
+            "model": {
+              "const": "gpt-5.6-sol"
+            },
+            "effort": {
+              "const": "medium"
+            },
+            "timeout_seconds": {
+              "const": 90
+            },
+            "max_context_chars": {
+              "const": 64000
+            },
+            "protocol_digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "protocol",
+            "provider",
+            "runtime_version",
+            "model",
+            "effort",
+            "timeout_seconds",
+            "max_context_chars"
+          ]
+        },
         "scripted_user_digest": {
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"
@@ -969,6 +1009,60 @@
         "output_tokens"
       ]
     },
+    "simulatedUserEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "const": "semantic-user-v1"
+        },
+        "model": {
+          "const": "gpt-5.6-sol"
+        },
+        "effort": {
+          "const": "medium"
+        },
+        "call_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_calls": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "duration_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "usage_complete": {
+          "type": "boolean"
+        },
+        "model_usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modelUsage"
+          }
+        },
+        "cost_usd": {
+          "$ref": "#/$defs/nullableNumber"
+        },
+        "pricing_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "required": [
+        "protocol",
+        "model",
+        "effort",
+        "call_count",
+        "max_calls",
+        "duration_seconds",
+        "usage_complete",
+        "model_usage",
+        "cost_usd",
+        "pricing_digest"
+      ]
+    },
     "comparisonTrial": {
       "type": "object",
       "additionalProperties": false,
@@ -1060,6 +1154,9 @@
           "items": {
             "$ref": "#/$defs/sessionUsage"
           }
+        },
+        "simulated_user": {
+          "$ref": "#/$defs/simulatedUserEvidence"
         },
         "code_review": {
           "$ref": "#/$defs/codeReview"
@@ -1291,6 +1388,18 @@
         },
         "code_review": {
           "$ref": "#/$defs/codeReviewAggregate"
+        },
+        "passed_all": {
+          "type": "boolean",
+          "description": "Every scheduled attempt completed correctly with protected state intact."
+        },
+        "review_clean": {
+          "type": "boolean",
+          "description": "Final-patch review completed with no unconfirmed claims and no confirmed remaining defects."
+        },
+        "reviewed": {
+          "type": "boolean",
+          "description": "Final-patch review completed for every scheduled trial."
         }
       },
       "required": [
@@ -1364,6 +1473,10 @@
         "cost_ratio": {
           "anyOf": [
             {
+              "type": "number",
+              "minimum": 0
+            },
+            {
               "$ref": "#/$defs/ratio"
             },
             {
@@ -1373,6 +1486,10 @@
         },
         "time_ratio": {
           "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
             {
               "$ref": "#/$defs/ratio"
             },
@@ -1531,6 +1648,8 @@
           "$ref": "#/$defs/digest"
         },
         "bootstrap": {
+          "deprecated": true,
+          "description": "Retired bootstrap summary; accepted only so older evidence validates.",
           "anyOf": [
             {
               "type": "object",
@@ -1608,6 +1727,13 @@
         },
         "history": {
           "$ref": "#/$defs/comparisonHistory"
+        },
+        "unsolved_tasks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Selected tasks that no contender in the cohort solved; they cannot separate contenders."
         }
       },
       "required": [
@@ -1618,7 +1744,6 @@
         "provisional",
         "policy_id",
         "policy_digest",
-        "bootstrap",
         "limitations",
         "leaders",
         "contenders",
@@ -1726,8 +1851,121 @@
         "collaboration_evaluation": {
           "$ref": "#/$defs/collaborationCampaign"
         },
+        "evaluation_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "plan_id",
+            "source_report_id",
+            "trial_ids"
+          ],
+          "properties": {
+            "plan_id": {
+              "$ref": "#/$defs/digest"
+            },
+            "source_report_id": {
+              "$ref": "#/$defs/digest"
+            },
+            "trial_ids": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        },
+        "verifier_recovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_report_id",
+            "receipt_digest",
+            "trial_id",
+            "scheduler_summary_preserved"
+          ],
+          "properties": {
+            "source_report_id": {
+              "$ref": "#/$defs/digest"
+            },
+            "receipt_digest": {
+              "$ref": "#/$defs/digest"
+            },
+            "trial_id": {
+              "$ref": "#/$defs/digest"
+            },
+            "scheduler_summary_preserved": {
+              "const": true
+            }
+          }
+        },
         "collaboration_calibration": {
+          "deprecated": true,
+          "description": "Retired human-preference field. Accepted only so retained evidence written before September 23, 2026 still validates; never produced or read.",
           "$ref": "#/$defs/collaborationCalibration"
+        },
+        "quality_calibration": {
+          "deprecated": true,
+          "description": "Retired human-preference field. Accepted only so retained evidence written before September 23, 2026 still validates; never produced or read.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "protocol_id",
+            "source_report_ids",
+            "labels"
+          ],
+          "properties": {
+            "protocol_id": {
+              "$ref": "#/$defs/digest"
+            },
+            "source_report_ids": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/digest"
+              }
+            },
+            "labels": {
+              "type": "array",
+              "minItems": 15,
+              "items": {
+                "$ref": "#/$defs/calibrationLabel"
+              }
+            }
+          }
+        },
+        "grader_validation": {
+          "deprecated": true,
+          "description": "Retired human-preference field. Accepted only so retained evidence written before September 23, 2026 still validates; never produced or read.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "protocol_id",
+            "plan_id",
+            "results_digest",
+            "status"
+          ],
+          "properties": {
+            "protocol_id": {
+              "$ref": "#/$defs/digest"
+            },
+            "plan_id": {
+              "$ref": "#/$defs/digest"
+            },
+            "results_digest": {
+              "$ref": "#/$defs/digest"
+            },
+            "status": {
+              "const": "passed"
+            }
+          }
+        },
+        "preference": {
+          "deprecated": true,
+          "description": "Retired human-preference field. Accepted only so retained evidence written before September 23, 2026 still validates; never produced or read.",
+          "$ref": "#/$defs/preference"
         }
       },
       "required": [
@@ -1744,6 +1982,84 @@
         "comparison",
         "supersedes_report_id"
       ]
+    },
+    "preference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_id",
+        "status",
+        "winner_id",
+        "calibrated",
+        "reasons",
+        "contenders"
+      ],
+      "properties": {
+        "policy_id": {
+          "const": "benchmark-readiness-v2"
+        },
+        "status": {
+          "enum": [
+            "insufficient_evidence",
+            "uncalibrated",
+            "no_clear_preference",
+            "preferred"
+          ]
+        },
+        "winner_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "calibrated": {
+          "type": "boolean"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contenders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "score",
+              "graded",
+              "scheduled"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/digest"
+              },
+              "score": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 1
+              },
+              "graded": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "scheduled": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
     },
     "jobV3": {
       "type": "object",
@@ -2978,11 +3294,20 @@
             "candor",
             "warmth",
             "restraint",
-            "completion_clarity"
+            "completion_clarity",
+            "plain_language",
+            "appropriate_autonomy",
+            "self_verification",
+            "regression_coverage",
+            "requirements_fit",
+            "research_depth"
           ]
         },
         "score": {
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "minimum": 1,
           "maximum": 5
         },
@@ -3096,6 +3421,66 @@
     "calibrationLabel": {
       "type": "object",
       "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "outcome"
+            ],
+            "properties": {
+              "outcome": {}
+            }
+          },
+          "then": {
+            "required": [
+              "task_id",
+              "attempt",
+              "contender_ids"
+            ],
+            "properties": {
+              "task_id": {},
+              "attempt": {},
+              "contender_ids": {}
+            }
+          },
+          "else": {
+            "properties": {
+              "preferred_contender_id": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "outcome"
+            ],
+            "properties": {
+              "outcome": {
+                "enum": [
+                  "tie",
+                  "abstain"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "preferred_contender_id": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "preferred_contender_id": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        }
+      ],
       "properties": {
         "pair_id": {
           "type": "string",
@@ -3106,7 +3491,38 @@
           "minLength": 1
         },
         "preferred_contender_id": {
-          "$ref": "#/$defs/digest"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "contender_ids": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/digest"
+          }
+        },
+        "outcome": {
+          "enum": [
+            "preference",
+            "tie",
+            "abstain"
+          ]
         },
         "other_contender_id": {
           "$ref": "#/$defs/digest"

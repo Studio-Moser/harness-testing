@@ -1,5 +1,0 @@
-[public_reports]
-repository = "Studio-Moser/harness-testing"
-data_branch = "dashboard-data"
-workflow = "Publish_Pages.yml"
-code_ref = "main"

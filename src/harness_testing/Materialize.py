@@ -33,10 +33,6 @@ _IMAGE_INPUTS = {
     "verifier": (
         "images/Verifier.Dockerfile",
         "src/harness_testing/__init__.py",
-        "src/harness_testing/Contract_Criteria.py",
-        "src/harness_testing/Contract_Stub_Server.py",
-        "src/harness_testing/Harness_Result.py",
-        "src/harness_testing/Harness_Result.schema.json",
         "src/harness_testing/Trajectory_Events.py",
         "src/harness_testing/Workflow_Criteria.py",
     ),

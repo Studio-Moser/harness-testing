@@ -6,6 +6,8 @@ import math
 import re
 from difflib import SequenceMatcher
 
+from harness_testing.Public_Safety import normalize_visible_local_paths, public_safety_errors
+
 _WORD = re.compile(r"[\w]+(?:[’'-][\w]+)*", re.UNICODE)
 _TOKEN = re.compile(r"[\w]+|[^\w\s]", re.UNICODE)
 _SENTENCE = re.compile(r"(?<=[.!?])\s+|\n+")
@@ -34,7 +36,7 @@ _SLOP = (
 
 
 def validate_visible_transcript(value: object) -> list[dict]:
-    """Validate the public root transcript without repairing missing evidence."""
+    """Validate visible evidence, marking omitted local paths while retaining raw evidence."""
     if not isinstance(value, list) or not value:
         raise ValueError("missing_transcript")
     result = []
@@ -63,7 +65,10 @@ def validate_visible_transcript(value: object) -> list[dict]:
         ):
             raise ValueError("invalid_transcript")
         previous_time = float(elapsed)
-        result.append(dict(row))
+        content = normalize_visible_local_paths(row["content"])
+        if public_safety_errors(content):
+            raise ValueError("private_transcript_content")
+        result.append(dict(row, content=content))
     if not any(row["kind"] == "final" for row in result):
         raise ValueError("missing_final_message")
     return result

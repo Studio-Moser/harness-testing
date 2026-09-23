@@ -28,6 +28,7 @@
       "commands": ["npm run test:saved-view", "npm run test:view-filter", "npm run gate"],
       "expected": {"efficiency": 1.0, "reward": 0.0, "workflow": 1.0},
       "mutation_paths": ["src/domain/Saved_View.ts", "src/App.tsx"],
+      "run_oracle_first": true,
       "script": "tests/QA/Source_Tamper.sh"
     }
   },

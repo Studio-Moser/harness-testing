@@ -2,10 +2,9 @@
 set -euo pipefail
 
 cd /app
-perl -0pi -e "s/  void value\n  return 'all'/  return value === 'active' || value === 'archived' ? value : 'all'/" \
-  src/domain/Saved_View.ts
-perl -0pi -e 's/  void view\n  void storage/  storage.setItem(SAVED_VIEW_KEY, view)/' \
-  src/domain/Saved_View.ts
+# Start from the complete reference fix, so only the unrelated source change
+# below can cause rejection, not a missing persistence/error-handling behavior.
+bash /tmp/harness-qa-oracle.sh
 printf '\n// unrelated source edit\n' >> src/App.tsx
 npm run test:saved-view
 npm run test:view-filter

@@ -70,102 +70,6 @@ def test_task_qa_batches_one_pack_and_all_cases(monkeypatch, capsys):
     ]
 
 
-def test_run_plan_requires_and_forwards_billing_mode(monkeypatch, capsys):
-    from harness_testing.CLI import main
-
-    calls = []
-
-    def fake_plan(root, **arguments):
-        calls.append((root, arguments))
-        return object()
-
-    monkeypatch.setattr("harness_testing.Runs.plan_run", fake_plan)
-    monkeypatch.setattr("harness_testing.Runs.format_plan", lambda manifest: "planned")
-
-    assert (
-        main(
-            [
-                "run",
-                "plan",
-                "--profile",
-                "smoke",
-                "--billing-mode",
-                "subscription",
-                "--cell",
-                "codex:A0:baseline",
-                "--task",
-                "react-grouped-ui-updates",
-                "--max-sessions",
-                "1",
-                "--max-budget-usd",
-                "0",
-            ]
-        )
-        == 0
-    )
-    assert calls[0][1]["billing_mode"] == "subscription"
-    assert calls[0][1]["skill_evaluation"] is None
-    assert capsys.readouterr().out == "planned\n"
-
-    with pytest.raises(SystemExit) as exit_info:
-        main(
-            [
-                "run",
-                "plan",
-                "--profile",
-                "smoke",
-                "--cell",
-                "codex:A0:baseline",
-                "--task",
-                "react-grouped-ui-updates",
-                "--max-sessions",
-                "1",
-                "--max-budget-usd",
-                "0",
-            ]
-        )
-    assert exit_info.value.code == 2
-
-
-@pytest.mark.parametrize(
-    ("flag", "mode"),
-    (("--invoke-skill", "capability"), ("--observe-skill", "discovery")),
-)
-def test_run_plan_forwards_mutually_exclusive_skill_evaluation(monkeypatch, capsys, flag, mode):
-    from harness_testing.CLI import main
-
-    calls = []
-    monkeypatch.setattr(
-        "harness_testing.Runs.plan_run",
-        lambda root, **arguments: calls.append(arguments) or object(),
-    )
-    monkeypatch.setattr("harness_testing.Runs.format_plan", lambda manifest: "planned")
-    arguments = [
-        "run",
-        "plan",
-        "--profile",
-        "smoke",
-        "--billing-mode",
-        "subscription",
-        "--cell",
-        "codex:A2:candidate:" + "a" * 40,
-        "--task",
-        "missing-rubric",
-        "--max-sessions",
-        "5",
-        "--max-budget-usd",
-        "0",
-        flag,
-        "harness:execute",
-    ]
-
-    assert main(arguments) == 0
-    evaluation = calls[0]["skill_evaluation"]
-    assert evaluation.mode == mode
-    assert evaluation.name == "harness:execute"
-    assert capsys.readouterr().out == "planned\n"
-
-
 def test_claude_auth_stores_token_with_redacted_success_message(monkeypatch, capsys):
     from harness_testing.CLI import main
 
@@ -202,12 +106,6 @@ def test_claude_auth_returns_redacted_failure_without_storage_output(monkeypatch
     [
         ("prepare", ["--report", "Report.json", "--protocol", "Protocol.json"], "prepare_grading"),
         ("record", ["--plan", "Plan.json", "--results", "Results.json"], "record_grading"),
-        ("calibration-prepare", ["--report", "Report.json"], "prepare_calibration"),
-        (
-            "calibration-record",
-            ["--plan", "Plan.json", "--labels", "Labels.json"],
-            "record_calibration",
-        ),
     ],
 )
 def test_collaboration_commands_dispatch_without_starting_models(

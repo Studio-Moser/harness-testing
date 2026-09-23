@@ -77,8 +77,12 @@ function list(items, className = "toolbox-list") {
 }
 
 function detail(title, ...content) {
-  const node = element("details", "toolbox-detail");
-  node.append(element("summary", "toolbox-detail-summary", title), ...content);
+  const node = element("details", "toolbox-detail accordion-item");
+  const summary = element("summary", "toolbox-detail-summary accordion-button collapsed", title);
+  const toggle = element("span", "accordion-button-toggle");
+  toggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M6 9l6 6l6 -6" /></svg>';
+  summary.append(toggle);
+  node.append(summary, ...content);
   return node;
 }
 
@@ -170,12 +174,12 @@ function renderCard(test) {
   const card = element("article", `toolbox-card toolbox-card-level-${test.level} card`);
   card.setAttribute("data-test-id", test.id);
 
-  const header = element("header", "toolbox-card-header");
+  const header = element("header", "toolbox-card-header card-body");
   const labels = element("div", "toolbox-card-labels");
   labels.append(
-    element("span", "toolbox-badge toolbox-badge-type", TYPE_LABELS[test.type]),
-    element("span", "toolbox-badge toolbox-badge-level", LEVEL_LABELS[test.level]),
-    element("span", `toolbox-readiness toolbox-readiness-${readinessLabel(test.setupState).toLowerCase()}`, readinessLabel(test.setupState))
+    element("span", "toolbox-badge toolbox-badge-type badge bg-secondary-lt", TYPE_LABELS[test.type]),
+    element("span", `toolbox-badge toolbox-badge-level badge bg-${["blue", "teal", "orange", "purple"][test.level - 1]}-lt`, LEVEL_LABELS[test.level]),
+    element("span", `toolbox-readiness badge bg-${test.setupState.materialized ? "green" : "yellow"}-lt`, readinessLabel(test.setupState))
   );
   const learning = element("div", "toolbox-learning");
   learning.append(
@@ -184,11 +188,11 @@ function renderCard(test) {
   );
   header.append(
     labels,
-    element("h3", "toolbox-card-title", test.title),
+    element("h3", "toolbox-card-title card-title", test.title),
     learning
   );
 
-  const details = element("div", "toolbox-details");
+  const details = element("div", "toolbox-details accordion");
   details.append(
     detail("What it tests", renderWhatItTests(test)),
     detail("Task brief", renderBrief(test)),
@@ -197,19 +201,19 @@ function renderCard(test) {
     detail("Verification", renderVerification(test))
   );
 
-  card.append(header, details);
+  card.append(element("div", `card-status-top bg-${["blue", "teal", "orange", "purple"][test.level - 1]}`), header, details);
   return card;
 }
 
 function filterButton({dimension, value, label, count, selected, onSelect, registry}) {
-  const button = element("button", "toolbox-filter");
+  const button = element("button", `toolbox-filter nav-link${selected ? " active" : ""}`);
   button.setAttribute("type", "button");
   button.setAttribute("data-filter", dimension);
   button.setAttribute("data-value", String(value));
   button.setAttribute("aria-pressed", String(selected));
   button.append(
     element("span", "toolbox-filter-label", label),
-    element("span", "toolbox-filter-count", count)
+    element("span", "toolbox-filter-count badge bg-secondary-lt ms-2", count)
   );
   button.addEventListener("click", () => onSelect(value));
   registry.set(String(value), button);
@@ -220,7 +224,7 @@ function renderFilterRow({label, dimension, values, labels, counts, selected, on
   const row = element("section", "toolbox-filter-row");
   row.setAttribute("aria-label", `${label} filters`);
   row.append(element("h2", "toolbox-filter-heading", label));
-  const controls = element("div", "toolbox-filter-controls");
+  const controls = element("div", "toolbox-filter-controls nav nav-pills");
   controls.setAttribute("role", "group");
   controls.setAttribute("aria-label", label);
   for (const value of values) {
@@ -255,8 +259,8 @@ function renderResults(tests, selection) {
     const section = element("section", "toolbox-level-group");
     const heading = element("div", "toolbox-level-heading");
     heading.append(
-      element("h2", "", LEVEL_LABELS[group.level]),
-      element("span", "toolbox-level-count", `${group.tests.length} ${group.tests.length === 1 ? "test" : "tests"}`)
+      element("h2", "mb-0", LEVEL_LABELS[group.level]),
+      element("span", "toolbox-level-count badge bg-secondary-lt", `${group.tests.length} ${group.tests.length === 1 ? "test" : "tests"}`)
     );
     const grid = element("div", "toolbox-grid");
     for (const test of group.tests) grid.append(renderCard(test));
@@ -270,20 +274,20 @@ export function renderToolbox(tests, {
   location = globalThis.location,
   history = globalThis.history
 } = {}) {
-  const root = element("section", "toolbox");
+  const root = element("section", "toolbox container-xl");
   root.setAttribute("aria-label", "Harness Test Toolbox");
   let selection = selectionFromSearch(location?.search ?? "");
   const initialCounts = facetCounts(tests, selection);
   const typeButtons = new Map();
   const levelButtons = new Map();
 
-  const intro = element("header", "toolbox-intro");
+  const intro = element("header", "toolbox-intro page-header");
   intro.append(
-    element("h1", "", `${tests.length} Harness Tests`),
+    element("h1", "page-title fs-1", "Toolbox"),
     element("p", "toolbox-intro-copy", "Explore the work profiles used to compare harnesses: what each test asks, how it is built, what process it expects, and what it can teach us.")
   );
 
-  const filters = element("nav", "toolbox-filters");
+  const filters = element("nav", "toolbox-filters card card-body");
   filters.setAttribute("aria-label", "Harness Test filters");
   filters.append(
     renderFilterRow({
@@ -311,7 +315,7 @@ export function renderToolbox(tests, {
   const summary = element("div", "toolbox-selection-summary");
   const summaryText = element("p", "");
   summaryText.setAttribute("aria-live", "polite");
-  const clear = element("button", "toolbox-clear", "Clear filters");
+  const clear = element("button", "toolbox-clear btn btn-ghost-secondary btn-sm", "Clear filters");
   clear.setAttribute("type", "button");
   clear.addEventListener("click", () => {
     selection = {type: "all", level: "all"};
@@ -337,6 +341,7 @@ export function renderToolbox(tests, {
   function updateButtons(registry, selected) {
     for (const [value, button] of registry) {
       button.setAttribute("aria-pressed", String(String(selected) === value));
+      button.className = `toolbox-filter nav-link${String(selected) === value ? " active" : ""}`;
     }
   }
 

@@ -77,6 +77,32 @@ def test_workflow_criteria_distinguish_direct_and_final_verification(
     assert Workflow_Criteria.command_after_last_mutation("npm test") is True
 
 
+@pytest.mark.parametrize(
+    "command, expected",
+    [
+        ("python Visual_Check.py", True),
+        ("python3 ./Visual_Check.py", True),
+        ("/usr/local/bin/python3.12 /app/Visual_Check.py", True),
+        ("python3 /tmp/Visual_Check.py", False),
+        ("python3 Visual_Check_Fake.py", False),
+        ("echo python3 Visual_Check.py", False),
+    ],
+)
+def test_python_script_verification_accepts_equivalent_spellings(
+    tmp_path, monkeypatch, command, expected
+):
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+    _write_trajectory(trajectory, [command])
+    assert Workflow_Criteria.python_script_after_last_mutation("Visual_Check.py") is expected
+    document = json.loads(trajectory.read_text())
+    result = document["steps"][1]["observation"]["results"][1]
+    result["extra"]["exit_code"] = 1
+    result["content"] = "[exit_code] 1"
+    trajectory.write_text(json.dumps(document))
+    assert Workflow_Criteria.python_script_after_last_mutation("Visual_Check.py") is False
+
+
 def test_compound_shell_does_not_infer_required_check_but_records_test_churn(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -119,9 +145,7 @@ def test_combined_cargo_command_covers_each_selected_package(
         ["cargo test --package event_model -p summary -p summary_cli"],
     )
 
-    assert Workflow_Criteria.cargo_packages_succeeded(
-        ("event_model", "summary", "summary_cli")
-    )
+    assert Workflow_Criteria.cargo_packages_succeeded(("event_model", "summary", "summary_cli"))
     assert not Workflow_Criteria.cargo_packages_succeeded(("missing",))
 
 
@@ -230,18 +254,14 @@ def test_protected_manifest_accepts_only_declared_final_replacements(tmp_path: P
         json.dumps(
             {
                 "files": {
-                    "package.json": (
-                        "sha256:" + hashlib.sha256(package.read_bytes()).hexdigest()
-                    )
+                    "package.json": ("sha256:" + hashlib.sha256(package.read_bytes()).hexdigest())
                 },
                 "mutable_files": {
                     "src/App.tsx": {
                         "baseline_sha256": (
                             "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
                         ),
-                        "replacements": [
-                            {"before": "old value", "after": "new value", "count": 1}
-                        ],
+                        "replacements": [{"before": "old value", "after": "new value", "count": 1}],
                     }
                 },
             }
@@ -255,22 +275,29 @@ def test_protected_manifest_accepts_only_declared_final_replacements(tmp_path: P
     assert Workflow_Criteria.protected_files_intact(workspace, manifest) is False
 
 
+@pytest.mark.parametrize(
+    "status,expected", [("passed", True), ("pending", False), ("missing", False)]
+)
 def test_node_correctness_runs_frozen_behavior_suite_and_removes_dependency_link(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    status: str,
+    expected: bool,
 ):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     package = workspace / "package.json"
     package.write_text('{"private":true}\n')
+    test_file = workspace / "Behavior.test.js"
+    test_file.write_text("test('behavior', () => {});\n")
     manifest = tmp_path / "Protected_Files.json"
     manifest.write_text(
         json.dumps(
             {
                 "files": {
-                    "package.json": (
-                        "sha256:" + hashlib.sha256(package.read_bytes()).hexdigest()
-                    )
+                    "Behavior.test.js": "sha256:"
+                    + hashlib.sha256(test_file.read_bytes()).hexdigest(),
+                    "package.json": ("sha256:" + hashlib.sha256(package.read_bytes()).hexdigest()),
                 },
                 "mutable_files": {},
             }
@@ -285,6 +312,22 @@ def test_node_correctness_runs_frozen_behavior_suite_and_removes_dependency_link
         assert cwd == workspace
         assert (workspace / "node_modules").resolve() == dependencies
         observed.append(command)
+        Path(command[command.index("--outputFile") + 1]).write_text(
+            json.dumps(
+                {
+                    "success": True,
+                    "testResults": []
+                    if status == "missing"
+                    else [
+                        {
+                            "name": str(test_file),
+                            "status": "passed",
+                            "assertionResults": [{"status": status}],
+                        }
+                    ],
+                }
+            )
+        )
         return subprocess.CompletedProcess(command, 0, "", "")
 
     monkeypatch.setattr(Workflow_Criteria.subprocess, "run", run)
@@ -295,29 +338,132 @@ def test_node_correctness_runs_frozen_behavior_suite_and_removes_dependency_link
             manifest,
             dependencies,
         )
-        is True
+        is expected
     )
-    assert observed == [["npm", "test", "--", "--reporter=dot"]]
+    assert observed[0][:4] == [
+        "node",
+        str(dependencies / "vitest/vitest.mjs"),
+        "run",
+        "Behavior.test.js",
+    ]
+    assert "--config" in observed[0]
     assert not (workspace / "node_modules").exists()
 
 
+@pytest.mark.parametrize(
+    "name",
+    [
+        "vitest.config.ts",
+        "vitest.workspace.ts",
+        ".babelrc",
+        ".cargo/config.toml",
+        "src/package.json",
+        "build.rs",
+    ],
+)
+def test_added_configuration_cannot_override_protected_verification(tmp_path, name):
+    manifest = tmp_path / "Protected_Files.json"
+    manifest.write_text(json.dumps({"files": {}, "mutable_files": {}}))
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    (workspace / "New.test.js").write_text("test('new test', () => {});")
+    assert Workflow_Criteria.protected_files_intact(workspace, manifest)
+    added = workspace / name
+    added.parent.mkdir(parents=True, exist_ok=True)
+    added.write_text("override")
+    assert not Workflow_Criteria.protected_files_intact(workspace, manifest)
+
+
+@pytest.mark.parametrize("failure", ["assertion", "crash", "skip", "zero"])
+def test_regression_mutation_requires_a_real_failed_assertion(tmp_path, monkeypatch, failure):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    test_file = workspace / "Different_Name.spec.ts"
+    test_file.write_text("test('regression', () => {});")
+    manifest = tmp_path / "Protected_Files.json"
+    manifest.write_text(json.dumps({"files": {}, "mutable_files": {}}))
+    dependencies = tmp_path / "deps"
+    dependencies.mkdir()
+
+    def run(command, **kwargs):
+        status = "pending" if failure == "skip" else "failed"
+        assertions = [] if failure in {"zero", "crash"} else [{"status": status}]
+        Path(command[command.index("--outputFile") + 1]).write_text(
+            json.dumps(
+                {
+                    "success": False,
+                    "testResults": [
+                        {"name": str(test_file), "status": "failed", "assertionResults": assertions}
+                    ],
+                }
+            )
+        )
+        return subprocess.CompletedProcess(command, 1, "", "")
+
+    monkeypatch.setattr(Workflow_Criteria.subprocess, "run", run)
+    assert Workflow_Criteria.node_test_correctness(
+        workspace,
+        manifest,
+        dependencies,
+        test_files=[test_file.name],
+        expect_assertion_failure=True,
+    ) is (failure == "assertion")
+
+
+@pytest.mark.parametrize("effective", [True, False])
+def test_regression_coverage_accepts_new_filename_and_preserves_submission(
+    tmp_path, monkeypatch, effective
+):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    source = workspace / "Count.ts"
+    source.write_text("fixed")
+    (workspace / "Different.spec.ts").write_text("regression")
+    manifest = tmp_path / "Protected_Files.json"
+    manifest.write_text(json.dumps({"files": {}, "mutable_files": {}}))
+    manifest.with_name("Regression.json").write_text(
+        json.dumps({"path": "Count.ts", "original": "broken"})
+    )
+    seen = []
+
+    def verify(path, manifest, dependencies, **kwargs):
+        seen.append(((path / "Count.ts").read_text(), kwargs))
+        return effective if kwargs.get("expect_assertion_failure") else True
+
+    monkeypatch.setattr(Workflow_Criteria, "node_test_correctness", verify)
+    assert Workflow_Criteria.regression_tests_effective(workspace, manifest, tmp_path) is effective
+    assert source.read_text() == "fixed"
+    assert seen == [
+        ("fixed", {"test_files": ["Different.spec.ts"]}),
+        ("broken", {"test_files": ["Different.spec.ts"], "expect_assertion_failure": True}),
+    ]
+
+
+@pytest.mark.parametrize(
+    "output, expected",
+    [("test behavior ... ok\n", True), ("", False), ("test behavior ... ignored\n", False)],
+)
 def test_cargo_correctness_uses_a_fresh_target_and_offline_locked_workspace(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    output,
+    expected,
 ):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     cargo_manifest = workspace / "Cargo.toml"
     cargo_manifest.write_text('[package]\nname = "fixture"\nversion = "0.1.0"\n')
+    behavior = workspace / "Behavior.rs"
+    behavior.write_text("#[test]\nfn behavior() {}\n")
     protected = tmp_path / "Protected_Files.json"
     protected.write_text(
         json.dumps(
             {
                 "files": {
+                    "Behavior.rs": "sha256:" + hashlib.sha256(behavior.read_bytes()).hexdigest(),
                     "Cargo.toml": (
-                        "sha256:"
-                        + hashlib.sha256(cargo_manifest.read_bytes()).hexdigest()
-                    )
+                        "sha256:" + hashlib.sha256(cargo_manifest.read_bytes()).hexdigest()
+                    ),
                 },
                 "mutable_files": {},
             }
@@ -330,12 +476,12 @@ def test_cargo_correctness_uses_a_fresh_target_and_offline_locked_workspace(
         assert cwd == workspace
         assert Path(env["CARGO_TARGET_DIR"]).parent == tmp_path
         observed.append((command, env))
-        return subprocess.CompletedProcess(command, 0, "", "")
+        return subprocess.CompletedProcess(command, 0, output, "")
 
     monkeypatch.setattr(Workflow_Criteria.subprocess, "run", run)
     monkeypatch.setattr(Workflow_Criteria.tempfile, "gettempdir", lambda: str(tmp_path))
 
-    assert Workflow_Criteria.cargo_test_correctness(workspace, protected) is True
+    assert Workflow_Criteria.cargo_test_correctness(workspace, protected) is expected
     assert observed[0][0] == [
         "cargo",
         "test",

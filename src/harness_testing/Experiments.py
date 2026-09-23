@@ -53,6 +53,25 @@ def validate_experiment_request(document: dict) -> list[str]:
     if document["first_version"] == bool(document["predecessor_result_ids"]):
         errors.append("predecessor_result_ids: supply a predecessor or declare first_version")
     conditions, limits = document["conditions"], document["limits"]
+    if "simulated_user" in conditions:
+        from harness_testing.Simulated_User import validate_config
+
+        try:
+            validate_config(conditions["simulated_user"])
+        except ValueError as error:
+            errors.append(str(error))
+        if (
+            type(limits["interaction_limit"]) is not int
+            or not 1 <= limits["interaction_limit"] <= 100
+        ):
+            errors.append("simulated user requires an interaction limit from 1 to 100")
+        if conditions["kickoff"]["provider"] != "codex" or limits["billing_mode"] != "subscription":
+            errors.append("simulated user requires Codex subscription trials")
+        if (
+            conditions["kickoff"]["runtime_version"]
+            != conditions["simulated_user"]["runtime_version"]
+        ):
+            errors.append("simulated user requires the pinned native runtime")
     if (
         "provider_recovery_seconds" in conditions
         and type(conditions["provider_recovery_seconds"]) is not int
@@ -63,11 +82,24 @@ def validate_experiment_request(document: dict) -> list[str]:
         and conditions["kickoff"]["provider"] != "codex"
     ):
         errors.append("conditions.provider_recovery_seconds: recovery requires the Codex protocol")
-    if conditions["task_variant"] == "deepswe" and (
+    readiness = conditions["decision_policy"] == "benchmark-readiness-v2"
+    if readiness and purpose != "diagnostic":
+        policy = json.loads((schema.parent / "Benchmark Policy.json").read_text())
+        if not any(set(scope) == set(conditions["task_ids"]) for scope in policy["scopes"]):
+            errors.append(
+                "conditions.task_ids: decision runs require an exact declared scope; "
+                "use diagnostic for subsets"
+            )
+    if readiness and conditions["task_variant"] == "deepswe":
+        from harness_testing.Materialize import DEEPSWE_TASK_IDS
+
+        if not set(conditions["task_ids"]) <= set(DEEPSWE_TASK_IDS):
+            errors.append("conditions: DeepSWE requires pinned catalog tasks")
+    elif conditions["task_variant"] == "deepswe" and (
         purpose != "diagnostic" or conditions["task_ids"] != ["quill-shared-toolbar-focus"]
     ):
         errors.append("conditions: DeepSWE support is limited to the queued Quill diagnostic task")
-    if purpose != "diagnostic" and conditions["task_variant"] != "comparison":
+    if purpose != "diagnostic" and conditions["task_variant"] != "comparison" and not readiness:
         errors.append(
             "conditions.task_variant: primary comparison requires neutral development tasks"
         )
@@ -84,6 +116,11 @@ def validate_experiment_request(document: dict) -> list[str]:
         errors.append("limits.max_budget_usd: API billing requires a positive budget")
     for index, contender in enumerate(document["contenders"]):
         prefix = f"contenders.{index}"
+        if contender["delivery_config"].get("required_capabilities"):
+            errors.append(
+                f"{prefix}.delivery_config.required_capabilities: capability requirements "
+                "are not attestable by this runtime; use the delivery diagnostics instead"
+            )
         if contender["family"] == "nothing" and (
             contender["sources"]
             or contender["startup_paths"]
@@ -189,7 +226,7 @@ def _require_coverage(conditions: dict, report: dict, contender: dict) -> None:
         raise ValueError(f"reference coverage incomplete for {contender['family']}")
 
 
-def available_reference_reports(root: Path) -> list[dict]:
+def available_reference_reports(root: Path, selected_ids: set[str] | None = None) -> list[dict]:
     """Load retained report revisions, deduplicating exact copies only."""
     from harness_testing.Run_Reports import load_run_report
 
@@ -202,6 +239,14 @@ def available_reference_reports(root: Path) -> list[dict]:
     ]
     reports = {}
     for path in sorted(paths):
+        if selected_ids is not None:
+            # Selection is explicit: unrelated obsolete reports are not inputs.
+            try:
+                identity = json.loads(path.read_text()).get("report_id")
+            except (OSError, ValueError, AttributeError):
+                continue
+            if identity not in selected_ids:
+                continue
         report = load_run_report(root, path)
         if report.get("report_id"):
             reports[report["report_id"]] = report
@@ -235,20 +280,24 @@ def plan_experiment(
 
     from harness_testing.Comparison_Tasks import (
         materialize_comparison_tasks,
+        materialize_research_comparison_tasks,
         research_scripted_user_policy,
     )
     from harness_testing.Config import load_versions
     from harness_testing.Contenders import materialize_contender
     from harness_testing.Materialize import _file_digests, load_deepswe_dataset
     from harness_testing.Runs import RunCell, _agent_adapter_digests, _tree_digest, compile_run
-    from harness_testing.Skill_Evaluation import SkillEvaluation
 
     errors = validate_experiment_request(document)
     if errors:
         raise ValueError("invalid experiment request:\n" + "\n".join(errors))
     request = copy.deepcopy(document)
-    skill_evaluation = SkillEvaluation.from_document(request.pop("skill_evaluation", None))
+    request.pop("skill_evaluation", None)
     conditions, limits = request["conditions"], request["limits"]
+    if "simulated_user" in conditions:
+        from harness_testing.Simulated_User import protocol_digest
+
+        conditions["simulated_user"]["protocol_digest"] = protocol_digest()
     conditions.setdefault(
         "provider_recovery_seconds", 600 if conditions["kickoff"]["provider"] == "codex" else 0
     )
@@ -282,11 +331,16 @@ def plan_experiment(
         authority_scope = "local-development-task"
     else:
         dataset = load_deepswe_dataset(root, task_ids=conditions["task_ids"])
+        comparison_tasks = materialize_research_comparison_tasks(
+            root, dataset.tasks_path, conditions["task_ids"]
+        )
         task_digests = {
-            task: _tree_digest(dataset.tasks_path / task) for task in conditions["task_ids"]
+            task: _tree_digest(comparison_tasks / task) for task in conditions["task_ids"]
         }
-        scripted = research_scripted_user_policy(conditions["task_ids"]) | {
-            "interaction_limit": limits["interaction_limit"]
+        scripted = {
+            task: research_scripted_user_policy([task])
+            | {"interaction_limit": limits["interaction_limit"]}
+            for task in conditions["task_ids"]
         }
         records = {
             record["task_id"]: record
@@ -303,6 +357,19 @@ def plan_experiment(
             for task in conditions["task_ids"]
         }
         authority_scope = "deepswe-task"
+    if conditions["decision_policy"] == "benchmark-readiness-v2":
+        from harness_testing.Communication_Contracts import load_communication_contract
+
+        frozen_contract = load_communication_contract(
+            root / "policy/Research Communication Contract.json"
+        )
+        request["evaluation_inputs"] = {
+            "comparison": json.loads((root / "policy/Benchmark Policy.json").read_text()),
+            "quality": json.loads((root / "policy/Quality Grading Protocol.json").read_text()),
+            "code_review": json.loads((root / "policy/Code Review Protocol.json").read_text()),
+            "research_contract": frozen_contract,
+        }
+        evaluator["readiness_policy"] = request["evaluation_inputs"]
     derived = {
         "task_digests": task_digests,
         "evaluator_digest": contender_identity(evaluator),
@@ -321,8 +388,17 @@ def plan_experiment(
         if key in conditions and conditions[key] != value:
             raise ValueError(f"conditions.{key}: frozen input does not match repository inputs")
         conditions[key] = value
-    references = resolve_reference_reports(
-        request, available_reference_reports(root) if reports is None else reports
+    references = (
+        resolve_reference_reports(
+            request,
+            available_reference_reports(
+                root, set(request["baseline_result_ids"] + request["predecessor_result_ids"])
+            )
+            if reports is None
+            else reports,
+        )
+        if request["baseline_result_ids"] or request["predecessor_result_ids"]
+        else []
     )
     cells, public = [], []
     changes = []
@@ -385,9 +461,7 @@ def plan_experiment(
     request["request_id"] = contender_identity(
         request
         | {
-            "skill_evaluation": (
-                skill_evaluation.to_dict() if skill_evaluation is not None else None
-            )
+            "skill_evaluation": None
         }
     )
     manifest = compile_run(
@@ -401,8 +475,6 @@ def plan_experiment(
         attempts=conditions["attempts"],
         concurrency=conditions["concurrency"],
         agent_timeout_seconds=conditions["timeout_seconds"],
-        skill_evaluation=skill_evaluation,
-        publish_report=request["publication"]["mode"] == "configured",
         experiment=request,
     )
     (manifest.path.parent / "Verified Changes.json").write_text(
