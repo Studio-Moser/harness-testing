@@ -505,12 +505,12 @@ test("behavior evidence is aggregated per model and harness version from complet
   try {
     const root = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: [astra, sol]});
     const text = root.textContent;
-    assert.match(text, /Behavior across models and harness versions/);
+    assert.match(text, /Behavior by harness version/);
     assert.match(text, /Transcript metrics/);
-    assert.match(text, /gpt-5\.6-sol · medium · 1 trial/);
     assert.match(text, /Slop phrases ↓/);
-    assert.match(text, /Communication grader/);
-    assert.match(text, /4\.00 \/ 5/);
+    // The page follows the selected model; the Sol-only communication grades stay out of the Astra view.
+    assert.doesNotMatch(text, /Communication grader/);
+    assert.match(text, /Work-quality grader/);
   } finally {globalThis.document = previousDocument;}
 });
 

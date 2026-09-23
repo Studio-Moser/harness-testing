@@ -795,8 +795,8 @@ function renderBehavior(columns) {
   const section = element("section", "results-panel results-behavior");
   const heading = element("header", "results-section-heading");
   heading.append(
-    element("h2", "mb-0", "Behavior across models and harness versions"),
-    element("p", "", "How each harness made the agent talk and work, per completed trial, for every kickoff model that has evidence. Values are means; the arrow shows the direction Tim prefers. Type and difficulty filters apply; the model selector does not, so a change in either axis stays visible.")
+    element("h2", "mb-0", "Behavior by harness version"),
+    element("p", "", "How each harness made the agent talk and work, per completed trial, under the selected model. Values are means; the arrow shows the direction Tim prefers. Switch the model above to compare behavior across models.")
   );
   section.append(heading);
   if (!columns.length) {
@@ -820,7 +820,7 @@ function renderBehavior(columns) {
       cell.append(
         element("span", `results-harness-mark results-harness-${column.family}`),
         element("strong", "", column.label),
-        element("small", "", `${column.model} · ${column.effort} · ${plural(column.trials, "trial")}`)
+        element("small", "", plural(column.trials, "trial"))
       );
       headerRow.append(cell);
     }
@@ -1157,9 +1157,10 @@ export function renderResults({tests, harnesses, reports, campaign = null}) {
 
     const effective = {...state};
     const rows = aggregateHarnesses(observations, harnesses, effective);
-    const behavior = aggregateBehavior(observations, harnesses, effective);
+    const behavior = aggregateBehavior(observations, harnesses, effective)
+      .filter((column) => column.modelKey === effective.model);
     body.replaceChildren(
-      renderHarnessRead(harnessRead(rows, behavior.filter((column) => column.modelKey === effective.model), verdict), rows),
+      renderHarnessRead(harnessRead(rows, behavior, verdict), rows),
       renderMatrix(observations, tests, harnesses, effective),
       renderBehavior(behavior)
     );
