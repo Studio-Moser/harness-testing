@@ -96,13 +96,12 @@ Grades and the deterministic transcript metrics are descriptive evidence beside 
 ## Full toolbox campaign
 
 ```bash
-uv run harness-test campaign plan --manifest CONTROLLED_MANIFEST --manifest RESEARCH_MANIFEST
-uv run harness-test campaign summarize --plan runs/campaigns/DIGEST/Plan.json \
+uv run harness-test campaign summarize \
   --report CONTROLLED_REPORT --report CONTROLLED_RECOVERY … \
   --report RESEARCH_REPORT --report RESEARCH_CORRECTION …
 ```
 
-List each lane's frozen report first, then its recovery and correction reports in execution order. A later report may replace a slot only when the earlier trial did not complete or the task digest changed, and a corrected task must be rerun for every contender. The summary reports per-lane verdicts, superseded trials, corrected adapters and whether the current policy still matches the frozen plan.
+List each lane's original report first, then its recovery and correction reports in execution order; the lanes and their contenders are read off the reports. A later report may replace a slot only when the earlier trial did not complete or the task digest changed, and a corrected task must be rerun for every contender. Tasks dropped from the current campaign policy are left out of the verdict. The summary is written to `runs/campaigns/<digest>/Summary.json`, which the dashboard reads. `campaign plan` can still bind two manifests up front if you want the lanes checked before running.
 
 ## Inspect and classify
 

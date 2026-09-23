@@ -121,27 +121,60 @@ def build_campaign(policy: dict, manifests: list[dict]) -> dict:
     }
 
 
-def campaign_summary(root: Path, plan_path: Path, report_paths: list[Path]) -> dict:
+def implicit_plan(policy: dict, reports: list[dict]) -> dict:
+    """A campaign plan read off the reports themselves: the first report of each lane is
+    the original run, and its conditions, contenders and identity define the lane."""
+    lanes: dict[str, dict] = {}
+    shared = contenders = None
+    for report in reports:
+        experiment = report["experiment"]
+        lane = experiment["conditions"]["task_variant"]
+        if lane in lanes:
+            continue
+        common = {k: v for k, v in experiment["conditions"].items() if k not in _LANE_FIELDS}
+        roster = sorted(experiment["contenders"], key=lambda row: row["id"])
+        if shared is not None and (common != shared or roster != contenders):
+            raise ValueError("campaign lanes have incompatible harnesses or conditions")
+        shared, contenders = common, roster
+        lanes[lane] = {
+            "manifest_digest": report["manifest_digest"],
+            "conditions": experiment["conditions"],
+            "report_identity": {key: experiment.get(key) for key in _REPORT_IDENTITY_FIELDS},
+        }
+    if not lanes:
+        raise ValueError("campaign summary needs at least one report")
+    unsigned = {
+        "schema_version": "1",
+        "policy": policy,
+        "lanes": lanes,
+        "conditions": shared,
+        "contenders": contenders,
+        "evaluation_inputs": {},
+    }
+    return {"digest": contender_identity(unsigned), **unsigned}
+
+
+def campaign_summary(root: Path, plan_path: Path | None, report_paths: list[Path]) -> dict:
+    """Summarize a campaign from its report files, listed original-first per lane.
+
+    A frozen plan is optional; without one the lanes are inferred from the reports."""
     from harness_testing.Experiment_Reports import comparison_pricing
 
-    plan = json.loads(plan_path.read_text())
-    if plan["digest"] != contender_identity({k: v for k, v in plan.items() if k != "digest"}):
-        raise ValueError("campaign plan identity mismatch")
-    reports = [load_run_report(root, path) for path in report_paths]
-    # The verdict uses the current policy and task list; retained evidence is unchanged.
     current = json.loads((root / "policy/Benchmark Campaign.json").read_text())
+    reports = [load_run_report(root, path) for path in report_paths]
+    if plan_path is None:
+        plan = implicit_plan(current, reports)
+    else:
+        plan = json.loads(plan_path.read_text())
+        if plan["digest"] != contender_identity({k: v for k, v in plan.items() if k != "digest"}):
+            raise ValueError("campaign plan identity mismatch")
+    # The verdict uses the current policy and task list; retained evidence is unchanged.
     return summarize_campaign(
         plan,
         reports,
         active_tasks=set(current["tasks"]),
         policy_for_lane=lambda conditions: load_comparison_policy(root, conditions)
         | {"pricing": comparison_pricing(root)},
-        evaluation={
-            "comparison_policy_matches_plan": json.loads(
-                (root / "policy/Benchmark Policy.json").read_text()
-            )
-            == plan["evaluation_inputs"].get("comparison"),
-        },
     )
 
 

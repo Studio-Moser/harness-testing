@@ -6,7 +6,12 @@ from pathlib import Path
 import pytest
 from test_Experiments import request_document
 
-from harness_testing.Campaigns import assemble_lane, build_campaign, summarize_campaign
+from harness_testing.Campaigns import (
+    assemble_lane,
+    build_campaign,
+    implicit_plan,
+    summarize_campaign,
+)
 from harness_testing.Comparisons import load_comparison_policy
 from harness_testing.Experiments import contender_identity, validate_experiment_request
 from harness_testing.Quality import DIMENSIONS, RUBRIC_VERSION
@@ -351,3 +356,15 @@ def test_retired_tasks_are_left_out_of_the_verdict_without_touching_evidence():
     assert lane["unsolved_tasks"] == []
     assert all(row["passed_all"] for row in lane["contenders"])
     assert any(t["task_id"] == retired for t in reports[1]["experiment"]["trials"])
+
+
+def test_lanes_can_be_inferred_from_the_reports_without_a_frozen_plan():
+    policy, _, plan, reports = fixture(attempts=1, purpose="diagnostic")
+    inferred = implicit_plan(policy, reports)
+    assert set(inferred["lanes"]) == {"comparison", "deepswe"}
+    assert inferred["lanes"]["comparison"]["manifest_digest"] == reports[0]["manifest_digest"]
+    assert summarize(inferred, reports)["winner_id"] == summarize(plan, reports)["winner_id"] == "a"
+    changed = copy.deepcopy(reports)
+    changed[1]["experiment"]["conditions"]["kickoff"] = {"model": "other"}
+    with pytest.raises(ValueError, match="incompatible"):
+        implicit_plan(policy, changed)

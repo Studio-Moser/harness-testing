@@ -33,7 +33,7 @@ These are frozen benchmark projects. A harder test means selecting or authoring 
 2. Plan: `uv run harness-test run plan --request 'runs/inputs/Experiment Request.json'`. This installs plugins and inspects images but starts no model.
 3. Obtain approval of the printed manifest digest, then `uv run harness-test run execute --manifest … --approve sha256:…`.
 4. Evaluate the retained submissions: `review prepare` and `review record` for the blinded final-patch review, `collaboration prepare` and `collaboration record` for the blinded automated work-quality grades. Grader sessions are model work and need their own approval.
-5. For a full toolbox pass, bind the controlled and research manifests with `campaign plan`, then `campaign summarize` with the original lane reports followed by any recovery or correction reports in execution order. It fills every scheduled slot once and never replaces a completed trial unless the task itself was corrected.
+5. For a full toolbox pass, run `campaign summarize` with each lane's original report followed by any recovery or correction reports in execution order. It fills every scheduled slot once, never replaces a completed trial unless the task itself was corrected, and writes the summary the dashboard reads.
 
 The [Runbook](docs/Runbook.md) has the exact commands; [Methodology](docs/Methodology.md) explains the measurements and rules.
 

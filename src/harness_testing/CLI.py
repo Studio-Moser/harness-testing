@@ -95,7 +95,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     campaign_plan_parser = campaign_commands.add_parser("plan")
     campaign_plan_parser.add_argument("--manifest", type=Path, action="append", required=True)
     campaign_summary_parser = campaign_commands.add_parser("summarize")
-    campaign_summary_parser.add_argument("--plan", type=Path, required=True)
+    campaign_summary_parser.add_argument("--plan", type=Path)
     campaign_summary_parser.add_argument("--report", type=Path, action="append", required=True)
     run_subparsers = run_parser.add_subparsers(dest="run_command")
     plan_parser = run_subparsers.add_parser("plan", help="compile a dry-run manifest")
@@ -228,7 +228,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         except (ValueError, KeyError, OSError) as error:
             parser.error(str(error))
-        print(json.dumps(outcome, indent=2, sort_keys=True))
+        text = json.dumps(outcome, indent=2, sort_keys=True)
+        if arguments.campaign_command == "summarize":
+            # The dashboard reads the newest runs/campaigns/*/Summary.json.
+            destination = (
+                _repository_root() / "runs/campaigns" / outcome["campaign_digest"][7:]
+                / "Summary.json"
+            )
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text(text + "\n")
+            print(f"Campaign summary: {destination}", file=sys.stderr)
+        print(text)
         return 0
     elif arguments.command == "run" and arguments.run_command == "plan":
         from harness_testing.Experiments import plan_experiment
