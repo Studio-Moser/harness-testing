@@ -155,7 +155,6 @@ function evidenceFlags(report) {
   const flags = [];
   const experiment = report.experiment ?? {};
   if (report.evidence?.review_state === "quarantined") flags.push("quarantined");
-  if (experiment.purpose === "diagnostic") flags.push("diagnostic");
   if (experiment.conditions?.decision_policy !== DECISION_POLICY) flags.push("old policy");
   if (!CORE_VERDICTS.has(experiment.comparison?.status)) flags.push("no core verdict");
   if ((report.evidence?.limitations ?? []).includes("obsolete-methodology")) flags.push("obsolete methodology");
@@ -163,8 +162,8 @@ function evidenceFlags(report) {
 }
 
 function primaryEvidenceState(flags) {
-  for (const state of ["quarantined", "diagnostic", "old policy", "no core verdict", "obsolete methodology"]) {
-    if (flags.includes(state)) return state.replace(" ", "-");
+  for (const state of ["quarantined", "old policy", "no core verdict", "obsolete methodology"]) {
+    if (flags.includes(state)) return state.replaceAll(" ", "-");
   }
   return "decision-grade";
 }
@@ -352,6 +351,34 @@ export function defaultModel(observations) {
   )[0]?.[0] ?? null;
 }
 
+export const CAMPAIGN_COHORT_ID = "campaign";
+
+// The stitched campaign is the one complete cohort: every scheduled slot filled once from
+// its member reports, minus the trials that recovery or correction runs superseded.
+// Its trials are decision evidence even though each member report is only a slice.
+export function applyCampaignCohort(observations, campaign) {
+  if (campaign == null || typeof campaign !== "object") return observations;
+  const members = new Set();
+  const superseded = new Set();
+  for (const lane of Object.values(campaign.lanes ?? {})) {
+    for (const member of lane.members ?? []) members.add(member.report_id);
+    for (const row of lane.superseded_trials ?? []) superseded.add(row.trial_id);
+  }
+  if (!members.size) return observations;
+  const status = campaign.status ?? "unknown";
+  const label = `Campaign · ${status.replaceAll("_", " ")}`;
+  for (const observation of observations) {
+    if (!members.has(observation.reportId) || superseded.has(observation.trialId)) continue;
+    if (observation.status === "pending") continue;
+    observation.campaignCohort = {id: CAMPAIGN_COHORT_ID, label};
+    observation.decisionEligible = true;
+    observation.evidenceFlags = observation.evidenceFlags.filter((flag) => flag === "quarantined");
+    observation.evidenceState = observation.evidenceFlags.length ? "quarantined" : "campaign";
+    observation.provisional = true;
+  }
+  return observations;
+}
+
 function reportGroups(observations, model = null) {
   const groups = new Map();
   for (const observation of observations) {
@@ -372,11 +399,20 @@ function reportGroups(observations, model = null) {
     group.observations += 1;
     groups.set(observation.reportId, group);
   }
+  const campaign = observations.filter((row) => row.campaignCohort && (model == null || row.modelKey === model));
+  if (campaign.length) {
+    groups.set(CAMPAIGN_COHORT_ID, {
+      id: CAMPAIGN_COHORT_ID, label: campaign[0].campaignCohort.label, campaign: true,
+      decisionEligible: true, provisional: true, observations: campaign.length,
+      updatedAt: campaign.map((row) => row.updatedAt).sort().at(-1)
+    });
+  }
   return [...groups.values()];
 }
 
 export function defaultCohort(observations, model = null) {
   return reportGroups(observations, model).sort((left, right) =>
+    Number(Boolean(right.campaign)) - Number(Boolean(left.campaign)) ||
     Number(right.decisionEligible) - Number(left.decisionEligible) ||
     compareText(right.updatedAt ?? "", left.updatedAt ?? "") ||
     right.observations - left.observations ||
@@ -386,6 +422,7 @@ export function defaultCohort(observations, model = null) {
 
 function cohortObservations(observations, cohort) {
   if (cohort == null) return [];
+  if (cohort === CAMPAIGN_COHORT_ID) return observations.filter((row) => row.campaignCohort);
   const primary = observations.find(({reportId}) => reportId === cohort);
   if (primary == null) return [];
   const referenced = new Set([...primary.baselineReportIds, ...primary.predecessorReportIds]);
@@ -1096,6 +1133,10 @@ function cohortLabel(group) {
 }
 
 function scopeDescription(observations, cohort) {
+  if (cohort === CAMPAIGN_COHORT_ID) {
+    const selected = observations.filter((row) => row.campaignCohort);
+    return `${selected.length} trials stitched from ${new Set(selected.map((row) => row.reportId)).size} reports · Decision-grade · Provisional until reviewed`;
+  }
   const primary = observations.find(({reportId}) => reportId === cohort);
   if (primary == null) return "No report cohort available";
   const parts = primary.evidenceFlags.map(titleCase);
@@ -1106,7 +1147,7 @@ function scopeDescription(observations, cohort) {
 }
 
 export function renderResults({tests, harnesses, reports, campaign = null}) {
-  const observations = normalizeResults(reports, tests, harnesses);
+  const observations = applyCampaignCohort(normalizeResults(reports, tests, harnesses), campaign);
   const admitted = admitResults(observations);
   const exploratory = observations.filter(({decisionEligible}) => !decisionEligible);
   const modelOptions = [...new Map(observations.map(({modelKey, model, effort}) => [modelKey, `${model} · ${effort}`]))]

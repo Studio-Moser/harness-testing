@@ -6,10 +6,12 @@ import {TOOLBOX_CATALOG} from "../src/data/Toolbox Catalog.js";
 import {
   admitResults,
   aggregateBehavior,
+  applyCampaignCohort,
   annoyanceFromTranscript,
   campaignVerdict,
   aggregateHarnesses,
   behaviorFromTrial,
+  defaultCohort,
   defaultModel,
   normalizeResults,
   qualityFromGrade,
@@ -245,7 +247,7 @@ test("decision admission counts genuine failed attempts and rejects diagnostic, 
     trial(studio, "react-active-badge-count", 1),
     trial(studio, "react-active-badge-count", 2, {status: "agent_failed", correctness: null})
   ]);
-  const diagnostic = report("diagnostic", [trial(studio)], {experiment: {purpose: "diagnostic"}});
+  const diagnostic = report("diagnostic", [trial(studio)], {experiment: {purpose: "diagnostic", comparison: {status: "insufficient_evidence", provisional: true, policy_id: "benchmark-readiness-v2"}}});
   const quarantined = report("quarantined", [trial(studio)], {evidence: {review_state: "quarantined"}});
   const oldPolicy = report("old-policy", [trial(studio)], {
     experiment: {conditions: conditions({decision_policy: "development-comparison-v1"})}
@@ -264,7 +266,7 @@ test("decision admission counts genuine failed attempts and rejects diagnostic, 
   assert.equal(row.cost, 0.01);
   assert.deepEqual(
     observations.filter(({decisionEligible}) => !decisionEligible).map(({evidenceState}) => evidenceState).sort(),
-    ["diagnostic", "old-policy", "quarantined"]
+    ["no-core-verdict", "old-policy", "quarantined"]
   );
 });
 
@@ -470,7 +472,7 @@ test("Results page separates an empty decision-grade view from exploratory detai
     assert.equal(root.attributes["aria-label"], "Harness results");
     assert.match(root.textContent, /No decision-grade ranking/);
     assert.match(root.textContent, /2 exploratory observations/);
-    assert.match(root.textContent, /Diagnostic · Old policy/);
+    assert.match(root.textContent, /Old policy/);
     assert.match(root.textContent, /communication · automated/);
     assert.match(root.textContent, /protected state unknown/);
     assert.match(root.textContent, /not code-reviewed/);
@@ -610,4 +612,35 @@ test("campaign verdict card names the recommended harness per lane and renders o
     const without = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: []});
     assert.doesNotMatch(without.textContent, /Campaign verdict/);
   } finally {globalThis.document = previousDocument;}
+});
+
+test("the stitched campaign is the default decision cohort and excludes superseded trials", () => {
+  const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
+  const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
+  const original = report("original", [
+    trial(nothing, "react-active-badge-count", 1),
+    trial(studio, "react-active-badge-count", 1, {status: "infrastructure_failure", correctness: null, protected_state: null})
+  ], {experiment: {purpose: "diagnostic", comparison: {status: "insufficient_evidence", provisional: true, policy_id: "benchmark-readiness-v2"}}});
+  const recovery = report("recovery", [
+    trial(studio, "react-active-badge-count", 1, {trial_id: "recovered-studio", correctness: false})
+  ], {experiment: {purpose: "diagnostic", comparison: {status: "insufficient_evidence", provisional: true, policy_id: "benchmark-readiness-v2"}}});
+  const campaign = {
+    status: "recommended", winner_id: nothing.identity, reasons: [],
+    lanes: {comparison: {
+      members: [{report_id: "original"}, {report_id: "recovery"}],
+      superseded_trials: [{trial_id: `trial-${studio.id}-react-active-badge-count-1`, replaced_by: "recovered-studio"}],
+      comparison: {status: "recommended", winner_id: nothing.identity, reasons: [], unsolved_tasks: [], contenders: []}
+    }}
+  };
+  const observations = applyCampaignCohort(normalizeResults([original, recovery], TOOLBOX_CATALOG, HARNESS_CATALOG), campaign);
+  const cohort = defaultCohort(observations);
+  assert.equal(cohort, "campaign");
+  const admitted = admitResults(observations);
+  assert.deepEqual(admitted.map(({trialId}) => trialId).sort(), ["recovered-studio", `trial-${nothing.id}-react-active-badge-count-1`]);
+  const rows = aggregateHarnesses(observations, HARNESS_CATALOG, {cohort});
+  assert.equal(rows[0].id, nothing.id);
+  assert.equal(rows[0].correctness, 1);
+  assert.equal(rows.find(({id}) => id === studio.id).correctness, 0);
+  assert.ok(rows[0].eligible);
+  assert.deepEqual(applyCampaignCohort(observations, null), observations);
 });
