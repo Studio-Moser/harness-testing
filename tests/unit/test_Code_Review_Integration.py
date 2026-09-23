@@ -20,6 +20,7 @@ def _root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path]:
     from harness_testing.Run_Reports import run_report_id
 
     report["experiment"]["conditions"]["image_digests"]["rust"] = "sha256:" + "b" * 64
+    report["experiment"]["conditions"]["decision_policy"] = "benchmark-readiness-v2"
     report["report_id"] = run_report_id(report)
     report_path = (
         root

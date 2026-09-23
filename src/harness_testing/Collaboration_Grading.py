@@ -416,7 +416,7 @@ def prepare_grading(root: Path, report_path: Path, protocol_path: Path) -> dict:
 
         manifest = _manifest_for_report(root, report)
         frozen = evaluation_protocol(manifest, "quality")
-        if protocol != frozen:
+        if frozen is not None and protocol != frozen:
             raise ValueError("grading protocol differs from the frozen benchmark policy")
     trials = _eligible_trials(report)
     if not trials:

@@ -1726,6 +1726,8 @@
           }
         },
         "history": {
+          "deprecated": true,
+          "description": "Retired predecessor history; accepted only so older evidence validates.",
           "$ref": "#/$defs/comparisonHistory"
         },
         "unsolved_tasks": {
@@ -1747,8 +1749,7 @@
         "limitations",
         "leaders",
         "contenders",
-        "pairs",
-        "history"
+        "pairs"
       ]
     },
     "experiment": {

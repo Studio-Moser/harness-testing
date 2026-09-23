@@ -167,8 +167,10 @@ def retained_trials(report: Mapping[str, object]) -> list[dict]:
     ]
 
 
-def evaluation_protocol(manifest: Mapping[str, object], name: str) -> dict:
-    return manifest["provenance"]["experiment"]["evaluation_inputs"][name]
+def evaluation_protocol(manifest: Mapping[str, object], name: str) -> dict | None:
+    """The protocol frozen into the run manifest, or None when the run froze none."""
+    experiment = manifest.get("provenance", {}).get("experiment", {})
+    return (experiment.get("evaluation_inputs") or {}).get(name)
 
 
 def _task_instruction(
@@ -470,8 +472,8 @@ def prepare_review(
     frozen_conditions = manifest.get("provenance", {}).get("experiment", {}).get("conditions")
     if frozen_conditions != report["experiment"]["conditions"]:
         raise ValueError("source report conditions do not match the source manifest")
-    if frozen_conditions["decision_policy"] == "benchmark-readiness-v2":
-        expected_protocol = evaluation_protocol(manifest, "code_review")
+    expected_protocol = evaluation_protocol(manifest, "code_review")
+    if expected_protocol is not None:
         if protocol != expected_protocol:
             raise ValueError("review protocol differs from the frozen benchmark policy")
     image_digests = frozen_conditions.get("image_digests")
@@ -975,10 +977,7 @@ def _attach_comparison(root: Path, report: dict[str, object]) -> None:
     )
     from harness_testing.Comparisons import load_comparison_policy
 
-    frozen = None
-    if request["conditions"]["decision_policy"] == "benchmark-readiness-v2":
-        manifest = _manifest_for_report(root, report)
-        frozen = manifest["provenance"]["experiment"]["evaluation_inputs"]["comparison"]
+    frozen = evaluation_protocol(_manifest_for_report(root, report), "comparison")
     policy = load_comparison_policy(root, request["conditions"], frozen)
     policy["pricing"] = comparison_pricing(root)
     report["report_id"] = request["request_id"]

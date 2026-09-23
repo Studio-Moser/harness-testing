@@ -24,20 +24,10 @@ _LIMITS = [
     "Review is advisory: a missing or incomplete review leaves the verdict provisional and "
     "flagged, unconfirmed reviewer claims are listed, and confirmed remaining defects "
     "disqualify.",
-    "No clear change does not establish equivalence.",
 ]
-_HISTORY_SUMMARIES = {
-    "improved": "The candidate improved on its predecessor.",
-    "regressed": "The candidate regressed from its predecessor.",
-    "mixed": "Task outcomes moved in both directions.",
-    "no_clear_change": "No clear change from the predecessor.",
-    "insufficient_evidence": "Task changes do not support an improvement claim.",
-}
 
 
 def load_comparison_policy(root: Path, conditions: dict, frozen: dict | None = None) -> dict:
-    if conditions["decision_policy"] != "benchmark-readiness-v2":
-        return json.loads((root / "policy/Comparison Policy.json").read_text())
     policy = frozen or json.loads((root / "policy/Benchmark Policy.json").read_text())
     tasks = conditions["task_ids"]
     scope = next((s for s in policy["scopes"] if set(s) == set(tasks)), None)
@@ -339,15 +329,12 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
     ):
         raise ValueError("conditions require unique task IDs and positive integer attempts")
     baseline_ids = request.get("baseline_result_ids", [])
-    predecessor_ids = request.get("predecessor_result_ids", [])
-    if len(set(baseline_ids)) != len(baseline_ids) or len(set(predecessor_ids)) != len(
-        predecessor_ids
-    ):
+    if len(set(baseline_ids)) != len(baseline_ids):
         raise ValueError("duplicate selected evidence IDs")
     contender_ids = [c["id"] for c in request["contenders"]]
     if not contender_ids or len(set(contender_ids)) != len(contender_ids):
         raise ValueError("request contenders must be nonempty and unique")
-    references = set(baseline_ids + predecessor_ids)
+    references = set(baseline_ids)
     by_id = {}
     for report in reports:
         if report["report_id"] in by_id:
@@ -373,16 +360,6 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         "pairs": [],
         "leaders": {"observed_cost_ids": [], "observed_time_ids": []},
         "provisional": True,
-        "history": {
-            "status": "first_version" if request.get("first_version") else "insufficient_evidence",
-            "summary": "No predecessor selected."
-            if request.get("first_version")
-            else "Selected predecessor evidence is insufficient.",
-            "predecessor_ids": list(predecessor_ids),
-            "hypothesis": request.get("change", {}).get("hypothesis"),
-            "task_changes": [],
-            "predecessor_contenders": [],
-        },
         "limitations": list(_LIMITS),
         "policy_id": policy["policy_id"],
         "policy_digest": _digest(policy),
@@ -420,14 +397,8 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
     if {c["id"] for c in current["experiment"]["contenders"]} != set(contender_ids):
         reasons.append("contender_identity_mismatch")
         return result
-    old_reports = [by_id[i] for i in predecessor_ids if i in by_id]
-    old_compatible = (
-        len(old_reports) == len(predecessor_ids)
-        and bool(old_reports)
-        and all(r["experiment"]["conditions"] == conditions for r in old_reports)
-    )
-    datasets, cohort, history_old = {}, [], []
-    for report in cohort_reports + (old_reports if old_compatible else []):
+    datasets, cohort = {}, []
+    for report in cohort_reports:
         declared = report["experiment"]["contenders"]
         declared_ids = [c["id"] for c in declared]
         if len(set(declared_ids)) != len(declared_ids):
@@ -440,17 +411,15 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         for contender in declared:
             key = (report["report_id"], contender["id"])
             datasets.setdefault(key, _dataset(report, contender, conditions, pricing))
-            if report in cohort_reports and key not in cohort:
+            if key not in cohort:
                 cohort.append(key)
-            if report in old_reports and key not in history_old:
-                history_old.append(key)
     if len({key[1] for key in cohort}) != len(cohort):
         reasons.append("ambiguous_contender_evidence")
         return result
     cohort.sort()
     # A task nobody solved says nothing about which contender is better.
     best = max(datasets[k]["successes"] for k in cohort)
-    for key in cohort + history_old:
+    for key in cohort:
         public = datasets[key]
         public["eligible"] = (
             public["coverage_complete"] and public["successes"] >= best and public["review_clean"]
@@ -481,7 +450,7 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         reasons.append("code_review_defects")
     result["provisional"] = any(
         r.get("evidence", {}).get("review_state") != "reviewed"
-        for r in cohort_reports + old_reports
+        for r in cohort_reports
     )
     covered = set(tasks) == set(policy["task_ids"]) and policy.get("declared_scope", True)
     enough = covered and attempts >= policy["minimum_repetitions"]
@@ -567,96 +536,4 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
             time_leaders = set(result["leaders"]["observed_time_ids"])
             if cost_leaders and time_leaders and not (cost_leaders & time_leaders):
                 reasons.append("cost_time_tradeoff")
-    _history(
-        result,
-        request,
-        datasets,
-        [k for k in cohort if k[0] == current_id],
-        history_old,
-        old_reports,
-        old_compatible,
-        predecessor_ids,
-        tasks,
-        policy,
-        enough and not quarantined,
-        current_id,
-    )
     return result
-
-
-def _history(
-    result,
-    request,
-    datasets,
-    current_keys,
-    history_old,
-    old_reports,
-    old_compatible,
-    predecessor_ids,
-    tasks,
-    policy,
-    claims_allowed,
-    current_id,
-):
-    history = result["history"]
-    if request.get("first_version"):
-        return
-    if old_reports and not old_compatible and len(old_reports) == len(predecessor_ids):
-        history.update(
-            status="incompatible_conditions", summary="Predecessor conditions do not match."
-        )
-        return
-    pairs = []
-    for new in current_keys:
-        matches = [old for old in history_old if datasets[old]["family"] == datasets[new]["family"]]
-        if len(matches) == 1:
-            pairs.append((new, matches[0]))
-    if not old_compatible or len(pairs) != len(current_keys):
-        return
-    history["predecessor_contenders"] = [datasets[k] for k in sorted(history_old)]
-    claims_allowed = claims_allowed and not any(
-        r.get("evidence", {}).get("review_state") == "quarantined" for r in old_reports
-    )
-    statuses = []
-    for new, old in pairs:
-        np, op = datasets[new], datasets[old]
-        recoveries = [t for t in tasks if np["task_successes"][t] > op["task_successes"][t]]
-        regressions = [t for t in tasks if np["task_successes"][t] < op["task_successes"][t]]
-        history["task_changes"].append(
-            {
-                "contender_id": new[1],
-                "predecessor_contender_id": old[1],
-                "recoveries": recoveries,
-                "regressions": regressions,
-            }
-        )
-        new_ok = np["review_clean"] and np["successes"] >= op["successes"]
-        old_ok = op["review_clean"] and op["successes"] >= np["successes"]
-        if not claims_allowed or not np["coverage_complete"] or not op["coverage_complete"]:
-            status = "insufficient_evidence"
-        elif recoveries and regressions:
-            status = "mixed"
-        elif new_ok and not old_ok and not regressions:
-            status = "improved"
-        elif old_ok and not new_ok and not recoveries:
-            status = "regressed"
-        elif new_ok and old_ok:
-            pair = _pair(new, old, np, op, current_id)
-            if _dominates(pair, policy):
-                status = "improved"
-            elif _dominates(_inverse(pair), policy):
-                status = "regressed"
-            else:
-                status = "no_clear_change"
-        else:
-            status = "insufficient_evidence"
-        statuses.append(status)
-    status_set = set(statuses)
-    status = (
-        "insufficient_evidence"
-        if "insufficient_evidence" in status_set
-        else "mixed"
-        if len(status_set) > 1 or "mixed" in status_set
-        else statuses[0]
-    )
-    history.update(status=status, summary=_HISTORY_SUMMARIES[status])

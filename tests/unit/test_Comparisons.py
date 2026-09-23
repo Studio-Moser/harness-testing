@@ -1,5 +1,4 @@
 import copy
-import json
 from pathlib import Path
 
 import pytest
@@ -11,7 +10,7 @@ ROOT = Path(__file__).parents[2]
 
 def run(request, reports, policy=None):
     if policy is None:
-        policy = json.loads((ROOT / "policy/Comparison Policy.json").read_text())
+        policy = load_comparison_policy(ROOT, request["conditions"])
     return build_comparison(request, reports, policy)
 
 
@@ -29,7 +28,7 @@ def fixture(ids=("a", "b"), attempts=3):
             "static-grouped-page-updates",
             "static-pricing-copy-polish",
         ],
-        "decision_policy": "development-comparison-v1",
+        "decision_policy": "benchmark-readiness-v2",
         "attempts": attempts,
         "task_variant": "comparison",
         "evaluator_digest": "grade-1",
@@ -91,8 +90,7 @@ def test_equal_contenders_have_no_clear_winner_and_full_tables():
     assert result["leaders"] == {"observed_cost_ids": ["a", "b"], "observed_time_ids": ["a", "b"]}
     assert result["unsolved_tasks"] == []
     assert result["provisional"] is True
-    assert result["history"]["status"] == "first_version"
-    assert result["history"]["hypothesis"] == request["change"]["hypothesis"]
+    assert "history" not in result
 
 
 @pytest.mark.parametrize("attempts", [1, 2])
@@ -228,7 +226,7 @@ def test_repricing_uses_the_frozen_pricing_table():
                 "cache_write_tokens": 0,
             }
         ]
-    policy = json.loads((ROOT / "policy/Comparison Policy.json").read_text())
+    policy = load_comparison_policy(ROOT, request["conditions"])
     policy["pricing"] = {
         "digest": "sha256:" + "0" * 64,
         "models": {
@@ -291,65 +289,6 @@ def test_explicit_baseline_is_compared_and_unselected_reports_are_ignored():
     assert "missing_or_ambiguous_evidence" in run(request, reports)["reasons"]
 
 
-def history_fixture():
-    request, reports = fixture(ids=("new",))
-    _, old_reports = fixture(ids=("old",))
-    old_reports[0]["report_id"] = "selected-predecessor"
-    old_reports[0]["experiment"]["request_id"] = "old-request"
-    old_reports[0]["experiment"]["contenders"][0]["family"] = "new"
-    request.update(first_version=False, predecessor_result_ids=["selected-predecessor"])
-    return request, reports + old_reports
-
-
-def test_history_judges_correctness_then_efficiency_against_the_exact_predecessor():
-    request, reports = history_fixture()
-    assert run(request, reports)["history"]["status"] == "no_clear_change"
-    for trial in reports[1]["experiment"]["trials"]:
-        trial["cost_usd"] = 2.0
-    result = run(request, reports)
-    assert result["history"]["status"] == "improved"
-    assert result["history"]["predecessor_ids"] == ["selected-predecessor"]
-    reports[1]["experiment"]["trials"][0]["correctness"] = False
-    result = run(request, reports)
-    assert result["history"]["status"] == "improved"
-    assert result["history"]["task_changes"][0]["recoveries"] == ["react-accent-polish"]
-    reports[0]["experiment"]["trials"][3]["correctness"] = False
-    assert run(request, reports)["history"]["status"] == "mixed"
-    for trial in reports[1]["experiment"]["trials"]:
-        trial.update(correctness=True, cost_usd=0.1)
-    reports[0]["experiment"]["trials"][3]["correctness"] = True
-    assert run(request, reports)["history"]["status"] == "regressed"
-
-
-def test_history_needs_a_compatible_complete_predecessor():
-    request, reports = history_fixture()
-    reports[1]["experiment"]["conditions"]["attempts"] = 2
-    assert run(request, reports)["history"]["status"] == "incompatible_conditions"
-    request, reports = history_fixture()
-    reports[1]["experiment"]["trials"][0].update(status="pending", correctness=None)
-    assert run(request, reports)["history"]["status"] == "insufficient_evidence"
-    request, reports = history_fixture()
-    assert run(request, reports[:1])["history"]["status"] == "insufficient_evidence"
-
-
-def test_readiness_policy_scopes_and_research_tasks_are_accepted():
-    request, reports = fixture()
-    policy = load_comparison_policy(ROOT, {"decision_policy": "development-comparison-v1"})
-    assert policy["policy_id"] == "development-comparison-v1"
-    readiness = load_comparison_policy(
-        ROOT,
-        {
-            "decision_policy": "benchmark-readiness-v2",
-            "task_ids": request["conditions"]["task_ids"],
-        },
-    )
-    assert readiness["declared_scope"] is True
-    for report in reports:
-        report["experiment"]["conditions"]["decision_policy"] = "benchmark-readiness-v2"
-    request["conditions"]["decision_policy"] = "benchmark-readiness-v2"
-    assert run(request, reports, readiness)["status"] == "no_clear_winner"
-
-
 def test_invalid_trials_are_rejected_loudly():
     request, reports = fixture()
     trials(reports, "a")[0]["attempt"] = 9
@@ -363,3 +302,13 @@ def test_invalid_trials_are_rejected_loudly():
     reports[0]["experiment"]["trials"].append(copy.deepcopy(trials(reports, "a")[0]))
     with pytest.raises(ValueError, match="duplicate"):
         run(request, reports)
+
+
+def test_policy_scopes_mark_declared_and_undeclared_task_sets():
+    request, _ = fixture()
+    declared = load_comparison_policy(ROOT, request["conditions"])
+    assert declared["declared_scope"] is True
+    undeclared = load_comparison_policy(
+        ROOT, dict(request["conditions"], task_ids=request["conditions"]["task_ids"][:2])
+    )
+    assert undeclared["declared_scope"] is False
