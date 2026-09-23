@@ -14,13 +14,11 @@ permissions:
   contents: read
 
 jobs:
-  affected:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out complete history
+      - name: Check out
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
@@ -39,23 +37,17 @@ jobs:
           python -m pip install --disable-pip-version-check uv==0.11.19
           uv sync --frozen
 
-      - name: Resolve comparison commit
-        id: base
-        shell: bash
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          PUSH_BEFORE_SHA: ${{ github.event.before }}
-        run: |
-          set -euo pipefail
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            base="$PR_BASE_SHA"
-          elif [[ -n "$PUSH_BEFORE_SHA" && ! "$PUSH_BEFORE_SHA" =~ ^0+$ ]]; then
-            base="$PUSH_BEFORE_SHA"
-          else
-            base="$(git rev-parse HEAD^ 2>/dev/null || git rev-parse HEAD)"
-          fi
-          echo "sha=$base" >> "$GITHUB_OUTPUT"
+      - name: Static validation
+        run: uv run harness-test validate
 
-      - name: Run affected deterministic checks
-        run: uv run harness-test validate --changed-from "${{ steps.base.outputs.sha }}"
+      - name: Lint
+        run: uv run ruff check src tests
+
+      - name: Unit tests
+        run: uv run pytest -q tests/unit
+
+      - name: Dashboard
+        run: |
+          npm ci --prefix dashboard --ignore-scripts
+          npm --prefix dashboard test
+          npm --prefix dashboard run build

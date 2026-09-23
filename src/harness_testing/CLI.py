@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import json
 import shlex
-import subprocess
 import sys
 import tomllib
 from collections.abc import Sequence
@@ -31,9 +30,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     subparsers = parser.add_subparsers(dest="command")
     validate_parser = subparsers.add_parser("validate", help="validate deterministic inputs")
-    validate_mode = validate_parser.add_mutually_exclusive_group()
-    validate_mode.add_argument("--changed-from")
-    validate_mode.add_argument("--static-only", action="store_true")
+    # Accepted for older docs and scripts; validation is always the static check.
+    validate_parser.add_argument("--static-only", action="store_true")
 
     images_parser = subparsers.add_parser("images", help="manage pinned images")
     image_subparsers = images_parser.add_subparsers(dest="images_command")
@@ -120,7 +118,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     arguments = parser.parse_args(argv)
     if arguments.command == "validate":
-        from harness_testing.Validate import run_affected_validation, validate_repository
+        from harness_testing.Validate import validate_repository
 
         failures = validate_repository(_repository_root())
         if failures:
@@ -128,12 +126,6 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(failure, file=sys.stderr)
             return 1
         print("Static validation passed.")
-        if arguments.changed_from:
-            try:
-                run_affected_validation(_repository_root(), arguments.changed_from)
-            except (ValueError, subprocess.CalledProcessError) as error:
-                print(error, file=sys.stderr)
-                return getattr(error, "returncode", 1) or 1
     elif arguments.command == "images" and arguments.images_command == "build":
         from harness_testing.Materialize import build_images, image_build_commands
 
