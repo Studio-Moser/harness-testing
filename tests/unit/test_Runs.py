@@ -1326,7 +1326,7 @@ def test_execution_updates_local_dashboard_after_delivery_failure(
 
 
 @pytest.mark.parametrize("failure_stage", ["progress", "completed"])
-def test_execution_report_failure_quarantines_last_safe_snapshot(
+def test_execution_report_failure_keeps_last_safe_snapshot_as_failed(
     run_root, monkeypatch, failure_stage
 ):
     manifest = _compile_pair(run_root)
@@ -1354,7 +1354,7 @@ def test_execution_report_failure_quarantines_last_safe_snapshot(
         Runs.execute_run(run_root, manifest.path, manifest.digest)
     report = load_run_report(run_root, manifest.path.parent / "Run_Report.json")
     assert report["status"] == "failed"
-    assert report["evidence"]["review_state"] == "quarantined"
+    assert report["evidence"]["review_state"] == "unreviewed"
     assert report["completed_jobs"] == (0 if failure_stage == "progress" else 4)
     assert len(calls) == (1 if failure_stage == "progress" else 4)
     assert list((manifest.path.parent / "Recovery").glob("*.json"))

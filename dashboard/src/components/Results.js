@@ -151,7 +151,6 @@ function readyHarnesses(harnesses) {
 function evidenceFlags(report) {
   const flags = [];
   const experiment = report.experiment ?? {};
-  if (report.evidence?.review_state === "quarantined") flags.push("quarantined");
   if (experiment.conditions?.decision_policy !== DECISION_POLICY) flags.push("old policy");
   if (!CORE_VERDICTS.has(experiment.comparison?.status)) flags.push("no core verdict");
   if ((report.evidence?.limitations ?? []).includes("obsolete-methodology")) flags.push("obsolete methodology");
@@ -159,7 +158,7 @@ function evidenceFlags(report) {
 }
 
 function primaryEvidenceState(flags) {
-  for (const state of ["quarantined", "old policy", "no core verdict", "obsolete methodology"]) {
+  for (const state of ["old policy", "no core verdict", "obsolete methodology"]) {
     if (flags.includes(state)) return state.replaceAll(" ", "-");
   }
   return "decision-grade";
@@ -385,12 +384,8 @@ export function applyCampaignCohort(observations, campaign) {
   if (campaign == null || typeof campaign !== "object") return observations;
   const members = new Set();
   const superseded = new Set();
-  const quarantinedLanes = new Set();
   for (const lane of Object.values(campaign.lanes ?? {})) {
-    for (const member of lane.members ?? []) {
-      members.add(member.report_id);
-      if (lane.review_state === "quarantined") quarantinedLanes.add(member.report_id);
-    }
+    for (const member of lane.members ?? []) members.add(member.report_id);
     // A replacement keeps the replaced trial's ID, so identity is report plus trial.
     for (const row of lane.superseded_trials ?? []) superseded.add(`${row.report_id}\0${row.trial_id}`);
   }
@@ -400,12 +395,11 @@ export function applyCampaignCohort(observations, campaign) {
   for (const observation of observations) {
     if (!members.has(observation.reportId) || superseded.has(observation.observationId)) continue;
     if (observation.status === "pending") continue;
-    // The stitched lane resolved its members' partial-run and automatic-quarantine states;
-    // only a lane the summary itself still quarantines keeps that flag.
+    // The stitched lane resolved its members' partial-run states.
     observation.campaignCohort = {id: CAMPAIGN_COHORT_ID, label};
     observation.decisionEligible = true;
-    observation.evidenceFlags = quarantinedLanes.has(observation.reportId) ? ["quarantined"] : [];
-    observation.evidenceState = observation.evidenceFlags.length ? "quarantined" : "campaign";
+    observation.evidenceFlags = [];
+    observation.evidenceState = "campaign";
     observation.limitations = [];
     observation.provisional = true;
   }
@@ -750,8 +744,7 @@ function renderMatrix(observations, tests, harnesses, filters) {
       const excluded = rawValues.filter((value) => !admittedSet.has(value));
       const score = mean(values.map(({correctness}) => correctness));
       let unavailable = "—";
-      if (rawValues.some(({evidenceFlags}) => evidenceFlags.includes("quarantined"))) unavailable = "Quarantined";
-      else if (rawValues.some(({evidenceFlags}) => evidenceFlags.includes("diagnostic"))) unavailable = "Diagnostic";
+      if (rawValues.some(({evidenceFlags}) => evidenceFlags.includes("diagnostic"))) unavailable = "Diagnostic";
       else if (rawValues.some(({evidenceFlags}) => evidenceFlags.includes("old policy"))) unavailable = "Old policy";
       else if (rawValues.some(({status}) => INCOMPLETE_STATUSES.has(status))) unavailable = "Incomplete";
       else if (rawValues.some(({status}) => status === "agent_failed" || status === "timeout")) unavailable = "Failed";

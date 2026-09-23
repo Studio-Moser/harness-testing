@@ -106,7 +106,7 @@ List each lane's frozen report first, then its recovery and correction reports i
 
 ## Inspect and classify
 
-Use Harbor's local viewer and the raw job directory. Sample passes, failures and outliers, assign the infrastructure state before interpreting a score, and quarantine a broken or unfair task. Raw jobs and provider homes are ignored local data; never copy them into docs, issues or dashboard assets.
+Use Harbor's local viewer and the raw job directory. Sample passes, failures and outliers, assign the infrastructure state before interpreting a score, and drop a broken or unfair task from the catalog and policies, as was done for pest. Raw jobs and provider homes are ignored local data; never copy them into docs, issues or dashboard assets.
 
 ## Dashboard
 

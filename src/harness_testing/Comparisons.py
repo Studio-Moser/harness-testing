@@ -448,10 +448,7 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         reasons.append("code_review_unconfirmed")
     if any(any(r["confirmed"].values()) for r in reviews):
         reasons.append("code_review_defects")
-    result["provisional"] = any(
-        r.get("evidence", {}).get("review_state") != "reviewed"
-        for r in cohort_reports
-    )
+    result["provisional"] = False
     covered = set(tasks) == set(policy["task_ids"]) and policy.get("declared_scope", True)
     enough = covered and attempts >= policy["minimum_repetitions"]
     if not covered:
@@ -473,11 +470,6 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
             reasons.append("duration_unavailable")
     if len({datasets[k]["pricing_digest"] for k in cohort}) != 1:
         reasons.append("pricing_unavailable")
-    quarantined = any(
-        r.get("evidence", {}).get("review_state") == "quarantined" for r in cohort_reports
-    )
-    if quarantined:
-        reasons.append("quarantined_evidence")
     result["reasons"] = reasons = list(dict.fromkeys(reasons))
     eligible = [k for k in cohort if datasets[k]["eligible"]]
     for field, leader in (
@@ -499,7 +491,7 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
     # while confirmed remaining defects still disqualify a contender.
     if any(not datasets[k]["reviewed"] for k in cohort):
         result["provisional"] = True
-    if enough and not quarantined and coverage_complete:
+    if enough and coverage_complete:
         result.update(
             status="no_clear_winner", summary="No clear overall winner in the selected evidence."
         )

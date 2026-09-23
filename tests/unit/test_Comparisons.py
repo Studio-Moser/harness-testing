@@ -89,7 +89,7 @@ def test_equal_contenders_have_no_clear_winner_and_full_tables():
     assert result["pairs"][0]["cost_ratio"] == 1.0 and result["pairs"][0]["time_ratio"] == 1.0
     assert result["leaders"] == {"observed_cost_ids": ["a", "b"], "observed_time_ids": ["a", "b"]}
     assert result["unsolved_tasks"] == []
-    assert result["provisional"] is True
+    assert result["provisional"] is False
     assert "history" not in result
 
 
@@ -261,13 +261,7 @@ def test_partial_scope_and_policy_mismatch_are_reported_not_ranked():
     assert run(request, reports)["status"] == "incompatible_conditions"
 
 
-def test_quarantined_or_ambiguous_evidence_cannot_produce_a_winner():
-    request, reports = fixture()
-    for trial in trials(reports, "a"):
-        trial["cost_usd"] = 0.5
-    reports[0]["evidence"]["review_state"] = "quarantined"
-    result = run(request, reports)
-    assert result["winner_id"] is None and "quarantined_evidence" in result["reasons"]
+def test_ambiguous_evidence_cannot_produce_a_winner():
     request, reports = fixture()
     duplicate = copy.deepcopy(reports[0])
     duplicate["report_id"] = "another"

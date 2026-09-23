@@ -231,21 +231,6 @@ def assemble_lane(plan: dict, lane: str, reports: list[dict]) -> dict:
             key = f"{task}:{suffix}"
             if key in (conditions.get("image_digests") or {}):
                 image_digests[key] = conditions["image_digests"][key]
-    # A partial run is quarantined automatically when it stops on an infrastructure failure.
-    # Once every slot it still supplies completed and the failed slots were superseded, that
-    # automatic quarantine no longer describes the assembled lane; any other quarantine does.
-    automatic = {"partial-run", "failed-run", "infrastructure-failure"}
-    states = set()
-    for report in reports:
-        evidence = report.get("evidence", {})
-        state = evidence.get("review_state")
-        if state == "quarantined" and set(evidence.get("limitations", [])) <= automatic and all(
-            trial["status"] == "completed"
-            for _, (trial, source) in chosen.items()
-            if source is report
-        ):
-            state = "unreviewed"
-        states.add(state)
     experiment = copy.deepcopy(frozen["report_identity"])
     experiment["conditions"] = dict(
         frozen["conditions"], task_digests=task_digests, image_digests=image_digests
@@ -256,13 +241,7 @@ def assemble_lane(plan: dict, lane: str, reports: list[dict]) -> dict:
     return {
         "report_id": f"campaign:{lane}",
         "manifest_digest": frozen["manifest_digest"],
-        "evidence": {
-            "review_state": "quarantined"
-            if "quarantined" in states
-            else "reviewed"
-            if states == {"reviewed"}
-            else "unreviewed"
-        },
+        "evidence": {"review_state": "unreviewed", "limitations": []},
         "experiment": experiment,
         "members": [
             {
@@ -330,9 +309,9 @@ def summarize_campaign(
             comparison = by_lane[lane][0]["experiment"].get("comparison") or {}
         experiment["comparison"] = comparison
         selected[lane] = [row["report_id"] for row in assembled["members"]]
-        if assembled["evidence"]["review_state"] == "quarantined" or comparison.get(
-            "status"
-        ) not in {"recommended", "no_clear_winner", "no_quality_qualified_winner"}:
+        if comparison.get("status") not in {
+            "recommended", "no_clear_winner", "no_quality_qualified_winner"
+        }:
             reasons.append(f"{lane}:evaluation_incomplete")
         lane_winners.append(comparison.get("winner_id"))
         trials.extend(experiment["trials"])
@@ -351,7 +330,6 @@ def summarize_campaign(
             "limitations": limitations,
             "members": assembled["members"],
             "superseded_trials": assembled["superseded_trials"],
-            "review_state": assembled["evidence"]["review_state"],
             "task_digests": experiment["conditions"]["task_digests"],
             "comparison": {
                 key: comparison.get(key)

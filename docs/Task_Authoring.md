@@ -91,6 +91,6 @@ Do not run the pack between task edits. If only a criterion or classifier change
 
 ## Review and compatibility
 
-Before release, inspect representative passes, failures, efficient trials, and outliers in Harbor’s local viewer. Quarantine a task that is ambiguous, contaminated, nondeterministic, unfair across providers, or broken by its own fixture.
+Before release, inspect representative passes, failures, efficient trials, and outliers in Harbor’s local viewer. Drop a task that is ambiguous, contaminated, nondeterministic, unfair across providers, or broken by its own fixture.
 
-Changing the task digest, pack composition, scorer, command classifier, environment image, provider-agent major contract, methodology schema, or skill-evaluation mode/name breaks the compatibility key by default. The current skill-evaluation series is schema `0.3.0`; old hidden-contract and plugin-seed cohorts remain local and quarantined, are not regraded, and receive no reviewed mapping into the current series.
+Changing the task digest, environment image or provider runtime changes the comparison conditions, so earlier results are no longer directly comparable with new ones.

@@ -562,7 +562,7 @@ def recover_failed_run_report(root: Path, manifest: RunManifest) -> Path:
     previous_id = report["report_id"]
     report.update(status="failed", updated_at=_now(), finished_at=_now())
     report["evidence"] = {
-        "review_state": "quarantined",
+        "review_state": "unreviewed",
         "limitations": list(dict.fromkeys([
             *report["evidence"]["limitations"], "partial-run", "failed-run",
             "infrastructure-failure",

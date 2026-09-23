@@ -244,14 +244,14 @@ test("normalizes authoritative trials and complete whole-tree telemetry", () => 
   assert.equal(defaultModel(observations), "gpt-6-astra\0high");
 });
 
-test("decision admission counts genuine failed attempts and rejects diagnostic, quarantined, and old-policy evidence", () => {
+test("decision admission counts genuine failed attempts, ignores old quarantine flags, and rejects unjudged or old-policy evidence", () => {
   const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
   const decision = report("decision", [
     trial(studio, "react-active-badge-count", 1),
     trial(studio, "react-active-badge-count", 2, {status: "agent_failed", correctness: null})
   ]);
   const diagnostic = report("diagnostic", [trial(studio)], {experiment: {purpose: "diagnostic", comparison: {status: "insufficient_evidence", provisional: true, policy_id: "benchmark-readiness-v2"}}});
-  const quarantined = report("quarantined", [trial(studio)], {evidence: {review_state: "quarantined"}});
+  const quarantined = report("quarantined", [trial(studio, "react-accent-polish")], {evidence: {review_state: "quarantined"}});
   const oldPolicy = report("old-policy", [trial(studio)], {
     experiment: {conditions: conditions({decision_policy: "development-comparison-v1"})}
   });
@@ -260,8 +260,8 @@ test("decision admission counts genuine failed attempts and rejects diagnostic, 
   const row = aggregateHarnesses(observations, HARNESS_CATALOG, {cohort: "decision"})
     .find(({id}) => id === studio.id);
 
-  assert.equal(admitted.length, 2);
-  assert.deepEqual(admitted.map(({correctness}) => correctness), [1, 0]);
+  assert.equal(admitted.length, 3);
+  assert.deepEqual(admitted.filter(({reportId}) => reportId === "decision").map(({correctness}) => correctness), [1, 0]);
   assert.equal(row.correctness, 0.5);
   assert.equal(row.attempts, 2);
   assert.equal(row.runtime, 60);
@@ -269,7 +269,7 @@ test("decision admission counts genuine failed attempts and rejects diagnostic, 
   assert.equal(row.cost, 0.01);
   assert.deepEqual(
     observations.filter(({decisionEligible}) => !decisionEligible).map(({evidenceState}) => evidenceState).sort(),
-    ["no-core-verdict", "old-policy", "quarantined"]
+    ["no-core-verdict", "old-policy"]
   );
 });
 

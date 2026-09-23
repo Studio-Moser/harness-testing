@@ -38,7 +38,7 @@ Every completed trial retains the normalized user-visible root conversation. Det
 
 ## Infrastructure classification
 
-A reviewed result carries one explicit state: passed, agent-task failure, verifier failure, task-definition failure, provider failure, authentication failure, rate-limited, timeout, sandbox failure, or unknown. Only agent-task failures count as coding failures. A run that stops on an infrastructure failure is quarantined automatically; once its failed slots are superseded by a recovery run, that quarantine no longer applies to the assembled lane.
+Each trial carries one state: passed, agent-task failure, verifier failure, task-definition failure, provider failure, authentication failure, rate-limited, timeout, sandbox failure, or unknown. Only agent-task failures count as coding failures. A run that stops on an infrastructure failure is marked failed with its unstarted slots pending; a recovery run fills them and the campaign summary stitches the lane back together.
 
 ## Evidence
 
