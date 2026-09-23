@@ -180,12 +180,16 @@ def test_confirmed_defects_disqualify_while_unconfirmed_claims_only_warn():
     assert "code_review_defects" in result["reasons"]
 
 
-def test_missing_or_incomplete_review_blocks_a_verdict():
+def test_missing_review_keeps_the_verdict_but_flags_it():
     request, reports = fixture()
-    trials(reports, "a")[0]["code_review"] = None
+    for trial in trials(reports, "a"):
+        trial["cost_usd"] = 0.5
+        trial["code_review"] = None
     result = run(request, reports)
-    assert result["status"] == "insufficient_evidence"
+    assert result["status"] == "recommended" and result["winner_id"] == "a"
     assert "code_review_incomplete" in result["reasons"]
+    assert result["contenders"][0]["reviewed"] is False
+    assert result["provisional"] is True
 
 
 @pytest.mark.parametrize("status", ["pending", "infrastructure_failure", "task_definition_gap"])

@@ -1,5 +1,5 @@
 import {HARNESS_FAMILIES} from "../data/Harness Catalog.js";
-import {selectCohort} from "../data/Selected Cohort.js";
+import {ANNOYANCE_COUNTERS, ANNOYANCE_PUNCTUATION} from "../data/Annoyance Phrases.js";
 
 const DECISION_POLICY = "benchmark-readiness-v2";
 const CORE_VERDICTS = new Set(["recommended", "no_clear_winner", "no_quality_qualified_winner"]);
@@ -43,8 +43,13 @@ const TRANSCRIPT_METRICS = [
   {key: "heading_count", label: "Headings", better: "lower", format: "count"},
   {key: "violation_count", label: "Contract violations", better: "lower", format: "count"}
 ];
+const ANNOYANCE_METRICS = [
+  ...ANNOYANCE_COUNTERS.map(({key, label}) => ({key, label, better: "lower", format: "count"})),
+  ...ANNOYANCE_PUNCTUATION.map(({key, label}) => ({key, label, better: "lower", format: "count"}))
+];
 const BEHAVIOR_GROUPS = [
   {id: "transcript", title: "Transcript metrics", note: "Deterministic counts over the user-visible root conversation.", metrics: TRANSCRIPT_METRICS},
+  {id: "annoyance", title: "Annoyances", note: "Phrase and punctuation counts over the assistant's visible messages, from the list in data/Annoyance Phrases.js. Lower is better.", metrics: ANNOYANCE_METRICS},
   {id: "quality", title: `Work-quality grader (${QUALITY_RUBRIC})`, note: "Blinded automated grades, 1 to 5. Descriptive only; they never decide the ranking.", metrics: [...QUALITY_DIMENSIONS].map((key) => ({key, label: titleCase(key.replaceAll("_", " ")), better: "higher", format: "grade"}))},
   {id: "communication", title: `Communication grader (${COMMUNICATION_RUBRIC})`, note: "Older blinded automated grades, 1 to 5, where a run carried them.", metrics: [...COMMUNICATION_DIMENSIONS].map((key) => ({key, label: titleCase(key.replaceAll("_", " ")), better: "higher", format: "grade"}))}
 ];
@@ -196,6 +201,33 @@ function dimensionScores(grade, rubric, requiredDimensions) {
   return scores;
 }
 
+export function annoyanceFromTranscript(transcript) {
+  if (!Array.isArray(transcript)) return {};
+  const messages = transcript
+    .filter((row) => row?.role === "assistant" && typeof row.content === "string")
+    .map((row) => row.content);
+  if (!messages.length) return {};
+  const counts = {};
+  for (const {key, phrases} of ANNOYANCE_COUNTERS) {
+    let total = 0;
+    for (const message of messages) {
+      const lower = message.toLowerCase().replaceAll("\u2019", "'").replaceAll("\u2018", "'");
+      for (const phrase of phrases) {
+        let index = lower.indexOf(phrase);
+        while (index !== -1) {
+          total += 1;
+          index = lower.indexOf(phrase, index + phrase.length);
+        }
+      }
+    }
+    counts[key] = total;
+  }
+  for (const {key, pattern} of ANNOYANCE_PUNCTUATION) {
+    counts[key] = messages.reduce((sum, message) => sum + (message.match(pattern) ?? []).length, 0);
+  }
+  return counts;
+}
+
 export function behaviorFromTrial(trial) {
   const metrics = trial.collaboration?.metrics;
   const grade = trial.collaboration?.grade;
@@ -210,6 +242,7 @@ export function behaviorFromTrial(trial) {
   }
   return {
     transcript,
+    annoyance: annoyanceFromTranscript(trial.collaboration?.transcript),
     quality: dimensionScores(grade, QUALITY_RUBRIC, QUALITY_DIMENSIONS),
     communication: dimensionScores(grade, COMMUNICATION_RUBRIC, COMMUNICATION_DIMENSIONS)
   };
@@ -339,20 +372,11 @@ function reportGroups(observations, model = null) {
     group.observations += 1;
     groups.set(observation.reportId, group);
   }
-  const selected = observations.filter(row => row.observationalCohort && (model == null || row.modelKey === model));
-  if (selected.length) {
-    groups.set(selected[0].observationalCohort.id, {
-      id: selected[0].observationalCohort.id, label: selected[0].observationalCohort.label,
-      observational: true, decisionEligible: false, observations: selected.length,
-      updatedAt: selected[0].updatedAt
-    });
-  }
   return [...groups.values()];
 }
 
 export function defaultCohort(observations, model = null) {
   return reportGroups(observations, model).sort((left, right) =>
-    Number(Boolean(right.observational)) - Number(Boolean(left.observational)) ||
     Number(right.decisionEligible) - Number(left.decisionEligible) ||
     compareText(right.updatedAt ?? "", left.updatedAt ?? "") ||
     right.observations - left.observations ||
@@ -362,8 +386,6 @@ export function defaultCohort(observations, model = null) {
 
 function cohortObservations(observations, cohort) {
   if (cohort == null) return [];
-  const selected = observations.filter(row => row.observationalCohort?.id === cohort);
-  if (selected.length) return selected;
   const primary = observations.find(({reportId}) => reportId === cohort);
   if (primary == null) return [];
   const referenced = new Set([...primary.baselineReportIds, ...primary.predecessorReportIds]);
@@ -464,10 +486,7 @@ export function aggregateHarnesses(observations, harnesses, filters = {}) {
   const model = filters.model === "all" || filters.model == null ? defaultModel(observations) : filters.model;
   const cohort = filters.cohort ?? defaultCohort(observations, model);
   const scoped = filterResults(observations, {...filters, model, cohort});
-  const observational = observations.some(row => row.observationalCohort?.id === cohort);
-  const admitted = observational
-    ? scoped.filter(row => ATTEMPT_STATUSES.has(row.status) && Number.isFinite(row.correctness))
-    : admitResults(scoped);
+  const admitted = admitResults(scoped);
   const versions = readyHarnesses(harnesses);
   const eligibleVersions = versions.filter(({id}) => admitted.some(({harnessId}) => harnessId === id));
   const eligibleIds = new Set(eligibleVersions.map(({id}) => id));
@@ -503,8 +522,7 @@ export function aggregateHarnesses(observations, harnesses, filters = {}) {
       family: harness.family,
       label: `${HARNESS_FAMILIES[harness.family].name} ${harness.versionLabel}`,
       versionLabel: harness.versionLabel,
-      eligible: !observational && eligibleIds.has(harness.id),
-      observational,
+      eligible: eligibleIds.has(harness.id),
       provisional: decisionValues.some(({provisional}) => provisional),
       cohort,
       cohortComplete: gaps.infrastructure === 0 && !limitations.some((limitation) =>
@@ -540,13 +558,12 @@ export function aggregateHarnesses(observations, harnesses, filters = {}) {
       gaps,
       limitations,
       evidenceFlags: [...new Set(rawValues.flatMap(({evidenceFlags}) => evidenceFlags))],
-      deltaFromNothing: observational ? null : exactPairedDelta(admitted, harness.id, nothingId, "baselineReportIds"),
-      deltaFromPredecessor: observational ? null : exactPairedDelta(admitted, harness.id, harness.predecessorId, "predecessorReportIds")
+      deltaFromNothing: exactPairedDelta(admitted, harness.id, nothingId, "baselineReportIds"),
+      deltaFromPredecessor: exactPairedDelta(admitted, harness.id, harness.predecessorId, "predecessorReportIds")
     });
   }
 
   return rows.sort((left, right) => {
-    if (observational) return compareText(left.label, right.label);
     if (left.correctness == null && right.correctness != null) return 1;
     if (left.correctness != null && right.correctness == null) return -1;
     return (right.correctness ?? 0) - (left.correctness ?? 0) ||
@@ -611,13 +628,10 @@ function renderLeaderboard(rows, testCount) {
   const sharedTests = rows.find(({eligible}) => eligible)?.sharedTests ?? 0;
   const provisional = rows.some(({eligible, provisional}) => eligible && provisional);
   const incomplete = rows.some(({eligible, cohortComplete}) => eligible && !cohortComplete);
-  const observational = rows.some(row => row.observational);
-  const explanation = observational
-    ? "One selected attempt per task and harness. Observed outcomes, not a decision-grade ranking or causal proof. Recovery reports and original evidence warnings are preserved; missing Quality stays unknown."
-    : rankedHarnesses === 0
+  const explanation = rankedHarnesses === 0
     ? "No decision-grade ranking is available for this cohort. Exploratory coverage remains visible below."
     : `${rankedHarnesses} harnesses ranked by correctness, then Quality, on ${sharedTests} shared ${sharedTests === 1 ? "test" : "tests"}. ${provisional ? "The ranking is provisional. " : ""}${incomplete ? "The cohort has incomplete slots and is not a complete-cohort result. " : ""}Deltas use exact report references.`;
-  heading.append(element("h2", "card-title", observational ? "Observed harness comparison" : "Decision-grade ranking"), element("p", "", explanation));
+  heading.append(element("h2", "card-title", "Decision-grade ranking"), element("p", "", explanation));
   const cue = element("p", "results-scroll-cue", "Swipe horizontally to see every metric.");
   const scroll = element("div", "results-table-scroll table-responsive");
   scroll.setAttribute("tabindex", "0");
@@ -637,7 +651,7 @@ function renderLeaderboard(rows, testCount) {
     name.append(
       element("span", `results-harness-mark results-harness-${row.family}`),
       element("strong", "", row.label),
-      element("small", "", observational ? plural(row.observations, "selected observation") : `${plural(row.observations, "decision observation")} · ${plural(row.exploratoryObservations, "exploratory observation")}`)
+      element("small", "", `${plural(row.observations, "decision observation")} · ${plural(row.exploratoryObservations, "exploratory observation")}`)
     );
     const score = element("td", "results-score-cell");
     score.append(element("strong", "", formatPercent(row.correctness)));
@@ -649,7 +663,7 @@ function renderLeaderboard(rows, testCount) {
       score.append(track);
     }
     const coverage = element("td", "results-coverage-cell");
-    if (row.eligible || row.observational) {
+    if (row.eligible) {
       coverage.append(
         element("strong", "", `${row.sharedTests} shared`),
         element("small", "", `${row.coveredTests} / ${testCount} observed`)
@@ -726,8 +740,7 @@ function matrixEvidence(rawValues, excluded) {
 
 function renderMatrix(observations, tests, harnesses, filters) {
   const filtered = filterResults(observations, filters);
-  const observational = observations.some(row => row.observationalCohort?.id === filters.cohort);
-  const admitted = observational ? filtered.filter(row => ATTEMPT_STATUSES.has(row.status) && Number.isFinite(row.correctness)) : admitResults(filtered);
+  const admitted = admitResults(filtered);
   const admittedSet = new Set(admitted);
   const visibleTests = tests
     .filter((test) => (filters.type === "all" || test.type === filters.type) && (filters.level === "all" || test.level === Number(filters.level)))
@@ -737,7 +750,7 @@ function renderMatrix(observations, tests, harnesses, filters) {
   const heading = element("header", "results-section-heading card-header");
   heading.append(
     element("h2", "card-title", "Test coverage"),
-    element("p", "", observational ? "Selected observed correctness, not decision-grade scores. Original report warnings and review gaps remain visible." : "Decision scores include qualifying attempts. Exploratory, failed, incomplete, unreviewed, and protected-state-limited evidence remains visible beside them.")
+    element("p", "", "Decision scores include qualifying attempts. Exploratory, failed, incomplete, unreviewed, and protected-state-limited evidence remains visible beside them.")
   );
   const cue = element("p", "results-scroll-cue", "Swipe horizontally to compare every harness version.");
   const scroll = element("div", "results-table-scroll table-responsive");
@@ -758,7 +771,7 @@ function renderMatrix(observations, tests, harnesses, filters) {
     for (const version of versions) {
       const rawValues = filtered.filter(({taskId, harnessId}) => taskId === test.id && harnessId === version.id);
       const values = admitted.filter(({taskId, harnessId}) => taskId === test.id && harnessId === version.id);
-      const excluded = observational ? rawValues : rawValues.filter((value) => !admittedSet.has(value));
+      const excluded = rawValues.filter((value) => !admittedSet.has(value));
       const score = mean(values.map(({correctness}) => correctness));
       let unavailable = "—";
       if (rawValues.some(({evidenceFlags}) => evidenceFlags.includes("quarantined"))) unavailable = "Quarantined";
@@ -850,7 +863,7 @@ function renderTradeoffs(rows) {
   );
   const qualityNote = element("div", "results-quality-note alert alert-info");
   qualityNote.append(
-    element("strong", "", `Quality has ${plural(graded, "complete grade")} in this ${rows.some(row => row.observational) ? "observational" : "decision"} cohort.`),
+    element("strong", "", `Quality has ${plural(graded, "complete grade")} in this decision cohort.`),
     element("span", "", `Quality requires all six tim-work-quality-v2 dimensions; missing dimensions stay unknown. Trial grades are automated evidence and never decide the ranking.${communication ? ` ${plural(communication, "older communication grade")} ${communication === 1 ? "remains" : "remain"} exploratory automated evidence.` : ""}`)
   );
   const qualityRows = rows.filter(row => row.quality != null || row.communicationQuality != null || row.tradeoffs.runtime.quality != null);
@@ -982,6 +995,94 @@ function renderBehavior(columns) {
   return section;
 }
 
+export function campaignVerdict(campaign, harnesses) {
+  if (campaign == null || typeof campaign !== "object") return null;
+  const byIdentity = new Map(harnesses.map((version) => [version.identity, version]));
+  const label = (id) => {
+    const version = byIdentity.get(id);
+    return version ? `${HARNESS_FAMILIES[version.family].name} ${version.versionLabel}` : (id ?? "—");
+  };
+  const lanes = Object.entries(campaign.lanes ?? {}).map(([lane, value]) => {
+    const comparison = value.comparison ?? {};
+    return {
+      lane,
+      status: comparison.status ?? "unknown",
+      winner: comparison.winner_id ? label(comparison.winner_id) : null,
+      reasons: comparison.reasons ?? [],
+      unsolved: comparison.unsolved_tasks ?? [],
+      limitations: value.limitations ?? [],
+      contenders: (comparison.contenders ?? []).map((row) => ({
+        label: label(row.id),
+        family: byIdentity.get(row.id)?.family ?? "unknown",
+        successes: row.successes,
+        scheduled: row.scheduled,
+        eligible: row.eligible === true,
+        reviewed: row.reviewed !== false,
+        unconfirmed: row.code_review?.unconfirmed ?? 0,
+        meanCost: Number.isFinite(row.mean_cost_usd) ? row.mean_cost_usd : null,
+        meanDuration: Number.isFinite(row.mean_duration_seconds) ? row.mean_duration_seconds : null
+      }))
+    };
+  });
+  return {
+    status: campaign.status ?? "unknown",
+    winner: campaign.winner_id ? label(campaign.winner_id) : null,
+    reasons: campaign.reasons ?? [],
+    lanes,
+    digest: campaign.campaign_digest ?? null
+  };
+}
+
+function renderCampaignVerdict(campaign, harnesses) {
+  const verdict = campaignVerdict(campaign, harnesses);
+  if (verdict == null) return null;
+  const section = element("section", "results-panel results-verdict card card-body");
+  const heading = element("header", "results-section-heading");
+  const title = verdict.status === "recommended" && verdict.winner
+    ? `Campaign verdict: ${verdict.winner} recommended`
+    : `Campaign verdict: ${titleCase(verdict.status.replaceAll("_", " "))}`;
+  heading.append(
+    element("h2", "card-title", title),
+    element("p", "", "The latest full-toolbox campaign, stitched from its original, recovery and correction reports. Correctness first; cost and time decide among equally correct harnesses. Review and grades are advisory.")
+  );
+  section.append(heading);
+  if (verdict.reasons.length) section.append(element("p", "results-scope-note", `Reasons: ${verdict.reasons.map((reason) => reason.replaceAll("_", " ")).join(" · ")}`));
+  for (const lane of verdict.lanes) {
+    const block = element("div", "results-verdict-lane");
+    const laneTitle = lane.winner ? `${titleCase(lane.lane)} lane · ${lane.winner} recommended` : `${titleCase(lane.lane)} lane · ${titleCase(lane.status.replaceAll("_", " "))}`;
+    block.append(element("h3", "results-behavior-title", laneTitle));
+    const scroll = element("div", "results-table-scroll table-responsive");
+    const table = element("table", "results-table table table-vcenter card-table");
+    const head = element("thead");
+    const headerRow = element("tr");
+    for (const text of ["Harness", "Correct", "Eligible", "Cost per task", "Time per task", "Review"]) headerRow.append(element("th", "", text));
+    head.append(headerRow);
+    const body = element("tbody");
+    for (const row of lane.contenders) {
+      const tr = element("tr");
+      const name = element("td", "results-harness-name");
+      name.append(element("span", `results-harness-mark results-harness-${row.family}`), element("strong", "", row.label));
+      tr.append(
+        name,
+        element("td", "", `${row.successes} / ${row.scheduled}`),
+        element("td", "", row.eligible ? "yes" : "no"),
+        element("td", "", formatCost(row.meanCost)),
+        element("td", "", formatRuntime(row.meanDuration)),
+        element("td", "", row.reviewed ? (row.unconfirmed ? `${plural(row.unconfirmed, "unconfirmed claim")}` : "clean") : "incomplete")
+      );
+      body.append(tr);
+    }
+    table.append(head, body);
+    scroll.append(table);
+    block.append(scroll);
+    const notes = [...lane.limitations];
+    if (lane.unsolved.length) notes.push(`Unsolved by every harness: ${lane.unsolved.join(", ")}.`);
+    if (notes.length) block.append(element("p", "results-scope-note", notes.join(" ")));
+    section.append(block);
+  }
+  return section;
+}
+
 function selectedTestCount(tests, filters) {
   return tests.filter((test) =>
     (filters.type === "all" || test.type === filters.type) &&
@@ -995,8 +1096,6 @@ function cohortLabel(group) {
 }
 
 function scopeDescription(observations, cohort) {
-  const selected = observations.filter(row => row.observationalCohort?.id === cohort);
-  if (selected.length) return `${selected.length} explicitly selected submissions from ${new Set(selected.map(row => row.reportId)).size} immutable reports · Observational · Original warnings retained`;
   const primary = observations.find(({reportId}) => reportId === cohort);
   if (primary == null) return "No report cohort available";
   const parts = primary.evidenceFlags.map(titleCase);
@@ -1006,15 +1105,8 @@ function scopeDescription(observations, cohort) {
   return parts.join(" · ");
 }
 
-export function renderResults({tests, harnesses, reports, selection = null}) {
+export function renderResults({tests, harnesses, reports, campaign = null}) {
   const observations = normalizeResults(reports, tests, harnesses);
-  const selected = selectCohort(reports, selection);
-  if (selected) {
-    const ids = new Set(selected.members.map(member => `${member.reportId}\0${member.trialId}`));
-    const matched = observations.filter(row => ids.has(row.observationId));
-    if (matched.length !== ids.size) throw new Error("Selected cohort contains unknown catalog entries");
-    for (const row of matched) row.observationalCohort = {id: selected.id, label: selected.label};
-  }
   const admitted = admitResults(observations);
   const exploratory = observations.filter(({decisionEligible}) => !decisionEligible);
   const modelOptions = [...new Map(observations.map(({modelKey, model, effort}) => [modelKey, `${model} · ${effort}`]))]
@@ -1031,6 +1123,7 @@ export function renderResults({tests, harnesses, reports, selection = null}) {
     element("p", "results-evidence-line", `${plural(admitted.length, "decision attempt")} · ${plural(exploratory.length, "exploratory observation")} · ${new Set(admitted.map(({taskId}) => taskId)).size} of ${tests.length} Toolbox tests represented by decision-grade evidence`)
   );
 
+  const verdict = renderCampaignVerdict(campaign, harnesses);
   const filters = element("nav", "results-filters card card-body");
   filters.setAttribute("aria-label", "Results scope");
   const body = element("div", "results-body");
@@ -1067,6 +1160,6 @@ export function renderResults({tests, harnesses, reports, selection = null}) {
   }
 
   update();
-  root.append(intro, filters, body);
+  root.append(intro, ...(verdict ? [verdict] : []), filters, body);
   return root;
 }

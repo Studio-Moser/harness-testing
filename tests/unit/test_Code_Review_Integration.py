@@ -437,5 +437,7 @@ def test_interrupted_review_keeps_unknown_usage_and_cannot_win(tmp_path, monkeyp
     returned.write_text(json.dumps(results))
     result = record_review(root, plan_path, returned)
     report = load_run_report(root, Path(result["artifacts"]["report"]))
-    assert report["experiment"]["comparison"]["winner_id"] is None
+    # Review is advisory: an interrupted review flags the verdict rather than blocking it.
+    assert "code_review_incomplete" in report["experiment"]["comparison"]["reasons"]
+    assert report["experiment"]["comparison"]["provisional"] is True
     assert report["experiment"]["code_review"]["evaluation_cost_usd"] is None

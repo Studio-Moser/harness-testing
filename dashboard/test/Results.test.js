@@ -3,10 +3,11 @@ import test from "node:test";
 
 import {HARNESS_CATALOG} from "../src/data/Harness Catalog.js";
 import {TOOLBOX_CATALOG} from "../src/data/Toolbox Catalog.js";
-import {selectCohort} from "../src/data/Selected Cohort.js";
 import {
   admitResults,
   aggregateBehavior,
+  annoyanceFromTranscript,
+  campaignVerdict,
   aggregateHarnesses,
   behaviorFromTrial,
   defaultModel,
@@ -196,64 +197,6 @@ test("bound evaluations include only explicitly selected trials without altering
   assert.equal(normalizeResults([source], TOOLBOX_CATALOG, HARNESS_CATALOG).length, 0);
   delete source.experiment.evaluation_binding;
   assert.equal(normalizeResults([source], TOOLBOX_CATALOG, HARNESS_CATALOG).length, 2);
-});
-
-test("explicit observational cohort cannot promote diagnostic evidence or imply a winner", () => {
-  const contenders = HARNESS_CATALOG.filter(harness => harness.identity);
-  const trials = contenders.map(harness => trial(harness, "react-active-badge-count", 1, {
-    collaboration: {grade: completedGrade()}
-  }));
-  const source = report(DIGEST, trials, {experiment: {purpose: "diagnostic"}});
-  const selection = {schemaVersion: 1, label: "Full selected pass",
-    contenderIds: contenders.map(harness => harness.identity), taskIds: ["react-active-badge-count"],
-    members: [{reportId: DIGEST, trialIds: trials.map(row => row.trial_id)}]};
-  const selected = selectCohort([source], selection);
-  const observations = normalizeResults([source], TOOLBOX_CATALOG, HARNESS_CATALOG);
-  observations.forEach(row => {row.observationalCohort = {id: selected.id, label: selected.label};});
-  const rows = aggregateHarnesses(observations, HARNESS_CATALOG);
-  assert.equal(admitResults(observations).length, 0);
-  assert.ok(rows.every(row => row.observational && !row.eligible && row.correctness === 1));
-  assert.ok(rows.every(row => Math.abs(row.quality - 0.8) < 1e-10 && row.deltaFromNothing === null));
-  assert.ok(rows.every(row => row.evidenceFlags.includes("diagnostic")));
-  for (const mutate of [
-    value => value.members[0].trialIds.pop(),
-    value => value.members[0].trialIds.push(value.members[0].trialIds[0]),
-    value => {value.members[0].reportId = OTHER_DIGEST;}
-  ]) {
-    const invalid = structuredClone(selection); mutate(invalid);
-    assert.throws(() => selectCohort([source], invalid));
-  }
-  const previousDocument = globalThis.document;
-  globalThis.document = {createElement: tag => new FakeElement(tag), createElementNS: (_, tag) => new FakeElement(tag)};
-  try {
-    const root = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: [source], selection});
-    assert.match(root.textContent, /Observed harness comparison/);
-    assert.match(root.textContent, /not a decision-grade ranking/);
-    assert.match(root.textContent, /3 complete grades.*observational/);
-    assert.doesNotMatch(root.textContent, /3 harnesses ranked/);
-  } finally {globalThis.document = previousDocument;}
-});
-
-test("observational selection rejects incompatible and out-of-binding source trials", () => {
-  const contenders = HARNESS_CATALOG.filter(harness => harness.identity);
-  const trials = contenders.map(harness => trial(harness));
-  const sources = [report(DIGEST, trials.slice(0, 2)), report(OTHER_DIGEST, trials.slice(2))];
-  const selection = {schemaVersion: 1, label: "Selected pass",
-    contenderIds: contenders.map(harness => harness.identity), taskIds: ["react-active-badge-count"],
-    members: sources.map(source => ({reportId: source.report_id, trialIds: source.experiment.trials.map(row => row.trial_id)}))};
-  assert.equal(selectCohort(sources, selection).members.length, 3);
-  const differentModel = structuredClone(sources);
-  differentModel[1].experiment.conditions.kickoff.model = "other-model";
-  assert.throws(() => selectCohort(differentModel, selection), /Mixed kickoff/);
-  const differentTask = structuredClone(sources);
-  differentTask[1].experiment.conditions.task_digests["react-active-badge-count"] = OTHER_DIGEST;
-  assert.throws(() => selectCohort(differentTask, selection), /Incompatible task/);
-  const unselected = structuredClone(sources);
-  unselected[1].experiment.evaluation_binding = {trial_ids: []};
-  assert.throws(() => selectCohort(unselected, selection), /unselected observational trial/);
-  const duplicateSlot = structuredClone(sources);
-  duplicateSlot[1].experiment.trials[0].contender_id = trials[0].contender_id;
-  assert.throws(() => selectCohort(duplicateSlot, selection), /task\/contender slot/);
 });
 
 test("normalizes authoritative trials and complete whole-tree telemetry", () => {
@@ -596,7 +539,7 @@ test("behavior evidence is aggregated per model and harness version from complet
   assert.equal(astraStudio["transcript.violation_count"].mean, 1);
   assert.equal(astraStudio["quality.plain_language"].mean, 3);
   assert.equal(columns[0].values["communication.warmth"].mean, 4);
-  assert.deepEqual(behaviorFromTrial({}), {transcript: {}, quality: {}, communication: {}});
+  assert.deepEqual(behaviorFromTrial({}), {transcript: {}, annoyance: {}, quality: {}, communication: {}});
   assert.deepEqual(aggregateBehavior(observations, HARNESS_CATALOG, {type: "polish"}), []);
 
   const previousDocument = globalThis.document;
@@ -610,5 +553,61 @@ test("behavior evidence is aggregated per model and harness version from complet
     assert.match(text, /Slop phrases ↓/);
     assert.match(text, /Communication grader/);
     assert.match(text, /4\.00 \/ 5/);
+  } finally {globalThis.document = previousDocument;}
+});
+
+test("annoyance counters read the assistant's visible messages only", () => {
+  const transcript = [
+    {role: "user", content: "Great question! Fix it."},
+    {role: "assistant", content: "Great question! I think it\u2019s worth noting this is robust \u2014 let me know if you want more."},
+    {role: "assistant", content: "Done."}
+  ];
+  const counts = annoyanceFromTranscript(transcript);
+  assert.equal(counts.sycophancy, 1);
+  assert.equal(counts.hedging, 1);
+  assert.equal(counts.filler, 1);
+  assert.equal(counts.self_praise, 1);
+  assert.equal(counts.closing_offers, 1);
+  assert.equal(counts.em_dashes, 1);
+  assert.equal(counts.exclamations, 1);
+  assert.deepEqual(annoyanceFromTranscript(null), {});
+  assert.deepEqual(annoyanceFromTranscript([{role: "user", content: "hi!"}]), {});
+});
+
+test("campaign verdict card names the recommended harness per lane and renders on the page", () => {
+  const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
+  const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
+  const contender = (harness, cost, reviewed = true, unconfirmed = 0) => ({
+    id: harness.identity, successes: 19, scheduled: 19, eligible: true, reviewed,
+    mean_cost_usd: cost, mean_duration_seconds: 70, code_review: {unconfirmed}
+  });
+  const campaign = {
+    campaign_digest: DIGEST, status: "recommended", winner_id: nothing.identity, reasons: [],
+    lanes: {
+      comparison: {limitations: ["Some slots were rerun."], comparison: {
+        status: "recommended", winner_id: nothing.identity, reasons: ["practical_advantage_supported"],
+        unsolved_tasks: [], contenders: [contender(nothing, 0.29, true, 5), contender(studio, 0.56, false)]
+      }},
+      deepswe: {limitations: [], comparison: {status: "no_clear_winner", winner_id: null, reasons: [], unsolved_tasks: ["pest"], contenders: []}}
+    }
+  };
+  const verdict = campaignVerdict(campaign, HARNESS_CATALOG);
+  assert.equal(verdict.winner, "Nothing v1");
+  assert.equal(verdict.lanes[0].winner, "Nothing v1");
+  assert.equal(verdict.lanes[0].contenders[1].reviewed, false);
+  assert.equal(verdict.lanes[1].winner, null);
+  assert.equal(campaignVerdict(null, HARNESS_CATALOG), null);
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag), createElementNS: (_, tag) => new FakeElement(tag)};
+  try {
+    const root = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: [], campaign});
+    const text = root.textContent;
+    assert.match(text, /Campaign verdict: Nothing v1 recommended/);
+    assert.match(text, /Comparison lane · Nothing v1 recommended/);
+    assert.match(text, /5 unconfirmed claims/);
+    assert.match(text, /incomplete/);
+    assert.match(text, /Unsolved by every harness: pest/);
+    const without = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: []});
+    assert.doesNotMatch(without.textContent, /Campaign verdict/);
   } finally {globalThis.document = previousDocument;}
 });

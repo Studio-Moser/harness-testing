@@ -1396,6 +1396,10 @@
         "review_clean": {
           "type": "boolean",
           "description": "Final-patch review completed with no unconfirmed claims and no confirmed remaining defects."
+        },
+        "reviewed": {
+          "type": "boolean",
+          "description": "Final-patch review completed for every scheduled trial."
         }
       },
       "required": [

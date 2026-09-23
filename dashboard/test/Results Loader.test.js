@@ -90,14 +90,14 @@ test("build preflight invalidates result and toolbox loader caches", async () =>
   await mkdir(resolve(root, "src/.observablehq/cache/data"), {recursive: true});
   await writeFile(resolve(root, "package.json"), JSON.stringify({type: "module"}));
   await writeFile(resolve(root, "src/data/Published Results.json.js"), "export async function loadPublishedReports() { return []; } export function safetyErrors() { return []; }");
-  await cp(resolve(repositoryRoot, "dashboard/src/data/Selected Cohort.js"), resolve(root, "src/data/Selected Cohort.js"));
+  await writeFile(resolve(root, "src/data/Campaign Summary.json.js"), "export async function loadCampaignSummary() { return null; }");
   await cp(resolve(repositoryRoot, "dashboard/Validate Results.js"), resolve(root, "Validate Results.js"));
-  for (const name of ["Published Results.json", "Toolbox.json", "Selected Cohort.json"]) {
+  for (const name of ["Published Results.json", "Toolbox.json", "Campaign Summary.json"]) {
     await writeFile(resolve(root, "src/.observablehq/cache/data", name), "stale");
   }
   const result = spawnSync(process.execPath, [resolve(root, "Validate Results.js")], {encoding: "utf8"});
   assert.equal(result.status, 0, result.stderr);
-  for (const name of ["Published Results.json", "Toolbox.json", "Selected Cohort.json"]) {
+  for (const name of ["Published Results.json", "Toolbox.json", "Campaign Summary.json"]) {
     await assert.rejects(readFile(resolve(root, "src/.observablehq/cache/data", name)), {code: "ENOENT"});
   }
 });

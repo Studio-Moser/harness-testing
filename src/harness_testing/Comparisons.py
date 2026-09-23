@@ -21,8 +21,9 @@ _LIMITS = [
     "One attempt per task is the default minimum; one flaky trial can change the verdict.",
     "Cost and time ratios are point estimates over per-task means; the advantage and "
     "noninferiority thresholds are product defaults, not research findings.",
-    "Unconfirmed reviewer claims are listed but do not block the verdict; confirmed remaining "
-    "defects do.",
+    "Review is advisory: a missing or incomplete review leaves the verdict provisional and "
+    "flagged, unconfirmed reviewer claims are listed, and confirmed remaining defects "
+    "disqualify.",
     "No clear change does not establish equivalence.",
 ]
 _HISTORY_SUMMARIES = {
@@ -233,7 +234,8 @@ def _dataset(report, contender, conditions, pricing):
         "successes": successes,
         "success_fraction": {"numerator": successes, "denominator": scheduled},
         "passed_all": complete and successes == scheduled,
-        "review_clean": review["status"] == "completed" and not any(review["confirmed"].values()),
+        "reviewed": review["status"] == "completed",
+        "review_clean": not any(review["confirmed"].values()),
         "eligible": False,
         "coverage_complete": complete,
         "counts": counts,
@@ -524,12 +526,11 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
         pair = pairs.get((left[1], right[1]))
         return pair if pair is not None else _inverse(pairs[(right[1], left[1])])
 
-    reviews_comparable = (
-        bool(reviews)
-        and all(r["status"] == "completed" for r in reviews)
-        and len({r["protocol_id"] for r in reviews}) == 1
-    )
-    if enough and not quarantined and reviews_comparable and coverage_complete:
+    # Review is advisory: an incomplete review keeps the verdict provisional and flagged,
+    # while confirmed remaining defects still disqualify a contender.
+    if any(not datasets[k]["reviewed"] for k in cohort):
+        result["provisional"] = True
+    if enough and not quarantined and coverage_complete:
         result.update(
             status="no_clear_winner", summary="No clear overall winner in the selected evidence."
         )
@@ -537,14 +538,14 @@ def build_comparison(request: dict, reports: list[dict], policy: dict) -> dict:
             result.update(
                 status="no_quality_qualified_winner",
                 summary="No contender reached the best observed correctness with complete "
-                "coverage and a finished review free of confirmed remaining defects.",
+                "coverage and no confirmed remaining defects.",
             )
         elif len(eligible) == 1:
             result.update(
                 status="recommended",
                 winner_id=eligible[0][1],
-                summary="One contender reached the best observed correctness and finished "
-                "review with no confirmed remaining defects.",
+                summary="One contender reached the best observed correctness with no confirmed "
+                "remaining defects.",
             )
             reasons.append("sole_quality_eligible")
         else:
@@ -631,17 +632,7 @@ def _history(
         )
         new_ok = np["review_clean"] and np["successes"] >= op["successes"]
         old_ok = op["review_clean"] and op["successes"] >= np["successes"]
-        reviews_ok = (
-            np["code_review"]["status"] == "completed"
-            and op["code_review"]["status"] == "completed"
-            and np["code_review"]["protocol_id"] == op["code_review"]["protocol_id"]
-        )
-        if (
-            not claims_allowed
-            or not np["coverage_complete"]
-            or not op["coverage_complete"]
-            or not reviews_ok
-        ):
+        if not claims_allowed or not np["coverage_complete"] or not op["coverage_complete"]:
             status = "insufficient_evidence"
         elif recoveries and regressions:
             status = "mixed"
