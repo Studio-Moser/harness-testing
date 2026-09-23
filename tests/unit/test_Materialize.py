@@ -754,7 +754,7 @@ def test_deepswe_plan_is_manual_exact_and_has_no_side_effects(capsys):
     assert plan.task_ids == DEEPSWE_TASK_IDS
     assert plan.commit == "8cae5984d5dd0ee37445beff0e928dc10c331116"
     assert plan.platform == "linux/amd64"
-    assert "6 selected pinned task directories" in report
+    assert "5 selected pinned task directories" in report
     assert "linux/amd64" in report
     assert "@sha256:930ec9d5" in report
     assert "No model session" in report
@@ -882,7 +882,7 @@ def test_deepswe_cache_reuse_validates_bytes_and_does_not_rebuild(
     )
 
     assert first == second
-    assert len(calls) == 6
+    assert len(calls) == 5
     assert load_deepswe_dataset(root) == first
 
     wrapper_instruction = (

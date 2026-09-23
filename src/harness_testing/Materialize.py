@@ -61,7 +61,6 @@ DEEPSWE_TASK_IDS = (
     "yjs-map-conflict-detection",
     "katex-multicolumn-array-spans",
     "wasmi-trap-coredumps",
-    "pest-character-class-coalescing",
 )
 
 
@@ -1157,7 +1156,7 @@ def _deepswe_configuration(
         not task["image"] or not _SHA256_DIGEST.fullmatch(task["digest"])
         for task in normalized
     ):
-        raise ValueError("Versions.toml DeepSWE cohort does not match the six-task pin")
+        raise ValueError("Versions.toml DeepSWE cohort does not match the five-task pin")
     if source.get("redistribute") is not False:
         raise ValueError("DeepSWE redistribution must remain disabled")
     if configuration.get("license_at_pin") != "absent":

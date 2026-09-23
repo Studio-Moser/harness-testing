@@ -19,7 +19,6 @@ NEAR_MISS_REMOVED_PATHS = {
     "yjs-map-conflict-detection": "src/utils/MapConflict.js",
     "katex-multicolumn-array-spans": "src/functions/multicolumn.ts",
     "wasmi-trap-coredumps": "crates/wasmi/src/engine/coredump.rs",
-    "pest-character-class-coalescing": "meta/src/optimizer/coalescer.rs",
 }
 _CASES = ("oracle", "nop", "near-miss", "source-tamper")
 _EXPECTED = {

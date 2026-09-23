@@ -18,7 +18,6 @@ const APPROVED_IDS = new Set([
   "yjs-map-conflict-detection",
   "katex-multicolumn-array-spans",
   "wasmi-trap-coredumps",
-  "pest-character-class-coalescing",
   "node-cross-module-permissions", "node-small-pagination", "static-responsive-settings-polish",
   "node-durable-queue-recovery", "node-export-clear", "node-export-ambiguous",
   "node-capacity-boundary", "node-toggle-completion", "static-notification-card-polish",
@@ -395,23 +394,6 @@ export const TOOLBOX_CATALOG = Object.freeze([
     expectedHarnessBehavior: ["Call for domain research before coding", "Split substantial independent investigation when useful", "Enforce format-level and runtime-level proof"],
     verification: ["Existing wasmi tests", "Separate DeepSWE verifier", "Frozen base commit", "Patch artifact review"],
     learningGoal: "Whether the harness helps manage a specification-heavy systems feature without losing binary or runtime edge cases."
-  }),
-  deepSwe({
-    id: "pest-character-class-coalescing",
-    title: "pest character-class coalescing",
-    type: "feature",
-    level: 4,
-    purpose: "Tests an optimizer feature involving new IR variants, ordered rewrite rules, range normalization, and negated predicates.",
-    promptSummary: "Coalesce qualifying choice chains into merged character classes as a final top-down optimizer pass.",
-    stack: ["Rust", "pest", "Parser optimizer", "Intermediate representation"],
-    repository: "https://github.com/pest-parser/pest",
-    baseCommit: "79dd30d11aab6f0fba3cd79bd48f456209b966b3",
-    setupSummary: "A pinned pest repository and separate verifier in an offline 2-CPU, 8-GB container.",
-    existingTests: ["Repository test suite", "DeepSWE hidden verifier"],
-    expectedProcess: ["Understand optimizer ordering and IR consumers", "Design qualification and merge invariants", "Implement new expression variants and top-down pass", "Add positive, partial-run, case-folding, and negation tests", "Run optimizer and workspace suites", "Review semantic preservation"],
-    expectedHarnessBehavior: ["Use design work for optimizer invariants", "Track the transformation matrix", "Demand semantic and ordering regressions"],
-    verification: ["Existing pest tests", "Separate DeepSWE verifier", "Frozen base commit", "Patch artifact review"],
-    learningGoal: "Whether the harness improves disciplined implementation of a broad compiler-style transformation."
   })
 ].map((entry) => Object.freeze(entry)));
 

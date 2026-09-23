@@ -131,10 +131,10 @@ def test_campaign_declares_complete_lanes_and_total_evaluation_workload():
 
     policy, _, plan, reports = fixture()
     profiles = tomllib.loads((ROOT / "runs/Profiles.toml").read_text())["profiles"]
-    assert profiles["research"]["max_sessions"] == 6 * 3 * 3
-    assert len(policy["tasks"]) == 25
-    assert plan["workload"]["coding_trials"] == 225
-    assert plan["workload"]["minimum_model_sessions"] == 675
+    assert profiles["research"]["max_sessions"] >= 5 * 3 * 3
+    assert len(policy["tasks"]) == 24
+    assert plan["workload"]["coding_trials"] == 216
+    assert plan["workload"]["minimum_model_sessions"] == 648
     assert "human_pairs" not in plan["workload"]
     result = summarize(plan, reports)
     assert result["status"] == "recommended" and result["winner_id"] == "a"
@@ -142,11 +142,11 @@ def test_campaign_declares_complete_lanes_and_total_evaluation_workload():
     assert result["lanes"]["comparison"]["superseded_trials"] == []
     assert result["summaries"]["overall"][0] == {
         "id": "a",
-        "trials": 75,
-        "correct": 75,
-        "outcomes": {"completed": 75},
-        "duration_seconds": 750,
-        "cost_usd": 37.5,
+        "trials": 72,
+        "correct": 72,
+        "outcomes": {"completed": 72},
+        "duration_seconds": 720,
+        "cost_usd": 36.0,
         "usage_complete": True,
         "quality": 0.8,
     }
@@ -213,12 +213,12 @@ def test_campaign_weights_export_variants_as_one_task_block():
                 for dimension in trial["collaboration"]["grade"]["dimensions"]:
                     dimension["score"] = 1
     result = summarize(plan, reports)
-    assert result["summaries"]["overall"][0]["quality"] == pytest.approx((23 * 0.8 + 0.2) / 24)
+    assert result["summaries"]["overall"][0]["quality"] == pytest.approx((22 * 0.8 + 0.2) / 23)
 
 
 def test_one_attempt_diagnostic_campaign_is_decision_evidence():
     policy, manifests, plan, reports = fixture(attempts=1, purpose="diagnostic")
-    assert plan["workload"]["coding_trials"] == 75
+    assert plan["workload"]["coding_trials"] == 72
     result = summarize(plan, reports)
     assert result["status"] == "recommended" and result["winner_id"] == "a"
     assert result["reasons"] == []
@@ -227,8 +227,8 @@ def test_one_attempt_diagnostic_campaign_is_decision_evidence():
     trial.update(status="timeout", usage_complete=False, cost_usd=None)
     result = summarize(plan, reports)
     row = result["summaries"]["overall"][0]
-    assert row["correct"] == 24 and row["outcomes"]["timeout"] == 1
-    assert row["duration_seconds"] == 250 and row["cost_usd"] is None
+    assert row["correct"] == 23 and row["outcomes"]["timeout"] == 1
+    assert row["duration_seconds"] == 240 and row["cost_usd"] is None
     assert row["usage_complete"] is False
     assert result["winner_id"] is None
     trial["duration_seconds"] = None

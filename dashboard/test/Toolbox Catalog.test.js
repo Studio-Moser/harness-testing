@@ -29,12 +29,12 @@ const EXPECTED_CELLS = {
   "feature:1": 1,
   "feature:2": 3,
   "feature:3": 2,
-  "feature:4": 5
+  "feature:4": 4
 };
 
-test("the catalog exposes the accepted 25-test coverage contract", () => {
+test("the catalog exposes the accepted 24-test coverage contract", () => {
   validateCatalog(TOOLBOX_CATALOG);
-  assert.equal(TOOLBOX_CATALOG.length, 25);
+  assert.equal(TOOLBOX_CATALOG.length, 24);
 
   for (const [cell, count] of Object.entries(EXPECTED_CELLS)) {
     const [type, level] = cell.split(":");
@@ -51,7 +51,7 @@ test("the catalog exposes the accepted 25-test coverage contract", () => {
 test("catalog validation rejects duplicate IDs and unsupported classifications", () => {
   assert.throws(
     () => validateCatalog([...TOOLBOX_CATALOG, TOOLBOX_CATALOG[0]]),
-    /exactly 25 entries/
+    /exactly 24 entries/
   );
 
   const invalidType = TOOLBOX_CATALOG.map((entry, index) =>
@@ -161,5 +161,5 @@ test("the Observable loader resolves the repository from its own location", asyn
   const output = JSON.parse(stdout);
 
   assert.equal(output.schemaVersion, 2);
-  assert.equal(output.tests.length, 25);
+  assert.equal(output.tests.length, 24);
 });

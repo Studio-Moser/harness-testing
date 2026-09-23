@@ -65,11 +65,6 @@ id = "wasmi-trap-coredumps"
 image = "public.ecr.aws/d3j8x8q7/swe-bench-202605:kh70h37djmvc9ac48jeh25gwz582xgqv-v1.1"
 digest = "sha256:1bec57bc662b5c33289f88cb28cae2c4df07cb33cd96aff7840c77e2b0a96c10"
 
-[[deepswe.tasks]]
-id = "pest-character-class-coalescing"
-image = "public.ecr.aws/d3j8x8q7/swe-bench-202605:kh7bmp04pqht2pcvp8qce1afm582ph2j-v1.1"
-digest = "sha256:3147fd9b5a532ba679ac2c933ddf16e7ade6f32ddcf3b2d93576f243be3bd6af"
-
 [[packages]]
 name = "harbor"
 ecosystem = "pypi"

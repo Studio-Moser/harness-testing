@@ -48,7 +48,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     deepswe_subparsers = deepswe_parser.add_subparsers(dest="deepswe_command")
     deepswe_materialize_parser = deepswe_subparsers.add_parser(
-        "materialize", help="fetch and derive the pinned six-task cohort"
+        "materialize", help="fetch and derive the pinned five-task cohort"
     )
     deepswe_materialize_parser.add_argument("--confirm-download", action="store_true")
     deepswe_materialize_parser.add_argument("--task", action="append", default=[])

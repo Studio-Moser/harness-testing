@@ -137,17 +137,6 @@ def _materialize_tasks(
                         "Use the existing package scripts, such as npm run lint:tsc -w quill. "
                         "Headed browser checks need xvfb-run -a in this display-free container.\n"
                     )
-                if task_id == "pest-character-class-coalescing":
-                    instruction += (
-                        "Task-specific test boundary: the existing inline Rust assertions "
-                        "optimizer::tests::rotate and tests::sql_parse_attempts_error describe "
-                        "pre-feature optimizer output. You may update only their expected AST "
-                        "and diagnostic text to reflect the requested coalescing behavior. "
-                        "Keep their inputs, assertions, and execution intact; do not delete, "
-                        "skip, weaken, or special-case them. All other existing tests and all "
-                        "standalone test files remain read-only. Do not preserve obsolete "
-                        "output by branching on test names or callers.\n"
-                    )
             # Pinned research trees are read-only. Replace only the derived prompts;
             # never follow a copied prompt symlink back into the original dataset.
             target.chmod(stat.S_IMODE(target.stat().st_mode) | stat.S_IWUSR)

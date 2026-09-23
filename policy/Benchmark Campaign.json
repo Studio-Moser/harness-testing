@@ -103,11 +103,6 @@
       4,
       "feature"
     ],
-    "pest-character-class-coalescing": [
-      "deepswe",
-      4,
-      "feature"
-    ],
     "node-capacity-boundary": [
       "comparison",
       1,
@@ -134,8 +129,7 @@
     "node-export-ambiguous": "export"
   },
   "holdouts": [
-    "wasmi-trap-coredumps",
-    "pest-character-class-coalescing"
+    "wasmi-trap-coredumps"
   ],
   "decision": "Correctness and completed independent review on every trial first; cost and time decide among equally correct contenders. Automated work-quality grades and level/type summaries are descriptive, not additional winner searches. No universal reliability claim."
 }

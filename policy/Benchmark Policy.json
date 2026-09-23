@@ -97,16 +97,14 @@
       "quill-shared-toolbar-focus",
       "yjs-map-conflict-detection",
       "katex-multicolumn-array-spans",
-      "wasmi-trap-coredumps",
-      "pest-character-class-coalescing"
+      "wasmi-trap-coredumps"
     ],
     [
       "happy-dom-abort-pending-body-reads",
       "quill-shared-toolbar-focus",
       "yjs-map-conflict-detection",
       "katex-multicolumn-array-spans",
-      "wasmi-trap-coredumps",
-      "pest-character-class-coalescing"
+      "wasmi-trap-coredumps"
     ],
     [
       "node-capacity-boundary"

@@ -8,7 +8,7 @@ With the provider, model, effort, task, environment and attempt policy held fixe
 
 Every workflow task contains a frozen starting project, a neutral comparison instruction, a scripted user with authored facts, an oracle solution, a protected-file manifest, a deterministic verifier and five model-free QA cases (oracle, no-op, near miss, adversarial, source tamper). Dependencies, toolchains, container images, upstream repositories, provider agents and models are pinned in `Versions.toml`.
 
-Tasks use no live product repositories or private data. Workflow projects begin as clean Git worktrees with a deterministic baseline commit; the environment and the separate verifier have no network. `/app` and the agent trajectory are retained as local artifacts for verification. The research lane uses six pinned DeepSWE tasks materialized into ignored local storage; the upstream tree has no license file, so nothing fetched is redistributed.
+Tasks use no live product repositories or private data. Workflow projects begin as clean Git worktrees with a deterministic baseline commit; the environment and the separate verifier have no network. `/app` and the agent trajectory are retained as local artifacts for verification. The research lane uses five pinned DeepSWE tasks materialized into ignored local storage; the upstream tree has no license file, so nothing fetched is redistributed.
 
 Each contender is an immutable, content-addressed bundle: source commits, plugin and skill inventory, injected startup instructions, rubric bytes and delivery configuration. Changing any of those creates a new harness version. Claude receives plugin directories through `--plugin-dir`; Codex receives its native marketplace layout, where plugins are skills-only.
 

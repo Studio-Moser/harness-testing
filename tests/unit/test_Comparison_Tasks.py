@@ -219,26 +219,3 @@ def test_active_badge_prompt_delivers_explicit_test_file_boundary(tmp_path):
     existing.write_text(existing.read_text() + "\n// even additive edits are protected\n")
     assert not protected_files_intact(workspace, manifest)
 
-
-def test_pest_prompt_discloses_narrow_inline_expectation_exception_without_changing_oracle(
-    tmp_path,
-):
-    from harness_testing.Comparison_Tasks import materialize_research_comparison_tasks
-    from harness_testing.Materialize import _file_digests
-
-    task_id = "pest-character-class-coalescing"
-    source = tmp_path / "source" / task_id
-    (source / "tests").mkdir(parents=True)
-    (source / "instruction.md").write_text("Coalesce qualifying alternatives top-down.\n")
-    (source / "task.toml").write_text('[metadata]\nbase_commit_hash = "' + "a" * 40 + '"\n')
-    (source / "tests/test.patch").write_text("Frozen protected feature assertions.\n")
-    (source / "tests/config.json").write_text('{"p2p_node_ids": ["existing"]}\n')
-    original = _file_digests(source)
-    dataset = materialize_research_comparison_tasks(tmp_path, source.parent, [task_id])
-    prompt = (dataset / task_id / "instruction.md").read_text()
-    assert "optimizer::tests::rotate and tests::sql_parse_attempts_error" in prompt
-    assert "update only their expected AST and diagnostic text" in prompt
-    assert "Keep their inputs, assertions, and execution intact" in prompt
-    assert "All other existing tests and all standalone test files remain read-only" in prompt
-    assert _file_digests(source) == original
-    assert _file_digests(dataset / task_id / "tests") == _file_digests(source / "tests")
