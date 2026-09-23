@@ -632,7 +632,9 @@ test("the stitched campaign is the default decision cohort and excludes supersed
       comparison: {status: "recommended", winner_id: nothing.identity, reasons: [], unsolved_tasks: [], contenders: []}
     }}
   };
+  original.evidence = {review_state: "quarantined", limitations: ["partial-run", "infrastructure-failure"]};
   const observations = applyCampaignCohort(normalizeResults([original, recovery], TOOLBOX_CATALOG, HARNESS_CATALOG), campaign);
+  assert.ok(observations.filter((row) => row.campaignCohort).every((row) => row.evidenceFlags.length === 0 && row.limitations.length === 0));
   const cohort = defaultCohort(observations);
   assert.equal(cohort, "campaign");
   const admitted = admitResults(observations);
@@ -641,6 +643,6 @@ test("the stitched campaign is the default decision cohort and excludes supersed
   assert.equal(rows[0].id, nothing.id);
   assert.equal(rows[0].correctness, 1);
   assert.equal(rows.find(({id}) => id === studio.id).correctness, 0);
-  assert.ok(rows[0].eligible);
+  assert.ok(rows[0].eligible && rows[0].cohortComplete);
   assert.deepEqual(applyCampaignCohort(observations, null), observations);
 });
