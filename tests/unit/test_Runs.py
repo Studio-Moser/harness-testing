@@ -249,12 +249,14 @@ version = "6.3.0"
 commit = "{superpowers_commit}"
 """,
     )
+    assert "3fb970f32d2901b82e3d17c35dbe192604fc7762" in versions  # fixture tracks the real pin
     versions = versions.replace(
         """[[sources]]
 name = "Studio Harness"
 url = "https://github.com/Studio-Moser/skills-n-stuff.git"
-version = "0.8.7"
-commit = "a0fec5021b442c4db2a8889b3a722d838f66e117"
+# v5 under test: harness plugin 1.0.0, marketplace 0.20.0, "ship direct-by-default lite mode" (#57).
+version = "1.0.0"
+commit = "3fb970f32d2901b82e3d17c35dbe192604fc7762"
 """,
         f"""[[sources]]
 name = "Studio Harness"
