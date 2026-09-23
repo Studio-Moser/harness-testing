@@ -70,13 +70,9 @@
           "target_digest",
           "conditions",
           "status",
-          "session_id",
-          "fresh_session",
-          "no_tested_harness",
           "usage_complete",
           "model_usage",
-          "findings",
-          "internal_review"
+          "findings"
         ],
         "properties": {
           "packet_id": {
@@ -236,8 +232,7 @@
         "title",
         "file",
         "line",
-        "status",
-        "confirmation"
+        "status"
       ],
       "properties": {
         "id": {

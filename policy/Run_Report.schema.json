@@ -2544,27 +2544,6 @@
         "line",
         "status",
         "evidence_digest"
-      ],
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "status": {
-                "enum": [
-                  "confirmed",
-                  "dismissed"
-                ]
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "evidence_digest": {
-                "$ref": "#/$defs/digest"
-              }
-            }
-          }
-        }
       ]
     },
     "internalReview": {

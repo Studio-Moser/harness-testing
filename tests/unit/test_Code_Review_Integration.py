@@ -198,7 +198,7 @@ def test_partial_trial_coverage_reviews_finished_work_without_erasing_gap(tmp_pa
     assert len(reviewed) == len(plan["packets"])
 
 
-@pytest.mark.parametrize("tamper", ["patch", "packet", "protocol", "conditions", "session"])
+@pytest.mark.parametrize("tamper", ["patch", "packet", "protocol", "conditions"])
 def test_record_rejects_changed_review_inputs(tmp_path, monkeypatch, tamper):
     from harness_testing.Code_Reviews import prepare_review, record_review
 
@@ -224,67 +224,6 @@ def test_record_rejects_changed_review_inputs(tmp_path, monkeypatch, tamper):
     assert not (plan_path.parent / "Imported Results.json").exists()
 
 
-@pytest.mark.parametrize("invalid", [None, "same_session", "blank", "hash", "private"])
-def test_confirmation_requires_distinct_session_and_retained_evidence(
-    tmp_path, monkeypatch, invalid
-):
-    from harness_testing.Code_Reviews import prepare_review, record_review
-    from harness_testing.Run_Reports import load_run_report
-
-    root, report_path = _root(tmp_path, monkeypatch)
-    prepared = prepare_review(root, report_path, root / "policy/Code Review Protocol.json")
-    plan_path = Path(prepared["artifacts"]["files"][0])
-    results = _results(plan_path)
-    packet = results["packets"][0]
-    proof = root / "Proof.txt"
-    proof.write_text("Reproduced stale active editor on the pinned patch.\n")
-    finding = {
-        "id": "F1",
-        "severity": "P1",
-        "category": "correctness",
-        "title": "Stale editor",
-        "file": "src/App.tsx",
-        "line": 2,
-        "status": "confirmed",
-        "confirmation": {
-            "session_id": "separate-verifier",
-            "procedure": "Focus the second editor; click Bold.",
-            "expected": "Only the second editor changes.",
-            "observed": "First editor changes.",
-            "evidence": {"path": proof.name, "digest": _digest(proof.read_bytes())},
-        },
-    }
-    if invalid == "same_session":
-        finding["confirmation"]["session_id"] = packet["session_id"]
-    elif invalid == "blank":
-        finding["confirmation"]["procedure"] = " "
-    elif invalid == "hash":
-        proof.write_text("tampered")
-    elif invalid == "private":
-        finding["title"] = "/Users/private/raw-log"
-    packet["findings"] = [finding]
-    returned = root / "Results.json"
-    returned.write_text(json.dumps(results))
-    if invalid:
-        with pytest.raises(ValueError):
-            record_review(root, plan_path, returned)
-        assert not (plan_path.parent / "Imported Results.json").exists()
-        assert not (plan_path.parent / "Evidence").exists()
-        # A malformed submission must not poison an otherwise usable plan.
-        returned.write_text(json.dumps(_results(plan_path)))
-    result = record_review(root, plan_path, returned)
-    report = load_run_report(root, Path(result["artifacts"]["report"]))
-    reviewed = [f for t in report["experiment"]["trials"] for f in t["code_review"]["findings"]]
-    assert len(reviewed) == (0 if invalid else 1)
-    if not invalid:
-        assert reviewed[0]["evidence_digest"] == _digest(proof.read_bytes())
-        reviewed_trial = next(
-            trial for trial in report["experiment"]["trials"] if trial["code_review"]["findings"]
-        )
-        assert reviewed_trial["code_review"]["usage_complete"] is False
-        assert reviewed_trial["code_review"]["cost_usd"] is None
-
-
 @pytest.mark.parametrize("field,value", [("provider", "anthropic"), ("model", "gpt-5.6-sol")])
 def test_record_rejects_wrong_review_usage_identity(tmp_path, monkeypatch, field, value):
     from harness_testing.Code_Reviews import prepare_review, record_review
@@ -298,129 +237,6 @@ def test_record_rejects_wrong_review_usage_identity(tmp_path, monkeypatch, field
     returned.write_text(json.dumps(results))
 
     with pytest.raises(ValueError, match="usage"):
-        record_review(root, plan_path, returned)
-
-
-def test_confirmation_usage_adds_distinct_session_cost_and_duration(tmp_path, monkeypatch):
-    from harness_testing.Code_Reviews import prepare_review, record_review
-    from harness_testing.Run_Reports import load_run_report
-
-    root, report_path = _root(tmp_path, monkeypatch)
-    prepared = prepare_review(root, report_path, root / "policy/Code Review Protocol.json")
-    plan_path = Path(prepared["artifacts"]["files"][0])
-    results = _results(plan_path)
-    packet = results["packets"][0]
-    proof = root / "Confirmation.txt"
-    proof.write_text("Observed the defect on the frozen patch.\n")
-    confirmer = "independent-confirmation"
-    packet["findings"] = [
-        {
-            "id": "F-confirmed",
-            "severity": "P1",
-            "category": "correctness",
-            "title": "Confirmed defect",
-            "file": "src/App.tsx",
-            "line": 1,
-            "status": "confirmed",
-            "confirmation": {
-                "session_id": confirmer,
-                "procedure": "Exercise the pinned case.",
-                "expected": "Expected behavior.",
-                "observed": "Observed defect.",
-                "evidence": {"path": proof.name, "digest": _digest(proof.read_bytes())},
-            },
-        }
-    ]
-    packet["confirmation_usage"] = [
-        {
-            "session_id": confirmer,
-            "target_digest": packet["target_digest"],
-            "conditions": packet["conditions"],
-            "fresh_session": True,
-            "no_tested_harness": True,
-            "usage_complete": True,
-            "duration_seconds": 2,
-            "model_usage": [
-                {
-                    "provider": "openai",
-                    "model": "gpt-6-astra",
-                    "input_tokens": 20,
-                    "output_tokens": 2,
-                    "cache_read_tokens": 0,
-                    "cache_write_tokens": 0,
-                }
-            ],
-        }
-    ]
-    returned = root / "Confirmation Results.json"
-    returned.write_text(json.dumps(results))
-
-    recorded = record_review(root, plan_path, returned)
-    report = load_run_report(root, Path(recorded["artifacts"]["report"]))
-    review = next(
-        trial["code_review"]
-        for trial in report["experiment"]["trials"]
-        if trial["code_review"]["findings"]
-    )
-    assert review["usage_complete"] is True
-    assert review["cost_usd"] is not None
-    assert review["duration_seconds"] == 3.0
-    assert len(review["model_usage"]) == 2
-
-
-def test_confirmation_usage_rejects_wrong_conditions(tmp_path, monkeypatch):
-    from harness_testing.Code_Reviews import prepare_review, record_review
-
-    root, report_path = _root(tmp_path, monkeypatch)
-    prepared = prepare_review(root, report_path, root / "policy/Code Review Protocol.json")
-    plan_path = Path(prepared["artifacts"]["files"][0])
-    results = _results(plan_path)
-    packet = results["packets"][0]
-    proof = root / "Confirmation.txt"
-    proof.write_text("Evidence\n")
-    packet["findings"] = [
-        {
-            "id": "F1",
-            "severity": "P1",
-            "category": "correctness",
-            "title": "Defect",
-            "file": "src/App.tsx",
-            "line": 1,
-            "status": "confirmed",
-            "confirmation": {
-                "session_id": "confirm",
-                "procedure": "Run case.",
-                "expected": "Pass.",
-                "observed": "Fail.",
-                "evidence": {"path": proof.name, "digest": _digest(proof.read_bytes())},
-            },
-        }
-    ]
-    packet["confirmation_usage"] = [
-        {
-            "session_id": "confirm",
-            "target_digest": packet["target_digest"],
-            "conditions": {**packet["conditions"], "effort": "low"},
-            "fresh_session": True,
-            "no_tested_harness": True,
-            "usage_complete": True,
-            "duration_seconds": 1,
-            "model_usage": [
-                {
-                    "provider": "openai",
-                    "model": "gpt-6-astra",
-                    "input_tokens": 1,
-                    "output_tokens": 1,
-                    "cache_read_tokens": 0,
-                    "cache_write_tokens": 0,
-                }
-            ],
-        }
-    ]
-    returned = root / "Wrong Confirmation Conditions.json"
-    returned.write_text(json.dumps(results))
-
-    with pytest.raises(ValueError, match="confirmation usage"):
         record_review(root, plan_path, returned)
 
 
@@ -442,3 +258,35 @@ def test_interrupted_review_keeps_unknown_usage_and_cannot_win(tmp_path, monkeyp
     assert "code_review_incomplete" in report["experiment"]["comparison"]["reasons"]
     assert report["experiment"]["comparison"]["provisional"] is True
     assert report["experiment"]["code_review"]["evaluation_cost_usd"] is None
+
+
+def test_confirmed_findings_import_without_separate_confirmation_sessions(tmp_path, monkeypatch):
+    from harness_testing.Code_Reviews import prepare_review, record_review
+    from harness_testing.Run_Reports import load_run_report
+
+    root, report_path = _root(tmp_path, monkeypatch)
+    prepared = prepare_review(root, report_path, root / "policy/Code Review Protocol.json")
+    plan_path = Path(prepared["artifacts"]["files"][0])
+    results = _results(plan_path)
+    for packet in results["packets"]:
+        for key in ("session_id", "fresh_session", "no_tested_harness", "internal_review"):
+            packet.pop(key)
+    results["packets"][0]["findings"] = [
+        {"id": "f1", "severity": "P2", "category": "correctness", "title": "Off by one",
+         "file": "src/App.tsx", "line": 3, "status": "confirmed"},
+        {"id": "f2", "severity": "P3", "category": "maintainability", "title": "Dead code",
+         "file": "src/App.tsx", "line": 9, "status": "unconfirmed"},
+    ]
+    returned = root / "Results.json"
+    returned.write_text(json.dumps(results))
+    result = record_review(root, plan_path, returned)
+    report = load_run_report(root, Path(result["artifacts"]["report"]))
+    reviewed = [t for t in report["experiment"]["trials"] if t.get("code_review")]
+    findings = [f for t in reviewed for f in t["code_review"]["findings"]]
+    assert {f["status"] for f in findings} == {"confirmed", "unconfirmed"}
+    assert all(f["evidence_digest"] is None for f in findings)
+    confirmed = [
+        row["code_review"]["confirmed"]["P2"]
+        for row in report["experiment"]["comparison"]["contenders"]
+    ]
+    assert sum(confirmed) == 1

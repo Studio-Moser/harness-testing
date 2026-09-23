@@ -79,7 +79,7 @@ uv run harness-test review record \
   --plan runs/reviews/PLAN/Plan.json --results /private/reviewer/Results.json
 ```
 
-Packets are blinded and frozen; reviewers must attest a fresh session without the tested harness. Confirmed findings need a separate confirming session with a reproduction and an evidence file. Review is advisory: a missing review leaves the verdict provisional and flagged, unconfirmed claims are listed as a warning, and confirmed remaining defects disqualify a contender.
+Packets are blinded and frozen. Return one result per packet with its status, usage and findings; each finding has a severity, category, title, file, line and a status of confirmed, unconfirmed or dismissed. Review is advisory: a missing review leaves the verdict provisional, unconfirmed claims are a warning, and confirmed remaining defects disqualify a contender.
 
 Automated work-quality grades, same shape:
 

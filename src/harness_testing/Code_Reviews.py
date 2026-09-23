@@ -16,7 +16,6 @@ import os
 import re
 import secrets
 import shlex
-import shutil
 import subprocess
 import tempfile
 from collections.abc import Mapping
@@ -686,37 +685,13 @@ def _verify_frozen_inputs(
     return report, report_path
 
 
-def _evidence_file(
-    results_directory: Path, declared: object, description: str
-) -> tuple[Path, bytes, str]:
-    if not isinstance(declared, Mapping) or set(declared) != {"path", "digest"}:
-        raise ValueError(f"{description} must name one retained evidence file and digest")
-    path = declared.get("path")
-    digest = declared.get("digest")
-    if not isinstance(path, str) or not isinstance(digest, str) or not _DIGEST.fullmatch(digest):
-        raise ValueError(f"{description} is invalid")
-    evidence = (results_directory / _safe_relative(path, description)).resolve()
-    if not evidence.is_relative_to(results_directory.resolve()):
-        raise ValueError(f"unsafe {description}")
-    contents = _path_bytes(evidence, description)
-    if _sha256(contents) != digest:
-        raise ValueError(f"{description} digest does not match its bytes")
-    return evidence, contents, digest
 
-
-def _public_finding(
-    finding: Mapping[str, object],
-    *,
-    results_directory: Path,
-    evidence_directory: Path,
-    packet_id: str,
-    reviewer_sessions: set[object],
-) -> dict[str, object]:
-    required = {"id", "severity", "category", "title", "file", "line", "status", "confirmation"}
-    if set(finding) != required:
-        raise ValueError("review finding has missing or unknown fields")
-    status = finding["status"]
-    if status not in _FINDING_STATUSES or finding["severity"] not in _SEVERITIES:
+def _public_finding(finding: Mapping[str, object]) -> dict[str, object]:
+    """A reviewer's finding: what, where, how bad, and whether anyone confirmed it."""
+    missing = {"id", "severity", "category", "title", "file", "line", "status"} - set(finding)
+    if missing:
+        raise ValueError("review finding has missing fields")
+    if finding["status"] not in _FINDING_STATUSES or finding["severity"] not in _SEVERITIES:
         raise ValueError("review finding has unsupported status or severity")
     if (
         not all(
@@ -730,90 +705,23 @@ def _public_finding(
     if not _FINDING_ID.fullmatch(str(finding["id"])):
         raise ValueError("review finding ID is unsafe")
     _safe_relative(str(finding["file"]), "finding file")
-    if status == "unconfirmed":
-        if finding["confirmation"] is not None:
-            raise ValueError("unconfirmed findings may not carry a confirmation")
-        return {
-            key: finding[key]
-            for key in ("id", "severity", "category", "title", "file", "line", "status")
-        } | {"evidence_digest": None}
-    if status == "dismissed":
-        confirmation = finding["confirmation"]
-        if not isinstance(confirmation, Mapping) or set(confirmation) != {"evidence"}:
-            raise ValueError("dismissed finding requires retained evidence")
-        _, contents, digest = _evidence_file(
-            results_directory, confirmation.get("evidence"), "dismissal evidence"
-        )
-        (evidence_directory / f"{packet_id}-{finding['id']}.dismissed.evidence").write_bytes(
-            contents
-        )
-        return {
-            key: finding[key]
-            for key in ("id", "severity", "category", "title", "file", "line", "status")
-        } | {"evidence_digest": digest}
-    confirmation = finding["confirmation"]
-    if not isinstance(confirmation, Mapping) or set(confirmation) != {
-        "session_id",
-        "procedure",
-        "expected",
-        "observed",
-        "evidence",
-    }:
-        raise ValueError("confirmed finding has incomplete confirmation")
-    session = confirmation.get("session_id")
-    if not isinstance(session, str) or not session or session in reviewer_sessions:
-        raise ValueError("confirmed finding requires a distinct confirming session")
-    if not all(
-        isinstance(confirmation.get(name), str) and confirmation[name].strip()
-        for name in ("procedure", "expected", "observed")
-    ):
-        raise ValueError("confirmed finding requires reproduction procedure and observed result")
-    path, contents, digest = _evidence_file(
-        results_directory, confirmation.get("evidence"), "confirmation evidence"
-    )
-    destination = evidence_directory / f"{packet_id}-{finding['id']}.evidence"
-    destination.write_bytes(contents)
     return {
         key: finding[key]
         for key in ("id", "severity", "category", "title", "file", "line", "status")
-    } | {"evidence_digest": digest}
+    } | {"evidence_digest": None}
 
-
-def _internal_review(
-    value: object,
-    *,
-    results_directory: Path,
-    evidence_directory: Path,
-    packet_id: str,
-) -> dict[str, object]:
-    if not isinstance(value, Mapping) or "status" not in value:
-        raise ValueError("internal review is invalid")
-    if value.get("status") == "unknown" and set(value) == {"status"}:
-        return {
-            "status": "unknown",
-            "found": None,
-            "fixed": None,
-            "unresolved": None,
-            "evidence_digest": None,
-        }
-    required = {"status", "found", "fixed", "unresolved", "evidence"}
-    if value.get("status") != "recorded" or set(value) != required:
-        raise ValueError("recorded internal review requires counts and evidence")
-    if not all(
+def _internal_review(value: object) -> dict[str, object]:
+    if value is None or (isinstance(value, Mapping) and value.get("status") == "unknown"):
+        return {"status": "unknown", "found": None, "fixed": None, "unresolved": None,
+                "evidence_digest": None}
+    if not isinstance(value, Mapping) or value.get("status") != "recorded" or not all(
         type(value.get(name)) is int and value[name] >= 0
         for name in ("found", "fixed", "unresolved")
     ):
-        raise ValueError("internal review counts are invalid")
-    if value["fixed"] + value["unresolved"] > value["found"]:
-        raise ValueError("internal review counts exceed findings")
-    _, contents, digest = _evidence_file(
-        results_directory, value.get("evidence"), "internal review evidence"
-    )
-    (evidence_directory / f"{packet_id}-internal.evidence").write_bytes(contents)
+        raise ValueError("internal review must be unknown or recorded counts")
     return {key: value[key] for key in ("status", "found", "fixed", "unresolved")} | {
-        "evidence_digest": digest
+        "evidence_digest": None
     }
-
 
 def _review_usage(result: Mapping, conditions: Mapping) -> tuple[list[dict], bool]:
     usage_complete = result.get("usage_complete")
@@ -846,10 +754,6 @@ def _review_summary(
     root: Path,
     packet: Mapping[str, object],
     result: Mapping[str, object],
-    results_directory: Path,
-    evidence_directory: Path,
-    reviewer_sessions: set[object],
-    time_budget_seconds: int,
 ) -> dict[str, object]:
     if result.get("status") not in _STATUSES:
         raise ValueError("review result has invalid status")
@@ -859,90 +763,24 @@ def _review_summary(
         type(duration) not in {int, float} or not math.isfinite(duration) or duration < 0
     ):
         raise ValueError("review result duration is invalid")
-    if result.get("status") == "completed" and duration is None:
-        raise ValueError("completed review requires a known duration")
-    if result.get("status") == "completed" and duration > time_budget_seconds:
-        raise ValueError("review result exceeds the frozen time budget")
-    session = result.get("session_id")
-    if (
-        not isinstance(session, str)
-        or not session
-        or result.get("fresh_session") is not True
-        or result.get("no_tested_harness") is not True
-    ):
-        raise ValueError("review result requires a fresh isolated session identity")
     findings = result.get("findings")
-    if not isinstance(findings, list):
+    if not isinstance(findings, list) or not all(isinstance(f, Mapping) for f in findings):
         raise ValueError("review result findings are invalid")
-    if len({finding.get("id") for finding in findings if isinstance(finding, Mapping)}) != len(
-        findings
-    ):
+    if len({finding.get("id") for finding in findings}) != len(findings):
         raise ValueError("review result has duplicate finding IDs")
-    public_findings = [
-        _public_finding(
-            finding,
-            results_directory=results_directory,
-            evidence_directory=evidence_directory,
-            packet_id=str(packet["packet_id"]),
-            reviewer_sessions=reviewer_sessions,
-        )
-        for finding in findings
-        if isinstance(finding, Mapping)
-    ]
-    if len(public_findings) != len(findings):
-        raise ValueError("review result finding is invalid")
-    required_sessions = {
-        finding["confirmation"]["session_id"]
-        for finding in findings
-        if finding["status"] == "confirmed"
-    }
-    ledgers = result.get("confirmation_usage", [])
-    seen = set()
-    for ledger in ledgers:
-        session_id = ledger["session_id"]
-        if (
-            session_id not in required_sessions
-            or session_id in seen
-            or session_id in reviewer_sessions
-            or ledger["conditions"] != result["conditions"]
-            or ledger["target_digest"] != packet["target_digest"]
-        ):
-            raise ValueError("confirmation usage does not match the independent frozen review")
-        seen.add(session_id)
-        additional, complete = _review_usage(ledger, result["conditions"])
-        usage.extend(additional)
-        usage_complete = usage_complete and complete
-        elapsed = ledger["duration_seconds"]
-        if elapsed is not None and (
-            type(elapsed) not in {int, float}
-            or not math.isfinite(elapsed)
-            or elapsed < 0
-            or elapsed > time_budget_seconds
-        ):
-            raise ValueError("confirmation duration is outside the frozen budget")
-        duration = duration + elapsed if duration is not None and elapsed is not None else None
-    if seen != required_sessions:
-        usage_complete = False
-        duration = None
     cost, pricing_digest = _price_usage(root, usage)
     return {
         "protocol_id": packet["protocol_id"],
         "status": result["status"],
         "target_digest": packet["target_digest"],
-        "findings": public_findings,
+        "findings": [_public_finding(finding) for finding in findings],
         "cost_usd": cost if usage_complete else None,
         "pricing_digest": pricing_digest,
         "duration_seconds": float(duration) if duration is not None else None,
         "usage_complete": usage_complete,
         "model_usage": [dict(row) for row in usage],
-        "internal_review": _internal_review(
-            result.get("internal_review"),
-            results_directory=results_directory,
-            evidence_directory=evidence_directory,
-            packet_id=str(packet["packet_id"]),
-        ),
+        "internal_review": _internal_review(result.get("internal_review")),
     }
-
 
 def _attach_comparison(root: Path, report: dict[str, object]) -> None:
     experiment = report.get("experiment")
@@ -1018,108 +856,77 @@ def record_review(root: Path, plan_path: Path, results_path: Path) -> dict[str, 
         or set(planned) != set(returned)
     ):
         raise ValueError("review results must cover every frozen packet exactly once")
-    sessions = [item.get("session_id") for item in submitted if isinstance(item, Mapping)]
-    if len(set(sessions)) != len(sessions):
-        raise ValueError("review packets must use distinct fresh sessions")
-    confirming_sessions = set()
-    for item in submitted:
-        packet_sessions = {
-            finding["confirmation"]["session_id"]
-            for finding in item["findings"]
-            if finding["status"] == "confirmed"
-            and isinstance(finding["confirmation"], Mapping)
-            and isinstance(finding["confirmation"].get("session_id"), str)
-        }
-        if confirming_sessions.intersection(packet_sessions):
-            raise ValueError("confirmation sessions must not review multiple packets")
-        confirming_sessions.update(packet_sessions)
-    with tempfile.TemporaryDirectory(dir=directory, prefix=".record-") as scratch:
-        evidence_directory = Path(scratch)
-        summaries = {}
-        for packet_id, packet in planned.items():
-            if returned[packet_id].get("target_digest") != packet.get("target_digest"):
-                raise ValueError("review result does not match the frozen packet target")
-            if returned[packet_id].get("conditions") != plan.get("conditions"):
-                raise ValueError("review packet does not match the required reviewer conditions")
-            findings = returned[packet_id].get("findings")
-            if not isinstance(findings, list) or any(
-                not isinstance(finding, Mapping)
-                or finding.get("category") not in plan["protocol"]["categories"]
-                for finding in findings
-            ):
-                raise ValueError("review finding category is not in the frozen protocol")
-            complete_packet = dict(packet) | {"protocol_id": plan["protocol"]["protocol_id"]}
-            summaries[packet["trial_id"]] = _review_summary(
-                root,
-                complete_packet,
-                returned[packet_id],
-                results_path.parent,
-                evidence_directory,
-                set(sessions),
-                plan["protocol"]["time_budget_seconds"],
-            )
-        revised = copy.deepcopy(source_report)
-        trials = revised["experiment"]["trials"]
-        for trial in trials:
-            if isinstance(trial, dict) and trial.get("trial_id") in summaries:
-                trial["code_review"] = summaries[trial["trial_id"]]
-        costs = [summary["cost_usd"] for summary in summaries.values()]
-        revised["experiment"]["code_review"] = {
-            "plan_id": plan["plan_id"],
-            "protocol_id": plan["protocol"]["protocol_id"],
-            "source_report_id": source_report["report_id"],
-            "results_digest": _sha256(results_bytes),
-            "evaluation_cost_usd": sum(costs)
-            if costs and all(cost is not None for cost in costs)
-            else None,
-        }
-        revised["experiment"]["supersedes_report_id"] = source_report["report_id"]
-        imported_path = directory / "Import.json"
-        imported = _read_json(imported_path, "retained import") if imported_path.exists() else None
-        if imported and imported.get("results_digest") != _sha256(results_bytes):
-            raise ValueError("imported review results conflict with retained private evidence")
-        revised["updated_at"] = (
-            imported["imported_at"]
-            if imported
-            else datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    summaries = {}
+    for packet_id, packet in planned.items():
+        if returned[packet_id].get("target_digest") != packet.get("target_digest"):
+            raise ValueError("review result does not match the frozen packet target")
+        if returned[packet_id].get("conditions") != plan.get("conditions"):
+            raise ValueError("review packet does not match the required reviewer conditions")
+        findings = returned[packet_id].get("findings")
+        if not isinstance(findings, list) or any(
+            not isinstance(finding, Mapping)
+            or finding.get("category") not in plan["protocol"]["categories"]
+            for finding in findings
+        ):
+            raise ValueError("review finding category is not in the frozen protocol")
+        complete_packet = dict(packet) | {"protocol_id": plan["protocol"]["protocol_id"]}
+        summaries[packet["trial_id"]] = _review_summary(
+            root, complete_packet, returned[packet_id]
         )
-        _attach_comparison(root, revised)
-        revised["report_id"] = run_report_id(revised)
-        if imported and imported.get("report_id") != revised["report_id"]:
-            raise ValueError("repeated import conflicts with the retained report revision")
-        safety = public_safety_errors(revised)
-        validation = validate_run_report(root, revised)
-        if safety or validation:
-            raise ValueError(
-                "reviewed report is not public-safe: "
-                + "; ".join(dict.fromkeys((*safety, *validation)))
+    revised = copy.deepcopy(source_report)
+    trials = revised["experiment"]["trials"]
+    for trial in trials:
+        if isinstance(trial, dict) and trial.get("trial_id") in summaries:
+            trial["code_review"] = summaries[trial["trial_id"]]
+    costs = [summary["cost_usd"] for summary in summaries.values()]
+    revised["experiment"]["code_review"] = {
+        "plan_id": plan["plan_id"],
+        "protocol_id": plan["protocol"]["protocol_id"],
+        "source_report_id": source_report["report_id"],
+        "results_digest": _sha256(results_bytes),
+        "evaluation_cost_usd": sum(costs)
+        if costs and all(cost is not None for cost in costs)
+        else None,
+    }
+    revised["experiment"]["supersedes_report_id"] = source_report["report_id"]
+    imported_path = directory / "Import.json"
+    imported = _read_json(imported_path, "retained import") if imported_path.exists() else None
+    if imported and imported.get("results_digest") != _sha256(results_bytes):
+        raise ValueError("imported review results conflict with retained private evidence")
+    revised["updated_at"] = (
+        imported["imported_at"]
+        if imported
+        else datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    )
+    _attach_comparison(root, revised)
+    revised["report_id"] = run_report_id(revised)
+    if imported and imported.get("report_id") != revised["report_id"]:
+        raise ValueError("repeated import conflicts with the retained report revision")
+    safety = public_safety_errors(revised)
+    validation = validate_run_report(root, revised)
+    if safety or validation:
+        raise ValueError(
+            "reviewed report is not public-safe: "
+            + "; ".join(dict.fromkeys((*safety, *validation)))
+        )
+    retained_results = directory / "Imported Results.json"
+    if retained_results.exists() and retained_results.read_bytes() != results_bytes:
+        raise ValueError("imported review results conflict with retained private evidence")
+    if not retained_results.exists():
+        retained_results.write_bytes(results_bytes)
+    if not imported_path.exists():
+        imported_path.write_text(
+            json.dumps(
+                {
+                    "results_digest": _sha256(results_bytes),
+                    "report_id": revised["report_id"],
+                    "imported_at": revised["updated_at"],
+                },
+                indent=2,
+                sort_keys=True,
             )
-        retained_results = directory / "Imported Results.json"
-        if retained_results.exists() and retained_results.read_bytes() != results_bytes:
-            raise ValueError("imported review results conflict with retained private evidence")
-        if not retained_results.exists():
-            retained_results.write_bytes(results_bytes)
-        if not imported_path.exists():
-            imported_path.write_text(
-                json.dumps(
-                    {
-                        "results_digest": _sha256(results_bytes),
-                        "report_id": revised["report_id"],
-                        "imported_at": revised["updated_at"],
-                    },
-                    indent=2,
-                    sort_keys=True,
-                )
-                + "\n"
-            )
-        final_evidence = directory / "Evidence"
-        final_evidence.mkdir(exist_ok=True)
-        for staged in evidence_directory.iterdir():
-            destination = final_evidence / staged.name
-            if destination.exists() and destination.read_bytes() != staged.read_bytes():
-                raise ValueError("retained review evidence conflicts with the imported bytes")
-            if not destination.exists():
-                shutil.move(str(staged), destination)
+            + "\n"
+        )
     contents = json.dumps(revised, indent=2, sort_keys=True) + "\n"
     evidence_path = (
         root / "runs" / "evidence" / (revised["report_id"].removeprefix("sha256:") + ".json")

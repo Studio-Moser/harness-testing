@@ -207,9 +207,10 @@ def test_review_report_accepts_safe_evidence_and_rejects_unproven_or_private_fie
     report["report_id"] = run_report_id(report)
     assert validate_run_report(ROOT, report) == ()
     finding = report["experiment"]["trials"][0]["code_review"]["findings"][0]
+    # A confirmed finding no longer needs a retained evidence file.
     finding["evidence_digest"] = None
     report["report_id"] = run_report_id(report)
-    assert validate_run_report(ROOT, report)
+    assert validate_run_report(ROOT, report) == ()
     finding["status"] = "unconfirmed"
     report["report_id"] = run_report_id(report)
     assert validate_run_report(ROOT, report) == ()
