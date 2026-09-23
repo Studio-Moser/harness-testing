@@ -335,3 +335,19 @@ def test_campaign_assembly_refuses_cherry_picking_gaps_and_uneven_corrections():
     # A report from the wrong lane is rejected before any slot is filled.
     with pytest.raises(ValueError, match="continuation report has incompatible conditions"):
         assemble_lane(plan, "comparison", [original, reports[1]])
+
+
+def test_retired_tasks_are_left_out_of_the_verdict_without_touching_evidence():
+    _, _, plan, reports = fixture(attempts=1, purpose="diagnostic")
+    research = [t for t, spec in plan["policy"]["tasks"].items() if spec[0] == "deepswe"]
+    retired = research[-1]
+    for trial in reports[1]["experiment"]["trials"]:
+        if trial["task_id"] == retired:
+            trial.update(correctness=False)
+    active = set(plan["policy"]["tasks"]) - {retired}
+    result = summarize_campaign(plan, reports, policy_for_lane=policy_for_lane, active_tasks=active)
+    lane = result["lanes"]["deepswe"]["comparison"]
+    assert result["summaries"]["overall"][0]["trials"] == len(active)
+    assert lane["unsolved_tasks"] == []
+    assert all(row["passed_all"] for row in lane["contenders"])
+    assert any(t["task_id"] == retired for t in reports[1]["experiment"]["trials"])

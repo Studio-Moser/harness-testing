@@ -473,9 +473,8 @@ def prepare_review(
     if frozen_conditions != report["experiment"]["conditions"]:
         raise ValueError("source report conditions do not match the source manifest")
     expected_protocol = evaluation_protocol(manifest, "code_review")
-    if expected_protocol is not None:
-        if protocol != expected_protocol:
-            raise ValueError("review protocol differs from the frozen benchmark policy")
+    if expected_protocol is not None and protocol != expected_protocol:
+        raise ValueError("review protocol differs from the frozen benchmark policy")
     image_digests = frozen_conditions.get("image_digests")
     if not isinstance(image_digests, Mapping) or not all(
         isinstance(name, str) and isinstance(digest, str) and _DIGEST.fullmatch(digest)

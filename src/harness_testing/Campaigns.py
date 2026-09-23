@@ -128,10 +128,12 @@ def campaign_summary(root: Path, plan_path: Path, report_paths: list[Path]) -> d
     if plan["digest"] != contender_identity({k: v for k, v in plan.items() if k != "digest"}):
         raise ValueError("campaign plan identity mismatch")
     reports = [load_run_report(root, path) for path in report_paths]
-    # The verdict uses the current policy; retained coding evidence is unchanged.
+    # The verdict uses the current policy and task list; retained evidence is unchanged.
+    current = json.loads((root / "policy/Benchmark Campaign.json").read_text())
     return summarize_campaign(
         plan,
         reports,
+        active_tasks=set(current["tasks"]),
         policy_for_lane=lambda conditions: load_comparison_policy(root, conditions)
         | {"pricing": comparison_pricing(root)},
         evaluation={
@@ -281,13 +283,26 @@ def assemble_lane(plan: dict, lane: str, reports: list[dict]) -> dict:
     }
 
 
+def _retire_tasks(experiment: dict, active_tasks: set[str]) -> None:
+    conditions = experiment["conditions"]
+    kept = [task for task in conditions["task_ids"] if task in active_tasks]
+    conditions["task_ids"] = kept
+    for field in ("task_digests",):
+        if isinstance(conditions.get(field), dict):
+            conditions[field] = {k: v for k, v in conditions[field].items() if k in active_tasks}
+    experiment["trials"] = [t for t in experiment["trials"] if t["task_id"] in active_tasks]
+
+
 def summarize_campaign(
     plan: dict,
     reports: list[dict],
     *,
     policy_for_lane: Callable[[dict], dict] | None = None,
     evaluation: dict | None = None,
+    active_tasks: set[str] | None = None,
 ) -> dict:
+    """Summarize a campaign; tasks retired since it ran (not in active_tasks) are left out
+    of every verdict and summary, while the retained evidence itself is unchanged."""
     lanes = plan["lanes"]
     by_lane: dict[str, list[dict]] = defaultdict(list)
     for report in reports:
@@ -302,6 +317,8 @@ def summarize_campaign(
     for lane in sorted(lanes):
         assembled = assemble_lane(plan, lane, by_lane[lane])
         experiment = assembled["experiment"]
+        if active_tasks is not None:
+            _retire_tasks(experiment, active_tasks)
         if policy_for_lane is not None:
             policy = policy_for_lane(experiment["conditions"])
             comparison = build_comparison(experiment, [assembled], policy)
@@ -344,11 +361,14 @@ def summarize_campaign(
                 )
             },
         }
-    tasks = plan["policy"]["tasks"]
+    tasks = {
+        task: spec for task, spec in plan["policy"]["tasks"].items()
+        if active_tasks is None or task in active_tasks
+    }
     groups = {"overall": set(tasks)}
     for task, (_, level, kind) in tasks.items():
         groups.setdefault(f"L{level}/{kind}", set()).add(task)
-    groups["holdouts"] = set(plan["policy"]["holdouts"])
+    groups["holdouts"] = set(plan["policy"]["holdouts"]) & set(tasks)
     summaries = {}
     for group, members in groups.items():
         summaries[group] = []
