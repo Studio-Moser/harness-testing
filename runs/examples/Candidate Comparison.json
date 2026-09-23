@@ -30,11 +30,20 @@
     }
   ],
   "conditions": {
+    "simulated_user": {
+      "protocol": "semantic-user-v1",
+      "provider": "codex",
+      "runtime_version": "0.153.4",
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "timeout_seconds": 90,
+      "max_context_chars": 64000
+    },
     "kickoff": {
       "provider": "codex",
       "runtime_version": "0.153.4",
       "model": "gpt-6-astra",
-      "effort": "high"
+      "effort": "medium"
     },
     "task_ids": [
       "react-accent-polish",
@@ -53,7 +62,37 @@
         "provider": "codex",
         "runtime_version": "0.153.4",
         "model": "gpt-6-astra",
+        "effort": "low"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-6-astra",
+        "effort": "medium"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-6-astra",
         "effort": "high"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-6-astra",
+        "effort": "xhigh"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-6-astra",
+        "effort": "max"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-6-astra",
+        "effort": "ultra"
       },
       {
         "provider": "codex",
@@ -76,8 +115,80 @@
       {
         "provider": "codex",
         "runtime_version": "0.153.4",
+        "model": "gpt-5.6-sol",
+        "effort": "xhigh"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-sol",
+        "effort": "max"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-sol",
+        "effort": "ultra"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-terra",
+        "effort": "low"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-terra",
+        "effort": "medium"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
         "model": "gpt-5.6-terra",
         "effort": "high"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-terra",
+        "effort": "xhigh"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-terra",
+        "effort": "max"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-terra",
+        "effort": "ultra"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-luna",
+        "effort": "low"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-luna",
+        "effort": "medium"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-luna",
+        "effort": "high"
+      },
+      {
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "model": "gpt-5.6-luna",
+        "effort": "xhigh"
       },
       {
         "provider": "codex",
@@ -91,7 +202,7 @@
     "timeout_seconds": 1800,
     "retry_policy": "none",
     "accounting_policy": "agent-tree-v1",
-    "decision_policy": "development-comparison-v1",
+    "decision_policy": "benchmark-readiness-v2",
     "resources": {
       "cpus": 2,
       "memory_mb": 4096

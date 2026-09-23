@@ -1,0 +1,1 @@
+import {it,expect} from 'vitest'; import {readFileSync} from 'node:fs'; it('retains all controls and live status',()=>{const text=readFileSync('index.html','utf8');expect((text.match(/<button>/g)||[]).length).toBe(3);expect(text).toContain('role="status"');});

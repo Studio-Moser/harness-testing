@@ -41,6 +41,6 @@ attempts = 1
 agent_timeout_seconds = 3600
 concurrency = 1
 packs = ["research"]
-max_sessions = 24
+max_sessions = 54
 estimated_input_tokens_per_session = 2000000
 estimated_output_tokens_per_session = 200000

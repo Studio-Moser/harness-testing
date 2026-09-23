@@ -18,7 +18,11 @@ const APPROVED_IDS = new Set([
   "yjs-map-conflict-detection",
   "katex-multicolumn-array-spans",
   "wasmi-trap-coredumps",
-  "pest-character-class-coalescing"
+  "pest-character-class-coalescing",
+  "node-cross-module-permissions", "node-small-pagination", "static-responsive-settings-polish",
+  "node-durable-queue-recovery", "node-export-clear", "node-export-ambiguous",
+  "node-capacity-boundary", "node-toggle-completion", "static-notification-card-polish",
+  "static-workspace-design-system-polish"
 ]);
 const TYPES = new Set(["polish", "bug-fix", "feature"]);
 const LEVELS = new Set([1, 2, 3, 4]);
@@ -60,6 +64,108 @@ function deepSwe(entry) {
 }
 
 export const TOOLBOX_CATALOG = Object.freeze([
+  controlled({
+    id: "node-cross-module-permissions", title: "Cross-module permission cache", type: "bug-fix", level: 3,
+    purpose: "Tests a shared authorization defect spanning HTTP and background work, tenant isolation, revocation and promotion.",
+    promptSummary: "Diagnose stale and cross-workspace permissions; fix the shared cause without disabling the cache.",
+    stack: ["JavaScript", "Node.js", "Vitest"], taskPath: "tasks/workflow/node-cross-module-permissions",
+    setupSummary: "Frozen role store, HTTP and worker callers expose a shared mutable permission cache.",
+    existingTests: ["test/Behavior.test.js"], expectedProcess: ["Reproduce both callers", "Trace cache identity and invalidation", "Verify revocation, promotion and tenant separation"],
+    expectedHarnessBehavior: ["Investigate the shared cause", "Preserve effective caching", "Check every affected caller"],
+    verification: ["Behavioral and cache-hit assertions", "Protected files", "Five-case verifier QA"],
+    learningGoal: "Whether the harness investigates the common cause and adds useful regression checks without being told to test."
+  }),
+  controlled({
+    id: "node-small-pagination", title: "Small list-pagination feature", type: "feature", level: 2,
+    purpose: "Tests a small feature, unprompted verification, and applying a user correction without disrupting working behavior.",
+    promptSummary: "Implement one-based pagination, totals, empty and out-of-range behavior, and argument validation.",
+    stack: ["JavaScript", "Node.js", "Vitest"], taskPath: "tasks/workflow/node-small-pagination",
+    setupSummary: "A bounded list API. After the first completed response, the scripted user corrects TypeError to RangeError in the same root session; protected checks require the corrected behavior.",
+    existingTests: ["test/Behavior.test.js"], expectedProcess: ["Read the complete brief", "Implement the local function", "Verify boundaries and input preservation"],
+    expectedHarnessBehavior: ["Proceed without unnecessary approval", "Keep planning proportionate", "Verify the completed behavior"],
+    verification: ["Empty, exact-boundary and invalid-argument checks", "Protected files", "Five-case verifier QA"],
+    learningGoal: "Whether the harness incorporates a correction, checks its work unprompted, and keeps a small feature proportionate."
+  }),
+  controlled({
+    id: "static-responsive-settings-polish", title: "Responsive settings-page polish", type: "polish", level: 3,
+    purpose: "Tests actual rendered hierarchy, spacing, responsiveness and accessibility rather than exact CSS substitutions.",
+    promptSummary: "Make a cramped settings screen readable and coherent while preserving its copy and behavior; choose the visual treatment.",
+    stack: ["HTML", "CSS", "Playwright", "Chromium"], taskPath: "tasks/workflow/static-responsive-settings-polish",
+    setupSummary: "Pinned browser environments render the page at 320, 768 and 1440 pixels and retain screenshots.",
+    existingTests: ["Visual_Check.py", "test/Behavior.test.js"], expectedProcess: ["Inspect the rendered baseline", "Refine layout and visual hierarchy", "Check responsive layouts and keyboard focus", "Review screenshots"],
+    expectedHarnessBehavior: ["Use rendered evidence", "Preserve accessible interactions", "Distinguish measurable correctness from visual judgment"],
+    verification: ["Browser layout, contrast, overflow, focus and interaction checks", "Retained screenshots", "Separate visual acceptance rubric", "Five-case verifier QA"],
+    learningGoal: "Whether the harness improves a real visual composition and checks it at multiple sizes; an automated pass alone is not proof of good taste."
+  }),
+  controlled({
+    id: "node-durable-queue-recovery", title: "Durable queue recovery", type: "bug-fix", level: 4,
+    purpose: "Tests persistence and recovery behavior across interacting queue subsystems under injected failures.",
+    promptSummary: "Diagnose and repair lost or duplicated work during queue recovery while preserving normal processing behavior.",
+    stack: ["JavaScript", "Node.js", "Persistence", "Vitest"], taskPath: "tasks/workflow/node-durable-queue-recovery",
+    setupSummary: "A controlled multi-module queue fixture with deterministic failure injection; difficulty is provisional until pilot evidence is available.",
+    existingTests: ["test/Behavior.test.js (protected lifecycle and fault-injection assertions)"], expectedProcess: ["Reproduce recovery failures", "Trace durable state and execution order", "Repair the recovery boundary", "Verify the fault matrix"],
+    expectedHarnessBehavior: ["Research persistence invariants", "Check failure and recovery paths", "Avoid claiming success from happy-path tests"],
+    verification: ["Fault-injection tests", "Protected source and runner configuration", "Five-case verifier QA"],
+    learningGoal: "Whether difficult-bug performance extends beyond the Happy DOM lifecycle task into persistence and recovery."
+  }),
+  controlled({
+    id: "node-capacity-boundary", title: "Inclusive capacity boundary", type: "bug-fix", level: 1,
+    purpose: "Tests an atomic off-by-one repair without expanding the task into a larger redesign.",
+    promptSummary: "Treat a queue at its exact capacity as full; preserve below- and over-capacity behavior.",
+    stack: ["JavaScript", "Node.js", "Vitest"], taskPath: "tasks/workflow/node-capacity-boundary",
+    setupSummary: "One existing predicate and frozen baseline tests, with protected boundary checks including zero capacity.",
+    existingTests: ["test/Behavior.test.js"], expectedProcess: ["Inspect the predicate", "Reproduce the boundary", "Make and verify the local repair"],
+    expectedHarnessBehavior: ["Keep diagnosis proportionate", "Avoid unrelated validation or abstractions", "Check the boundary without weakening tests"],
+    verification: ["Exact/below/above capacity matrix", "Protected files", "Five-case verifier QA"],
+    learningGoal: "Whether an atomic bug receives useful verification without unnecessary ceremony."
+  }),
+  controlled({
+    id: "node-toggle-completion", title: "Immutable completion toggle", type: "feature", level: 1,
+    purpose: "Tests a fully specified, atomic feature with a small immutability contract.",
+    promptSummary: "Return a new task with done toggled; preserve every other property and never mutate the input.",
+    stack: ["JavaScript", "Node.js", "Vitest"], taskPath: "tasks/workflow/node-toggle-completion",
+    setupSummary: "One stub export, frozen public smoke test, and separate protected behavioral checks.",
+    existingTests: ["test/Behavior.test.js"], expectedProcess: ["Read the complete contract", "Implement the helper", "Verify both directions and input preservation"],
+    expectedHarnessBehavior: ["Proceed from a complete brief", "Avoid scope expansion", "Use direct verification"],
+    verification: ["Both toggle directions", "Frozen input, identity and property preservation", "Five-case verifier QA"],
+    learningGoal: "Whether the harness completes a tiny feature directly while respecting nonmutation."
+  }),
+  controlled({
+    id: "static-notification-card-polish", title: "Notification card polish", type: "polish", level: 2,
+    purpose: "Tests a bounded visual refinement requiring a few coordinated layout and typography decisions.",
+    promptSummary: "Polish one notification card while preserving copy and the Save interaction.",
+    stack: ["HTML", "CSS", "Playwright", "Chromium"], taskPath: "tasks/workflow/static-notification-card-polish",
+    setupSummary: "One mutable stylesheet, protected markup and interactions; rendered at 320, 768 and 1440 pixels.",
+    existingTests: ["Visual_Check.py", "test/Behavior.test.js"], expectedProcess: ["Inspect the card", "Refine hierarchy and spacing", "Check narrow layout, contrast and focus"],
+    expectedHarnessBehavior: ["Keep the visual scope bounded", "Use rendered proof", "Preserve accessible behavior"],
+    verification: ["Card geometry, contrast, keyboard and Save checks", "Three retained screenshots and visual rubric", "Five-case verifier QA"],
+    learningGoal: "Whether the harness can make a small composition coherent without turning it into an application redesign."
+  }),
+  controlled({
+    id: "static-workspace-design-system-polish", title: "Workspace visual-system polish", type: "polish", level: 4,
+    purpose: "Tests coherent visual refinement across a multi-page application and shared component system.",
+    promptSummary: "Unify overview, project directory, settings and activity screens while preserving navigation and interactions.",
+    stack: ["HTML", "CSS", "JavaScript", "Playwright", "Chromium"], taskPath: "tasks/workflow/static-workspace-design-system-polish",
+    setupSummary: "Two mutable shared/page stylesheets, four frozen routes, dense tables and forms; 12 route/viewport captures. L4 describes the intended multi-page scope; difficulty remains provisional.",
+    existingTests: ["Visual_Check.py", "test/Behavior.test.js"], expectedProcess: ["Audit all routes and shared patterns", "Choose a consistent visual system", "Refine shared and page-specific layouts", "Verify the full route/viewport and interaction matrix"],
+    expectedHarnessBehavior: ["Plan proportionately for cross-page consistency", "Avoid fixing only the first screen", "Review rendered evidence and accessible states"],
+    verification: ["All-route responsive layout and contrast", "Navigation, filter, form, review action and keyboard checks", "Twelve retained screenshots and visual rubric", "Five-case verifier QA"],
+    learningGoal: "Whether the harness maintains visual consistency and verification coverage across a larger polish scope."
+  }),
+  ...[
+    ["node-export-clear", "Record export — clear brief", false],
+    ["node-export-ambiguous", "Record export — ambiguous brief", true]
+  ].map(([id, title, ambiguous]) => controlled({
+    id, title, type: "feature", level: 2,
+    purpose: "One half of a matched experiment isolating useful clarification from unnecessary ceremony.",
+    promptSummary: ambiguous ? "Add exports without specified format, fields or privacy behavior; resolve the missing choices with the scripted user." : "Implement CSV export of visible records using the existing serializer, with explicit fields and privacy requirements.",
+    stack: ["JavaScript", "CSV", "Vitest"], taskPath: `tasks/workflow/${id}`,
+    setupSummary: "Both variants use identical application and verifier bytes. Only the brief and communication policy differ. Report this pair separately from broad capability averages.",
+    existingTests: ["test/Behavior.test.js"], expectedProcess: [ambiguous ? "Ask a useful product question" : "Proceed from the complete specification", "Reuse the serializer", "Verify filtering, privacy, quoting and empty data"],
+    expectedHarnessBehavior: ["Scale clarification to actual ambiguity", "Respect existing helpers", "Avoid publication or extra authority"],
+    verification: ["Identical protected behavioral tests", "Scripted product facts", "Question/approval evidence", "Five-case verifier QA"],
+    learningGoal: "Whether the harness recognizes when clarification adds value, without asking unnecessary questions on the matched clear task."
+  })),
   controlled({
     id: "react-accent-polish",
     title: "React accent polish",
@@ -310,8 +416,8 @@ export const TOOLBOX_CATALOG = Object.freeze([
 ].map((entry) => Object.freeze(entry)));
 
 export function validateCatalog(entries) {
-  if (!Array.isArray(entries) || entries.length !== 15) {
-    throw new Error(`Toolbox catalog must contain exactly 15 entries; received ${entries?.length ?? "invalid"}`);
+  if (!Array.isArray(entries) || entries.length !== APPROVED_IDS.size) {
+    throw new Error(`Toolbox catalog must contain exactly ${APPROVED_IDS.size} entries; received ${entries?.length ?? "invalid"}`);
   }
 
   const ids = new Set();

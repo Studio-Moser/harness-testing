@@ -10,8 +10,12 @@ import {HARNESS_CATALOG} from "./data/Harness Catalog.js";
 
 const {tests} = await FileAttachment("./data/Toolbox.json").json();
 const reports = await FileAttachment("./data/Published Results.json").json();
+const selection = await FileAttachment("./data/Selected Cohort.json").json();
 
-for (const link of document.querySelectorAll("[data-nav]")) link.removeAttribute("aria-current");
+for (const link of document.querySelectorAll("[data-nav]")) {
+  link.removeAttribute("aria-current");
+  link.parentElement.classList.toggle("active", link.dataset.nav === "results");
+}
 document.querySelector('[data-nav="results"]')?.setAttribute("aria-current", "page");
-display(renderResults({tests, harnesses: HARNESS_CATALOG, reports}));
+display(renderResults({tests, harnesses: HARNESS_CATALOG, reports, selection}));
 ```

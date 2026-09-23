@@ -9,7 +9,6 @@ import os
 import re
 import stat
 import subprocess
-import sys
 import tarfile
 import tempfile
 import tomllib
@@ -39,17 +38,12 @@ from harness_testing.Materialize import (
     materialize_arm,
     require_current_image,
 )
-from harness_testing.Report_Publication import (
-    load_publication_target,
-    publication_manifest_record,
-    sync_pending_reports,
-)
 from harness_testing.Run_Reports import (
     record_job_timestamps,
+    recover_failed_run_report,
     refresh_local_dashboard,
     write_run_report,
 )
-from harness_testing.Skill_Evaluation import SkillEvaluation, write_skill_evaluation_report
 from harness_testing.Validate import find_sensitive_keys, validate_repository
 
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -94,10 +88,11 @@ _AGENT_ADAPTERS = {
 _AGENT_ADAPTER_SHARED_PATHS = tuple(
     Path("src/harness_testing") / name
     for name in (
-        "Skill_Evaluation.py",
         "Native_Conversation.py",
         "Trial_Evidence.py",
         "Scripted_User.py",
+        "Simulated_User.py",
+        "Submission.py",
         "External_Codex.py",
     )
 )
@@ -134,7 +129,6 @@ class RunManifest:
     schema_version: str
     profile: str
     billing_mode: str
-    skill_evaluation: SkillEvaluation | None
     cells: tuple[RunCell, ...]
     task_ids: tuple[str, ...]
     attempts: int
@@ -155,9 +149,7 @@ class RunManifest:
             "schema_version": self.schema_version,
             "profile": self.profile,
             "billing_mode": self.billing_mode,
-            "skill_evaluation": (
-                self.skill_evaluation.to_dict() if self.skill_evaluation is not None else None
-            ),
+            "skill_evaluation": None,
             "cells": [cell.to_dict() for cell in self.cells],
             "task_ids": list(self.task_ids),
             "attempts": self.attempts,
@@ -175,8 +167,6 @@ class RunManifest:
 
     @classmethod
     def from_document(cls, document: dict[str, object], path: Path) -> RunManifest:
-        if "skill_evaluation" not in document:
-            raise ValueError("manifest skill_evaluation is missing")
         cells = tuple(
             RunCell(
                 label=str(cell["label"]),
@@ -200,7 +190,6 @@ class RunManifest:
             schema_version=str(document["schema_version"]),
             profile=str(document["profile"]),
             billing_mode=str(document["billing_mode"]),
-            skill_evaluation=SkillEvaluation.from_document(document["skill_evaluation"]),
             cells=cells,
             task_ids=tuple(str(task) for task in document["task_ids"]),
             attempts=int(document["attempts"]),
@@ -1113,7 +1102,6 @@ def _job_document(
     timeout: int,
     versions: dict[str, Any],
     billing_mode: str,
-    skill_evaluation: SkillEvaluation | None,
     experiment: dict | None = None,
 ) -> tuple[dict[str, object], str]:
     bundle = _bundle_path(root, cell)
@@ -1164,10 +1152,19 @@ def _job_document(
                 for entry in conditions["executor_inventory"]
             ],
         }
+        if "simulated_user" in conditions:
+            from harness_testing.Simulated_User import validate_config
+
+            validate_config(conditions["simulated_user"])
+            if cell.provider != "codex" or billing_mode != "subscription":
+                raise ValueError("simulated user requires Codex subscription trials")
+            kwargs["conversation"]["simulated_user"] = conditions["simulated_user"]
         if "provider_recovery_seconds" in conditions:
             kwargs["conversation"]["provider_recovery_seconds"] = recovery
         if conditions["task_variant"] == "deepswe":
             kwargs["conversation"]["artifact_patch_base_commit"] = base_commit
+            contract = json.loads((dataset_path / task_id / "Submission Contract.json").read_text())
+            kwargs["conversation"]["submission_protocol"] = contract["protocol"]
         if cell.provider == "codex":
             from harness_testing.Native_Conversation import approved_hooks_from_bundle
 
@@ -1182,8 +1179,6 @@ def _job_document(
                 }
             )
         )
-    if skill_evaluation is not None and skill_evaluation.mode == "capability":
-        kwargs["skill_invocation"] = skill_evaluation.name
     provider_config = _provider_config(bundle, cell.provider)
     if provider_config:
         kwargs["config"] = provider_config
@@ -1294,8 +1289,6 @@ def compile_run(
     attempts: int | None = None,
     concurrency: int | None = None,
     agent_timeout_seconds: int | None = None,
-    skill_evaluation: SkillEvaluation | None = None,
-    publish_report: bool = True,
     experiment: dict | None = None,
 ) -> RunManifest:
     """Compile immutable one-cell task shards and write a dry-run manifest."""
@@ -1315,10 +1308,6 @@ def compile_run(
         raise ValueError("at least one explicit --task is required")
     if attempts < 1:
         raise ValueError("attempts must be positive")
-    if not isinstance(skill_evaluation, (SkillEvaluation, type(None))):
-        raise ValueError("skill_evaluation must be a SkillEvaluation or None")
-    if skill_evaluation is not None and skill_evaluation.mode == "discovery" and attempts < 5:
-        raise ValueError("skill discovery requires at least five attempts")
     if timeout < 1:
         raise ValueError("agent timeout must be positive")
     if concurrency < 1:
@@ -1346,11 +1335,6 @@ def compile_run(
     for cell in cells:
         _validate_cell(root, cell, versions)
     cells = _ordered_cells(cells)
-    if skill_evaluation is not None:
-        for cell in cells:
-            _, delivered_skills = _expected_runtime_delivery(root, cell)
-            if skill_evaluation.name not in delivered_skills:
-                raise ValueError(f"cell {cell.label} does not expose skill {skill_evaluation.name}")
     session_count = len(cells) * len(task_ids) * attempts
     if session_count > max_sessions:
         raise ValueError(f"run needs {session_count} sessions but max_sessions {max_sessions}")
@@ -1362,6 +1346,24 @@ def compile_run(
     api_equivalent_cost = _estimated_budget(
         cells, len(task_ids), attempts, selected_profile, versions
     )
+    responder_estimate = Decimal("0")
+    if experiment and "simulated_user" in experiment["conditions"]:
+        from harness_testing.Simulated_User import validate_config
+
+        responder = experiment["conditions"]["simulated_user"]
+        validate_config(responder)
+        prices = next(row for row in versions["models"] if row["model"] == responder["model"])
+        # Admission estimate, not an output-token or dollar hard stop.
+        responder_estimate = (
+            session_count
+            * (experiment["limits"]["interaction_limit"] + 1)
+            * (
+                Decimal(str(prices["input_usd_per_million_tokens"])) * 16000
+                + Decimal(str(prices["output_usd_per_million_tokens"])) * 2000
+            )
+            / Decimal("1000000")
+        )
+        api_equivalent_cost += responder_estimate
     estimated_budget = Decimal("0") if billing_mode == "subscription" else api_equivalent_cost
     if billing_mode == "api" and estimated_budget > max_budget_usd:
         raise ValueError(
@@ -1372,8 +1374,7 @@ def compile_run(
     schema_version = str(versions["repository"]["schema_version"])
     research_selection = (
         task_ids
-        if experiment is not None
-        and experiment["conditions"]["task_variant"] == "deepswe"
+        if experiment is not None and experiment["conditions"]["task_variant"] == "deepswe"
         else None
     )
     research_dataset = _research_dataset(root, selected_profile, research_selection)
@@ -1382,6 +1383,12 @@ def compile_run(
         from harness_testing.Comparison_Tasks import materialize_comparison_tasks
 
         comparison_dataset = materialize_comparison_tasks(root, list(task_ids))
+    elif research_selection is not None:
+        from harness_testing.Comparison_Tasks import materialize_research_comparison_tasks
+
+        comparison_dataset = materialize_research_comparison_tasks(
+            root, research_dataset.tasks_path, list(task_ids)
+        )
     task_digests = {}
     for task_id in task_ids:
         pack, _, task_path = _task_location(root, selected_profile, task_id, research_dataset)
@@ -1395,11 +1402,7 @@ def compile_run(
     agent_adapter_digests = _agent_adapter_digests(root)
     versions_digest = _sha256((root / "Versions.toml").read_bytes())
     profiles_digest = _sha256((root / "runs" / "Profiles.toml").read_bytes())
-    report_publication = (
-        publication_manifest_record(load_publication_target(root))
-        if publish_report
-        else {"mode": "local-only"}
-    )
+    report_publication = {"mode": "local-only"}
 
     schedule = (
         comparison_schedule(cells, task_ids, attempts)
@@ -1429,7 +1432,6 @@ def compile_run(
                 timeout,
                 versions,
                 billing_mode,
-                skill_evaluation,
                 experiment,
             )
             relative_path = (
@@ -1443,7 +1445,7 @@ def compile_run(
         "schema_version": schema_version,
         "profile": profile,
         "billing_mode": billing_mode,
-        "skill_evaluation": (skill_evaluation.to_dict() if skill_evaluation is not None else None),
+        "skill_evaluation": None,
         "cells": [cell.to_dict() for cell in cells],
         "task_ids": list(task_ids),
         "attempts": attempts,
@@ -1493,11 +1495,12 @@ def compile_run(
     if experiment is not None:
         provenance["experiment"] = experiment
         provenance["trial_schedule"] = schedule
+        if "simulated_user" in experiment["conditions"]:
+            provenance["simulated_user_estimate_usd"] = _decimal_text(responder_estimate)
     manifest = RunManifest(
         schema_version=schema_version,
         profile=profile,
         billing_mode=billing_mode,
-        skill_evaluation=skill_evaluation,
         cells=cells,
         task_ids=task_ids,
         attempts=attempts,
@@ -1589,8 +1592,6 @@ def plan_run(
     attempts: int | None = None,
     concurrency: int | None = None,
     agent_timeout_seconds: int | None = None,
-    skill_evaluation: SkillEvaluation | None = None,
-    publish_report: bool = True,
 ) -> RunManifest:
     if not cell_specifications:
         raise ValueError("at least one explicit --cell is required; no matrix is implicit")
@@ -1606,8 +1607,6 @@ def plan_run(
         attempts=attempts,
         concurrency=concurrency,
         agent_timeout_seconds=agent_timeout_seconds,
-        skill_evaluation=skill_evaluation,
-        publish_report=publish_report,
     )
 
 
@@ -1620,12 +1619,6 @@ def format_plan(manifest: RunManifest) -> str:
             "subscription (no API-key fallback)"
             if manifest.billing_mode == "subscription"
             else "api"
-        ),
-        "Skill evaluation: "
-        + (
-            f"{manifest.skill_evaluation.mode} {manifest.skill_evaluation.name}"
-            if manifest.skill_evaluation is not None
-            else "none"
         ),
         f"Tasks: {', '.join(manifest.task_ids)}",
         f"Attempts: {manifest.attempts}",
@@ -1642,10 +1635,23 @@ def format_plan(manifest: RunManifest) -> str:
             if manifest.billing_mode == "subscription"
             else "Budget enforcement: admission estimate only; no consistent provider hard stop"
         ),
-        _format_publication(manifest),
         "Cells:",
     ]
     conditions = manifest.provenance.get("experiment", {}).get("conditions", {})
+    if "simulated_user" in conditions:
+        responder = conditions["simulated_user"]
+        limits = manifest.provenance["experiment"]["limits"]
+        lines.extend(
+            [
+                f"Simulated user: {responder['model']} {responder['effort']} / "
+                f"{responder['protocol']}",
+                f"Responder calls: at most {limits['interaction_limit'] + 1} per trial, "
+                f"{responder['timeout_seconds']}s per call, within the trial wall-time limit",
+                "Responder API-equivalent admission estimate (included above): $"
+                + manifest.provenance["simulated_user_estimate_usd"],
+                "Responder usage is separate from coding-agent cost/tokens; no API fallback.",
+            ]
+        )
     if "provider_recovery_seconds" in conditions:
         recovery = conditions["provider_recovery_seconds"]
         index = lines.index(f"Agent timeout: {manifest.agent_timeout_seconds}s") + 1
@@ -1672,16 +1678,6 @@ def format_plan(manifest: RunManifest) -> str:
     lines.append(f"Manifest path: {manifest.path}")
     lines.append("No model session started.")
     return "\n".join(lines)
-
-
-def _format_publication(manifest: RunManifest) -> str:
-    publication = manifest.provenance.get("report_publication")
-    if not isinstance(publication, Mapping) or publication.get("mode") != "public":
-        return "Public run report: local-only"
-    return (
-        f"Public run report: {publication['repository']} "
-        f"({publication['data_branch']}; {publication['workflow']})"
-    )
 
 
 def load_manifest(path: Path) -> RunManifest:
@@ -1714,11 +1710,6 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     )
     if manifest.provenance.get("subscription_selectors") != expected_selectors:
         raise ValueError("manifest subscription selectors do not match its billing route")
-    report_publication = manifest.provenance.get("report_publication")
-    if report_publication is not None and report_publication != {"mode": "local-only"}:
-        expected_publication = publication_manifest_record(load_publication_target(root))
-        if report_publication != expected_publication:
-            raise ValueError("manifest report publication does not match the tracked destination")
     versions = load_versions(root / "Versions.toml")
     for cell in manifest.cells:
         _validate_cell(root, cell, versions)
@@ -1729,8 +1720,7 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
     experiment = manifest.provenance.get("experiment")
     research_selection = (
         manifest.task_ids
-        if experiment is not None
-        and experiment["conditions"]["task_variant"] == "deepswe"
+        if experiment is not None and experiment["conditions"]["task_variant"] == "deepswe"
         else None
     )
     research_dataset = _research_dataset(root, profile, research_selection)
@@ -1742,6 +1732,12 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
         from harness_testing.Comparison_Tasks import materialize_comparison_tasks
 
         comparison_dataset = materialize_comparison_tasks(root, list(manifest.task_ids))
+    elif research_selection is not None:
+        from harness_testing.Comparison_Tasks import materialize_research_comparison_tasks
+
+        comparison_dataset = materialize_research_comparison_tasks(
+            root, research_dataset.tasks_path, list(manifest.task_ids)
+        )
     actual_task_digests = {}
     for task_id in manifest.task_ids:
         pack, _, task_path = _task_location(root, profile, task_id, research_dataset)
@@ -1773,8 +1769,7 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
                 for record in json.loads(research_dataset.provenance_path.read_text())["tasks"]
             }
             actual_frozen_images = {
-                f"{task}:agent": records[task]["derived_image_digest"]
-                for task in manifest.task_ids
+                f"{task}:agent": records[task]["derived_image_digest"] for task in manifest.task_ids
             } | {
                 f"{task}:verifier": records[task]["verifier_image_digest"]
                 for task in manifest.task_ids
@@ -1809,17 +1804,8 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
         expected_import_path = _AGENT_ADAPTERS[cell.provider][0]
         if agent.import_path != expected_import_path:
             raise ValueError(f"Harbor agent adapter mismatch: {relative_path}")
-        expected_skill_invocation = (
-            manifest.skill_evaluation.name
-            if manifest.skill_evaluation is not None
-            and manifest.skill_evaluation.mode == "capability"
-            else None
-        )
-        actual_skill_invocation = agent.kwargs.get("skill_invocation")
-        if actual_skill_invocation != expected_skill_invocation or (
-            expected_skill_invocation is None and "skill_invocation" in agent.kwargs
-        ):
-            raise ValueError(f"Harbor skill invocation does not match evaluation: {relative_path}")
+        if "skill_invocation" in agent.kwargs:
+            raise ValueError(f"Harbor skill invocation is no longer supported: {relative_path}")
         if cell.provider != "claude":
             continue
         if "CLAUDE_CODE_PLUGIN_SEED_DIR" in agent.env:
@@ -1885,24 +1871,6 @@ def _verify_subscription_auth(
                 raise ValueError(f"{name} must be unset for Claude subscription billing")
         if not environment.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip():
             raise ValueError("Claude subscription credential is missing")
-
-
-def _publish_terminal_reports(root: Path, manifest: RunManifest) -> None:
-    publication = manifest.provenance.get("report_publication")
-    if not isinstance(publication, Mapping) or publication.get("mode") != "public":
-        return
-    try:
-        target = load_publication_target(root)
-        receipts = sync_pending_reports(root, target)
-    except ValueError as error:
-        print(
-            "Public dashboard update pending; retry with "
-            f"`uv run harness-test report sync`: {error}",
-            file=sys.stderr,
-        )
-        return
-    if receipts:
-        print(f"Published {len(receipts)} run report(s) to {target.repository}")
 
 
 def _expected_runtime_delivery(
@@ -2278,32 +2246,6 @@ def _completed_job_errors(
     return tuple(errors[:_MAX_DELIVERY_ERRORS])
 
 
-def _skill_evaluation_trials(root: Path, manifest: RunManifest) -> tuple[dict[str, object], ...]:
-    trials: list[dict[str, object]] = []
-    cell_count = len(manifest.cells)
-    for index, relative_path in enumerate(manifest.harbor_config_paths):
-        cell = manifest.cells[index % cell_count]
-        task_id = manifest.task_ids[index // cell_count]
-        job_name = load_job(manifest.path.parent / relative_path).job_name
-        job_dir = root / "jobs" / "raw" / job_name
-        trial_dirs = sorted(
-            path for path in job_dir.iterdir() if path.is_dir() and (path / "result.json").is_file()
-        )
-        trials.extend(
-            {
-                "provider": cell.provider,
-                "cell": cell.label,
-                "task": task_id,
-                "attempt": attempt,
-                "trajectory": trial_dir / "agent" / "trajectory.json",
-            }
-            for attempt, trial_dir in enumerate(trial_dirs, start=1)
-        )
-    if len(trials) != manifest.session_count:
-        raise ValueError("skill evaluation trial count does not match the approved manifest")
-    return tuple(trials)
-
-
 def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
     """Execute only a previously compiled manifest with an exact digest approval."""
 
@@ -2415,30 +2357,18 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
             )
             if errors:
                 raise ValueError("job delivery failed: " + "; ".join(errors))
-        if manifest.skill_evaluation is not None:
-            report = write_skill_evaluation_report(
-                manifest.path.parent / "Skill_Evaluation.json",
-                manifest_digest=manifest.digest,
-                evaluation=manifest.skill_evaluation,
-                trials=_skill_evaluation_trials(root, manifest),
-            )
-            aggregate = report["aggregate"]
-            if isinstance(aggregate, dict):
-                print(
-                    "Skill invocation: "
-                    f"{aggregate['numerator']}/{aggregate['denominator']} "
-                    f"({aggregate['rate']:.0%})"
-                )
+        report_path = write_run_report(root, manifest, "completed")
     except BaseException as error:
         try:
-            write_run_report(root, manifest, "failed")
-            _publish_terminal_reports(root, manifest)
+            try:
+                write_run_report(root, manifest, "failed")
+            except Exception as report_error:
+                error.add_note(f"Full failure report could not be rebuilt: {report_error}")
+                recover_failed_run_report(root, manifest)
             refresh_local_dashboard(root)
         except Exception as report_error:
             error.add_note(f"Local dashboard refresh also failed: {report_error}")
         raise
-    report_path = write_run_report(root, manifest, "completed")
-    _publish_terminal_reports(root, manifest)
     dashboard_path = refresh_local_dashboard(root)
     print(f"Local run report: {report_path}")
     if dashboard_path is not None:

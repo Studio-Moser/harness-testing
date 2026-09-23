@@ -1,0 +1,1 @@
+body { margin: 0; font: 12px Arial; color: #aaa; background: white; } .card { width: 800px; padding: 4px; } h1 { font-size: 14px; } button { height: 22px; color: #999; background: #eee; border: 0; } button:focus { outline: none; }

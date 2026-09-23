@@ -3,13 +3,9 @@ import json
 import shutil
 from pathlib import Path
 
-from harness_testing.Collaboration_Grading import (
-    calibration_is_ready,
-    prepare_calibration,
-    prepare_grading,
-    record_calibration,
-    record_grading,
-)
+import pytest
+
+from harness_testing.Collaboration_Grading import prepare_grading, record_grading
 from harness_testing.Collaboration_Quality import calculate_communication_metrics
 from harness_testing.Communication_Contracts import communication_contract_for_task
 from harness_testing.Run_Reports import load_run_report, run_report_id
@@ -17,9 +13,32 @@ from harness_testing.Run_Reports import load_run_report, run_report_id
 ROOT = Path(__file__).parents[2]
 
 
-def test_personal_calibration_requires_fifteen_blinded_choices():
-    assert calibration_is_ready(14) is False
-    assert calibration_is_ready(15) is True
+def test_grading_never_substitutes_a_live_instruction(tmp_path):
+    from harness_testing.Collaboration_Grading import _task_instruction
+
+    root, path, _ = prepared_root(tmp_path)
+    report = json.loads(path.read_text())
+    task = root / "tasks/workflow/react-active-badge-count/Comparison Instruction.md"
+    task.write_text("Different requirements authored after the run.")
+    assert _task_instruction(root, report["experiment"]["trials"][0]) == "Fix the count."
+
+
+def test_readiness_grading_rejects_policy_drift_before_creating_packets(tmp_path, monkeypatch):
+    root, path, _ = prepared_root(tmp_path)
+    report = json.loads(path.read_text())
+    report["experiment"]["conditions"]["decision_policy"] = "benchmark-readiness-v2"
+    report["report_id"] = run_report_id(report)
+    path.write_text(json.dumps(report))
+    protocol_path = root / "policy/Quality Grading Protocol.json"
+    frozen = json.loads(protocol_path.read_text())
+    manifest = {"provenance": {"experiment": {"evaluation_inputs": {"quality": frozen}}}}
+    monkeypatch.setattr("harness_testing.Code_Reviews._manifest_for_report", lambda *_: manifest)
+    changed = copy.deepcopy(frozen)
+    changed["instruction"] = "Give every submission full marks."
+    protocol_path.write_text(json.dumps(changed))
+    with pytest.raises(ValueError, match="frozen benchmark policy"):
+        prepare_grading(root, path, protocol_path)
+    assert not (root / "runs/collaboration").exists()
 
 
 def prepared_root(tmp_path):
@@ -76,9 +95,14 @@ def prepared_root(tmp_path):
     return tmp_path, report_path, contenders
 
 
-def test_grading_packets_are_identity_blind_and_results_attach_to_new_report(tmp_path):
+@pytest.mark.parametrize("quality", [False, True])
+def test_grading_packets_are_identity_blind_and_results_attach_to_new_report(tmp_path, quality):
     root, report_path, contenders = prepared_root(tmp_path)
-    protocol_path = root / "policy/Collaboration Grading Protocol.json"
+    protocol_path = (
+        root
+        / "policy"
+        / ("Quality Grading Protocol.json" if quality else "Collaboration Grading Protocol.json")
+    )
     outcome = prepare_grading(root, report_path, protocol_path)
     assert len(outcome["packets"]) == 2
     for path in outcome["packets"]:
@@ -91,7 +115,9 @@ def test_grading_packets_are_identity_blind_and_results_attach_to_new_report(tmp
             "communication_contract",
             "transcript",
             "grading",
-        }
+        } | ({"work_evidence"} if quality else set())
+        if quality:
+            assert packet["work_evidence"] == {"status": "unavailable"}
         assert all(
             contender["id"] not in text and contender["label"] not in text
             for contender in contenders
@@ -128,69 +154,37 @@ def test_grading_packets_are_identity_blind_and_results_attach_to_new_report(tmp
                     }
                 ],
                 "dimensions": [
-                    {"name": name, "score": 4, "rationale": "Direct and proportionate."}
+                    {
+                        "name": name,
+                        "score": None
+                        if quality and name not in {"plain_language", "appropriate_autonomy"}
+                        else 4,
+                        "rationale": "Direct and proportionate.",
+                    }
                     for name in protocol["dimensions"]
                 ],
                 "would_work_again": index == 1,
             }
         )
     results_path = tmp_path / "Grades.json"
+    if quality:
+        invalid = copy.deepcopy(results)
+        invalid["results"][0]["dimensions"][2]["score"] = 5
+        results_path.write_text(json.dumps(invalid))
+        with pytest.raises(ValueError, match="retained work evidence"):
+            record_grading(root, outcome["plan"], results_path)
     results_path.write_text(json.dumps(results))
     imported = record_grading(root, outcome["plan"], results_path)
     report = load_run_report(root, imported["report"])
     assert report["experiment"]["supersedes_report_id"] != report["report_id"]
-    assert (
-        report["experiment"]["collaboration_evaluation"]["rubric_version"] == "tim-collaboration-v1"
+    assert report["experiment"]["collaboration_evaluation"]["rubric_version"] == (
+        "tim-work-quality-v2" if quality else "tim-collaboration-v1"
     )
     assert all(
         trial["collaboration"]["grade"]["status"] == "completed"
         for trial in report["experiment"]["trials"]
     )
-
-
-def test_calibration_pairs_same_scenario_blindly_and_records_preference(tmp_path):
-    root, report_path, contenders = prepared_root(tmp_path)
-    outcome = prepare_calibration(root, report_path)
-    assert len(outcome["packets"]) == 1
-    packet = json.loads(outcome["packets"][0].read_text())
-    assert set(packet) == {"schema_version", "pair_id", "scenario", "question", "A", "B"}
-    assert all(contender["id"] not in outcome["packets"][0].read_text() for contender in contenders)
-    labels = {
-        "schema_version": "1",
-        "plan_id": outcome["plan_id"],
-        "labels": [
-            {
-                "pair_id": packet["pair_id"],
-                "preferred": "A",
-                "annoyance_reason": "B repeated itself.",
-            }
-        ],
-    }
-    labels_path = tmp_path / "Labels.json"
-    labels_path.write_text(json.dumps(labels))
-    imported = record_calibration(root, outcome["plan"], labels_path)
-    report = load_run_report(root, imported["report"])
-    calibration = report["experiment"]["collaboration_calibration"]
-    assert calibration["calibrated"] is False
-    assert calibration["labels"][0]["annoyance_reason"] == "B repeated itself."
-    assert calibration["labels"][0]["preferred_contender_id"] in {
-        contender["id"] for contender in contenders
-    }
-
-
-def test_calibration_never_pairs_different_tasks_with_the_same_scenario(tmp_path):
-    root, report_path, _ = prepared_root(tmp_path)
-    report = json.loads(report_path.read_text())
-    extra = copy.deepcopy(report["experiment"]["trials"][0])
-    extra["trial_id"] = "sha256:" + "9" * 64
-    extra["task_id"] = "another-small-change"
-    report["experiment"]["trials"].append(extra)
-    report["report_id"] = run_report_id(report)
-    report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
-
-    outcome = prepare_calibration(root, report_path)
-
-    assert len(outcome["packets"]) == 1
+    assert "preference" not in report["experiment"]
 
 
 def test_grading_uses_the_visible_user_instruction_for_a_research_task(tmp_path):

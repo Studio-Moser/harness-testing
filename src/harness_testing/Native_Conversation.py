@@ -25,6 +25,9 @@ from pathlib import Path
 if __package__:
     from .External_Codex import external_evidence, preflight_external_codex
     from .Scripted_User import select_reply, terminal_approval_request, validate_policy
+    from .Simulated_User import SimulatedUser, user_packet, validate_config
+    from .Submission import PROTOCOL as SUBMISSION_PROTOCOL
+    from .Submission import capture_submission
     from .Trial_Evidence import (
         ClaudeBackgroundTasks,
         collect_trial_evidence,
@@ -35,6 +38,9 @@ if __package__:
 else:
     from External_Codex import external_evidence, preflight_external_codex
     from Scripted_User import select_reply, terminal_approval_request, validate_policy
+    from Simulated_User import SimulatedUser, user_packet, validate_config
+    from Submission import PROTOCOL as SUBMISSION_PROTOCOL
+    from Submission import capture_submission
     from Trial_Evidence import (
         ClaudeBackgroundTasks,
         collect_trial_evidence,
@@ -72,6 +78,10 @@ def capture_committed_patch(workspace: Path, base_commit: str, destination: Path
 
 def validate_conversation(config: dict, provider: str) -> None:
     validate_policy(config["policy"])
+    if "simulated_user" in config:
+        validate_config(config["simulated_user"])
+        if provider != "codex":
+            raise ValueError("simulated_user_provider_unsupported")
     if type(config.get("timeout_seconds")) not in (int, float) or config["timeout_seconds"] <= 0:
         raise ValueError("native_timeout_invalid: positive timeout_seconds required")
     recovery = config.get("provider_recovery_seconds", 0)
@@ -247,6 +257,8 @@ async def stage_controller(environment, config: dict) -> str:
     for name in (
         "Native_Conversation.py",
         "Scripted_User.py",
+        "Simulated_User.py",
+        "Submission.py",
         "Trial_Evidence.py",
         "External_Codex.py",
     ):
@@ -299,6 +311,7 @@ class Conversation:
         self._visible_started = None
         self.models = []
         self.root_finished = False
+        self.follow_up_index = 0
         self.hook_trust = None
         configured_recovery = config.get("provider_recovery_seconds", 0)
         self.provider_recovery_seconds = (
@@ -311,6 +324,11 @@ class Conversation:
         )
         self.transport_error_count = 0
         self.provider_recovery_applied = False
+        self.simulated_user = (
+            SimulatedUser(config["simulated_user"], config["policy"]["interaction_limit"])
+            if "simulated_user" in config
+            else None
+        )
 
     def rpc(self, method, params):
         self.counter += 1
@@ -375,6 +393,23 @@ class Conversation:
         )
 
     def reply(self, text):
+        if self.simulated_user is not None:
+            result = self.simulated_user.respond(
+                user_packet(
+                    self.config["instruction"],
+                    self.config["policy"],
+                    self.transcript,
+                    text,
+                    self.follow_up_index,
+                )
+            )
+            if result["status"] == "reply":
+                if self.interactions >= self.config["policy"]["interaction_limit"]:
+                    result = {"status": "interaction_limit"}
+                else:
+                    self.interactions += 1
+            self.decisions.append({"interaction": self.interactions, **result})
+            return result
         result = select_reply(
             {"kind": "clarification", "text": text}, self.config["policy"], self.interactions
         )
@@ -423,11 +458,37 @@ class Conversation:
         reply = self.reply(self.text.strip())
         if reply["status"] == "reply":
             return [self.turn(reply["reply"])]
+        if self.simulated_user is not None and reply["status"] != "complete":
+            return self.fail(
+                reply.get("reason", reply["status"]),
+                "infrastructure_failure"
+                if reply["status"] == "infrastructure_failure"
+                else "task_definition_gap",
+            )
         request_kind = terminal_approval_request(self.text)
-        if request_kind is not None:
+        if self.simulated_user is None and request_kind is not None:
             return self.fail(reply["status"], "task_definition_gap")
-        if "?" in self.text or re.search(r"\b(awaiting|waiting for|need your)\b", self.text, re.I):
+        if self.simulated_user is None and (
+            "?" in self.text or re.search(r"\b(awaiting|waiting for|need your)\b", self.text, re.I)
+        ):
             return self.fail(reply["status"], "task_definition_gap")
+        follow_ups = self.config["policy"].get("follow_ups", [])
+        if self.follow_up_index < len(follow_ups):
+            if self.interactions >= self.config["policy"]["interaction_limit"]:
+                return self.fail("interaction_limit", "task_definition_gap")
+            follow_up = follow_ups[self.follow_up_index]
+            text = self.config["policy"]["facts"][follow_up["fact"]]
+            self.follow_up_index += 1
+            self.interactions += 1
+            self.decisions.append(
+                {
+                    "interaction": self.interactions,
+                    "status": "reply",
+                    "rule_id": follow_up["id"],
+                    "reply": text,
+                }
+            )
+            return [self.turn(text)]
         self.root_finished = True
         self.status = (
             "pending" if self.active_turns or self.background_tasks.pending else "completed"
@@ -577,9 +638,25 @@ class Conversation:
         if method == "item/tool/requestUserInput":
             answers = {}
             for question in params.get("questions", []):
+                if self.simulated_user is not None:
+                    visible = [question.get("question", "")]
+                    visible.extend(
+                        ": ".join(
+                            value
+                            for key in ("label", "description")
+                            if isinstance(value := option.get(key), str) and value
+                        )
+                        for option in question.get("options", [])
+                    )
+                    self._record_visible("assistant", "final", "\n".join(visible))
                 reply = self.reply(question.get("question", ""))
                 if reply["status"] != "reply":
-                    self.fail(reply["status"], "task_definition_gap")
+                    self.fail(
+                        reply.get("reason", reply["status"]),
+                        "infrastructure_failure"
+                        if reply["status"] == "infrastructure_failure"
+                        else "task_definition_gap",
+                    )
                     return [
                         {
                             "id": event["id"],
@@ -590,6 +667,8 @@ class Conversation:
                         }
                     ]
                 answers[question["id"]] = {"answers": [reply["reply"]]}
+                if self.simulated_user is not None:
+                    self._record_visible("user", "user", reply["reply"])
             return [{"id": event["id"], "result": {"answers": answers}}]
         if "id" in event and method:
             self.fail("native_authority_request_denied", "task_definition_gap")
@@ -775,6 +854,9 @@ def run_controller(config: dict) -> dict:
                 return base_deadline + state.provider_recovery_seconds
             return base_deadline
 
+        if state.simulated_user is not None:
+            state.simulated_user.deadline = deadline
+
         def deadline_failure():
             if state.transport_error_count:
                 return state.fail("provider_transport_interrupted")
@@ -950,11 +1032,23 @@ def run_controller(config: dict) -> dict:
         base_commit = config.get("artifact_patch_base_commit")
         if base_commit is not None:
             try:
-                capture_committed_patch(
-                    Path(config.get("cwd", "/app")),
-                    str(base_commit),
-                    Path("/logs/artifacts/model.patch"),
-                )
+                if config.get("submission_protocol") == SUBMISSION_PROTOCOL:
+                    submission = capture_submission(
+                        Path(config.get("cwd", "/app")), str(base_commit),
+                        log_dir.parent / "artifacts/model.patch", log_dir / "Submission",
+                    )
+                    if submission["status"] != "captured":
+                        incomplete.append(submission["reason"])
+                        if state.status == "completed":
+                            state.fail(submission["reason"])
+                elif config.get("submission_protocol") is not None:
+                    raise ValueError("submission_protocol_unsupported")
+                else:
+                    capture_committed_patch(
+                        Path(config.get("cwd", "/app")),
+                        str(base_commit),
+                        Path("/logs/artifacts/model.patch"),
+                    )
             except (OSError, subprocess.CalledProcessError, ValueError):
                 incomplete.append("committed_patch_capture_failed")
         evidence = collect_trial_evidence(
@@ -1005,6 +1099,11 @@ def run_controller(config: dict) -> dict:
                 "transport_error_count": state.transport_error_count,
                 "extension_applied": state.provider_recovery_applied,
             }
+        if state.simulated_user is not None:
+            evidence["simulated_user"] = state.simulated_user.evidence()
+            (log_dir / "Simulated_User_Calls.json").write_text(
+                json.dumps(state.simulated_user.calls, indent=2) + "\n"
+            )
         (log_dir / "Trial_Evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
         (log_dir / "Scripted_User_Decisions.json").write_text(
             json.dumps(state.decisions, indent=2) + "\n"

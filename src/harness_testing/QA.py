@@ -25,7 +25,7 @@ _EFFICIENCY_AUDITS = {
 
 
 def task_ids_for_pack(root: Path, pack: str) -> tuple[str, ...]:
-    if pack not in {"contract", "workflow"}:
+    if pack != "workflow":
         raise ValueError(f"unknown QA pack: {pack}")
     pack_root = root / "tasks" / pack
     if not pack_root.is_dir():
@@ -40,7 +40,7 @@ def task_ids_for_pack(root: Path, pack: str) -> tuple[str, ...]:
 def _task_root(root: Path, task_id: str) -> Path:
     matches = [
         root / "tasks" / pack / task_id
-        for pack in ("contract", "workflow")
+        for pack in ("workflow",)
         if (root / "tasks" / pack / task_id / "task.toml").is_file()
     ]
     if len(matches) != 1:

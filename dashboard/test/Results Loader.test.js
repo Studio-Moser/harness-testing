@@ -1,14 +1,20 @@
 import assert from "node:assert/strict";
+import {spawnSync} from "node:child_process";
 import {afterEach, test} from "node:test";
-import {cp, mkdir, mkdtemp, rm, writeFile} from "node:fs/promises";
+import {cp, mkdir, mkdtemp, readFile, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {dirname, join, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 
-import {loadPublishedReports} from "../src/data/Published Results.json.js";
+import {loadPublishedReports, safetyErrors} from "../src/data/Published Results.json.js";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const temporaries = [];
+
+test("Python and dashboard share the public path acceptance cases", async () => {
+  const cases = JSON.parse(await readFile(resolve(repositoryRoot, "policy/Public Safety Cases.json"), "utf8"));
+  for (const {text, safe} of cases) assert.equal(safetyErrors(text).length === 0, safe, text);
+});
 
 afterEach(async () => {
   await Promise.all(temporaries.splice(0).map((path) => rm(path, {recursive: true})));
@@ -63,4 +69,35 @@ test("published results loader fails closed on malformed reports", async () => {
     }),
     /schema validation failed/
   );
+});
+
+test("build preflight rejects unsafe source data before Observable can reuse stale output", async () => {
+  const root = await temporaryReports();
+  const report = JSON.parse(await readFile(resolve(repositoryRoot, "tests/Fixtures/Run_Reports/Comparison.json"), "utf8"));
+  report.experiment.change.summary = "Read /Volumes/example/private/file";
+  await writeFile(resolve(root, "reports", "unsafe.json"), JSON.stringify(report));
+  const result = spawnSync(process.execPath, [resolve(repositoryRoot, "dashboard/Validate Results.js")], {
+    env: {...process.env, HARNESS_PUBLISHED_REPORTS_DIRECTORY: resolve(root, "reports")}, encoding: "utf8"
+  });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /sensitive or local-only string/);
+  assert.doesNotMatch(result.stderr, /Volumes\/example/);
+});
+
+test("build preflight invalidates result and toolbox loader caches", async () => {
+  const root = await temporaryReports();
+  await mkdir(resolve(root, "src/data"), {recursive: true});
+  await mkdir(resolve(root, "src/.observablehq/cache/data"), {recursive: true});
+  await writeFile(resolve(root, "package.json"), JSON.stringify({type: "module"}));
+  await writeFile(resolve(root, "src/data/Published Results.json.js"), "export async function loadPublishedReports() { return []; } export function safetyErrors() { return []; }");
+  await cp(resolve(repositoryRoot, "dashboard/src/data/Selected Cohort.js"), resolve(root, "src/data/Selected Cohort.js"));
+  await cp(resolve(repositoryRoot, "dashboard/Validate Results.js"), resolve(root, "Validate Results.js"));
+  for (const name of ["Published Results.json", "Toolbox.json", "Selected Cohort.json"]) {
+    await writeFile(resolve(root, "src/.observablehq/cache/data", name), "stale");
+  }
+  const result = spawnSync(process.execPath, [resolve(root, "Validate Results.js")], {encoding: "utf8"});
+  assert.equal(result.status, 0, result.stderr);
+  for (const name of ["Published Results.json", "Toolbox.json", "Selected Cohort.json"]) {
+    await assert.rejects(readFile(resolve(root, "src/.observablehq/cache/data", name)), {code: "ENOENT"});
+  }
 });

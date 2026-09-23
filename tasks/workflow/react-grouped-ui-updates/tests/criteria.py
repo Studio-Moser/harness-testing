@@ -227,39 +227,11 @@ def _no_testing_churn() -> bool:
 
 
 def _sentinel_correctness(workspace: Path) -> bool:
-    if not _protected_files_intact(workspace):
-        return False
-    node_modules = workspace / "node_modules"
-    if (
-        not _VERIFIER_NODE_MODULES.is_dir()
-        or node_modules.exists()
-        or node_modules.is_symlink()
-    ):
-        return False
-    cleanup_failed = False
-    node_modules.symlink_to(_VERIFIER_NODE_MODULES, target_is_directory=True)
-    try:
-        result = subprocess.run(
-            ["npm", "test", "--", "--reporter=dot"],
-            cwd=workspace,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
-    except (OSError, subprocess.TimeoutExpired) as error:
-        print(error)
-        return False
-    finally:
-        try:
-            node_modules.unlink()
-        except OSError:
-            cleanup_failed = True
-    if result.returncode != 0:
-        print(result.stdout)
-        print(result.stderr)
-    return result.returncode == 0 and not cleanup_failed
+    from harness_testing.Workflow_Criteria import node_test_correctness
 
+    return node_test_correctness(
+        workspace, Path(__file__).with_name("Protected_Files.json"), _VERIFIER_NODE_MODULES
+    )
 
 @criterion(shared=True)
 def sentinel_correctness(workspace: Path) -> bool:

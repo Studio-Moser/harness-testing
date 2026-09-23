@@ -14,6 +14,8 @@ _LOCAL_DEVELOPMENT_APPROVAL = re.compile(
         |\b(?:please\s+)?confirm\s*,?\s+and\s+i(?:['’]ll|\s+will)\s+
           (?:apply|implement|proceed|continue)\b
         |\bdoes\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right\b
+        |\breply\s+["'“‘]?yes["'”’]?\s+to\s+(?:approve|confirm)\s+
+          (?:this|that|the)\s+(?:proposed\s+)?(?:plan|design|approach|treatment)\b
     )"""
 )
 _TERMINAL_DIRECT_REQUEST = re.compile(
@@ -24,6 +26,7 @@ _TERMINAL_DIRECT_REQUEST = re.compile(
             |(?:please\s+)?(?:approve|confirm)\b
             |does\s+(?:this|that|the)\s+(?:plan|design)\s+look\s+right\b
             |proceed\b
+            |reply\s+["'“‘]?yes["'”’]?\b
         )
         (?:(?![.!?]\s+).)*
     )
@@ -32,7 +35,7 @@ _TERMINAL_DIRECT_REQUEST = re.compile(
 _BROADER_AUTHORITY = re.compile(
     r"\b(?:deploy(?:ment|ing)?|publish(?:ing)?|publication|push(?:ing)?|"
     r"spend(?:ing)?|pay(?:ing)?|purchas(?:e|ing)|send(?:ing)?|upload(?:ing)?|"
-    r"production|credentials?)\b",
+    r"release|ship(?:ping)?|production|credentials?)\b",
     re.I,
 )
 _EXTERNAL_ACTION = re.compile(
@@ -54,7 +57,8 @@ _COMPLETED_OR_NEGATED_APPROVAL = re.compile(
     """
 )
 _AMBIGUOUS_APPROVAL_REQUEST = re.compile(
-    r"(?is)(?:^|[.!?]\s+|\n\s*\n)(?:please\s+)?(?:approve|confirm)\b.*?[?.]?\s*$"
+    r"(?is)(?:^|[.!?]\s+|\n\s*\n)(?:(?:please\s+)?(?:approve|confirm)\b|"
+    r"reply\s+[\"'“‘]?yes\b).*?[?.]?\s*$"
 )
 
 
@@ -131,12 +135,16 @@ _MATCHERS = {
 
 
 def validate_policy(policy: dict) -> None:
-    if not isinstance(policy, dict) or set(policy) != {
+    base_fields = {
         "schema_version",
         "interaction_limit",
         "facts",
         "rules",
-    }:
+    }
+    if not isinstance(policy, dict) or set(policy) not in (
+        base_fields,
+        base_fields | {"follow_ups"},
+    ):
         raise ValueError("scripted user policy requires version, limit, facts and rules only")
     if (
         policy["schema_version"] != "1"
@@ -151,6 +159,23 @@ def validate_policy(policy: dict) -> None:
         raise ValueError("scripted facts must be nonempty text")
     if not isinstance(rules, list):
         raise ValueError("scripted rules must be a list")
+    follow_ups = policy.get("follow_ups", [])
+    if (
+        not isinstance(follow_ups, list)
+        or len(follow_ups) > 3
+        or any(
+            not isinstance(row, dict)
+            or set(row) != {"id", "fact"}
+            or not isinstance(row["id"], str)
+            or not row["id"]
+            or not isinstance(row["fact"], str)
+            or row["fact"] not in facts
+            for row in follow_ups
+        )
+    ):
+        raise ValueError("invalid frozen completion follow-ups")
+    if len({row["id"] for row in follow_ups}) != len(follow_ups):
+        raise ValueError("duplicate frozen completion follow-up")
     ids = set()
     for rule in rules:
         base = {"id", "kind", "fact"}

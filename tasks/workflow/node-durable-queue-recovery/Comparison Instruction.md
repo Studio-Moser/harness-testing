@@ -1,0 +1,5 @@
+Work in `/app`. The durable queue fails at three related boundaries: a persistence fault can tear the committed snapshot, a restart strands claimed but unfinished work, and replaying an idempotency key after completion creates another job. Diagnose and repair the shared lifecycle without replacing the file-backed store.
+
+Preserve the deterministic `before-commit`, `after-claim`, and `after-complete` fault hooks. Restart must keep the last committed snapshot, requeue unfinished work exactly once across repeated recovery, retain FIFO order and attempt counts, and keep idempotency keys unique across pending, in-flight, and completed jobs. Reusing a key with different input must fail. Completion is the durable boundary: a crash after it must not invoke the handler again. This does not promise exactly-once external side effects before completion.
+
+Preserve existing tests, package metadata, and build configuration. You may edit implementation files and add focused implementation or test files. Complete and verify the local work; do not publish or deploy.

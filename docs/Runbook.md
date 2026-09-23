@@ -1,109 +1,50 @@
 # Runbook
 
-For harness-versus-harness experiments, start with the [Agent Experiment Guide](Agent%20Experiment%20Guide.md). The legacy arm commands below remain available for earlier diagnostics.
-
 ## Prerequisites
 
 - Docker
-- Python 3.12.14
-- `uv` 0.11.19
+- Python 3.12 and `uv`
 - Node 22.23.2 and npm
 - Provider CLIs only when a manually approved model-backed run is intended
-
-Install locked dependencies and run the fast static gate:
 
 ```bash
 uv sync --frozen
 uv run harness-test validate --static-only
 ```
 
-## Surgical development checks
+## Development checks
 
-Use the smallest check that proves the change:
+Use the smallest check that proves the change, and the full gates once at the checkpoint:
 
 ```bash
-# One Python module and its test
-uv run ruff check src/harness_testing/Results.py tests/unit/test_Results.py
-uv run pytest -q tests/unit/test_Results.py
-
-# One changed task while authoring
+uv run pytest -q tests/unit/test_Comparisons.py       # one module
 uv run harness-test task qa --task react-accent-polish --case oracle
 uv run harness-test task qa --task react-accent-polish --case nop
-
-# Dashboard-only change
-npm --prefix dashboard test
-npm --prefix dashboard run build
+npm --prefix dashboard test && npm --prefix dashboard run build
+uv run pytest -q tests/unit                            # checkpoint
 ```
 
-Run the full deterministic gates once at the checkpoint. `harness-test validate --changed-from COMMIT` uses the same policy in CI: it groups related unit modules into one pytest invocation and escalates only shared execution-contract changes.
+## Prepare a request
 
-## Materialize an arm
+Copy `runs/examples/Baseline Comparison.json` or `Candidate Comparison.json` into ignored `runs/inputs/`, then set:
 
-Arm materialization runs provider-native plugin tooling in an isolated build context but starts no model session:
+- every contender's source commits and the reviewed rubric path (`runs/inputs/Model Rubric.yml`);
+- the kickoff provider, runtime, model and effort, and the callable child inventory;
+- task IDs and variant, attempts, timeout, provider recovery allowance and resources;
+- `purpose` (`baseline` for fresh evidence, `candidate` with exact baseline and predecessor report IDs for a later Studio Moser version);
+- the change summary and hypothesis, written before results are seen.
+
+Plan without starting a model:
 
 ```bash
-uv run harness-test arm materialize --provider codex --arm A0
-uv run harness-test arm materialize \
-  --provider codex \
-  --arm A2 \
-  --harness-source https://github.com/Studio-Moser/skills-n-stuff.git \
-  --harness-commit FULL_40_CHARACTER_COMMIT
+uv run harness-test run plan --request 'runs/inputs/Experiment Request.json'
 ```
 
-Materialized bundles stay under ignored `arms/materialized/` and are mounted read-only in task containers. Claude copies immutable plugin directories and supplies each one with a repeatable `--plugin-dir`; materialization runs model-free `claude plugin validate --strict` and creates no plugin seed. Codex uses its native marketplace/plugin layout, with Superpowers recorded as skills-only, and writes a plugin inventory before agent dispatch.
+Review the printed tasks, versions, model and effort, child inventory, trial count, timeouts, credentials, estimate and manifest digest. The estimate is an admission guard, not a forecast or a hard stop; subscription runs still consume quota and wall time.
 
-## Plan before any model-backed run
+## Execute an approved manifest
 
-This example creates a one-session subscription manifest and starts no model:
-
-```bash
-uv run harness-test run plan \
-  --profile smoke \
-  --billing-mode subscription \
-  --cell codex:A0:baseline \
-  --task react-grouped-ui-updates \
-  --max-sessions 1 \
-  --max-budget-usd 0
-```
-
-Use exactly one skill-evaluation mode when the run is about a skill. Capability
-uses provider-native explicit invocation while preserving the task as skill
-arguments:
-
-```bash
-uv run harness-test run plan \
-  --profile smoke \
-  --billing-mode subscription \
-  --cell codex:A2:candidate:FULL_40_CHARACTER_COMMIT \
-  --task missing-rubric \
-  --invoke-skill harness:execute \
-  --max-sessions 1 \
-  --max-budget-usd 0
-```
-
-Discovery uses the unchanged task and needs at least five attempts:
-
-```bash
-uv run harness-test run plan \
-  --profile smoke \
-  --billing-mode subscription \
-  --cell codex:A2:candidate:FULL_40_CHARACTER_COMMIT \
-  --task missing-rubric \
-  --observe-skill harness:execute \
-  --attempts 5 \
-  --max-sessions 5 \
-  --max-budget-usd 0
-```
-
-After execution, `Skill_Evaluation.json` beside the ignored manifest contains
-only per-trial invocation classifications and the aggregate rate. Discovery is
-diagnostic; its rate is never converted into a release pass or failure.
-
-For paired evidence, name both cells explicitly and keep concurrency one. A2 and A3 cell specifications include the exact Studio Harness commit as the fourth colon-separated field.
-
-Review the printed provider/model/effort, tasks, attempts, session order, timeouts, incremental cost, API-equivalent estimate, input digests, manifest path, and manifest digest. Obtain a fresh explicit approval for that digest. Approval of an older manifest never authorizes a regenerated or duplicate run.
-
-Execute only the approved file:
+Only after explicit approval of that exact digest:
 
 ```bash
 uv run harness-test run execute \
@@ -111,131 +52,63 @@ uv run harness-test run execute \
   --approve sha256:EXACT_APPROVED_DIGEST
 ```
 
-Execution writes `Run_Report.json` beside the approved manifest, updates it after each
-job, and rebuilds the ignored local dashboard once when the run completes or stops.
-This report contains only allowlisted status, scores, timestamps, token totals, and
-cost telemetry plus the normalized user-visible root conversation used for collaboration
-evaluation. It never copies hidden reasoning, tool output, raw trajectories, commands,
-session IDs, or host paths.
-
-After normal completion or a handled failure, execution makes one best-effort batch
-publication attempt for every pending report. Publication failure does not erase or
-mislabel the run; it leaves the reports pending and prints this retry:
-
-```bash
-uv run harness-test report sync
-```
-
-The first selected task runs as the delivery canary across every selected cell. A correctness zero is valid task evidence and continues the run. Any infrastructure or delivery failure stops execution before the second task; later delivery failures also stop immediately.
+The first task runs as a delivery canary across every cell; an infrastructure or delivery failure stops before the second task, while a correctness zero continues. Execution writes `Run_Report.json` beside the manifest after each job and rebuilds the local dashboard once at the end. A report holds allowlisted status, scores, timestamps, usage and cost plus the normalized user-visible root conversation; never hidden reasoning, tool output, raw trajectories, session IDs or host paths.
 
 ### Subscription authentication
 
-Subscription mode forbids API fallback.
+Subscription mode forbids API fallback and requires `--max-budget-usd 0`.
 
-- Codex: unset `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `OPENAI_API_BASE`. The default credential is `~/.codex/auth.json`, or set `CODEX_AUTH_JSON_PATH` to another local ChatGPT-auth JSON file.
-- Claude: unset `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL`. For local macOS runs, create a subscription token once and store it in Keychain:
+- Codex: unset `OPENAI_API_KEY`, `OPENAI_BASE_URL` and `OPENAI_API_BASE`. The default credential is `~/.codex/auth.json`, or set `CODEX_AUTH_JSON_PATH`.
+- Claude: unset `ANTHROPIC_API_KEY` and `ANTHROPIC_BASE_URL`. On macOS store a subscription token once with `claude setup-token` then `uv run harness-test auth claude`; elsewhere use `CLAUDE_CODE_OAUTH_TOKEN`. The adapter passes the token through mode-0600 temporary files and deletes every copy after use.
 
-  ```bash
-  claude setup-token
-  uv run harness-test auth claude
-  ```
+The execution preflight rejects missing or wrong-mode credentials before Harbor starts.
 
-  CI and non-macOS runs use `CLAUDE_CODE_OAUTH_TOKEN`. Neither the Keychain nor environment path authorizes API billing.
+### Recovering an interrupted run
 
-  The runner passes the resolved value only in Harbor's child environment. The
-  Claude adapter then uses mode-`0600` temporary files rather than Harbor's
-  per-exec environment interface, because that interface expands values into
-  Docker argv. The adapter also removes the token from Harbor's trial-scoped
-  agent environment. It deletes the host copy immediately after upload and the
-  container copy before Claude starts, with final cleanup on failures. This
-  adapter supports direct Claude trials only; ACP remains disabled until its
-  pre-run bridge can use the same secret-safe handoff.
+Do not resume an approved manifest with changed inputs. Prepare a new request covering only the unstarted or failed slots (a recovery), or the corrected tasks for every contender (a correction), and approve it separately. `campaign summarize` stitches those reports back into the original lane.
 
-The execution preflight rejects missing or wrong-mode credentials before Harbor starts. Subscription mode requires `--max-budget-usd 0`; the report still shows an API-equivalent usage estimate because subscription quota is not a dollar hard stop.
+## Evaluate the finished code
 
-API mode requires a positive maximum. That maximum is an admission guard based on the conservative estimate, not a provider-enforced mid-session cutoff.
+Final-patch review, model-free preparation then one fresh reviewer session per packet:
+
+```bash
+uv run harness-test review prepare \
+  --report runs/generated/DIGEST/Run_Report.json \
+  --protocol 'policy/Code Review Protocol.json'
+uv run harness-test review record \
+  --plan runs/reviews/PLAN/Plan.json --results /private/reviewer/Results.json
+```
+
+Packets are blinded and frozen; reviewers must attest a fresh session without the tested harness. Confirmed findings need a separate confirming session with a reproduction and an evidence file. Confirmed remaining defects disqualify a contender; unconfirmed claims are listed as a warning.
+
+Automated work-quality grades, same shape:
+
+```bash
+uv run harness-test collaboration prepare \
+  --report runs/generated/DIGEST/Run_Report.json \
+  --protocol 'policy/Quality Grading Protocol.json'
+uv run harness-test collaboration record \
+  --plan runs/collaboration/PLAN/Plan.json --results runs/inputs/Grades.json
+```
+
+Grades and the deterministic transcript metrics are descriptive evidence beside the verdict; they never decide it.
+
+## Full toolbox campaign
+
+```bash
+uv run harness-test campaign plan --manifest CONTROLLED_MANIFEST --manifest RESEARCH_MANIFEST
+uv run harness-test campaign summarize --plan runs/campaigns/DIGEST/Plan.json \
+  --report CONTROLLED_REPORT --report CONTROLLED_RECOVERY … \
+  --report RESEARCH_REPORT --report RESEARCH_CORRECTION …
+```
+
+List each lane's frozen report first, then its recovery and correction reports in execution order. A later report may replace a slot only when the earlier trial did not complete or the task digest changed, and a corrected task must be rerun for every contender. The summary reports per-lane verdicts, superseded trials, corrected adapters and whether the current policy still matches the frozen plan.
 
 ## Inspect and classify
 
-Use Harbor’s local viewer and raw job directory. Sample passes, failures, unusually efficient trials, and outliers. Assign the infrastructure state before interpreting a score. Quarantine a broken or unfair task; do not finalize partial or quarantined evidence.
-
-Raw jobs and provider homes are ignored local data. Never copy them into `results/`, docs, issues, or dashboard assets.
-
-## Regrade without another agent run
-
-When only verifier/scorer logic changes, preserve the source job and run:
-
-```bash
-uv run harness-test regrade \
-  --job jobs/raw/SOURCE_JOB \
-  --tasks tasks/workflow
-```
-
-The command requires the source workspace and trajectory artifacts, runs Harbor’s regrade path with the Docker verifier, verifies the source tree stayed byte-identical, and writes a local provenance receipt in the new ignored job. A verifier/scorer-only change does not buy new model sessions.
-
-## Finalize a public result
-
-Prepare a complete reviewed candidate matching the public schema, then construct the allowlisted output:
-
-```bash
-uv run harness-test result sanitize \
-  --job runs/generated/Reviewed_Result.json \
-  --output results/Reviewed_Result.json
-```
-
-`results/` accepts finalized, reviewed, non-partial, non-quarantined data only. It resolves `run.manifest_digest` only through the matching content-addressed `runs/generated/` manifest, revalidates that manifest’s digest, and requires both manifest and methodology schema to match the current repository series with no reviewed mapping. Use `runs/generated/` for inspectable local staging. The sanitizer rejects raw trajectories, reasoning, command/tool output, environment variables, auth-looking fields, home paths, arbitrary Harbor extras, unknown telemetry, and mismatched identities.
-
-Old hidden-contract and plugin-seed cohorts stay local and quarantined. Do not regrade them or create a reviewed mapping into current schema `0.3.0`.
+Use Harbor's local viewer and the raw job directory. Sample passes, failures and outliers, assign the infrastructure state before interpreting a score, and quarantine a broken or unfair task. Raw jobs and provider homes are ignored local data; never copy them into docs, issues or dashboard assets.
 
 ## Dashboard
-
-The dashboard has two evidence lanes:
-
-- Development history is every schema-valid, public-safe run report, including
-  incomplete, failed, unreviewed, quarantined, and historical reports. It is useful
-  for diagnosing progress but is not automatically decision-grade.
-- Decision-grade results are still created only by the strict, unchanged
-  `harness-test result sanitize` path described above.
-
-Collaboration evidence appears inside the development-history lane and remains separate
-from the engineering verdict. After a coding run, prepare identity-blind grades and Tim's
-same-scenario A/B labels with the commands in [Agent Experiment Guide](Agent%20Experiment%20Guide.md#a7--evaluate-collaboration-quality). Preparing and importing are model-free. Executing the grader packets is additional model work and needs explicit approval of the prepared plan and its exact session count.
-
-Older single-task comparison reports may be backfilled only from retained root ATIF and
-native-request artifacts with the documented `collaboration backfill` command. The new
-report preserves the source identity and visibly labels the evidence as retrospective.
-
-Reconstruct historical reports without opening raw job artifacts or starting a
-model session:
-
-```bash
-uv run harness-test report backfill \
-  --source-root "$HARNESS_HISTORY_ARCHIVE_ROOT" \
-  --source-root "$PWD" \
-  --mapping runs/Historical_Backfill.toml \
-  --output runs/history
-```
-
-The output and its publication receipts are ignored local files. Backfill accepts
-only manifest/config/top-level result summaries, fails closed on ambiguous matches,
-and labels legacy, partial, failed, or missing-provenance evidence explicitly.
-
-Publish every pending live or historical report in one batch:
-
-```bash
-uv run harness-test report sync
-```
-
-The publisher validates the complete batch, uses a temporary checkout of the fixed
-`dashboard-data` branch, makes at most one data commit, and dispatches
-`Publish_Pages.yml` once. It never switches the caller's worktree, never
-force-pushes, and retries once only after a non-fast-forward rejection. A local
-receipt beside each report records the report ID and data commit, so an unchanged
-report is not republished. Run the sync command again after any other failure.
-
-Dashboard code and reviewed results stay on `main`; `dashboard-data` contains only
-its README and `reports/*.json`. Charts retain unavailable measurements as null,
-and cross-run deltas require exactly equal, non-null series keys.
 
 ```bash
 npm ci --prefix dashboard --ignore-scripts
@@ -243,18 +116,12 @@ npm --prefix dashboard test
 npm --prefix dashboard run build
 ```
 
-The build emits ignored `dashboard/dist/`. A model-backed execution invalidates the
-local result-loader cache and performs this build once at the end. GitHub Pages
-checks out dashboard code and reviewed results from `main`, reads run reports from
-`dashboard-data`, validates both inputs, and deploys the combined static site. A
-report sync dispatches that workflow even though it does not mutate `main`.
+The build emits ignored `dashboard/dist/`. Without a `dashboard-data/reports` directory it reads `runs/evidence` directly and skips files that are not public-safe run reports.
 
 ## DeepSWE research lane
 
-First print the exact download/build plan:
-
 ```bash
-uv run harness-test deepswe materialize --task quill-shared-toolbar-focus
+uv run harness-test deepswe materialize --task quill-shared-toolbar-focus --confirm-download
 ```
 
-Materialization requires `--confirm-download`. An explicit `--task` fetches only that pinned selection into ignored `.cache/deepswe/`; omitting it retains the full-cohort workflow. It builds separate `linux/amd64` images. Do not track or redistribute the fetched source, derived task wrappers, or images.
+An explicit `--task` fetches only that pinned selection into ignored `.cache/deepswe/` and builds separate `linux/amd64` images. Do not track or redistribute the fetched source, derived wrappers or images.

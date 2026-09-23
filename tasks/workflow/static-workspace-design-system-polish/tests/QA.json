@@ -1,0 +1,72 @@
+{
+  "schema_version": "1",
+  "cases": {
+    "oracle": {
+      "commands": [
+        "python Visual_Check.py"
+      ],
+      "expected": {
+        "efficiency": 1,
+        "reward": 1,
+        "workflow": 1
+      },
+      "mutation_paths": [
+        "Styles.css",
+        "Pages.css"
+      ],
+      "script": "solution/solve.sh"
+    },
+    "nop": {
+      "commands": [],
+      "expected": {
+        "efficiency": 1,
+        "reward": 0,
+        "workflow": 0
+      },
+      "mutation_paths": [],
+      "script": "@shared/Nop.sh"
+    },
+    "near-miss": {
+      "commands": [],
+      "expected": {
+        "efficiency": 1,
+        "reward": 0,
+        "workflow": 0
+      },
+      "mutation_paths": [
+        "Styles.css",
+        "Pages.css"
+      ],
+      "script": "tests/QA/Near_Miss.sh"
+    },
+    "adversarial": {
+      "commands": [
+        "python Visual_Check.py"
+      ],
+      "expected": {
+        "efficiency": 1,
+        "reward": 0,
+        "workflow": 1
+      },
+      "mutation_paths": [
+        "test/Behavior.test.js"
+      ],
+      "script": "tests/QA/Adversarial.sh"
+    },
+    "source-tamper": {
+      "commands": [
+        "python Visual_Check.py"
+      ],
+      "expected": {
+        "efficiency": 1,
+        "reward": 0,
+        "workflow": 1
+      },
+      "mutation_paths": [
+        "README.md"
+      ],
+      "script": "tests/QA/Source_Tamper.sh",
+      "run_oracle_first": true
+    }
+  }
+}

@@ -1,4 +1,77 @@
+import pytest
+
 from harness_testing.Collaboration_Quality import calculate_communication_metrics
+
+
+def test_private_links_are_normalized_without_changing_raw_messages():
+    from harness_testing.Collaboration_Quality import validate_visible_transcript
+    from harness_testing.Public_Safety import public_safety_errors
+
+    rows = transcript()
+    rows[-1]["content"] = (
+        "Verified [Phone](/tmp/proof/phone.png), [Source](/app/Styles.css), "
+        "[Docs](https://example.com/guide), and ![Desktop](file:///private/proof.png)."
+    )
+    original = rows[-1]["content"]
+    safe = validate_visible_transcript(rows)
+    assert safe[-1]["content"] == (
+        "Verified Phone [local link omitted], [Source](/app/Styles.css), "
+        "[Docs](https://example.com/guide), and Desktop [local link omitted]."
+    )
+    assert public_safety_errors(safe) == ()
+    assert rows[-1]["content"] == original
+    assert validate_visible_transcript(safe) == safe
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/tmp/proof/phone.png",
+        "`/private/tmp/screenshot proofs/phone.png`",
+        '"/Users/Example Person/Desktop/proof.png"',
+        r"C:\Users\Example\proof.png",
+        r"\\server\private\proof.png",
+        "file:///tmp/proof.png",
+        "/app/../private/proof.png",
+    ],
+)
+def test_bare_and_quoted_paths_keep_prose_metrics_and_raw_evidence(path):
+    from harness_testing.Collaboration_Quality import validate_visible_transcript
+    from harness_testing.Public_Safety import public_safety_errors
+
+    rows = transcript()
+    original = f"Verified. Saved proof to {path}. All checks passed."
+    rows[-1]["content"] = original
+    safe = validate_visible_transcript(rows)
+    assert "[local path omitted]" in safe[-1]["content"]
+    assert "Verified." in safe[-1]["content"]
+    assert "All checks passed." in safe[-1]["content"]
+    assert "Example" not in safe[-1]["content"]
+    assert "screenshot proofs" not in safe[-1]["content"]
+    assert public_safety_errors(safe) == ()
+    assert rows[-1]["content"] == original
+    assert validate_visible_transcript(safe) == safe
+    assert calculate_communication_metrics(
+        safe, contract(), task_text="Change blue to purple.", model_output_tokens=200
+    )
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "password=fixture-value",
+        "[proof](/tmp/password=fixture-value)",
+        "`/tmp/secret=fixture-value`",
+        "[proof](https://example.com/?api_key=fixture-value)",
+    ],
+)
+def test_path_normalization_never_launders_credentials(content):
+    from harness_testing.Collaboration_Quality import validate_visible_transcript
+
+    rows = transcript()
+    rows[-1]["content"] = content
+    with pytest.raises(ValueError, match="private_transcript_content"):
+        validate_visible_transcript(rows)
 
 
 def contract():

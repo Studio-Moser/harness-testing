@@ -7,7 +7,9 @@
     "node": "22.23.2"
   },
   "scripts": {
+    "prebuild": "node 'Validate Results.js'",
     "build": "OBSERVABLE_TELEMETRY_DISABLE=true observable build",
+    "predev": "node 'Validate Results.js'",
     "dev": "OBSERVABLE_TELEMETRY_DISABLE=true observable preview",
     "test": "node --test test/*.test.js"
   },

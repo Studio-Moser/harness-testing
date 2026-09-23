@@ -1,14 +1,21 @@
 ---
 style: ./Toolbox.css
-title: Harness Test Toolbox
+title: Results
 toc: false
 ---
 
 ```js
-import {renderToolbox} from "./components/Toolbox.js";
-const {tests} = await FileAttachment("./data/Toolbox.json").json();
+import {renderResults} from "./components/Results.js";
+import {HARNESS_CATALOG} from "./data/Harness Catalog.js";
 
-for (const link of document.querySelectorAll("[data-nav]")) link.removeAttribute("aria-current");
-document.querySelector('[data-nav="toolbox"]')?.setAttribute("aria-current", "page");
-display(renderToolbox(tests));
+const {tests} = await FileAttachment("./data/Toolbox.json").json();
+const reports = await FileAttachment("./data/Published Results.json").json();
+const selection = await FileAttachment("./data/Selected Cohort.json").json();
+
+for (const link of document.querySelectorAll("[data-nav]")) {
+  link.removeAttribute("aria-current");
+  link.parentElement.classList.toggle("active", link.dataset.nav === "results");
+}
+document.querySelector('[data-nav="results"]')?.setAttribute("aria-current", "page");
+display(renderResults({tests, harnesses: HARNESS_CATALOG, reports, selection}));
 ```

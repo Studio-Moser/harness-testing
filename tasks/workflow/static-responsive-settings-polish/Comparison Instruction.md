@@ -1,0 +1,5 @@
+Work in `/app`. Polish this cramped settings screen into a readable, coherent interface. Preserve all copy, controls and behavior. Establish a clear heading hierarchy, comfortable card spacing, readable contrast and visible keyboard focus. Make it work at phone, tablet and desktop widths without horizontal overflow. The existing Visual_Check.py documents measurable acceptance and captures screenshots; use rendered evidence, not only source inspection. Choose the visual treatment yourself; no exact CSS values or reference screenshot are prescribed.
+
+Preserve existing tests, package metadata, and build configuration. You may add implementation and regression files. Complete and verify the local work; do not publish or deploy.
+
+Use solid-color backgrounds only. Gradients, background images, CSS filters/backdrop filters, masks, clipping paths and blend modes are outside this fixture's supported paint contract; typography, palette, spacing, borders and responsive layout remain your design choices.

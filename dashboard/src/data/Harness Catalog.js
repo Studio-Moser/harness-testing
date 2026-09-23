@@ -134,45 +134,9 @@ export const HARNESS_CATALOG = Object.freeze([
     identityNotes: ["Identity covers the pinned source tree, complete skill inventory, and provider delivery files", "A source or inventory change creates a different version", "The display name and test results do not affect identity"]
   }),
   studioVersion({
-    id: "studio-moser-v1",
-    versionOrder: 1,
-    predecessorId: null,
-    commit: "0004abb6180d82b90b342f88244998fd618963f0",
-    identity: "sha256:45e8190c8e8d3577771ea1f1a1e1130eef5bb5c026facbd12bbe84c1529b3167",
-    changeSummary: "Establish the first full-collection Studio Moser version in this catalog.",
-    changeDetails: ["Full Studio Moser collection", "Pinned Superpowers dependency", "Frozen routing rubric"]
-  }),
-  studioVersion({
-    id: "studio-moser-v2",
-    versionOrder: 2,
-    predecessorId: "studio-moser-v1",
-    commit: "481a99a3fce47e7c1d7ae533cb007d2e95860fcd",
-    identity: "sha256:4d7cac115fc866c56e2d9975cf5446db622379f826cc46e168d7e0ff5472a67f",
-    changeSummary: "Require direct evidence before waiving independent review for public contract changes.",
-    changeDetails: ["Strengthens the risk-gate review decision", "Requires named contract assertions and observed results", "Adds regression coverage for Lite mode"]
-  }),
-  studioVersion({
-    id: "studio-moser-v3",
-    versionOrder: 3,
-    predecessorId: "studio-moser-v2",
-    commit: "771c633a6a959bb03d4f0df2002280b81df5d6cd",
-    identity: "sha256:b54f0eb5a341f745de39494c84129692a63bd3b067d03149b50ae576afb143bc",
-    changeSummary: "Scope verification to repository-required and behavior-relevant checks.",
-    changeDetails: ["Removes generic checklist behavior", "Requires availability checks before optional tools", "Keeps missing required checks visible as unmet gates"]
-  }),
-  studioVersion({
-    id: "studio-moser-v4",
-    versionOrder: 4,
-    predecessorId: "studio-moser-v3",
-    commit: "f989eb1b6cef1248fefa89f8de3f3c6349f330f2",
-    identity: "sha256:fe632a155dbeb1028e319e725c115bb468dedbd8ccef659ec9514745deacb0cc",
-    changeSummary: "Deliver verification selection in startup instructions.",
-    changeDetails: ["Moves the verification rule into the baseline agent instructions", "Makes the rule available before skill selection", "Updates Lite-mode contract coverage"]
-  }),
-  studioVersion({
     id: "studio-moser-v5",
     versionOrder: 5,
-    predecessorId: "studio-moser-v4",
+    predecessorId: null,
     commit: "3fb970f32d2901b82e3d17c35dbe192604fc7762",
     identity: "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
     changeSummary: "Adopt the Lite direct-by-default harness used by the Quill pilot.",

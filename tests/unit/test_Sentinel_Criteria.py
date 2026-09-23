@@ -155,6 +155,12 @@ def test_mutable_files_allow_only_the_three_declared_substitutions(
         assert cwd == workspace
         assert (workspace / "node_modules").is_symlink()
         assert (workspace / "node_modules").resolve() == verifier_dependencies
+        Path(command[command.index("--outputFile") + 1]).write_text(json.dumps({
+            "success": True, "testResults": [{
+                "name": str(workspace / "src/App.test.tsx"), "status": "passed",
+                "assertionResults": [{"status": "passed"}],
+            }],
+        }))
         return subprocess.CompletedProcess(command, 0, "", "")
 
     monkeypatch.setattr(criteria.subprocess, "run", run_behavior_test)
@@ -162,7 +168,7 @@ def test_mutable_files_allow_only_the_three_declared_substitutions(
     assert criteria._protected_files_intact(workspace) is True
     assert not (workspace / "node_modules").exists()
     assert criteria._sentinel_correctness(workspace) is True
-    assert commands == [["npm", "test", "--", "--reporter=dot"]]
+    assert commands[0][:3] == ["node", str(verifier_dependencies / "vitest/vitest.mjs"), "run"]
     assert not (workspace / "node_modules").exists()
 
     app.write_text(

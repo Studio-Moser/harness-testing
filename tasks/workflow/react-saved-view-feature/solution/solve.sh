@@ -18,11 +18,19 @@ export function parseSavedView(value: string | null): SavedView {
 }
 
 export function loadSavedView(storage: ViewStorage): SavedView {
-  return parseSavedView(storage.getItem(SAVED_VIEW_KEY))
+  try {
+    return parseSavedView(storage.getItem(SAVED_VIEW_KEY))
+  } catch {
+    return 'all'
+  }
 }
 
 export function saveSavedView(view: SavedView, storage: ViewStorage): void {
-  storage.setItem(SAVED_VIEW_KEY, view)
+  try {
+    storage.setItem(SAVED_VIEW_KEY, view)
+  } catch {
+    // The current selection remains usable when persistence is unavailable.
+  }
 }
 SOURCE
 

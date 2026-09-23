@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "files": {
+    "Dockerfile": "sha256:889b1bc5c21b7eb0adb1f3698a42f1067a3a7c2955086c7bee6617d8f6665a51",
+    ".dockerignore": "sha256:16d30e4462189fb14dd611bdb708c510630c576a1f35b9383e89a4352da36c97",
+    "package.json": "sha256:9eee8df835dd91e6d26e0566c2c7a03765c6f38b126e11506843128476880acb",
+    "package-lock.json": "sha256:ba4dddcc8ceef3ccb29c56260fbf3035f483951d000fd5779c29cab09afc4825",
+    "src/Role_Store.js": "sha256:d4c68fece34acd2265c9342ff49ca61f9b02ef96dd8e7a7097bf717b8b1b5056",
+    "src/Http.js": "sha256:157af29dc60ab8372cc74d7bc5098fa22f583e6617125273b431c28287536564",
+    "src/Worker.js": "sha256:3833d75bf91433b43940bf86fb1573b4f3bf78e7588a42220b47f2235c06ce68",
+    "test/Behavior.test.js": "sha256:962fea36364ac43b3ea1867ce21ea69ec6a0b735d72475235b0911222036ad79",
+    "README.md": "sha256:b2539185ab38bcfd9e95b04952fcf3fb17d2b8151ed0b7cf60cd5936c2d3e5ea"
+  },
+  "mutable_files": {}
+}

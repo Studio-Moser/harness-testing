@@ -1,0 +1,56 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+]
+
+[task]
+name = "studio-moser/node-durable-queue-recovery"
+version = "1.0.0"
+description = "Repair a file-backed queue across torn writes, process crashes, and idempotent replay."
+authors = [{ name = "Studio Moser" }]
+keywords = ["node", "javascript", "persistence", "recovery", "idempotency"]
+
+[metadata]
+difficulty = "hard"
+category = "workflow"
+tags = ["node", "javascript", "persistence", "recovery", "fault-injection"]
+change_class = "feature"
+verification_envelope = "feature"
+fixture_digest = "sha256:0f4d65f288a00b215e616f23a77bfb0a76a935f6e82fdd65734864606093d795"
+
+[agent]
+timeout_sec = 1200.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

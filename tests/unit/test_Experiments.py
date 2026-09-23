@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 
 from harness_testing.Experiments import (
-    available_reference_reports,
     comparison_mismatches,
     contender_identity,
     resolve_reference_reports,
@@ -13,30 +12,11 @@ from harness_testing.Experiments import (
 )
 
 
-def test_reference_discovery_ignores_publication_receipts(tmp_path, monkeypatch):
-    report_id = "a" * 64
-    evidence = tmp_path / "runs" / "evidence"
-    evidence.mkdir(parents=True)
-    (evidence / f"{report_id}.json").write_text("{}")
-    (evidence / f"{report_id}.Publication.json").write_text("{}")
-    loaded = []
-
-    def load_report(_root, path):
-        loaded.append(path.name)
-        return {"report_id": path.stem}
-
-    monkeypatch.setattr("harness_testing.Run_Reports.load_run_report", load_report)
-
-    assert available_reference_reports(tmp_path) == [{"report_id": report_id}]
-    assert loaded == [f"{report_id}.json"]
-
-
 def request_document():
     return {
         "schema_version": "1",
         "label": "Rubric iteration",
         "purpose": "candidate",
-        "skill_evaluation": None,
         "contenders": [
             {
                 "family": "studio-moser",
@@ -102,20 +82,71 @@ def test_request_validation_is_strict_and_aggregates_errors():
     assert "max_sessions" in errors
 
 
-def test_request_accepts_explicit_skill_capability_invocation():
-    document = request_document()
-    document["skill_evaluation"] = {
-        "mode": "capability",
-        "name": "harness:execute",
+@pytest.mark.parametrize("name", ["Baseline Comparison.json", "Candidate Comparison.json"])
+def test_astra_templates_cover_native_efforts_without_coercing_or_admitting_unknown_routes(name):
+    from harness_testing.Trial_Evidence import executor_condition
+
+    request = json.loads((Path(__file__).parents[2] / "runs/examples" / name).read_text())
+    assert validate_experiment_request(request) == []
+    assert request["conditions"]["kickoff"]["model"] == "gpt-6-astra"
+    assert request["conditions"]["kickoff"]["effort"] == "medium"
+    assert request["conditions"]["simulated_user"]["model"] == "gpt-5.6-sol"
+    assert request["conditions"]["simulated_user"]["effort"] == "medium"
+    inventory = request["conditions"]["executor_inventory"]
+    assert {row["model"] for row in inventory} == {
+        "gpt-6-astra",
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "gpt-5.6-luna",
     }
+    assert len(inventory) == 23
+    for model in {row["model"] for row in inventory}:
+        efforts = {"low", "medium", "high", "xhigh", "max"}
+        if model != "gpt-5.6-luna":
+            efforts.add("ultra")
+        assert {row["effort"] for row in inventory if row["model"] == model} == efforts
+        for effort in efforts:
+            assert (
+                executor_condition("codex", {"model": model, "effort": effort}, inventory) is None
+            )
+    assert (
+        executor_condition("codex", {"model": "gpt-5.6-luna", "effort": "ultra"}, inventory)
+        == "executor_condition_mismatch"
+    )
+    assert (
+        executor_condition("codex", {"model": "undeclared", "effort": "medium"}, inventory)
+        == "executor_condition_mismatch"
+    )
+    without_medium = [
+        row for row in inventory if (row["model"], row["effort"]) != ("gpt-5.6-luna", "medium")
+    ]
+    assert (
+        executor_condition("codex", {"model": "gpt-5.6-luna", "effort": "medium"}, without_medium)
+        == "executor_condition_mismatch"
+    )
 
-    assert validate_experiment_request(document) == []
+
+@pytest.mark.parametrize(
+    "capability", ["native_delegation", "scripted_user", "child_model_routing", "complete_usage"]
+)
+def test_unattestable_capability_requirements_fail_before_planning(capability):
+    request = request_document()
+    request["contenders"][0]["delivery_config"]["required_capabilities"] = [capability]
+    assert any("not attestable" in error for error in validate_experiment_request(request))
 
 
-def test_request_keeps_skill_evaluation_optional_for_version_one_inputs():
+def test_readiness_rejects_unsupported_decision_scopes_but_allows_diagnostic_subsets():
     document = request_document()
-    document.pop("skill_evaluation")
-
+    document["conditions"].update(
+        decision_policy="benchmark-readiness-v2",
+        task_variant="deepswe",
+        task_ids=["quill-shared-toolbar-focus"],
+    )
+    assert any("exact declared scope" in error for error in validate_experiment_request(document))
+    document["purpose"] = "diagnostic"
+    assert validate_experiment_request(document) == []
+    document["purpose"] = "candidate"
+    document["conditions"]["task_ids"] = ["happy-dom-abort-pending-body-reads"]
     assert validate_experiment_request(document) == []
 
 

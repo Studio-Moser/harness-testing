@@ -14,8 +14,12 @@ function list(items, className = "harness-list") {
 }
 
 function detail(title, ...content) {
-  const node = element("details", "toolbox-detail harness-detail");
-  node.append(element("summary", "toolbox-detail-summary", title), ...content);
+  const node = element("details", "toolbox-detail harness-detail accordion-item");
+  const summary = element("summary", "toolbox-detail-summary accordion-button collapsed", title);
+  const toggle = element("span", "accordion-button-toggle");
+  toggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" class="icon"><path d="M6 9l6 6l6 -6" /></svg>';
+  summary.append(toggle);
+  node.append(summary, ...content);
   return node;
 }
 
@@ -93,35 +97,36 @@ function renderCard(version, family) {
   const card = element("article", `harness-card harness-card-${family.role} harness-card-family-${version.family} card`);
   card.setAttribute("data-harness-id", version.id);
 
-  const header = element("header", "harness-card-header harness-version-header");
+  const header = element("header", "harness-card-header harness-version-header card-body");
   const labels = element("div", "toolbox-card-labels");
   labels.append(
-    element("span", "toolbox-badge harness-version-badge", version.versionLabel),
-    element("span", `toolbox-badge harness-state harness-state-${version.state}`, version.state === "ready" ? "Ready" : "Draft")
+    element("span", "toolbox-badge harness-version-badge badge bg-secondary-lt", version.versionLabel),
+    element("span", `toolbox-badge harness-state badge bg-${version.state === "ready" ? "green" : "yellow"}-lt`, version.state === "ready" ? "Ready" : "Draft")
   );
-  if (version.latest && version.family === "studio-moser") labels.append(element("span", "toolbox-badge harness-latest", "Latest"));
+  if (version.latest && version.family === "studio-moser") labels.append(element("span", "toolbox-badge harness-latest badge bg-purple-lt", "Latest"));
 
   const changes = element("div", "harness-change");
   changes.append(
-    element("p", "harness-change-label", "Changes from previous version"),
+    element("p", "harness-change-label", version.predecessorId == null ? "Version summary" : "Changes from previous version"),
     element("p", "harness-change-summary", version.changeSummary),
     list(version.changeDetails, "harness-change-list")
   );
   header.append(
     labels,
-    element("h3", "toolbox-card-title harness-card-title", `${family.name} ${version.versionLabel}`),
+    element("h3", "toolbox-card-title harness-card-title card-title", `${family.name} ${version.versionLabel}`),
     element("p", "harness-card-subtitle", version.sourceLabel),
     changes
   );
 
-  const details = element("div", "toolbox-details");
+  const details = element("div", "toolbox-details accordion");
   details.append(
     detail("What it does", renderPurpose(family)),
     detail("Included layers", renderLayers(version)),
     detail("How it is delivered", renderDelivery(version)),
     detail("Version identity", renderIdentity(version))
   );
-  card.append(header, details);
+  const color = {nothing: "secondary", superpowers: "blue", "studio-moser": "purple", "studio-personality": "teal"}[version.family];
+  card.append(element("div", `card-status-top bg-${color}`), header, details);
   return card;
 }
 
@@ -133,8 +138,8 @@ function renderFamily(catalog, familyId, {newestFirst = false} = {}) {
   const heading = element("header", "harness-family-heading");
   const title = element("div", "harness-family-title");
   title.append(
-    element("h3", "", family.name),
-    element("span", "harness-family-count", `${versions.length} ${versions.length === 1 ? "version" : "versions"}`)
+    element("h2", "mb-0", family.name),
+    element("span", "harness-family-count badge bg-secondary-lt", `${versions.length} ${versions.length === 1 ? "version" : "versions"}`)
   );
   heading.append(
     title,
@@ -153,7 +158,7 @@ function renderBaselines(catalog) {
   const section = element("section", "harness-family harness-family-baselines");
   const heading = element("header", "harness-family-heading");
   const title = element("div", "harness-family-title");
-  title.append(element("h3", "", "Baselines"), element("span", "harness-family-count", `${versions.length} harnesses`));
+  title.append(element("h2", "mb-0", "Baselines"), element("span", "harness-family-count badge bg-secondary-lt", `${versions.length} harnesses`));
   heading.append(
     title,
     element("p", "harness-family-purpose", "Reference configurations that remain separate from the Studio Moser version line."),
@@ -165,39 +170,20 @@ function renderBaselines(catalog) {
   return section;
 }
 
-function renderGroup(title, description, catalog, familyIds, className) {
-  const section = element("section", `harness-group ${className}`);
-  const heading = element("div", "harness-group-heading");
-  heading.append(element("h2", "", title), element("p", "", description));
-  section.append(heading);
-  for (const familyId of familyIds) section.append(renderFamily(catalog, familyId));
-  return section;
-}
-
 export function renderHarnesses(catalog) {
   const primary = primaryHarnesses(catalog);
-  const primaryFamilies = Object.entries(HARNESS_FAMILIES)
-    .filter(([, family]) => family.role === "primary")
-    .sort(([, a], [, b]) => a.stage - b.stage)
-    .map(([id]) => id);
   const draftBaselines = catalog.filter(({family, state}) => HARNESS_FAMILIES[family]?.role === "baseline" && state === "draft");
-  const root = element("section", "harnesses");
+  const root = element("section", "harnesses container-xl");
   root.setAttribute("aria-label", "Harness catalog");
 
-  const intro = element("header", "toolbox-intro harnesses-intro");
+  const intro = element("header", "toolbox-intro harnesses-intro page-header");
   intro.append(
-    element("h1", "", `${primary.length} Harness Versions`),
+    element("h1", "page-title fs-1", "Harnesses"),
     element("p", "toolbox-intro-copy", "Track each harness revision as a distinct test input: what it contains, which version preceded it, and exactly what changed. This catalog contains definitions only—no results or recommendations."),
     element("p", "harness-count", `${primary.length} ready harness versions, plus ${draftBaselines.length} draft baseline.`)
   );
 
-  const primaryGroup = renderGroup(
-    "Primary comparison",
-    "The baselines anchor a newest-first Studio Moser history; newer does not imply better.",
-    catalog,
-    [],
-    "harness-group-primary"
-  );
+  const primaryGroup = element("div", "harness-group harness-group-primary page-body");
   primaryGroup.append(renderFamily(catalog, "studio-moser", {newestFirst: true}), renderBaselines(catalog));
   root.append(intro, primaryGroup);
   return root;

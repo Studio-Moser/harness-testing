@@ -19,7 +19,6 @@ from jsonschema import Draft202012Validator
 from jsonschema.exceptions import SchemaError
 
 from harness_testing.Config import load_job, load_task, load_trajectory, load_versions
-from harness_testing.Harness_Result import harness_result_schema_errors
 
 _FULL_COMMIT = re.compile(r"^[0-9a-f]{40}$")
 _DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -39,18 +38,9 @@ _CORE_SCHEMA_PATHS = {
 _POLICY_PATHS = {
     "policy/Command_Classification.toml",
     "policy/Verification_Envelopes.toml",
-    "src/harness_testing/Metrics.py",
-}
-_HARNESS_RESULT_SCHEMA_TESTS = {
-    "tests/unit/test_Contract_Criteria.py",
-    "tests/unit/test_Contract_Stub_Server.py",
-    "tests/unit/test_Harness_Result.py",
-    "tests/unit/test_Materialize.py",
-    "tests/unit/test_Validate.py",
 }
 _TRAJECTORY_DECODER_TESTS = {
     "tests/unit/test_Codex_Agent.py",
-    "tests/unit/test_Metrics.py",
     "tests/unit/test_Sentinel_Criteria.py",
     "tests/unit/test_Trajectory_Events.py",
     "tests/unit/test_Workflow_Criteria.py",
@@ -85,16 +75,6 @@ _FULL_DETERMINISTIC_COMMANDS = (
         "qa",
         "--pack",
         "workflow",
-        "--all-cases",
-    ),
-    (
-        "uv",
-        "run",
-        "harness-test",
-        "task",
-        "qa",
-        "--pack",
-        "contract",
         "--all-cases",
     ),
 )
@@ -132,7 +112,6 @@ def _validate_benchmark_task_assets(
     task_root = task_path.parent
     environment_directory = task_root / "environment"
     is_rust = (environment_directory / "Cargo.toml").is_file()
-    is_contract = task.metadata.get("category") == "contract"
     required_files = [
         "instruction.md",
         "environment/Dockerfile",
@@ -142,31 +121,7 @@ def _validate_benchmark_task_assets(
         "tests/criteria.py",
         "tests/Protected_Files.json",
     ]
-    if is_contract:
-        required_files.extend(
-            (
-                "environment/docker-compose.yaml",
-                "tests/Expected.json",
-                "tests/QA.json",
-            )
-        )
-        if task.task and task.task.name == "studio-moser/standalone-computer-use":
-            required_files.extend(
-                (
-                    "environment/Fixture/Computer_Use_Request.json",
-                    "environment/computer-use-server/Dockerfile",
-                    "environment/computer-use-server/Server.py",
-                )
-            )
-        else:
-            required_files.extend(
-                (
-                    "environment/Harness_Stub.mjs",
-                    "environment/stub-server/Dockerfile",
-                    "environment/stub-server/Scenario.json",
-                )
-            )
-    elif is_rust:
+    if is_rust:
         required_files.extend(("environment/Cargo.toml", "environment/Cargo.lock"))
     else:
         required_files.extend(
@@ -191,18 +146,17 @@ def _validate_benchmark_task_assets(
     if failures:
         return failures
 
-    if not is_contract:
-        dockerfile_path = environment_directory / "Dockerfile"
-        dockerfile = dockerfile_path.read_text()
-        if not all(
-            fragment in dockerfile for fragment in _WORKFLOW_GIT_BASELINE_FRAGMENTS
-        ):
-            failures.append(
-                _failure(
-                    dockerfile_path,
-                    "workflow fixture must create a deterministic Git baseline",
-                )
+    dockerfile_path = environment_directory / "Dockerfile"
+    dockerfile = dockerfile_path.read_text()
+    if not all(
+        fragment in dockerfile for fragment in _WORKFLOW_GIT_BASELINE_FRAGMENTS
+    ):
+        failures.append(
+            _failure(
+                dockerfile_path,
+                "workflow fixture must create a deterministic Git baseline",
             )
+        )
 
     test_script = (task_root / "tests" / "test.sh").read_text()
     if re.search(r"\b(?:uvx|pip\s+install|npm\s+install)\b", test_script):
@@ -213,7 +167,7 @@ def _validate_benchmark_task_assets(
             )
         )
 
-    if not is_rust and not is_contract:
+    if not is_rust:
         try:
             environment_package = json.loads(
                 (task_root / "environment" / "package.json").read_text()
@@ -253,111 +207,6 @@ def _validate_benchmark_task_assets(
                 )
             )
 
-    if is_contract:
-        expected_path = task_root / "tests" / "Expected.json"
-        qa_path = task_root / "tests" / "QA.json"
-        expected: dict[str, Any] = {}
-        try:
-            expected = json.loads(expected_path.read_text())
-            result = expected["result"]
-            if set(expected) != {
-                "artifacts",
-                "calls",
-                "evidence_requirements",
-                "result",
-            }:
-                raise ValueError(
-                    "Expected.json requires artifacts, calls, evidence_requirements, "
-                    "and result"
-                )
-            evidence_requirements = expected["evidence_requirements"]
-            if (
-                not isinstance(evidence_requirements, list)
-                or not evidence_requirements
-                or not all(
-                    isinstance(requirement, str) and requirement.strip()
-                    for requirement in evidence_requirements
-                )
-            ):
-                raise ValueError("evidence_requirements must contain exact prefixes")
-            errors = harness_result_schema_errors(result)
-            if errors:
-                raise ValueError(
-                    "; ".join(
-                        f"HarnessResult {pointer}: {validator}"
-                        for pointer, validator in errors
-                    )
-                )
-            qa = json.loads(qa_path.read_text())
-            if set(qa["cases"]) != {
-                "oracle",
-                "nop",
-                "near-miss",
-                "adversarial",
-                "source-tamper",
-            }:
-                raise ValueError("QA.json must define the five deterministic cases")
-        except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
-            failures.append(
-                _failure(expected_path, f"invalid contract expectation: {error}")
-            )
-
-        event_artifacts = [
-            artifact
-            for artifact in task.artifacts
-            if not isinstance(artifact, str)
-            and artifact.service not in (None, "main")
-            and artifact.source.endswith("Events.jsonl")
-        ]
-        if len(event_artifacts) != 1:
-            failures.append(
-                _failure(
-                    task_path,
-                    "contract task requires one protected sidecar Events.jsonl artifact",
-                )
-            )
-
-        if task.task and task.task.name == "studio-moser/standalone-computer-use":
-            dockerfile_path = (
-                environment_directory / "computer-use-server" / "Dockerfile"
-            )
-            dockerfile = dockerfile_path.read_text()
-            if not all(
-                fragment in dockerfile
-                for fragment in (
-                    "mcp==2.1.1",
-                    "playwright==1.62.0",
-                    "mcr.microsoft.com/playwright/python:v1.62.0-noble@sha256:",
-                )
-            ):
-                failures.append(
-                    _failure(
-                        dockerfile_path,
-                        "computer-use sidecar must use the pinned MCP and Playwright stack",
-                    )
-                )
-            if len(task.environment.mcp_servers) != 1:
-                failures.append(
-                    _failure(task_path, "computer-use task requires one MCP server")
-                )
-        else:
-            scenario_path = environment_directory / "stub-server" / "Scenario.json"
-            try:
-                scenario = json.loads(scenario_path.read_text())
-                contract = scenario.get("contract")
-                if isinstance(contract, dict) and "harness_result_schema" in contract:
-                    raise ValueError("scenario contract reserves harness_result_schema")
-                scenario_calls = [
-                    {"action": call["action"], "payload": call["payload"]}
-                    for call in scenario["calls"]
-                ]
-                if scenario_calls != expected.get("calls"):
-                    raise ValueError("protected scenario calls differ from Expected.json")
-            except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
-                failures.append(
-                    _failure(scenario_path, f"invalid contract scenario: {error}")
-                )
-
     for path in environment_directory.rglob("*"):
         if path.is_symlink():
             failures.append(_failure(path, "frozen fixture must not contain symlinks"))
@@ -377,7 +226,7 @@ def _validate_benchmark_task_assets(
         manifest = json.loads(manifest_path.read_text())
         protected_files = manifest["files"]
         protected_root = (
-            environment_directory / "Fixture" if is_contract else environment_directory
+            environment_directory
         )
         if not isinstance(protected_files, dict) or not protected_files:
             raise ValueError("files must be a non-empty object")
@@ -682,37 +531,6 @@ def _validate_atif_fixtures(root: Path) -> list[ValidationFailure]:
     return failures
 
 
-def validate_public_results(root: Path) -> tuple[ValidationFailure, ...]:
-    """Validate the publication schema and every JSON result under results/."""
-
-    failures: list[ValidationFailure] = []
-    schema_path = root / "policy" / "Public_Result.schema.json"
-    try:
-        schema = json.loads(schema_path.read_text())
-        Draft202012Validator.check_schema(schema)
-    except (OSError, json.JSONDecodeError, SchemaError) as error:
-        return (_failure(schema_path, f"invalid public result schema: {error}"),)
-
-    from harness_testing.Results import validate_public_result
-
-    results_root = root / "results"
-    if not results_root.is_dir():
-        return ()
-    for path in sorted(results_root.rglob("*.json")):
-        try:
-            document = json.loads(path.read_text())
-        except (OSError, json.JSONDecodeError) as error:
-            failures.append(_failure(path, f"invalid public result JSON: {error}"))
-            continue
-        errors = validate_public_result(root, document)
-        for error in errors:
-            failures.append(_failure(path, error))
-        run = document.get("run") if isinstance(document, dict) else None
-        if not isinstance(run, dict) or run.get("finalized") is not True:
-            failures.append(_failure(path, "public results must be finalized"))
-    return tuple(failures)
-
-
 def validate_markdown_links(root: Path) -> tuple[ValidationFailure, ...]:
     """Check repository-local Markdown links without flaky network requests."""
 
@@ -939,9 +757,6 @@ def affected_validation_commands(
         if name.startswith("images/"):
             unit_tests.add("tests/unit/test_Materialize.py")
 
-        if name == "src/harness_testing/Harness_Result.schema.json":
-            unit_tests.update(_HARNESS_RESULT_SCHEMA_TESTS)
-            images.add("verifier")
         if name == "src/harness_testing/Trajectory_Events.py":
             unit_tests.update(_TRAJECTORY_DECODER_TESTS)
             images.add("verifier")
@@ -1073,7 +888,11 @@ def _repository_files(root: Path) -> tuple[Path, ...]:
         check=True,
         capture_output=True,
     )
-    return tuple(root / path for path in result.stdout.decode().split("\0") if path)
+    return tuple(
+        root / path
+        for path in result.stdout.decode().split("\0")
+        if path and (root / path).is_file()
+    )
 
 
 def _validate_checked_in_commands(root: Path) -> list[ValidationFailure]:
@@ -1127,7 +946,6 @@ def validate_collaboration_policy(root: Path) -> tuple[ValidationFailure, ...]:
         "Communication Contract.schema.json",
         "Collaboration Grading Protocol.schema.json",
         "Collaboration Grading Results.schema.json",
-        "Collaboration Calibration Labels.schema.json",
     )
     schemas: dict[str, dict] = {}
     for name in schema_names:
@@ -1217,7 +1035,6 @@ def validate_repository(root: Path) -> tuple[ValidationFailure, ...]:
     )
     failures.extend(_validate_generated_jobs(root))
     failures.extend(_validate_atif_fixtures(root))
-    failures.extend(validate_public_results(root))
     failures.extend(validate_markdown_links(root))
     action_pins = (
         None

@@ -30,6 +30,21 @@ def test_answers_only_frozen_facts_and_records_rule():
     )
 
 
+@pytest.mark.parametrize(
+    "followups",
+    [
+        None,
+        [{"id": "x", "fact": "missing"}],
+        [{"id": "x", "fact": "workspace", "action": "publish"}],
+        [{"id": "x", "fact": "workspace"}] * 2,
+    ],
+)
+def test_followups_are_bounded_unique_frozen_facts(followups):
+    with pytest.raises(ValueError, match="follow-up"):
+        validate_policy(policy() | {"follow_ups": followups})
+    validate_policy(policy() | {"follow_ups": [{"id": "x", "fact": "workspace"}]})
+
+
 def test_unknown_approval_never_grants_authority():
     decision = select_reply(
         {"kind": "approval", "text": "Publish externally", "actions": ["publish"]}, policy(), 0
@@ -78,7 +93,7 @@ def test_all_comparison_tasks_answer_authored_questions():
     from pathlib import Path
 
     policies = list((Path(__file__).parents[2] / "tasks/workflow").glob("*/Scripted User.json"))
-    assert len(policies) == 10
+    assert len(policies) == 20
     for path in policies:
         frozen = json.loads(path.read_text())
         for kind, text in [
@@ -100,7 +115,7 @@ def test_all_comparison_tasks_answer_authored_questions():
             ("approval", "Design:\n\nPlease confirm this design and I\u2019ll continue."),
             ("approval", "Please approve this plan so I can branch and implement."),
             ("approval", "Please approve this plan so I can update src/lib.rs."),
-            ("approval", "Please approve this plan before I release v1.2."),
+            ("approval", "Reply “yes” to approve this treatment and I’ll implement it."),
             (
                 "approval",
                 (
@@ -110,10 +125,7 @@ def test_all_comparison_tasks_answer_authored_questions():
             ),
             (
                 "approval",
-                (
-                    "I will update the source value, then run the checks.\n\n"
-                    "Approve this approach?"
-                ),
+                ("I will update the source value, then run the checks.\n\nApprove this approach?"),
             ),
             ("approval", "Design:\n\nDoes that design look right?"),
         ]:
@@ -278,7 +290,10 @@ def test_research_policy_approves_routine_plans_but_denies_tool_authority():
     ) == {
         "status": "reply",
         "rule_id": "implementation-approval",
-        "reply": "Proceed with the implementation and verification in the task workspace.",
+        "reply": (
+            "Proceed with implementation and verification within the original local task scope. "
+            "This grants no publishing, deployment, additional spending, or broader authority."
+        ),
     }
     assert (
         select_reply(

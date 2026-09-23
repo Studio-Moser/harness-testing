@@ -124,6 +124,22 @@ def test_prepare_rejects_a_report_without_a_completed_experiment_trial(tmp_path:
         prepare_review(ROOT, report_path, ROOT / "policy" / "Code Review Protocol.json")
 
 
+def test_fixture_patch_accepts_pinned_runtime_copy_but_not_cross_stage_app_files(tmp_path):
+    from harness_testing.Code_Reviews import _comparison_patch
+
+    source, final = tmp_path / "source", tmp_path / "final"
+    source.mkdir()
+    final.mkdir()
+    dockerfile = "COPY --from=node-runtime /usr/local /usr/local\nCOPY . .\n"
+    for folder in (source, final):
+        (folder / "Dockerfile").write_text(dockerfile)
+        (folder / "index.html").write_text("same\n")
+    assert _comparison_patch(source, final)[0] == b""
+    (source / "Dockerfile").write_text("COPY --from=node-runtime /app /app\nCOPY . .\n")
+    with pytest.raises(ValueError, match="unsupported fixture COPY instruction"):
+        _comparison_patch(source, final)
+
+
 def test_review_cli_forwards_prepare_paths(monkeypatch, capsys, tmp_path: Path):
     from harness_testing.CLI import main
 
@@ -229,32 +245,6 @@ def test_review_cli_refreshes_dashboard_after_record(monkeypatch, capsys):
     assert main(["review", "record", "--plan", "Plan.json", "--results", "Results.json"]) == 0
     assert calls == ["record", "refresh"]
     assert json.loads(capsys.readouterr().out)["status"] == "accepted"
-
-
-def test_review_cli_forwards_explicit_references(monkeypatch, capsys):
-    from harness_testing.CLI import main
-
-    calls = []
-    monkeypatch.setattr(
-        "harness_testing.Code_Reviews.prepare_review",
-        lambda *args, **kwargs: calls.append(kwargs) or {"status": "accepted"},
-    )
-    assert (
-        main(
-            [
-                "review",
-                "prepare",
-                "--report",
-                "Report.json",
-                "--protocol",
-                "Protocol.json",
-                "--references",
-                "References.json",
-            ]
-        )
-        == 0
-    )
-    assert calls == [{"references_path": Path("References.json")}]
 
 
 def test_later_global_attempt_resolves_its_own_single_trial_job():

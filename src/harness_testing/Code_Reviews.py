@@ -29,7 +29,6 @@ from jsonschema import Draft202012Validator, FormatChecker
 from harness_testing.Experiment_Reports import _price_usage, comparison_pricing
 from harness_testing.Experiments import available_reference_reports, resolve_reference_reports
 from harness_testing.Public_Safety import public_safety_errors
-from harness_testing.Review_References import validate_review_references
 from harness_testing.Run_Reports import load_run_report, run_report_id, validate_run_report
 from harness_testing.Runs import verify_manifest_document
 
@@ -141,7 +140,7 @@ def _review_result(
     }
 
 
-def _manifest_for_report(root: Path, report: Mapping[str, object]) -> dict[str, Any]:
+def _source_manifest(root: Path, report: Mapping[str, object]) -> dict[str, Any]:
     digest = report.get("manifest_digest")
     if not isinstance(digest, str) or not _DIGEST.fullmatch(digest):
         raise ValueError("source report has no valid manifest digest")
@@ -154,6 +153,24 @@ def _manifest_for_report(root: Path, report: Mapping[str, object]) -> dict[str, 
     return manifest
 
 
+def _manifest_for_report(root: Path, report: Mapping[str, object]) -> dict[str, Any]:
+    return _source_manifest(root, report)
+
+
+def retained_trials(report: Mapping[str, object]) -> list[dict]:
+    """Trials of a report; an older retained binding may name an explicit subset."""
+    experiment = report.get("experiment", {})
+    selected = (experiment.get("evaluation_binding") or {}).get("trial_ids")
+    return [
+        trial for trial in experiment.get("trials", [])
+        if selected is None or trial.get("trial_id") in selected
+    ]
+
+
+def evaluation_protocol(manifest: Mapping[str, object], name: str) -> dict:
+    return manifest["provenance"]["experiment"]["evaluation_inputs"][name]
+
+
 def _task_instruction(
     root: Path, manifest: Mapping[str, object], task_id: str, task_root: Path | None = None
 ) -> tuple[Path, bytes]:
@@ -164,26 +181,15 @@ def _task_instruction(
     )
     conditions = experiment.get("conditions") if isinstance(experiment, Mapping) else None
     variant = conditions.get("task_variant") if isinstance(conditions, Mapping) else None
-    if variant == "comparison":
+    if variant in {"comparison", "deepswe"}:
         from harness_testing.Materialize import _tree_digest
 
         if task_root is None or _tree_digest(task_root) != conditions["task_digests"][task_id]:
             raise ValueError("comparison task cache does not match the frozen task digest")
-        path = task_root / "Comparison Instruction.md"
-        return path, _path_bytes(path, "original task instruction")
-    if variant == "deepswe":
-        from harness_testing.Materialize import load_deepswe_dataset
-
-        dataset = load_deepswe_dataset(root, task_ids=(task_id,))
-        expected = (
-            manifest.get("provenance", {}).get("deepswe_dataset_digest")
-            if isinstance(manifest.get("provenance"), Mapping)
-            else None
+        path = task_root / (
+            "Comparison Instruction.md" if variant == "comparison" else "instruction.md"
         )
-        if not isinstance(expected, str) or dataset.digest != expected:
-            raise ValueError("DeepSWE task cache does not match the source manifest")
-        path = dataset.path / "tasks" / task_id / "instruction.md"
-        return path, _path_bytes(path, "original DeepSWE task instruction")
+        return path, _path_bytes(path, "original task instruction")
     raise ValueError(f"unsupported source task variant for review: {variant!r}")
 
 
@@ -291,6 +297,9 @@ def _trial_inputs(
         base = _sha256(_canonical(base_files))
     if not isinstance(base, str) or not base:
         raise ValueError("source job has no retained patch base")
+    from harness_testing.Visual_Evidence import visual_evidence
+
+    visuals = visual_evidence(task_root, trial_directories[0]) if task_root else None
     return {
         "patch_path": patch_path,
         "patch": patch,
@@ -298,6 +307,7 @@ def _trial_inputs(
         "instruction": instruction,
         "base": base,
         "base_files": base_files,
+        "visual_evidence": visuals,
     }
 
 
@@ -317,6 +327,9 @@ def _fixture_copy_files(source: Path) -> set[Path] | None:
             tokens = shlex.split(line, comments=True)
         except ValueError as error:
             raise ValueError("unsupported fixture COPY instruction") from error
+        # This pinned runtime copy is outside /app and contributes no fixture files.
+        if tokens == ["COPY", "--from=node-runtime", "/usr/local", "/usr/local"]:
+            continue
         if len(tokens) < 3 or any(token.startswith("--") for token in tokens[1:]):
             raise ValueError("unsupported fixture COPY instruction")
         sources, destination = tokens[1:-1], tokens[-1]
@@ -423,7 +436,7 @@ def _protocol(root: Path, protocol_path: Path) -> tuple[dict[str, Any], bytes, s
 
 
 def prepare_review(
-    root: Path, report_path: Path, protocol_path: Path, references_path: Path | None = None
+    root: Path, report_path: Path, protocol_path: Path
 ) -> dict[str, object]:
     """Freeze blinded, packet-local review inputs for completed v3 trials."""
 
@@ -438,7 +451,7 @@ def prepare_review(
         raise ValueError("review preparation requires a version-3 experiment report")
     selected = [
         trial
-        for trial in trials
+        for trial in retained_trials(raw_report)
         if isinstance(trial, Mapping) and trial.get("status") == "completed"
     ]
     if not selected:
@@ -453,16 +466,14 @@ def prepare_review(
     if not source_snapshot.exists():
         source_snapshot.write_bytes(report_bytes)
     protocol, protocol_bytes, protocol_id = _protocol(root, protocol_path)
-    references = validate_review_references(
-        root,
-        report,
-        protocol_id,
-        _read_json(references_path, "review reference mapping") if references_path else {},
-    )
     manifest = _manifest_for_report(root, report)
     frozen_conditions = manifest.get("provenance", {}).get("experiment", {}).get("conditions")
     if frozen_conditions != report["experiment"]["conditions"]:
         raise ValueError("source report conditions do not match the source manifest")
+    if frozen_conditions["decision_policy"] == "benchmark-readiness-v2":
+        expected_protocol = evaluation_protocol(manifest, "code_review")
+        if protocol != expected_protocol:
+            raise ValueError("review protocol differs from the frozen benchmark policy")
     image_digests = frozen_conditions.get("image_digests")
     if not isinstance(image_digests, Mapping) or not all(
         isinstance(name, str) and isinstance(digest, str) and _DIGEST.fullmatch(digest)
@@ -503,6 +514,10 @@ def prepare_review(
             raise ValueError("source task has no pinned agent image")
         if inputs.get("base_files") is not None:
             packet["task"]["base_files"] = inputs["base_files"]
+        if inputs.get("visual_evidence") is not None:
+            if inputs["visual_evidence"]["status"] != "complete":
+                raise ValueError("visual review requires retained verifier screenshots")
+            packet["visual_evidence"] = inputs["visual_evidence"]
         packet_bytes = json.dumps(packet, indent=2, sort_keys=True).encode() + b"\n"
         prepared.append(
             {
@@ -536,11 +551,11 @@ def prepare_review(
         },
         "conditions": protocol["reviewer"],
         "pricing_digest": _price_usage(root, [])[1],
-        "reference_revisions": references,
+        "reference_revisions": {},
         "unreviewed_trials": [
             {"trial_id": trial["trial_id"], "status": trial["status"]}
             for trial in trials
-            if trial["status"] != "completed"
+            if trial not in selected
         ],
         "packets": [
             {key: value for key, value in item.items() if key not in {"packet", "packet_bytes"}}
@@ -631,12 +646,14 @@ def _verify_frozen_inputs(
     if not isinstance(report_trials, list):
         raise ValueError("source report has no experiment trials")
     by_id = {trial.get("trial_id"): trial for trial in report_trials if isinstance(trial, Mapping)}
-    expected = {trial["trial_id"] for trial in report_trials if trial["status"] == "completed"}
+    expected = {
+        trial["trial_id"] for trial in retained_trials(report) if trial["status"] == "completed"
+    }
     actual = [item.get("trial_id") for item in packets if isinstance(item, Mapping)]
     unreviewed = [
         {"trial_id": trial["trial_id"], "status": trial["status"]}
         for trial in report_trials
-        if trial["status"] != "completed"
+        if trial["trial_id"] not in expected
     ]
     if (
         len(actual) != len(expected)
@@ -947,11 +964,22 @@ def _attach_comparison(root: Path, report: dict[str, object]) -> None:
         )
     }
     references = (
-        resolve_reference_reports(request, available_reference_reports(root))
+        resolve_reference_reports(
+            request,
+            available_reference_reports(
+                root, set(request["baseline_result_ids"] + request["predecessor_result_ids"])
+            ),
+        )
         if request["baseline_result_ids"] or request["predecessor_result_ids"]
         else []
     )
-    policy = _read_json(root / "policy" / "Comparison Policy.json", "comparison policy")
+    from harness_testing.Comparisons import load_comparison_policy
+
+    frozen = None
+    if request["conditions"]["decision_policy"] == "benchmark-readiness-v2":
+        manifest = _manifest_for_report(root, report)
+        frozen = manifest["provenance"]["experiment"]["evaluation_inputs"]["comparison"]
+    policy = load_comparison_policy(root, request["conditions"], frozen)
     policy["pricing"] = comparison_pricing(root)
     report["report_id"] = request["request_id"]
     experiment["comparison"] = build_comparison(request, [report, *references], policy)
@@ -968,12 +996,6 @@ def record_review(root: Path, plan_path: Path, results_path: Path) -> dict[str, 
     root = root.resolve()
     plan, directory = _verify_plan(root, plan_path)
     source_report, source_path = _verify_frozen_inputs(root, plan, directory)
-    references = validate_review_references(
-        root,
-        source_report,
-        plan["protocol"]["protocol_id"],
-        plan.get("reference_revisions", {}),
-    )
     if plan.get("pricing_digest") != _price_usage(root, [])[1]:
         raise ValueError("review pricing changed after preparation; restore the frozen rates")
     results_path = results_path.resolve()
@@ -1063,10 +1085,6 @@ def record_review(root: Path, plan_path: Path, results_path: Path) -> dict[str, 
             if imported
             else datetime.now(UTC).isoformat().replace("+00:00", "Z")
         )
-        for key in ("baseline_result_ids", "predecessor_result_ids"):
-            revised["experiment"][key] = [
-                references.get(identity, identity) for identity in revised["experiment"][key]
-            ]
         _attach_comparison(root, revised)
         revised["report_id"] = run_report_id(revised)
         if imported and imported.get("report_id") != revised["report_id"]:

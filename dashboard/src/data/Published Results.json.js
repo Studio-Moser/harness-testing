@@ -13,7 +13,7 @@ const privateFields = new Set([
   "prompts", "reasoning", "reasoning_content", "tool_output", "trajectory", "trajectories"
 ]);
 const sensitiveKey = /(?:^|_)(?:api_key|access_token|refresh_token|auth_token|authorization|password|secret|credential)(?:$|_)/i;
-const localPath = /(?:file:\/\/|\/Users\/|\/home\/|[A-Za-z]:\\Users\\)/;
+const localPath = /file:\/\/|(?<![A-Za-z])[A-Za-z]:[\\/]|\\\\[^\\\s]+\\|(?<![\w:/])\/\/[^\s/]|(?<![\w:/])\/(?!app(?:\/|(?=$|[\s<>"'`),;:!?]|\.(?:\s|$))))[^\s/<>"'`]+|\/app\/[^\s]*\.\./;
 const secretValue = /(?:api[_-]?key|access[_-]?token|refresh[_-]?token|authorization|password|secret)\s*[:=]|\bBearer\s+\S+|\bsk-[A-Za-z0-9_-]{8,}/i;
 
 function compareText(left, right) {
@@ -40,7 +40,7 @@ function reportId(report) {
   return `sha256:${createHash("sha256").update(JSON.stringify(identityValue(unsigned))).digest("hex")}`;
 }
 
-function safetyErrors(value, path = "$") {
+export function safetyErrors(value, path = "$") {
   const errors = [];
   if (Array.isArray(value)) {
     value.forEach((child, index) => errors.push(...safetyErrors(child, `${path}[${index}]`)));
@@ -59,8 +59,17 @@ function safetyErrors(value, path = "$") {
 
 async function defaultReportsDirectory() {
   const configured = process.env.HARNESS_PUBLISHED_REPORTS_DIRECTORY?.trim();
-  if (configured) return configured;
-  return resolve(repositoryRoot, "dashboard-data", "reports");
+  if (configured) return {directory: configured, strict: true};
+  // A published data checkout wins; otherwise the local build reads the retained local
+  // evidence directly, so a developer sees their own runs without a publication step.
+  const published = resolve(repositoryRoot, "dashboard-data", "reports");
+  try {
+    await readdir(published);
+    return {directory: published, strict: true};
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+  return {directory: resolve(repositoryRoot, "runs", "evidence"), strict: false};
 }
 
 export async function loadPublishedReports({
@@ -71,7 +80,11 @@ export async function loadPublishedReports({
   const ajv = new Ajv2020({allErrors: true, strict: true});
   addFormats(ajv);
   const validate = ajv.compile(schema);
-  const directory = reportsDirectory ?? await defaultReportsDirectory();
+  const selected = reportsDirectory == null ? await defaultReportsDirectory() : {directory: reportsDirectory, strict: true};
+  const {directory, strict} = selected;
+  // Published data must be public-safe; local evidence that fails the check is skipped
+  // with a warning rather than blanking the whole local dashboard.
+  const skipped = [];
   let entries;
   try {
     entries = await readdir(directory, {withFileTypes: true});
@@ -90,10 +103,16 @@ export async function loadPublishedReports({
     }
     if (!validate(report)) {
       const details = (validate.errors ?? []).map((error) => `${error.instancePath || "$"} ${error.message}`).join("; ");
-      throw new Error(`${entry.name}: schema validation failed: ${details}`);
+      if (strict) throw new Error(`${entry.name}: schema validation failed: ${details}`);
+      skipped.push(`${entry.name}: not a run report`);
+      continue;
     }
     const unsafe = safetyErrors(report);
-    if (unsafe.length) throw new Error(`${entry.name}: public safety validation failed: ${unsafe.join("; ")}`);
+    if (unsafe.length) {
+      if (strict) throw new Error(`${entry.name}: public safety validation failed: ${unsafe.join("; ")}`);
+      skipped.push(`${entry.name}: ${unsafe[0]}`);
+      continue;
+    }
     if (report.report_id != null && report.report_id !== reportId(report)) {
       throw new Error(`${entry.name}: report identity does not match its content`);
     }
@@ -104,6 +123,7 @@ export async function loadPublishedReports({
       throw new Error(`${report.run_id}: run reports conflict at the same update time`);
     }
   }
+  if (skipped.length) process.stderr.write(`Skipped ${skipped.length} local file(s) that are not public-safe run reports:\n  ${skipped.join("\n  ")}\n`);
   return [...reportsByRun.values()].sort((left, right) => compareText(
     `${left.updated_at}\0${left.run_id}`,
     `${right.updated_at}\0${right.run_id}`

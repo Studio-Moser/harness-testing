@@ -1,0 +1,21 @@
+[
+  {"text": "/Users/example/private/file", "safe": false},
+  {"text": "/Volumes/example/private/file", "safe": false},
+  {"text": "Read (/private/var/run/file)", "safe": false},
+  {"text": "`/tmp/private.txt`", "safe": false},
+  {"text": "/opt/private/file", "safe": false},
+  {"text": "//Volumes/example/private", "safe": false},
+  {"text": "/app-private/file", "safe": false},
+  {"text": "/app.private/file", "safe": false},
+  {"text": "/app.private", "safe": false},
+  {"text": "D:\\private\\file", "safe": false},
+  {"text": "D:/private/file", "safe": false},
+  {"text": "\\\\server\\share\\private", "safe": false},
+  {"text": "file:///app/file", "safe": false},
+  {"text": "/app/../../private/file", "safe": false},
+  {"text": "/app/src/App.tsx", "safe": true},
+  {"text": "Work in /app.", "safe": true},
+  {"text": "src/App.tsx", "safe": true},
+  {"text": "https://example.com/docs/guide", "safe": true},
+  {"text": "codex/gpt-6-astra", "safe": true}
+]

@@ -37,7 +37,6 @@ from harness_testing.Runs import (
     compile_run,
     verify_manifest_document,
 )
-from harness_testing.Skill_Evaluation import SkillEvaluation
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
 RUN_REPORT_FIXTURES = REPOSITORY_ROOT / "tests" / "Fixtures" / "Run_Reports"
@@ -278,20 +277,16 @@ commit = "{harness_commit}"
     for relative in (
         "images/Node_Agent.Dockerfile",
         "images/Verifier.Dockerfile",
-        "policy/Dashboard_Publication.toml",
         "policy/Run_Report.schema.json",
         "src/harness_testing/Claude_Agent.py",
         "src/harness_testing/Codex_Agent.py",
         "src/harness_testing/__init__.py",
-        "src/harness_testing/Contract_Criteria.py",
-        "src/harness_testing/Contract_Stub_Server.py",
-        "src/harness_testing/Harness_Result.py",
-        "src/harness_testing/Harness_Result.schema.json",
-        "src/harness_testing/Skill_Evaluation.py",
         "src/harness_testing/Native_Conversation.py",
         "src/harness_testing/External_Codex.py",
         "src/harness_testing/Trial_Evidence.py",
         "src/harness_testing/Scripted_User.py",
+        "src/harness_testing/Simulated_User.py",
+        "src/harness_testing/Submission.py",
         "src/harness_testing/Trajectory_Events.py",
         "src/harness_testing/Workflow_Criteria.py",
     ):
@@ -512,32 +507,23 @@ def _compile_pair(root: Path, **overrides):
         "max_sessions": 4,
         "max_budget_usd": Decimal("100"),
         "billing_mode": "api",
-        "publish_report": False,
     }
     arguments.update(overrides)
     return compile_run(**arguments)
 
 
-def test_new_manifest_binds_public_report_destination(run_root: Path):
-    manifest = _compile_pair(run_root, publish_report=True)
-
-    assert manifest.provenance["report_publication"] == {
-        "mode": "public",
-        "repository": "Studio-Moser/harness-testing",
-        "data_branch": "dashboard-data",
-        "workflow": "Publish_Pages.yml",
-        "code_ref": "main",
-    }
-    assert "Public run report: Studio-Moser/harness-testing" in Runs.format_plan(manifest)
-
-
-def test_local_only_manifest_is_explicit_and_content_addressed(run_root: Path):
-    public = _compile_pair(run_root, publish_report=True)
-    local = _compile_pair(run_root)
-
-    assert local.provenance["report_publication"] == {"mode": "local-only"}
-    assert local.digest != public.digest
-    assert local.provenance["run_id"] != public.provenance["run_id"]
+def test_compile_defaults_to_local_only(run_root: Path):
+    cells = _paired_cells(run_root)
+    manifest = compile_run(
+        run_root,
+        profile="smoke",
+        billing_mode="api",
+        cells=cells,
+        task_ids=("task-one",),
+        max_sessions=2,
+        max_budget_usd=Decimal("100"),
+    )
+    assert manifest.provenance["report_publication"] == {"mode": "local-only"}
 
 
 def test_v2_report_separates_estimate_from_observed_cost(run_root: Path):
@@ -1176,20 +1162,14 @@ def test_execution_updates_local_dashboard_after_completed_run(
     monkeypatch: pytest.MonkeyPatch,
 ):
     monkeypatch.setenv("TZ", "America/Los_Angeles")
-    manifest = _compile_pair(run_root, publish_report=True)
+    manifest = _compile_pair(run_root)
     _stub_execution_preflight(monkeypatch)
     refreshes: list[Path] = []
-    publications: list[tuple[Path, str]] = []
     monkeypatch.setattr(
         Runs,
         "refresh_local_dashboard",
         lambda root: refreshes.append(root),
         raising=False,
-    )
-    monkeypatch.setattr(
-        Runs,
-        "sync_pending_reports",
-        lambda root, target: publications.append((root, target.repository)) or (object(),),
     )
     real_run = subprocess.run
 
@@ -1234,7 +1214,6 @@ def test_execution_updates_local_dashboard_after_completed_run(
         "api_equivalent_cost_usd": 0.01,
     }
     assert refreshes == [run_root]
-    assert publications == [(run_root, "Studio-Moser/harness-testing")]
     assert os.environ["TZ"] == "America/Los_Angeles"
 
 
@@ -1303,41 +1282,18 @@ def test_dashboard_refresh_invalidates_the_observable_data_loader_cache(
     assert calls == [(("npm", "--prefix", "dashboard", "run", "build"), tmp_path, True)]
 
 
-def test_terminal_publication_failure_remains_retryable(
-    run_root: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-):
-    manifest = _compile_pair(run_root, publish_report=True)
-
-    def fail_sync(*args: object, **kwargs: object):
-        raise ValueError("could not publish run reports during push reports")
-
-    monkeypatch.setattr(Runs, "sync_pending_reports", fail_sync)
-
-    Runs._publish_terminal_reports(run_root, manifest)
-
-    assert "harness-test report sync" in capsys.readouterr().err
-
-
 def test_execution_updates_local_dashboard_after_delivery_failure(
     run_root: Path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    manifest = _compile_pair(run_root, publish_report=True)
+    manifest = _compile_pair(run_root)
     _stub_execution_preflight(monkeypatch)
     refreshes: list[Path] = []
-    publications: list[tuple[Path, str]] = []
     monkeypatch.setattr(
         Runs,
         "refresh_local_dashboard",
         lambda root: refreshes.append(root),
         raising=False,
-    )
-    monkeypatch.setattr(
-        Runs,
-        "sync_pending_reports",
-        lambda root, target: publications.append((root, target.repository)) or (object(),),
     )
     calls: list[str] = []
     real_run = subprocess.run
@@ -1365,7 +1321,41 @@ def test_execution_updates_local_dashboard_after_delivery_failure(
     assert report["completed_jobs"] == 2
     assert report["pending_jobs"] == 2
     assert refreshes == [run_root]
-    assert publications == [(run_root, "Studio-Moser/harness-testing")]
+
+
+@pytest.mark.parametrize("failure_stage", ["progress", "completed"])
+def test_execution_report_failure_quarantines_last_safe_snapshot(
+    run_root, monkeypatch, failure_stage
+):
+    manifest = _compile_pair(run_root)
+    _stub_execution_preflight(monkeypatch)
+    monkeypatch.setattr(Runs, "refresh_local_dashboard", lambda root: None)
+    real_run = subprocess.run
+    calls = []
+
+    def fake_run(command, **kwargs):
+        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
+            return real_run(command, **kwargs)
+        job = load_job(Path(command[-1]))
+        cell = manifest.cells[len(calls) % len(manifest.cells)]
+        calls.append(job.job_name)
+        _write_completed_job(run_root, cell, job.job_name)
+
+    def broken_report(root, plan, status):
+        if status == "failed" or (failure_stage == "progress" and calls) or status == "completed":
+            raise ValueError("synthetic report validation failure")
+        return Run_Reports.write_run_report(root, plan, status)
+
+    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
+    monkeypatch.setattr(Runs, "write_run_report", broken_report)
+    with pytest.raises(ValueError, match="synthetic report validation failure"):
+        Runs.execute_run(run_root, manifest.path, manifest.digest)
+    report = load_run_report(run_root, manifest.path.parent / "Run_Report.json")
+    assert report["status"] == "failed"
+    assert report["evidence"]["review_state"] == "quarantined"
+    assert report["completed_jobs"] == (0 if failure_stage == "progress" else 4)
+    assert len(calls) == (1 if failure_stage == "progress" else 4)
+    assert list((manifest.path.parent / "Recovery").glob("*.json"))
 
 
 def test_delivery_canary_stops_before_the_second_task(
@@ -1557,52 +1547,6 @@ def test_delivery_failure_after_canary_stops_immediately(
     ]
 
 
-def test_discovery_execution_writes_one_safe_observation_per_trial(
-    run_root: Path,
-    monkeypatch: pytest.MonkeyPatch,
-):
-    cell = _cell("codex", "A2", "candidate", "a", "a" * 40)
-    _add_bundle(run_root, cell)
-    manifest = compile_run(
-        run_root,
-        profile="smoke",
-        billing_mode="api",
-        cells=(cell,),
-        task_ids=("task-one",),
-        max_sessions=5,
-        max_budget_usd=Decimal("100"),
-        attempts=5,
-        skill_evaluation=SkillEvaluation("discovery", "harness:execute"),
-    )
-    _stub_execution_preflight(monkeypatch)
-    real_run = subprocess.run
-
-    def fake_run(command, **kwargs):
-        if tuple(command[:3]) != (sys.executable, "-m", "harbor.cli.main"):
-            return real_run(command, **kwargs)
-        job = load_job(Path(command[-1]))
-        _write_completed_job(
-            run_root,
-            cell,
-            job.job_name,
-            attempts=5,
-            skill_invoked=True,
-        )
-
-    monkeypatch.setattr(Runs.subprocess, "run", fake_run)
-
-    Runs.execute_run(run_root, manifest.path, manifest.digest)
-
-    report = json.loads((manifest.path.parent / "Skill_Evaluation.json").read_text())
-    assert report["aggregate"] == {
-        "numerator": 5,
-        "denominator": 5,
-        "rate": 1.0,
-    }
-    assert len(report["trials"]) == 5
-    assert {trial["invocation"] for trial in report["trials"]} == {"implicit"}
-
-
 def test_generated_claude_jobs_follow_exact_arm_delivery_provenance(
     run_root: Path,
 ):
@@ -1621,92 +1565,6 @@ def test_generated_claude_jobs_follow_exact_arm_delivery_provenance(
         "/harness-arm/claude/plugins/harness",
     ]
     assert all(agent.env == {} and agent.skills == [] for agent in agents)
-
-
-def test_capability_manifest_round_trip_and_job_kwargs(run_root: Path):
-    claude = _cell("claude", "A2", "candidate", "a", "a" * 40)
-    codex = _cell("codex", "A2", "candidate", "b", "b" * 40)
-    for cell in (claude, codex):
-        _add_bundle(run_root, cell)
-    evaluation = SkillEvaluation("capability", "harness:execute")
-
-    manifest = compile_run(
-        run_root,
-        profile="smoke",
-        billing_mode="subscription",
-        cells=(claude, codex),
-        task_ids=("task-one",),
-        max_sessions=2,
-        max_budget_usd=Decimal("0"),
-        skill_evaluation=evaluation,
-    )
-
-    assert manifest.skill_evaluation == evaluation
-    assert Runs.load_manifest(manifest.path).skill_evaluation == evaluation
-    assert manifest.to_dict()["skill_evaluation"] == {
-        "mode": "capability",
-        "name": "harness:execute",
-    }
-    for path in manifest.harbor_config_paths:
-        assert (
-            load_job(manifest.path.parent / path).agents[0].kwargs["skill_invocation"]
-            == "harness:execute"
-        )
-    assert "Skill evaluation: capability harness:execute" in Runs.format_plan(manifest)
-
-
-def test_discovery_requires_five_attempts_and_keeps_job_prompt_unmodified(
-    run_root: Path,
-):
-    cell = _cell("claude", "A2", "candidate", "a", "a" * 40)
-    _add_bundle(run_root, cell)
-    evaluation = SkillEvaluation("discovery", "harness:execute")
-
-    with pytest.raises(ValueError, match="discovery.*five"):
-        compile_run(
-            run_root,
-            profile="smoke",
-            billing_mode="api",
-            cells=(cell,),
-            task_ids=("task-one",),
-            max_sessions=4,
-            max_budget_usd=Decimal("100"),
-            attempts=4,
-            skill_evaluation=evaluation,
-        )
-
-    manifest = compile_run(
-        run_root,
-        profile="smoke",
-        billing_mode="api",
-        cells=(cell,),
-        task_ids=("task-one",),
-        max_sessions=5,
-        max_budget_usd=Decimal("100"),
-        attempts=5,
-        skill_evaluation=evaluation,
-    )
-    agent = load_job(manifest.path.parent / manifest.harbor_config_paths[0]).agents[0]
-    assert "skill_invocation" not in agent.kwargs
-
-
-def test_skill_evaluation_rejects_a_skill_absent_from_any_selected_arm(
-    run_root: Path,
-):
-    cell = _cell("codex", "A1", "candidate", "a")
-    _add_bundle(run_root, cell)
-
-    with pytest.raises(ValueError, match="does not expose skill harness:execute"):
-        compile_run(
-            run_root,
-            profile="smoke",
-            billing_mode="api",
-            cells=(cell,),
-            task_ids=("task-one",),
-            max_sessions=1,
-            max_budget_usd=Decimal("100"),
-            skill_evaluation=SkillEvaluation("capability", "harness:execute"),
-        )
 
 
 @pytest.mark.parametrize(
@@ -2259,27 +2117,6 @@ def test_single_provider_manifest_binds_both_custom_agent_adapters(run_root: Pat
         _verify_generated_inputs(run_root, manifest)
 
 
-def test_manifest_binds_shared_skill_invocation_adapter_code(run_root: Path):
-    cell = _cell("codex", "A2", "candidate", "a", "a" * 40)
-    _add_bundle(run_root, cell)
-    manifest = compile_run(
-        run_root,
-        profile="smoke",
-        billing_mode="api",
-        cells=(cell,),
-        task_ids=("task-one",),
-        max_sessions=1,
-        max_budget_usd=Decimal("100"),
-        skill_evaluation=SkillEvaluation("capability", "harness:execute"),
-    )
-
-    shared = run_root / "src" / "harness_testing" / "Skill_Evaluation.py"
-    shared.write_text("changed after approval\n")
-
-    with pytest.raises(ValueError, match="agent adapter digest mismatch"):
-        _verify_generated_inputs(run_root, manifest)
-
-
 def test_static_job_verification_uses_task_major_cell_order(run_root: Path):
     manifest = _compile_claude_matrix(run_root)
     reordered = replace(
@@ -2299,93 +2136,6 @@ def test_static_job_verification_restarts_cells_for_each_task(run_root: Path):
 
     with pytest.raises(ValueError, match="order mismatch"):
         _verify_generated_inputs(run_root, reordered)
-
-
-def test_explicit_task_resolves_to_a_unique_pack_outside_profile_defaults(
-    run_root: Path,
-):
-    task = run_root / "tasks" / "contract" / "contract-task"
-    task.mkdir(parents=True)
-    (task / "instruction.md").write_text("contract task\n")
-    (task / "task.toml").write_text('schema_version = "1.4"\n')
-    cell = _cell("codex", "A0", "baseline", "a")
-    _add_bundle(run_root, cell)
-
-    manifest = compile_run(
-        run_root,
-        profile="smoke",
-        billing_mode="subscription",
-        cells=(cell,),
-        task_ids=("contract-task",),
-        max_sessions=1,
-        max_budget_usd=Decimal("0"),
-    )
-
-    assert set(manifest.provenance["task_digests"]) == {"contract/contract-task"}
-    config = yaml.safe_load((manifest.path.parent / manifest.harbor_config_paths[0]).read_text())
-    assert config["datasets"][0]["path"] == "tasks/contract"
-
-
-@pytest.mark.parametrize(
-    ("profile_packs", "task_packs", "expected"),
-    (
-        (("workflow",), ("contract", "workflow"), "workflow"),
-        (("workflow",), (), None),
-        (("contract", "workflow"), ("contract", "workflow"), None),
-    ),
-    ids=("profile-precedence", "missing", "ambiguous"),
-)
-def test_task_pack_resolution_is_explicit_and_deterministic(
-    run_root: Path,
-    profile_packs: tuple[str, ...],
-    task_packs: tuple[str, ...],
-    expected: str | None,
-):
-    task_id = "resolution-task"
-    for pack in task_packs:
-        task = run_root / "tasks" / pack / task_id
-        task.mkdir(parents=True)
-        (task / "task.toml").write_text('schema_version = "1.4"\n')
-    profile = replace(Runs._load_profile(run_root, "smoke"), packs=profile_packs)
-
-    if expected is None:
-        with pytest.raises(ValueError, match="does not resolve"):
-            Runs._task_pack(run_root, profile, task_id)
-    else:
-        assert Runs._task_pack(run_root, profile, task_id) == expected
-
-
-@pytest.mark.parametrize(
-    "boundary",
-    ("arbitrary-pack", "task-directory-symlink", "task-toml-symlink"),
-)
-def test_task_pack_rejects_untrusted_local_candidates(
-    run_root: Path,
-    tmp_path: Path,
-    boundary: str,
-):
-    task_id = "untrusted-task"
-    if boundary == "arbitrary-pack":
-        task = run_root / "tasks" / "arbitrary" / task_id
-        task.mkdir(parents=True)
-        (task / "task.toml").write_text('schema_version = "1.4"\n')
-    elif boundary == "task-directory-symlink":
-        external = tmp_path / "external-task"
-        external.mkdir()
-        (external / "task.toml").write_text('schema_version = "1.4"\n')
-        task = run_root / "tasks" / "contract" / task_id
-        task.parent.mkdir()
-        task.symlink_to(external, target_is_directory=True)
-    else:
-        external = tmp_path / "external-task.toml"
-        external.write_text('schema_version = "1.4"\n')
-        task = run_root / "tasks" / "contract" / task_id
-        task.mkdir(parents=True)
-        (task / "task.toml").symlink_to(external)
-    profile = Runs._load_profile(run_root, "smoke")
-
-    with pytest.raises(ValueError, match="does not resolve"):
-        Runs._task_pack(run_root, profile, task_id)
 
 
 def test_manifest_digest_is_canonical_and_stable(run_root: Path):
@@ -2843,35 +2593,93 @@ def test_every_generated_job_round_trips_through_harbor(run_root: Path):
 
 
 @pytest.mark.parametrize("allowance", [None, 0, 120])
+@pytest.mark.parametrize("task_variant", ["comparison", "deepswe"])
+@pytest.mark.parametrize("simulated", [False, True])
 def test_comparison_planning_freezes_recovery_and_reserves_outer_time(
-    run_root: Path, monkeypatch: pytest.MonkeyPatch, allowance
+    run_root: Path, monkeypatch: pytest.MonkeyPatch, allowance, task_variant, simulated
 ):
     from test_Experiments import request_document
 
     from harness_testing.Experiments import plan_experiment
 
-    task = "react-active-badge-count"
-    shutil.copytree(REPOSITORY_ROOT / "tasks/workflow" / task,
-                    run_root / "tasks/workflow" / task)
+    shutil.copytree(REPOSITORY_ROOT / "policy", run_root / "policy", dirs_exist_ok=True)
+    task = (
+        "react-active-badge-count" if task_variant == "comparison" else "quill-shared-toolbar-focus"
+    )
+    if task_variant == "comparison":
+        shutil.copytree(
+            REPOSITORY_ROOT / "tasks/workflow" / task, run_root / "tasks/workflow" / task
+        )
+    else:
+        source = run_root / ".cache/deepswe/datasets/fixture"
+        research_task = source / "tasks" / task
+        (research_task / "tests").mkdir(parents=True)
+        (research_task / "instruction.md").write_text("Fix the shared toolbar.\n")
+        (research_task / "task.toml").write_text(
+            '[metadata]\nbase_commit_hash = "' + "a" * 40 + '"\n'
+        )
+        (research_task / "tests/test.patch").write_text("immutable verifier\n")
+        (source / "Provenance.json").write_text(
+            json.dumps(
+                {
+                    "tasks": [
+                        {
+                            "task_id": task,
+                            "derived_image_digest": _digest("b"),
+                            "verifier_image_digest": _digest("c"),
+                            "verifier_dockerfile_digest": _digest("d"),
+                        }
+                    ]
+                }
+            )
+        )
+        dataset = MaterializedDeepSWE(path=source, digest=_digest("f"))
+        monkeypatch.setattr(Runs, "load_deepswe_dataset", lambda *args, **kwargs: dataset)
+        monkeypatch.setattr(
+            "harness_testing.Materialize.load_deepswe_dataset", lambda *args, **kwargs: dataset
+        )
     versions = load_versions(run_root / "Versions.toml")
     model = next(row for row in versions["models"] if row["provider"] == "codex")
-    version = next(row["version"] for row in versions["packages"]
-                   if row["name"] == "@openai/codex")
+    version = next(row["version"] for row in versions["packages"] if row["name"] == "@openai/codex")
     request = request_document()
     request.update(purpose="diagnostic", baseline_result_ids=[])
-    request["contenders"] = [{"family": "nothing", "label": "Nothing", "sources": [],
-                              "rubric": {"mode": "disabled", "path": None},
-                              "startup_paths": [], "delivery_config": {}}]
+    request["contenders"] = [
+        {
+            "family": "nothing",
+            "label": "Nothing",
+            "sources": [],
+            "rubric": {"mode": "disabled", "path": None},
+            "startup_paths": [],
+            "delivery_config": {},
+        }
+    ]
     request["conditions"].update(
-        kickoff={"provider": "codex", "runtime_version": version,
-                 "model": model["model"], "effort": model["effort"]},
-        task_ids=[task], attempts=1, timeout_seconds=30,
+        kickoff={
+            "provider": "codex",
+            "runtime_version": version,
+            "model": model["model"],
+            "effort": model["effort"],
+        },
+        task_ids=[task],
+        task_variant=task_variant,
+        attempts=1,
+        timeout_seconds=30,
+        decision_policy="benchmark-readiness-v2",
     )
     if allowance is not None:
         request["conditions"]["provider_recovery_seconds"] = allowance
-    monkeypatch.setattr("harness_testing.Experiments.runtime_image_digests",
-                        lambda root, images: {image: _digest("f") for image in images})
+    if simulated:
+        from harness_testing.Simulated_User import default_config, protocol_digest
+
+        request["conditions"]["simulated_user"] = default_config()
+    monkeypatch.setattr(
+        "harness_testing.Experiments.runtime_image_digests",
+        lambda root, images: {image: _digest("f") for image in images},
+    )
     manifest = plan_experiment(run_root, request, native_cli=False)
+    frozen = manifest.provenance["experiment"]["evaluation_inputs"]
+    assert frozen["comparison"]["policy_id"] == "benchmark-readiness-v2"
+    assert frozen["quality"]["rubric_version"] == "tim-work-quality-v2"
     expected = 600 if allowance is None else allowance
     assert manifest.provenance["experiment"]["conditions"]["provider_recovery_seconds"] == expected
     job = load_job(manifest.path.parent / manifest.harbor_config_paths[0])
@@ -2881,8 +2689,139 @@ def test_comparison_planning_freezes_recovery_and_reserves_outer_time(
     assert agent.override_timeout_sec == agent.max_timeout_sec == 30 + expected + 15
     assert job.retry.max_retries == 0
     plan = Runs.format_plan(manifest)
+    if simulated:
+        settings = agent.kwargs["conversation"]["simulated_user"]
+        assert settings == default_config() | {"protocol_digest": protocol_digest()}
+        assert manifest.provenance["experiment"]["conditions"]["simulated_user"] == settings
+        assert Decimal(manifest.provenance["simulated_user_estimate_usd"]) > 0
+        assert manifest.estimated_budget_usd == 0
+        assert "at most 13 per trial" in plan
+        assert "Responder usage is separate" in plan
     assert f"Provider recovery allowance: {expected}s" in plan
     assert f"Maximum agent wall time: {30 + expected}s" in plan
+    if task_variant == "deepswe":
+        from harness_testing.Code_Reviews import _task_instruction
+        from harness_testing.Comparison_Tasks import research_scripted_user_policy
+        from harness_testing.Experiments import contender_identity
+
+        conditions = manifest.provenance["experiment"]["conditions"]
+        task_root = run_root / job.datasets[0].path / task
+        assert task_root != research_task
+        assert conditions["task_digests"][task] == _tree_digest(task_root)
+        expected_policy = research_scripted_user_policy([task]) | {"interaction_limit": 12}
+        assert agent.kwargs["conversation"]["policy"] == expected_policy
+        assert agent.kwargs["conversation"]["submission_protocol"] == "worktree-snapshot-v1"
+        assert conditions["scripted_user_digest"] == contender_identity({task: expected_policy})
+        _, reviewed = _task_instruction(run_root, manifest.to_dict(), task, task_root)
+        assert reviewed == (task_root / "instruction.md").read_bytes()
+        assert b"Existing test files are read-only" in reviewed
+        assert (research_task / "instruction.md").read_text() == "Fix the shared toolbar.\n"
+        _verify_generated_inputs(run_root, manifest)
+    elif allowance == 0:
+        _rehearse_readiness_report(run_root, manifest, job, task)
+
+
+def _rehearse_readiness_report(root, manifest, job, task):
+    """Frozen plan -> synthetic attempted work -> report -> public loader -> UI."""
+    from harness_testing.Experiment_Reports import attach_experiment_report
+
+    _write_completed_job(root, replace(manifest.cells[0], arm="A0"), job.job_name, reward=0.0)
+    directory = root / "jobs/raw" / job.job_name / "trial-1"
+    (directory / "config.json").write_text("{}")
+    frozen = root / job.datasets[0].path / task
+    shutil.copytree(frozen / "environment", directory / "artifacts/workspace")
+    native = {
+        "status": "agent_failed",
+        "duration_seconds": 7,
+        "usage_complete": True,
+        "child_count": 1,
+        "model_usage": [
+            {
+                "provider": "openai",
+                "model": manifest.cells[0].model,
+                "input_tokens": 100,
+                "output_tokens": 20,
+                "cache_read_tokens": 30,
+                "cache_write_tokens": 0,
+            }
+        ],
+        "transcript": [
+            {
+                "ordinal": 1,
+                "role": "user",
+                "kind": "user",
+                "content": "Fix the count.",
+                "elapsed_seconds": 0,
+            },
+            {
+                "ordinal": 2,
+                "role": "assistant",
+                "kind": "final",
+                "content": "The check failed; work is incomplete.",
+                "elapsed_seconds": 7,
+            },
+        ],
+    }
+    if "simulated_user" in manifest.provenance["experiment"]["conditions"]:
+        from test_Simulated_User import record
+
+        native["simulated_user"] = {
+            **record()["evidence"],
+            "protocol": "semantic-user-v1",
+            "model": "gpt-5.6-sol",
+            "effort": "medium",
+            "call_count": 1,
+            "max_calls": 13,
+        }
+    (directory / "agent/Trial_Evidence.json").write_text(json.dumps(native))
+    path = Run_Reports.write_run_report(root, manifest, "failed")
+    report = load_run_report(root, path)
+    trial = report["experiment"]["trials"][0]
+    assert trial["status"] == "agent_failed" and trial["correctness"] is False
+    assert trial["duration_seconds"] == 7 and trial["child_count"] == 1
+    assert trial["cost_usd"] is not None
+    if "simulated_user" in native:
+        assert trial["simulated_user"]["cost_usd"] > 0
+        assert trial["simulated_user"]["usage_complete"] is True
+        assert trial["model_usage"][0]["input_tokens"] == 100
+    # Changes to the live definitions cannot reinterpret a frozen run.
+    (root / "tasks/workflow" / task / "Communication Contract.json").write_text("{}")
+    (root / "tasks/workflow" / task / "Comparison Instruction.md").write_text("Changed live task")
+    rebuilt = json.loads(json.dumps(report))
+    attach_experiment_report(root, manifest, rebuilt)
+    assert rebuilt["experiment"]["trials"] == report["experiment"]["trials"]
+    destination = root / "isolated-public-reports"
+    destination.mkdir()
+    (destination / "report.json").write_bytes(path.read_bytes())
+    loader = (REPOSITORY_ROOT / "dashboard/src/data/Published Results.json.js").as_uri()
+    ui = (REPOSITORY_ROOT / "dashboard/src/components/Results.js").as_uri()
+    source = f"""
+      import assert from 'node:assert/strict';
+      import {{loadPublishedReports}} from {json.dumps(loader)};
+      import {{normalizeResults}} from {json.dumps(ui)};
+      const reports = await loadPublishedReports({{reportsDirectory: process.argv[1]}});
+      const trial = reports[0].experiment.trials[0];
+      const tests = [{{id: trial.task_id, title: 'Fixture', type: 'bug-fix', level: 2}}];
+      const harnesses = [{{id: 'nothing', identity: trial.contender_id, family: 'nothing',
+        versionLabel: 'v1', state: 'ready'}}];
+      const rows = normalizeResults(reports, tests, harnesses);
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].correctness, 0);
+      assert.equal(rows[0].runtime, 7);
+      assert.equal(rows[0].tokens, 150);
+      assert.equal(rows[0].cost, trial.cost_usd);
+      assert.equal(rows[0].decisionEligible, false);
+      assert.equal(rows[0].quality, null);
+    """
+    subprocess.run(
+        ["node", "--input-type=module", "-e", source, str(destination)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    (frozen / "instruction.md").write_text("Tampered frozen input")
+    with pytest.raises(ValueError, match="frozen task inputs"):
+        attach_experiment_report(root, manifest, rebuilt)
 
 
 def test_research_profile_uses_only_the_materialized_deepswe_dataset(
@@ -2925,31 +2864,6 @@ def test_research_profile_uses_only_the_materialized_deepswe_dataset(
     assert selections == [None]
     _verify_generated_inputs(run_root, manifest)
     assert selections == [None, None]
-
-    (dataset / "Provenance.json").write_text(
-        json.dumps(
-            {
-                "tasks": [
-                    {
-                        "task_id": task_id,
-                        "derived_image_digest": _digest("b"),
-                        "verifier_image_digest": _digest("c"),
-                    }
-                ]
-            }
-        )
-    )
-    manifest.provenance["experiment"] = {
-        "conditions": {
-            "task_variant": "deepswe",
-            "image_digests": {
-                f"{task_id}:agent": _digest("b"),
-                f"{task_id}:verifier": _digest("c"),
-            },
-        }
-    }
-    _verify_generated_inputs(run_root, manifest)
-    assert selections == [None, None, (task_id,)]
 
     monkeypatch.setattr(
         Runs,

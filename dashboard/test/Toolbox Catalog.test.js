@@ -19,22 +19,22 @@ const execFileAsync = promisify(execFile);
 
 const EXPECTED_CELLS = {
   "polish:1": 2,
-  "polish:2": 0,
-  "polish:3": 2,
-  "polish:4": 0,
-  "bug-fix:1": 0,
+  "polish:2": 1,
+  "polish:3": 3,
+  "polish:4": 1,
+  "bug-fix:1": 1,
   "bug-fix:2": 3,
-  "bug-fix:3": 0,
-  "bug-fix:4": 1,
-  "feature:1": 0,
-  "feature:2": 0,
+  "bug-fix:3": 1,
+  "bug-fix:4": 2,
+  "feature:1": 1,
+  "feature:2": 3,
   "feature:3": 2,
   "feature:4": 5
 };
 
-test("the catalog exposes the accepted 15-test coverage contract", () => {
+test("the catalog exposes the accepted 25-test coverage contract", () => {
   validateCatalog(TOOLBOX_CATALOG);
-  assert.equal(TOOLBOX_CATALOG.length, 15);
+  assert.equal(TOOLBOX_CATALOG.length, 25);
 
   for (const [cell, count] of Object.entries(EXPECTED_CELLS)) {
     const [type, level] = cell.split(":");
@@ -51,18 +51,18 @@ test("the catalog exposes the accepted 15-test coverage contract", () => {
 test("catalog validation rejects duplicate IDs and unsupported classifications", () => {
   assert.throws(
     () => validateCatalog([...TOOLBOX_CATALOG, TOOLBOX_CATALOG[0]]),
-    /exactly 15 entries/
+    /exactly 25 entries/
   );
 
   const invalidType = TOOLBOX_CATALOG.map((entry, index) =>
     index === 0 ? {...entry, type: "research"} : entry
   );
-  assert.throws(() => validateCatalog(invalidType), /react-accent-polish.*type/);
+  assert.throws(() => validateCatalog(invalidType), /node-cross-module-permissions.*type/);
 
   const invalidLevel = TOOLBOX_CATALOG.map((entry, index) =>
     index === 0 ? {...entry, level: 5} : entry
   );
-  assert.throws(() => validateCatalog(invalidLevel), /react-accent-polish.*level/);
+  assert.throws(() => validateCatalog(invalidLevel), /node-cross-module-permissions.*level/);
 
   const replacementId = TOOLBOX_CATALOG.map((entry, index) =>
     index === 0 ? {...entry, id: "unapproved-replacement"} : entry
@@ -151,7 +151,7 @@ test("enrichment stops when a controlled task source is missing", async () => {
 
   await assert.rejects(
     enrichCatalog(missingSource, {repositoryRoot}),
-    /react-accent-polish.*Comparison Instruction\.md/
+    /node-cross-module-permissions.*Comparison Instruction\.md/
   );
 });
 
@@ -161,5 +161,5 @@ test("the Observable loader resolves the repository from its own location", asyn
   const output = JSON.parse(stdout);
 
   assert.equal(output.schemaVersion, 2);
-  assert.equal(output.tests.length, 15);
+  assert.equal(output.tests.length, 25);
 });

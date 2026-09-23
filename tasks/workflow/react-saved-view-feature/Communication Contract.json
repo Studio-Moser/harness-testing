@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "scenario": "development_feature",
+  "scenario": "ambiguous_feature",
   "expectations": {
     "initial_update": "required",
     "progress_updates": {
@@ -9,8 +9,8 @@
       "require_new_information": true
     },
     "questions": {
-      "minimum": 0,
-      "maximum": 0
+      "minimum": 1,
+      "maximum": 3
     },
     "approval_requests": {
       "minimum": 0,
