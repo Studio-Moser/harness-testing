@@ -3,9 +3,11 @@ import test from "node:test";
 
 import {HARNESS_CATALOG} from "../src/data/Harness Catalog.js";
 import {TOOLBOX_CATALOG} from "../src/data/Toolbox Catalog.js";
+import {parsePricing} from "../src/data/Pricing.json.js";
 import {
   admitResults,
   aggregateBehavior,
+  aggregateDelegation,
   applyCampaignCohort,
   annoyanceFromTranscript,
   campaignVerdict,
@@ -643,5 +645,76 @@ test("trade-off charts put higher quality and lower resource use toward the top 
         } else assert.match(ticks[2].textContent, /^(0s|0|\$0\.00)$/);
       }
     }
+  } finally {globalThis.document = previousDocument;}
+});
+
+test("pricing is parsed from the pinned model rows", () => {
+  const pricing = parsePricing(`[[models]]
+provider = "codex"
+agent = "codex"
+model = "gpt-6-astra"
+effort = "high"
+input_usd_per_million_tokens = "10"
+output_usd_per_million_tokens = "50"
+cache_read_usd_per_million_tokens = "1"
+cache_write_usd_per_million_tokens = "12.5"
+
+[[models]]
+provider = "claude"
+model = "claude-opus-5"
+input_usd_per_million_tokens = "5"
+output_usd_per_million_tokens = "25"
+`);
+  assert.deepEqual(pricing["openai/gpt-6-astra"], {input: 10, output: 50, cache_read: 1, cache_write: 12.5});
+  assert.equal(pricing["anthropic/claude-opus-5"].output, 25);
+});
+
+test("delegation shows subagent counts, models, cost share and whether routing went cheaper", () => {
+  const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
+  const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
+  const superpowers = HARNESS_CATALOG.find(({id}) => id === "superpowers-v1");
+  const pricing = {
+    "openai/gpt-6-astra": {input: 10, output: 50, cache_read: 1, cache_write: 12.5},
+    "openai/gpt-5.6-terra": {input: 2, output: 12, cache_read: 0.2, cache_write: 2.5}
+  };
+  const session = (name, model, effort, input) => ({session: name, provider: "openai", model, effort, input_tokens: input, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0});
+  const tasks = ["react-active-badge-count", "react-accent-polish"];
+  const source = report("delegation", [
+    trial(nothing, tasks[0], 1, {session_usage: [session("root", "gpt-6-astra", "medium", 100000)]}),
+    trial(nothing, tasks[1], 1, {session_usage: [session("root", "gpt-6-astra", "medium", 100000)]}),
+    trial(studio, tasks[0], 1, {cost_usd: 0.05, session_usage: [session("root", "gpt-6-astra", "medium", 100000), session("child_1", "gpt-5.6-terra", "high", 100000), session("child_2", "gpt-5.6-terra", "high", 100000)]}),
+    trial(studio, tasks[1], 1, {session_usage: [session("root", "gpt-6-astra", "medium", 100000)]}),
+    trial(superpowers, tasks[0], 1, {cost_usd: 0.07, session_usage: [session("root", "gpt-6-astra", "medium", 100000), session("child_1", "gpt-6-astra", "medium", 100000)]}),
+    trial(superpowers, tasks[1], 1, {session_usage: [session("root", "gpt-6-astra", "medium", 100000)]})
+  ], {experiment: {conditions: conditions({task_ids: tasks, task_digests: Object.fromEntries(tasks.map((task) => [task, DIGEST]))})}});
+  const observations = normalizeResults([source], TOOLBOX_CATALOG, HARNESS_CATALOG, pricing);
+  const rows = aggregateDelegation(observations, HARNESS_CATALOG, {cohort: "delegation"}, pricing);
+  const by = Object.fromEntries(rows.map((row) => [row.family, row]));
+  assert.equal(by.nothing.routing, "none");
+  assert.equal(by.nothing.subagents, 0);
+  assert.equal(by["studio-moser"].tasksWithSubagents, 1);
+  assert.equal(by["studio-moser"].subagents, 2);
+  assert.equal(by["studio-moser"].models, "5.6-terra high ×2");
+  assert.equal(by["studio-moser"].routing, "cheaper");
+  assert.ok(Math.abs(by["studio-moser"].childCost - 0.4) < 1e-9);
+  assert.ok(Math.abs(by["studio-moser"].childCostShare - 0.4 / 2.4) < 1e-9);
+  assert.equal(by.superpowers.routing, "kickoff");
+  assert.equal(by.superpowers.models, "6-astra medium");
+  const harnessRows = aggregateHarnesses(observations, HARNESS_CATALOG, {cohort: "delegation"});
+  const read = harnessRead(harnessRows, [], null, rows);
+  const card = (family) => read.cards.find((entry) => entry.family === family);
+  // Studio routed cheaper, but its delegated task still cost more than the others on it.
+  assert.equal(by["studio-moser"].delegatedCost, 0.05);
+  assert.ok(Math.abs(by["studio-moser"].othersCost - 0.04) < 1e-9);
+  assert.ok(card("studio-moser").cons.some((text) => /Routed subagents to cheaper models in 1 of 2 tasks \(5\.6-terra high ×2\); those tasks cost/.test(text)));
+  assert.ok(card("superpowers").cons.some((text) => /Spawned subagents on the kickoff model/.test(text)));
+  const previousDocument = globalThis.document;
+  globalThis.document = {createElement: tag => new FakeElement(tag), createElementNS: (_, tag) => new FakeElement(tag)};
+  try {
+    const root = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: [source], pricing});
+    assert.match(root.textContent, /Subagents and routing/);
+    assert.match(root.textContent, /2 subagents · 5\.6-terra high ×2/);
+    assert.match(root.textContent, /cheaper models/);
+    assert.match(root.textContent, /never delegated/);
   } finally {globalThis.document = previousDocument;}
 });

@@ -153,3 +153,7 @@ summary:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid var(--t
 .results-read-charts { margin-top: 1.25rem; }
 
 .results-cell-failure { display: block; color: var(--tblr-red); font-weight: 600; }
+
+.results-cell-subagents { display: block; color: var(--tblr-purple); }
+.results-delegation { margin: 1rem 0; }
+.results-delegation-models { white-space: normal !important; }

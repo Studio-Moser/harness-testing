@@ -8,6 +8,6 @@ import {loadPublishedReports} from "./src/data/Published Results.json.js";
 // bypass the current privacy/schema validator or display an obsolete verdict.
 await loadPublishedReports();
 await loadCampaignSummary();
-for (const name of ["Published Results.json", "Toolbox.json", "Campaign Summary.json"]) {
+for (const name of ["Published Results.json", "Toolbox.json", "Campaign Summary.json", "Pricing.json"]) {
   await rm(fileURLToPath(new URL(`./src/.observablehq/cache/data/${name}`, import.meta.url)), {force: true});
 }

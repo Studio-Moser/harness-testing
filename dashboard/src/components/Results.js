@@ -244,7 +244,34 @@ export function behaviorFromTrial(trial) {
   };
 }
 
-export function normalizeResults(reports, tests, harnesses) {
+function sessionCost(session, pricing) {
+  const rates = pricing?.[`${session.provider}/${session.model}`];
+  if (!rates) return null;
+  let total = 0;
+  for (const [field, rate] of [["input_tokens", rates.input], ["output_tokens", rates.output], ["cache_read_tokens", rates.cache_read], ["cache_write_tokens", rates.cache_write]]) {
+    const tokens = session[field] ?? 0;
+    if (tokens && !Number.isFinite(rate)) return null;
+    total += tokens * (rate ?? 0) / 1_000_000;
+  }
+  return total;
+}
+
+function sessionsFromTrial(trial, pricing) {
+  if (!Array.isArray(trial.session_usage)) return [];
+  return trial.session_usage
+    .filter((row) => row && typeof row.session === "string")
+    .map((row) => ({
+      session: row.session,
+      child: row.session !== "root",
+      model: row.model ?? "unknown",
+      effort: row.effort ?? "unknown",
+      provider: row.provider ?? "unknown",
+      tokens: TOKEN_FIELDS.reduce((sum, field) => sum + (Number.isFinite(row[field]) ? row[field] : 0), 0),
+      cost: sessionCost(row, pricing)
+    }));
+}
+
+export function normalizeResults(reports, tests, harnesses, pricing = null) {
   const testById = new Map(tests.map((entry) => [entry.id, entry]));
   const harnessByIdentity = new Map(readyHarnesses(harnesses).map((version) => [version.identity, version]));
   const observations = new Map();
@@ -319,7 +346,8 @@ export function normalizeResults(reports, tests, harnesses) {
         tokens: completeTokens(trial),
         cost,
         pricingDigest: cost == null ? null : trial.pricing_digest,
-        usageComplete: trial.usage_complete === true
+        usageComplete: trial.usage_complete === true,
+        sessions: sessionsFromTrial(trial, pricing)
       };
       observations.set(observation.observationId, observation);
     }
@@ -735,6 +763,8 @@ function renderMatrix(observations, tests, harnesses, filters) {
         const quality = mean(values.map((value) => value.quality));
         cell.append(element("strong", "", `${formatCost(mean(values.map(({cost}) => cost)))} · ${formatRuntime(mean(values.map(({runtime}) => runtime)))} · ${quality == null ? "—" : formatPercent(quality)} quality`));
         if (score < 1) cell.append(element("small", "results-cell-failure", score === 0 ? "Failed" : `${formatPercent(score)} correct`));
+        const children = values.flatMap(({sessions}) => sessions.filter(({child}) => child));
+        if (children.length) cell.append(element("small", "results-cell-subagents", `${plural(children.length, "subagent")} · ${modelMix(children)}`));
       }
       const evidence = matrixEvidence(rawValues, excluded);
       if (evidence.length) cell.append(element("small", "results-cell-evidence", evidence.join(" · ")));
@@ -789,6 +819,123 @@ function formatBehavior(value, format) {
   if (format === "rate") return `${Math.round(value * 100)}%`;
   if (format === "grade") return `${value.toFixed(2)} / 5`;
   return Number.isInteger(value) ? String(value) : value.toFixed(2);
+}
+
+function shortModel(model) {
+  return model.replace(/^gpt-/, "").replace(/^claude-/, "");
+}
+
+function modelMix(sessions) {
+  const counts = new Map();
+  for (const {model, effort} of sessions) {
+    const key = `${shortModel(model)} ${effort}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return [...counts].map(([key, count]) => (count > 1 ? `${key} ×${count}` : key)).join(", ");
+}
+
+function outputRate(pricing, provider, model) {
+  return pricing?.[`${provider}/${model}`]?.output ?? null;
+}
+
+// How each harness used subagents under the selected model: how often, on which models,
+// what they cost, and whether they ran on cheaper models than the kickoff.
+export function aggregateDelegation(observations, harnesses, filters = {}, pricing = null) {
+  const scoped = filterResults(observations, filters).filter((row) => ATTEMPT_STATUSES.has(row.status));
+  const rows = [];
+  for (const harness of readyHarnesses(harnesses)) {
+    const values = scoped.filter(({harnessId}) => harnessId === harness.id);
+    if (!values.length) continue;
+    const sessions = values.flatMap(({sessions}) => sessions);
+    const children = sessions.filter(({child}) => child);
+    const withChildren = values.filter(({sessions}) => sessions.some(({child}) => child));
+    const known = (list) => list.every(({cost}) => Number.isFinite(cost));
+    const sum = (list, field) => list.reduce((total, row) => total + (row[field] ?? 0), 0);
+    const totalCost = known(sessions) && sessions.length ? sum(sessions, "cost") : null;
+    const childCost = known(children) ? sum(children, "cost") : null;
+    const totalTokens = sum(sessions, "tokens");
+    const kickoff = sessions.find(({child}) => !child);
+    const kickoffRate = kickoff ? outputRate(pricing, kickoff.provider, kickoff.model) : null;
+    let routing = "none";
+    if (children.length) {
+      const rates = children.map(({provider, model}) => outputRate(pricing, provider, model));
+      const onKickoff = children.every(({model, effort}) => kickoff && model === kickoff.model && effort === kickoff.effort);
+      if (onKickoff) routing = "kickoff";
+      else if (kickoffRate != null && rates.every((rate) => rate != null && rate < kickoffRate)) routing = "cheaper";
+      else if (kickoffRate != null && rates.some((rate) => rate != null && rate > kickoffRate)) routing = "pricier";
+      else routing = "mixed";
+    }
+    rows.push({
+      harnessId: harness.id,
+      family: harness.family,
+      label: `${HARNESS_FAMILIES[harness.family].name} ${harness.versionLabel}`,
+      tasks: values.length,
+      tasksWithSubagents: withChildren.length,
+      subagents: children.length,
+      models: modelMix(children),
+      childCost,
+      childCostShare: totalCost ? (childCost ?? 0) / totalCost : null,
+      childTokenShare: totalTokens ? sum(children, "tokens") / totalTokens : null,
+      ...delegatedTaskCost(scoped, harness.id, withChildren),
+      routing
+    });
+  }
+  return rows;
+}
+
+// On exactly the tasks where a harness delegated, what it spent against the other harnesses'
+// mean on those same tasks. This answers "did delegating save money", not just "did it route".
+function delegatedTaskCost(scoped, harnessId, withChildren) {
+  const taskIds = new Set(withChildren.map(({taskId}) => taskId));
+  if (!taskIds.size) return {delegatedCost: null, othersCost: null};
+  const own = mean(withChildren.map(({cost}) => cost));
+  const others = [...taskIds].map((taskId) => mean(scoped
+    .filter((row) => row.taskId === taskId && row.harnessId !== harnessId)
+    .map(({cost}) => cost)));
+  return {delegatedCost: own, othersCost: others.every(Number.isFinite) ? mean(others) : null};
+}
+
+function renderDelegation(rows) {
+  const section = element("section", "results-panel results-delegation card card-body");
+  const heading = element("header", "results-section-heading");
+  heading.append(
+    element("h2", "card-title", "Subagents and routing"),
+    element("p", "", "How often each harness delegated to subagents under the selected model, which models they ran on, and what they cost. \"Cheaper\" means every subagent ran on a model with a lower list price than the kickoff; \"kickoff\" means they reused the kickoff model. The last two columns compare the whole trial cost on the tasks where it delegated with the other harnesses' mean on the same tasks, which is what tells you whether delegating saved money. Costs are API-equivalent estimates from the pinned price list.")
+  );
+  section.append(heading);
+  if (!rows.length) {
+    section.append(element("p", "results-scope-note", "No completed trials in this scope yet."));
+    return section;
+  }
+  const scroll = element("div", "results-table-scroll table-responsive");
+  const table = element("table", "results-table table table-vcenter card-table");
+  const head = element("thead");
+  const headerRow = element("tr");
+  for (const text of ["Harness", "Tasks delegated", "Subagents", "Models used", "Routing", "Subagent cost", "Share of cost", "Delegated tasks cost", "Others on those tasks"]) headerRow.append(element("th", "", text));
+  head.append(headerRow);
+  const body = element("tbody");
+  const routingText = {none: "never delegated", kickoff: "kickoff model", cheaper: "cheaper models", pricier: "pricier models", mixed: "mixed"};
+  for (const row of rows) {
+    const tr = element("tr");
+    const name = element("td", "results-harness-name");
+    name.append(element("span", `results-harness-mark results-harness-${row.family}`), element("strong", "", row.label));
+    tr.append(
+      name,
+      element("td", "", `${row.tasksWithSubagents} of ${row.tasks}`),
+      element("td", "", String(row.subagents)),
+      element("td", "results-delegation-models", row.models || "—"),
+      element("td", "", routingText[row.routing]),
+      element("td", "", row.subagents ? formatCost(row.childCost) : "—"),
+      element("td", "", row.subagents ? formatPercent(row.childCostShare) : "—"),
+      element("td", "", row.subagents ? formatCost(row.delegatedCost) : "—"),
+      element("td", "", row.subagents ? formatCost(row.othersCost) : "—")
+    );
+    body.append(tr);
+  }
+  table.append(head, body);
+  scroll.append(table);
+  section.append(scroll);
+  return section;
 }
 
 function renderBehavior(columns) {
@@ -891,7 +1038,7 @@ function ratioText(value, best) {
 // A plain-language read of each harness: what it does better or worse than the others in
 // the selected scope, and which one to use. Every sentence is derived from the same
 // numbers the tables show; nothing here is a model's opinion.
-export function harnessRead(rows, behaviorColumns, verdict = null) {
+export function harnessRead(rows, behaviorColumns, verdict = null, delegation = []) {
   const scored = rows.filter((row) => row.observations > 0);
   if (!scored.length) return null;
   const finite = (values) => values.filter(Number.isFinite);
@@ -955,6 +1102,19 @@ export function harnessRead(rows, behaviorColumns, verdict = null) {
         if (b.annoyance === calmest && behavior.size > 1) pros.push(`Fewest annoyances (${b.annoyance.toFixed(1)} per task)`);
         else if (b.annoyance - calmest >= 1) cons.push(`More annoyances (${b.annoyance.toFixed(1)} per task vs ${calmest.toFixed(1)})`);
       }
+    }
+    const d = delegation.find(({harnessId}) => harnessId === row.id);
+    if (d && d.subagents) {
+      const where = `${d.tasksWithSubagents} of ${d.tasks} tasks (${d.models})`;
+      const verb = d.routing === "cheaper" ? "Routed subagents to cheaper models" : d.routing === "kickoff" ? "Spawned subagents on the kickoff model" : "Spawned subagents";
+      const ratio = d.delegatedCost != null && d.othersCost ? d.delegatedCost / d.othersCost : null;
+      const outcome = ratio == null ? "" : `; those tasks cost ${formatCost(d.delegatedCost)} against ${formatCost(d.othersCost)} for the others`;
+      // Delegation counts as a pro only when it actually made those tasks cheaper.
+      if (ratio != null && ratio <= 0.8) pros.push(`${verb} in ${where}${outcome}`);
+      else if (ratio != null && ratio < 1.2) pros.push(`${verb} in ${where} at about the same cost as the others`);
+      else cons.push(`${verb} in ${where}${outcome}`);
+    } else if (d && row.family === "studio-moser") {
+      cons.push("Never used its model rubric to route a subagent");
     }
     return {id: row.id, family: row.family, label: row.label, pros, cons};
   });
@@ -1117,8 +1277,8 @@ function scopeDescription(observations, cohort) {
   return parts.join(" · ");
 }
 
-export function renderResults({tests, harnesses, reports, campaign = null}) {
-  const observations = applyCampaignCohort(normalizeResults(reports, tests, harnesses), campaign);
+export function renderResults({tests, harnesses, reports, campaign = null, pricing = null}) {
+  const observations = applyCampaignCohort(normalizeResults(reports, tests, harnesses, pricing), campaign);
   const admitted = admitResults(observations);
   const modelOptions = [...new Map(observations.map(({modelKey, model, effort}) => [modelKey, `${model} · ${effort}`]))]
     .sort((left, right) => compareText(left[1], right[1]));
@@ -1159,9 +1319,11 @@ export function renderResults({tests, harnesses, reports, campaign = null}) {
     const rows = aggregateHarnesses(observations, harnesses, effective);
     const behavior = aggregateBehavior(observations, harnesses, effective)
       .filter((column) => column.modelKey === effective.model);
+    const delegation = aggregateDelegation(observations, harnesses, effective, pricing);
     body.replaceChildren(
-      renderHarnessRead(harnessRead(rows, behavior, verdict), rows),
+      renderHarnessRead(harnessRead(rows, behavior, verdict, delegation), rows),
       renderMatrix(observations, tests, harnesses, effective),
+      renderDelegation(delegation),
       renderBehavior(behavior)
     );
   }
