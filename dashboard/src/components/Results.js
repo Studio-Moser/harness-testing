@@ -698,7 +698,7 @@ function renderMatrix(observations, tests, harnesses, filters) {
   const heading = element("header", "results-section-heading card-header");
   heading.append(
     element("h2", "card-title", "Results by task"),
-    element("p", "", "Correctness, API-equivalent cost and wall time per task for each harness version, under the selected model. Filter by task type and difficulty to see where a harness helps or hurts.")
+    element("p", "", "API-equivalent cost, wall time and automated quality score per task for each harness version, under the selected model. A task that did not fully pass says so in red. Filter by type and difficulty to see where a harness helps or hurts.")
   );
   const cue = element("p", "results-scroll-cue", "Swipe horizontally to compare every harness version.");
   const scroll = element("div", "results-table-scroll table-responsive");
@@ -728,10 +728,15 @@ function renderMatrix(observations, tests, harnesses, filters) {
       else if (rawValues.some(({status}) => INCOMPLETE_STATUSES.has(status))) unavailable = "Incomplete";
       else if (rawValues.some(({status}) => status === "agent_failed" || status === "timeout")) unavailable = "Failed";
       const cell = element("td", score == null ? "results-matrix-empty" : "results-matrix-score");
-      cell.append(element("strong", "", score == null ? unavailable : formatPercent(score)));
-      const evidence = [];
-      if (values.length) evidence.push(`${formatCost(mean(values.map(({cost}) => cost)))} · ${formatRuntime(mean(values.map(({runtime}) => runtime)))}`);
-      evidence.push(...matrixEvidence(rawValues, excluded));
+      if (score == null) {
+        cell.append(element("strong", "", unavailable));
+      } else {
+        // Passing is the norm, so the headline is what it cost; correctness appears only when it slipped.
+        const quality = mean(values.map((value) => value.quality));
+        cell.append(element("strong", "", `${formatCost(mean(values.map(({cost}) => cost)))} · ${formatRuntime(mean(values.map(({runtime}) => runtime)))} · ${quality == null ? "—" : formatPercent(quality)} quality`));
+        if (score < 1) cell.append(element("small", "results-cell-failure", score === 0 ? "Failed" : `${formatPercent(score)} correct`));
+      }
+      const evidence = matrixEvidence(rawValues, excluded);
       if (evidence.length) cell.append(element("small", "results-cell-evidence", evidence.join(" · ")));
       if (score != null) cell.setAttribute("style", `--score:${score}`);
       row.append(cell);

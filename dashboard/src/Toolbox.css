@@ -151,3 +151,5 @@ summary:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid var(--t
 .results-read-none { color: var(--tblr-secondary); list-style: none; margin-left: -1.1rem; }
 
 .results-read-charts { margin-top: 1.25rem; }
+
+.results-cell-failure { display: block; color: var(--tblr-red); font-weight: 600; }

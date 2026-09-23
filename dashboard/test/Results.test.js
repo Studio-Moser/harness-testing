@@ -597,7 +597,8 @@ test("the read turns the numbers into pros, cons and one recommendation", () => 
     const root = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: [source]});
     assert.match(root.textContent, /The readUse Nothing v1/);
     assert.match(root.textContent, /Results by task/);
-    assert.match(root.textContent, /\$0\.10 · 30s/);
+    assert.match(root.textContent, /\$0\.10 · 30s · 100% quality/);
+    assert.doesNotMatch(root.textContent, /Failed|% correct/);
     assert.match(root.textContent, /Difficulty 1 · Polish/);
     assert.doesNotMatch(root.textContent, /Decision-grade ranking|Quality trade-offs|Evidence cohort/);
   } finally {globalThis.document = previousDocument;}
