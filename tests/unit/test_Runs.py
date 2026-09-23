@@ -2077,6 +2077,22 @@ def test_generated_claude_plugin_seed_environment_is_rejected(run_root: Path):
         _verify_generated_inputs(run_root, manifest)
 
 
+def test_claude_comparison_jobs_may_carry_only_the_rubric_environment(run_root: Path):
+    manifest = _compile_claude_matrix(run_root)
+    assert Runs.claude_job_environment(manifest) == {}
+    compared = replace(manifest, provenance={**manifest.provenance, "experiment": {}})
+    assert Runs.claude_job_environment(compared) == {"XDG_CONFIG_HOME": "/harness-arm/config"}
+    relative_path = manifest.harbor_config_paths[0]
+    path = manifest.path.parent / relative_path
+    document = yaml.safe_load(path.read_text())
+    document["agents"][0]["env"] = {"XDG_CONFIG_HOME": "/harness-arm/config"}
+    text = yaml.safe_dump(document, sort_keys=False)
+    path.write_text(text)
+    manifest.provenance["harbor_config_digests"][relative_path] = Runs._sha256(text.encode())
+    with pytest.raises(ValueError, match="unsupported surfaces"):
+        _verify_generated_inputs(run_root, manifest)
+
+
 def test_manifest_binds_selected_custom_agent_adapters(run_root: Path):
     claude = _cell("claude", "A0", "baseline", "a")
     codex = _cell("codex", "A0", "candidate", "b")

@@ -1810,7 +1810,7 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
             continue
         if "CLAUDE_CODE_PLUGIN_SEED_DIR" in agent.env:
             raise ValueError(f"Claude plugin seed is forbidden: {relative_path}")
-        if agent.env != {} or agent.skills != []:
+        if agent.env != claude_job_environment(manifest) or agent.skills != []:
             raise ValueError(f"Claude delivery has unsupported surfaces: {relative_path}")
         expected_plugin_dirs = _claude_plugin_dirs(_bundle_path(root, cell), cell.arm)
         actual_plugin_dirs = agent.kwargs.get("plugin_dirs")
@@ -1820,6 +1820,14 @@ def _verify_generated_inputs(root: Path, manifest: RunManifest) -> None:
             raise ValueError(f"Claude plugin directories do not match delivery: {relative_path}")
         if "config" in agent.kwargs:
             raise ValueError(f"Claude settings config is forbidden: {relative_path}")
+
+
+def claude_job_environment(manifest: RunManifest) -> dict[str, str]:
+    """The only agent environment a Claude job may carry: comparison jobs deliver the
+    frozen rubric through XDG_CONFIG_HOME, legacy arm jobs carry nothing."""
+    if manifest.provenance.get("experiment") is not None:
+        return {"XDG_CONFIG_HOME": "/harness-arm/config"}
+    return {}
 
 
 def _approved_runtime_providers(manifest: RunManifest) -> set[str]:

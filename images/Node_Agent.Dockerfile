@@ -20,7 +20,7 @@ COPY --from=yaml-tools /usr/bin/yq /usr/local/bin/yq
 RUN python3 --version && gh --version && yq --version
 
 RUN npm install --global --no-audit --no-fund \
-        @anthropic-ai/claude-code@2.1.236 \
+        @anthropic-ai/claude-code@2.1.281 \
         @openai/codex@0.153.4 \
     && claude --version \
     && codex --version
