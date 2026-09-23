@@ -622,13 +622,13 @@ test("the stitched campaign is the default decision cohort and excludes supersed
     trial(studio, "react-active-badge-count", 1, {status: "infrastructure_failure", correctness: null, protected_state: null})
   ], {experiment: {purpose: "diagnostic", comparison: {status: "insufficient_evidence", provisional: true, policy_id: "benchmark-readiness-v2"}}});
   const recovery = report("recovery", [
-    trial(studio, "react-active-badge-count", 1, {trial_id: "recovered-studio", correctness: false})
+    trial(studio, "react-active-badge-count", 1, {correctness: false})
   ], {experiment: {purpose: "diagnostic", comparison: {status: "insufficient_evidence", provisional: true, policy_id: "benchmark-readiness-v2"}}});
   const campaign = {
     status: "recommended", winner_id: nothing.identity, reasons: [],
     lanes: {comparison: {
       members: [{report_id: "original"}, {report_id: "recovery"}],
-      superseded_trials: [{trial_id: `trial-${studio.id}-react-active-badge-count-1`, replaced_by: "recovered-studio"}],
+      superseded_trials: [{report_id: "original", trial_id: `trial-${studio.id}-react-active-badge-count-1`, replaced_by: `trial-${studio.id}-react-active-badge-count-1`}],
       comparison: {status: "recommended", winner_id: nothing.identity, reasons: [], unsolved_tasks: [], contenders: []}
     }}
   };
@@ -636,7 +636,7 @@ test("the stitched campaign is the default decision cohort and excludes supersed
   const cohort = defaultCohort(observations);
   assert.equal(cohort, "campaign");
   const admitted = admitResults(observations);
-  assert.deepEqual(admitted.map(({trialId}) => trialId).sort(), ["recovered-studio", `trial-${nothing.id}-react-active-badge-count-1`]);
+  assert.deepEqual(admitted.map(({reportId, trialId}) => `${reportId}:${trialId}`).sort(), [`original:trial-${nothing.id}-react-active-badge-count-1`, `recovery:trial-${studio.id}-react-active-badge-count-1`]);
   const rows = aggregateHarnesses(observations, HARNESS_CATALOG, {cohort});
   assert.equal(rows[0].id, nothing.id);
   assert.equal(rows[0].correctness, 1);

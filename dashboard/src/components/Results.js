@@ -362,13 +362,14 @@ export function applyCampaignCohort(observations, campaign) {
   const superseded = new Set();
   for (const lane of Object.values(campaign.lanes ?? {})) {
     for (const member of lane.members ?? []) members.add(member.report_id);
-    for (const row of lane.superseded_trials ?? []) superseded.add(row.trial_id);
+    // A replacement keeps the replaced trial's ID, so identity is report plus trial.
+    for (const row of lane.superseded_trials ?? []) superseded.add(`${row.report_id}\0${row.trial_id}`);
   }
   if (!members.size) return observations;
   const status = campaign.status ?? "unknown";
   const label = `Campaign · ${status.replaceAll("_", " ")}`;
   for (const observation of observations) {
-    if (!members.has(observation.reportId) || superseded.has(observation.trialId)) continue;
+    if (!members.has(observation.reportId) || superseded.has(observation.observationId)) continue;
     if (observation.status === "pending") continue;
     observation.campaignCohort = {id: CAMPAIGN_COHORT_ID, label};
     observation.decisionEligible = true;
