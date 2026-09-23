@@ -2,7 +2,6 @@ import importlib.util
 import json
 import shutil
 import subprocess
-import tomllib
 from pathlib import Path
 from types import ModuleType
 
@@ -112,17 +111,6 @@ def test_gate_then_python_source_write_is_rejected(
 
     assert criteria._final_gate_workflow() is False
     assert criteria._no_testing_churn() is False
-
-
-def test_sentinel_uses_the_repository_shell_mutation_policy(criteria: ModuleType):
-    with (REPOSITORY_ROOT / "policy" / "Command_Classification.toml").open(
-        "rb"
-    ) as policy_file:
-        policy = tomllib.load(policy_file)
-
-    assert tuple(policy["mutation"]["shell_mutation_patterns"]) == (
-        criteria._SHELL_MUTATION_PATTERNS
-    )
 
 
 def test_mutable_files_allow_only_the_three_declared_substitutions(

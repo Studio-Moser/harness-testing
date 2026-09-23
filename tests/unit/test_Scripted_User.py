@@ -262,7 +262,7 @@ def test_matcher_policy_shape_is_exclusive_in_runtime_and_schema():
     valid["facts"]["authority"] = "Proceed locally."
     valid["rules"].append(local)
     validate_policy(valid)
-    schema_path = Path(__file__).parents[2] / "policy/Scripted User.schema.json"
+    schema_path = Path(__file__).parents[2] / "tests/Fixtures/Scripted User.schema.json"
     schema = json.loads(schema_path.read_text())
     validator = Draft202012Validator(schema)
     assert validator.is_valid(valid)
@@ -327,7 +327,7 @@ def test_all_task_policies_answer_only_explicit_local_branch_handoffs():
 
     root = Path(__file__).parents[2]
     validator = Draft202012Validator(
-        json.loads((root / "policy/Scripted User.schema.json").read_text())
+        json.loads((root / "tests/Fixtures/Scripted User.schema.json").read_text())
     )
     for path in (root / "tasks/workflow").glob("*/Scripted User.json"):
         frozen = json.loads(path.read_text())

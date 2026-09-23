@@ -12,7 +12,7 @@ const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 const temporaries = [];
 
 test("Python and dashboard share the public path acceptance cases", async () => {
-  const cases = JSON.parse(await readFile(resolve(repositoryRoot, "policy/Public Safety Cases.json"), "utf8"));
+  const cases = JSON.parse(await readFile(resolve(repositoryRoot, "tests/Fixtures/Public Safety Cases.json"), "utf8"));
   for (const {text, safe} of cases) assert.equal(safetyErrors(text).length === 0, safe, text);
 });
 

@@ -37,6 +37,9 @@ jobs:
           python -m pip install --disable-pip-version-check uv==0.11.19
           uv sync --frozen
 
+      - name: Install dashboard dependencies
+        run: npm ci --prefix dashboard --ignore-scripts
+
       - name: Static validation
         run: uv run harness-test validate
 
@@ -48,6 +51,5 @@ jobs:
 
       - name: Dashboard
         run: |
-          npm ci --prefix dashboard --ignore-scripts
           npm --prefix dashboard test
           npm --prefix dashboard run build
