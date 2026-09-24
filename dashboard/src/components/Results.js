@@ -128,12 +128,16 @@ export function harnessArm(version) {
   return version.identity == null ? null : `V${version.identity.slice("sha256:".length, "sha256:".length + 16)}`;
 }
 
+// Mean of the scored dimensions. A null score means the grader had no evidence for that
+// dimension (the protocol forbids a neutral or punitive stand-in), so it is left out
+// rather than blanking the whole grade.
 function completeDimensionMean(grade, rubric, requiredDimensions) {
   if (grade?.status !== "completed" || grade.rubric_version !== rubric) return null;
   const byName = new Map((grade.dimensions ?? []).map((dimension) => [dimension.name, dimension.score]));
   if (byName.size !== requiredDimensions.size) return null;
-  for (const name of requiredDimensions) if (!Number.isFinite(byName.get(name))) return null;
-  return mean([...requiredDimensions].map((name) => byName.get(name) / 5));
+  if (![...requiredDimensions].every((name) => byName.has(name))) return null;
+  const scored = [...requiredDimensions].map((name) => byName.get(name)).filter(Number.isFinite);
+  return scored.length ? mean(scored.map((score) => score / 5)) : null;
 }
 
 export function qualityFromGrade(grade) {

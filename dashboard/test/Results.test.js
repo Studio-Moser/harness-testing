@@ -335,8 +335,14 @@ test("grades join by report and trial identity, count once, and require every Qu
   assert.equal(row.quality, null);
   assert.equal(row.qualityObservations, 1);
   assert.equal(qualityFromGrade(completedGrade(5, {dimensions: completedGrade().dimensions.slice(0, 5)})), null);
+  const partial = completedGrade().dimensions.map((dimension, index) => index === 2 ? {...dimension, score: null} : dimension);
+  const scored = partial.filter(({score}) => score != null);
+  assert.equal(
+    qualityFromGrade(completedGrade(5, {dimensions: partial})),
+    scored.reduce((sum, {score}) => sum + score / 5, 0) / scored.length
+  );
   assert.equal(qualityFromGrade(completedGrade(5, {
-    dimensions: completedGrade().dimensions.map((dimension, index) => index === 2 ? {...dimension, score: null} : dimension)
+    dimensions: completedGrade().dimensions.map((dimension) => ({...dimension, score: null}))
   })), null);
 });
 
