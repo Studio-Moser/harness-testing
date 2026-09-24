@@ -9,6 +9,7 @@ import {
   aggregateBehavior,
   aggregateDelegation,
   applyCampaignCohort,
+  campaignForModel,
   annoyanceFromTranscript,
   campaignVerdict,
   aggregateHarnesses,
@@ -717,4 +718,23 @@ test("delegation shows subagent counts, models, cost share and whether routing w
     assert.match(root.textContent, /cheaper models/);
     assert.match(root.textContent, /never delegated/);
   } finally {globalThis.document = previousDocument;}
+});
+
+test("each kickoff model shows its own campaign verdict", () => {
+  const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
+  const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
+  const codex = report("codex", [trial(nothing, "react-active-badge-count", 1)]);
+  const claude = report("claude", [trial(studio, "react-active-badge-count", 1)], {experiment: {conditions: conditions({kickoff: {provider: "claude", runtime_version: "2.1.281", model: "claude-opus-5-5", effort: "medium"}})}});
+  const campaign = (digest, reportId, winner) => ({
+    campaign_digest: digest, status: "recommended", winner_id: winner, reasons: [],
+    lanes: {comparison: {members: [{report_id: reportId}], superseded_trials: [], comparison: {status: "recommended", winner_id: winner, reasons: [], unsolved_tasks: [], contenders: []}}}
+  });
+  const campaigns = [campaign("claude-campaign", "claude", studio.identity), campaign("codex-campaign", "codex", nothing.identity)];
+  const observations = applyCampaignCohort(normalizeResults([codex, claude], TOOLBOX_CATALOG, HARNESS_CATALOG), campaigns);
+  const model = (reportId) => observations.find((row) => row.reportId === reportId).modelKey;
+  assert.notEqual(model("codex"), model("claude"));
+  assert.equal(campaignForModel(observations, campaigns, model("codex")).campaign_digest, "codex-campaign");
+  assert.equal(campaignForModel(observations, campaigns, model("claude")).campaign_digest, "claude-campaign");
+  assert.equal(campaignForModel(observations, campaigns, "no-such-model"), null);
+  assert.equal(campaignVerdict(campaignForModel(observations, campaigns, model("claude")), HARNESS_CATALOG).winner, "Studio Moser v5");
 });

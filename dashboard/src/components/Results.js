@@ -377,11 +377,26 @@ export function defaultModel(observations) {
 
 export const CAMPAIGN_COHORT_ID = "campaign";
 
-// The stitched campaign is the one complete cohort: every scheduled slot filled once from
-// its member reports, minus the trials that recovery or correction runs superseded.
-// Its trials are decision evidence even though each member report is only a slice.
-export function applyCampaignCohort(observations, campaign) {
-  if (campaign == null || typeof campaign !== "object") return observations;
+// Each stitched campaign is a complete cohort: every scheduled slot filled once from its
+// member reports, minus the trials that recovery or correction runs superseded. Its trials
+// are decision evidence even though each member report is only a slice. A campaign has
+// one kickoff model, so every trial belongs to at most one campaign.
+export function applyCampaignCohort(observations, campaigns) {
+  const list = campaigns == null ? [] : Array.isArray(campaigns) ? campaigns : [campaigns];
+  for (const campaign of list) {
+    if (campaign != null && typeof campaign === "object") tagCampaign(observations, campaign);
+  }
+  return observations;
+}
+
+// The campaign whose trials ran under the selected model, if any.
+export function campaignForModel(observations, campaigns, model) {
+  const digest = observations.find((row) => row.campaignCohort && row.modelKey === model)?.campaignCohort.digest;
+  const list = campaigns == null ? [] : Array.isArray(campaigns) ? campaigns : [campaigns];
+  return list.find((campaign) => campaign?.campaign_digest === digest) ?? null;
+}
+
+function tagCampaign(observations, campaign) {
   const members = new Set();
   const superseded = new Set();
   for (const lane of Object.values(campaign.lanes ?? {})) {
@@ -389,21 +404,20 @@ export function applyCampaignCohort(observations, campaign) {
     // A replacement keeps the replaced trial's ID, so identity is report plus trial.
     for (const row of lane.superseded_trials ?? []) superseded.add(`${row.report_id}\0${row.trial_id}`);
   }
-  if (!members.size) return observations;
+  if (!members.size) return;
   const status = campaign.status ?? "unknown";
   const label = `Campaign · ${status.replaceAll("_", " ")}`;
   for (const observation of observations) {
     if (!members.has(observation.reportId) || superseded.has(observation.observationId)) continue;
     if (observation.status === "pending") continue;
     // The stitched lane resolved its members' partial-run states.
-    observation.campaignCohort = {id: CAMPAIGN_COHORT_ID, label};
+    observation.campaignCohort = {id: CAMPAIGN_COHORT_ID, label, digest: campaign.campaign_digest ?? null};
     observation.decisionEligible = true;
     observation.evidenceFlags = [];
     observation.evidenceState = "campaign";
     observation.limitations = [];
     observation.provisional = true;
   }
-  return observations;
 }
 
 function reportGroups(observations, model = null) {
@@ -1256,9 +1270,9 @@ function renderHarnessRead(read, rows) {
 
 
 
-function scopeDescription(observations, cohort) {
+function scopeDescription(observations, cohort, model) {
   if (cohort === CAMPAIGN_COHORT_ID) {
-    const selected = observations.filter((row) => row.campaignCohort);
+    const selected = observations.filter((row) => row.campaignCohort && row.modelKey === model);
     return `${selected.length} trials stitched from ${new Set(selected.map((row) => row.reportId)).size} reports · Decision-grade · Provisional until reviewed`;
   }
   const primary = observations.find(({reportId}) => reportId === cohort);
@@ -1287,7 +1301,6 @@ export function renderResults({tests, harnesses, reports, campaign = null, prici
     element("p", "results-evidence-line", `${plural(admitted.length, "trial")} across ${new Set(admitted.map(({taskId}) => taskId)).size} of ${tests.length} tasks`)
   );
 
-  const verdict = campaignVerdict(campaign, harnesses);
   const filters = element("nav", "results-filters card card-body");
   filters.setAttribute("aria-label", "Results scope");
   const body = element("div", "results-body");
@@ -1305,10 +1318,11 @@ export function renderResults({tests, harnesses, reports, campaign = null, prici
         state.cohort = defaultCohort(observations, value);
         update();
       }),
-      element("p", "results-scope-note", scopeDescription(observations, state.cohort))
+      element("p", "results-scope-note", scopeDescription(observations, state.cohort, state.model))
     );
 
     const effective = {...state};
+    const verdict = campaignVerdict(campaignForModel(observations, campaign, state.model), harnesses);
     const rows = aggregateHarnesses(observations, harnesses, effective);
     const behavior = aggregateBehavior(observations, harnesses, effective)
       .filter((column) => column.modelKey === effective.model);

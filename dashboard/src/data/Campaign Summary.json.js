@@ -7,40 +7,46 @@ import {safetyErrors} from "./Published Results.json.js";
 const here = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(here, "../../..");
 
-// The newest local campaign summary, or the one named by HARNESS_CAMPAIGN_SUMMARY.
-// A summary is derived from retained reports, so it carries no raw traces; it is still
-// screened for local paths and secrets before it reaches the page.
+// Every local campaign summary, newest first, or only the one named by
+// HARNESS_CAMPAIGN_SUMMARY. Each campaign has one kickoff model; the page shows the one
+// matching the selected model. A summary rebuilt from the same reports replaces the older
+// copy. Summaries are derived from retained reports, so they carry no raw traces; each is
+// still screened for local paths and secrets before it reaches the page.
 export async function loadCampaignSummary() {
   const configured = process.env.HARNESS_CAMPAIGN_SUMMARY?.trim();
-  let path = configured;
-  if (!path) {
+  let paths = configured ? [configured] : [];
+  if (!configured) {
     const campaigns = resolve(repositoryRoot, "runs", "campaigns");
     let entries;
     try {
       entries = await readdir(campaigns, {withFileTypes: true});
     } catch (error) {
-      if (error?.code === "ENOENT") return null;
+      if (error?.code === "ENOENT") return [];
       throw error;
     }
-    let newest = null;
+    const found = [];
     for (const entry of entries.filter((item) => item.isDirectory())) {
       const candidate = resolve(campaigns, entry.name, "Summary.json");
-      let info;
       try {
-        info = await stat(candidate);
+        found.push({path: candidate, mtimeMs: (await stat(candidate)).mtimeMs});
       } catch (error) {
-        if (error?.code === "ENOENT") continue;
-        throw error;
+        if (error?.code !== "ENOENT") throw error;
       }
-      if (newest == null || info.mtimeMs > newest.mtimeMs) newest = {path: candidate, mtimeMs: info.mtimeMs};
     }
-    if (newest == null) return null;
-    path = newest.path;
+    paths = found.sort((left, right) => right.mtimeMs - left.mtimeMs).map(({path}) => path);
   }
-  const summary = JSON.parse(await readFile(path, "utf8"));
-  const unsafe = safetyErrors(summary);
-  if (unsafe.length) throw new Error(`campaign summary is not public-safe: ${unsafe.join("; ")}`);
-  return summary;
+  const summaries = [];
+  const seen = new Set();
+  for (const path of paths) {
+    const summary = JSON.parse(await readFile(path, "utf8"));
+    const unsafe = safetyErrors(summary);
+    if (unsafe.length) throw new Error(`campaign summary is not public-safe: ${unsafe.join("; ")}`);
+    const reports = JSON.stringify(summary.report_ids ?? null);
+    if (seen.has(reports)) continue;
+    seen.add(reports);
+    summaries.push(summary);
+  }
+  return summaries;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
