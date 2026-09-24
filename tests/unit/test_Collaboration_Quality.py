@@ -265,3 +265,25 @@ def test_approval_facts_are_not_misclassified_as_approval_requests():
     )
 
     assert result["approval_request_count"] == 0
+
+
+def test_closing_message_logged_as_progress_and_final_counts_once():
+    from harness_testing.Collaboration_Quality import validate_visible_transcript
+
+    def row(ordinal, kind, content, elapsed):
+        role = "user" if kind == "user" else "assistant"
+        return {"ordinal": ordinal, "role": role, "kind": kind, "content": content,
+                "elapsed_seconds": elapsed}
+
+    rows = [
+        row(1, "user", "Fix it.", 0),
+        row(2, "progress", "Checking.", 1),
+        row(3, "progress", "Fixed it.", 2),
+        row(4, "final", "Fixed it.", 2),
+    ]
+    safe = validate_visible_transcript(rows)
+    assert [(item["ordinal"], item["kind"], item["content"]) for item in safe] == [
+        (1, "user", "Fix it."),
+        (2, "progress", "Checking."),
+        (3, "final", "Fixed it."),
+    ]

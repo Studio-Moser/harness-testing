@@ -281,9 +281,12 @@ export function normalizeResults(reports, tests, harnesses, pricing = null) {
   const testById = new Map(tests.map((entry) => [entry.id, entry]));
   const harnessByIdentity = byAnyIdentity(readyHarnesses(harnesses));
   const observations = new Map();
+  // A graded or rebuilt revision replaces the report it supersedes.
+  const superseded = new Set(reports.map((report) => report.experiment?.supersedes_report_id).filter(Boolean));
 
   for (const report of reports) {
     if (report.schema_version !== "3" || report.source?.kind !== "current") continue;
+    if (superseded.has(report.report_id)) continue;
     const experiment = report.experiment;
     if (experiment?.conditions == null || !Array.isArray(experiment.trials)) continue;
     const reportId = report.report_id ?? report.run_id;

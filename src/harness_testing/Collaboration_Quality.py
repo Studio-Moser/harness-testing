@@ -68,7 +68,17 @@ def validate_visible_transcript(value: object) -> list[dict]:
         content = normalize_visible_local_paths(row["content"])
         if public_safety_errors(content):
             raise ValueError("private_transcript_content")
-        result.append(dict(row, content=content))
+        previous = result[-1] if result else None
+        if (
+            row["kind"] == "final"
+            and previous is not None
+            and previous["kind"] == "progress"
+            and previous["content"] == content
+        ):
+            # Claude recordings logged the closing message as progress and again as the
+            # final result; it was said once.
+            result.pop()
+        result.append(dict(row, content=content, ordinal=len(result) + 1))
     if not any(row["kind"] == "final" for row in result):
         raise ValueError("missing_final_message")
     return result

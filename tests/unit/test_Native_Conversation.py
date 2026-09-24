@@ -1089,3 +1089,16 @@ def test_claude_authentication_failure_is_infrastructure_not_agent_failure():
     state = Conversation(config("claude"))
     state.handle({"type": "result", "subtype": "success", "is_error": True})
     assert (state.status, state.reason) == ("agent_failed", "native_turn_failed")
+
+
+def test_claude_closing_message_is_recorded_once_as_final():
+    state = Conversation(config("claude"))
+    state.root = "root"
+    state.turn("Do the task")
+    message = {"content": [{"type": "text", "text": "Fixed it."}]}
+    state.handle({"type": "assistant", "message": message})
+    state.handle({"type": "result", "subtype": "success", "result": "Fixed it."})
+    assert [(row["kind"], row["content"]) for row in state.transcript] == [
+        ("user", "Do the task"),
+        ("final", "Fixed it."),
+    ]

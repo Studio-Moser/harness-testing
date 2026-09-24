@@ -790,7 +790,11 @@ class Conversation:
             if event.get("is_error") or event.get("subtype") != "success":
                 return self.fail("native_turn_failed", "agent_failed")
             self.text = event.get("result") or self.text
-            self._record_visible("assistant", "final", self.text)
+            last = self.transcript[-1] if self.transcript else None
+            if last and last["kind"] == "progress" and last["content"] == self.text.strip():
+                last["kind"] = "final"  # The closing message is the result, not a second message.
+            else:
+                self._record_visible("assistant", "final", self.text)
             return self.finish_turn()
         return []
 

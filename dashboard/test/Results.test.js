@@ -738,3 +738,11 @@ test("each kickoff model shows its own campaign verdict", () => {
   assert.equal(campaignForModel(observations, campaigns, "no-such-model"), null);
   assert.equal(campaignVerdict(campaignForModel(observations, campaigns, model("claude")), HARNESS_CATALOG).winner, "Studio Moser v5");
 });
+
+test("a revision replaces the report it supersedes", () => {
+  const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
+  const original = report("original", [trial(nothing, "react-active-badge-count", 1)]);
+  const revision = report("revision", [trial(nothing, "react-active-badge-count", 1)], {experiment: {supersedes_report_id: "original"}});
+  const observations = normalizeResults([original, revision], TOOLBOX_CATALOG, HARNESS_CATALOG);
+  assert.deepEqual([...new Set(observations.map(({reportId}) => reportId))], ["revision"]);
+});
