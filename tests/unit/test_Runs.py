@@ -3035,3 +3035,24 @@ def test_execution_preserves_harbor_error_when_timestamp_recording_fails(
         Runs.execute_run(run_root, manifest.path, manifest.digest)
     assert caught.value is failure
     assert "timing disk failure" in " ".join(caught.value.__notes__)
+
+
+def test_claude_runtime_builtins_are_not_benchmark_delivery(tmp_path):
+    runtime = Runs.claude_runtime_skills(Path(__file__).parents[2])
+    assert {"code-review", "simplify"} <= runtime
+    path = tmp_path / "claude-code.txt"
+    event = {
+        "type": "system",
+        "subtype": "init",
+        "plugins": [{"name": "agents-md", "path": "builtin", "source": "agents-md@builtin"}],
+        "skills": sorted(runtime),
+    }
+    path.write_text(json.dumps(event))
+    check = lambda: Runs._claude_delivery_errors(  # noqa: E731
+        path, frozenset(), frozenset(), frozenset(), complete_inventory=True,
+        runtime_skills=runtime,
+    )
+    assert check() == []
+    event["skills"].append("unlisted-skill")
+    path.write_text(json.dumps(event))
+    assert check()

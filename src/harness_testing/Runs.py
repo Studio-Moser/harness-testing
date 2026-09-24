@@ -1928,6 +1928,15 @@ def _benchmark_skill_names(root: Path, cells: tuple[RunCell, ...]) -> frozenset[
     return frozenset(names)
 
 
+def claude_runtime_skills(root: Path) -> frozenset[str]:
+    """Skills bundled inside the pinned Claude Code runtime. They are part of every
+    contender, Nothing included, so startup delivery checks do not count them."""
+    for package in load_versions(root / "Versions.toml")["packages"]:
+        if package["name"] == "@anthropic-ai/claude-code":
+            return frozenset(package.get("bundled_skills", []))
+    return frozenset()
+
+
 def _benchmark_looking(value: object) -> bool:
     try:
         text = json.dumps(value, sort_keys=True).lower()
@@ -1950,6 +1959,7 @@ def _claude_delivery_errors(
     benchmark_skill_names: frozenset[str],
     *,
     complete_inventory: bool = False,
+    runtime_skills: frozenset[str] = frozenset(),
 ) -> list[str]:
     errors: list[str] = []
     try:
@@ -2001,6 +2011,8 @@ def _claude_delivery_errors(
         errors.append("Claude startup benchmark plugins are malformed")
     else:
         for index, entry in enumerate(raw_plugins):
+            if isinstance(entry, dict) and entry.get("path") == "builtin":
+                continue  # ships inside the pinned Claude Code runtime
             name = entry.get("name") if isinstance(entry, dict) else entry
             normalized: str | None = None
             if isinstance(name, str):
@@ -2049,6 +2061,8 @@ def _claude_delivery_errors(
                         continue
                     seen_skills.add(entry)
                     observed_skills.add(entry)
+                elif entry in runtime_skills:
+                    continue
                 elif complete_inventory or _benchmark_looking(entry):
                     errors.append(
                         f"Claude skill entry {index} has unexpected benchmark skill {entry}"
@@ -2241,6 +2255,7 @@ def _completed_job_errors(
                 expected_skills,
                 benchmark_skill_names,
                 complete_inventory=cell.contender is not None,
+                runtime_skills=claude_runtime_skills(root),
             )
         else:
             delivery_errors = _codex_delivery_errors(

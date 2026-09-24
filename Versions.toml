@@ -89,6 +89,13 @@ version = "6.0.3"
 name = "@anthropic-ai/claude-code"
 ecosystem = "npm"
 version = "2.1.281"
+# Skills this runtime loads on its own, as its startup event lists them. Refresh on every
+# version bump: an unlisted one fails the delivery canary.
+bundled_skills = [
+  "batch", "claude-api", "code-review", "dataviz", "debug", "deep-research",
+  "doctor", "fewer-permission-prompts", "loop", "run", "run-skill-generator",
+  "simplify", "update-config", "verify", "workflow-authoring",
+]
 
 [[packages]]
 name = "@openai/codex"
