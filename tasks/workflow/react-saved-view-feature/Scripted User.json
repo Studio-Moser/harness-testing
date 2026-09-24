@@ -11,7 +11,7 @@
     {
       "id": "saved-view-product-choices",
       "kind": "clarification",
-      "pattern": "(?is)(?=.*\\?)(?=.*\\b(?:view|persist|storage|store|stored|reload|default|fallback|missing|absent|invalid|saved|parse|parsing|strict|format|value|values)\\b).*",
+      "pattern": "(?is)(?=.*\\?)(?=.*\\b(?:view|persist|storage|stored|reload|default|fallback|missing|absent|invalid|saved|parse|parsing|strict)\\b).*",
       "fact": "task"
     },
     {
