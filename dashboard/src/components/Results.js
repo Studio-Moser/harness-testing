@@ -811,6 +811,7 @@ function renderMatrix(observations, tests, harnesses, filters) {
 export function aggregateBehavior(observations, harnesses, filters = {}) {
   // Every model and harness version with completed trials, side by side, so a change in
   // either axis is visible. Type and level filters apply; cohort and model filters do not.
+  // A model with a campaign uses only that campaign's trials, like the rest of the page.
   const scoped = observations.filter((row) =>
     row.status === "completed" &&
     (filters.type == null || filters.type === "all" || row.type === filters.type) &&
@@ -821,8 +822,11 @@ export function aggregateBehavior(observations, harnesses, filters = {}) {
     .sort((left, right) => compareText(`${left[1].model}\0${left[1].effort}`, `${right[1].model}\0${right[1].effort}`));
   const columns = [];
   for (const [modelKey, {model, effort}] of models) {
+    const pool = scoped.filter((row) => row.modelKey === modelKey);
+    const campaign = pool.filter((row) => row.campaignCohort);
+    const source = campaign.length ? campaign : pool;
     for (const harness of versions) {
-      const values = scoped.filter((row) => row.modelKey === modelKey && row.harnessId === harness.id);
+      const values = source.filter((row) => row.harnessId === harness.id);
       if (!values.length) continue;
       const column = {
         modelKey, model, effort,

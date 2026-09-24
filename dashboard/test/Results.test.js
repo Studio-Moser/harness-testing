@@ -768,4 +768,6 @@ test("only the newest campaign for a model forms its cohort", () => {
   const tagged = observations.filter((row) => row.campaignCohort);
   assert.deepEqual(tagged.map(({reportId}) => reportId), ["newer"]);
   assert.equal(tagged[0].campaignCohort.digest, "new-campaign");
+  const behavior = aggregateBehavior(observations, HARNESS_CATALOG).filter(({harnessId}) => harnessId === nothing.id);
+  assert.equal(behavior[0].trials, 1);
 });
