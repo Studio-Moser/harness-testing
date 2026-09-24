@@ -397,8 +397,13 @@ export const CAMPAIGN_COHORT_ID = "campaign";
 // one kickoff model, so every trial belongs to at most one campaign.
 export function applyCampaignCohort(observations, campaigns) {
   const list = campaigns == null ? [] : Array.isArray(campaigns) ? campaigns : [campaigns];
+  // Summaries arrive newest first; the newest campaign for a model is its cohort, so an
+  // older campaign never tags trials of a model a newer one already covers.
+  const claimed = new Set();
   for (const campaign of list) {
-    if (campaign != null && typeof campaign === "object") tagCampaign(observations, campaign);
+    if (campaign == null || typeof campaign !== "object") continue;
+    const models = tagCampaign(observations, campaign, claimed);
+    for (const model of models) claimed.add(model);
   }
   return observations;
 }
@@ -410,7 +415,7 @@ export function campaignForModel(observations, campaigns, model) {
   return list.find((campaign) => campaign?.campaign_digest === digest) ?? null;
 }
 
-function tagCampaign(observations, campaign) {
+function tagCampaign(observations, campaign, claimed = new Set()) {
   const members = new Set();
   const superseded = new Set();
   for (const lane of Object.values(campaign.lanes ?? {})) {
@@ -418,12 +423,14 @@ function tagCampaign(observations, campaign) {
     // A replacement keeps the replaced trial's ID, so identity is report plus trial.
     for (const row of lane.superseded_trials ?? []) superseded.add(`${row.report_id}\0${row.trial_id}`);
   }
-  if (!members.size) return;
+  const models = new Set();
+  if (!members.size) return models;
   const status = campaign.status ?? "unknown";
   const label = `Campaign · ${status.replaceAll("_", " ")}`;
   for (const observation of observations) {
     if (!members.has(observation.reportId) || superseded.has(observation.observationId)) continue;
-    if (observation.status === "pending") continue;
+    if (observation.status === "pending" || claimed.has(observation.modelKey)) continue;
+    models.add(observation.modelKey);
     // The stitched lane resolved its members' partial-run states.
     observation.campaignCohort = {id: CAMPAIGN_COHORT_ID, label, digest: campaign.campaign_digest ?? null};
     observation.decisionEligible = true;
@@ -432,6 +439,7 @@ function tagCampaign(observations, campaign) {
     observation.limitations = [];
     observation.provisional = true;
   }
+  return models;
 }
 
 function reportGroups(observations, model = null) {

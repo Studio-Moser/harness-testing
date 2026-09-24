@@ -752,3 +752,20 @@ test("a revision replaces the report it supersedes", () => {
   const observations = normalizeResults([original, revision], TOOLBOX_CATALOG, HARNESS_CATALOG);
   assert.deepEqual([...new Set(observations.map(({reportId}) => reportId))], ["revision"]);
 });
+
+test("only the newest campaign for a model forms its cohort", () => {
+  const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
+  const older = report("older", [trial(nothing, "react-active-badge-count", 1)]);
+  const newer = report("newer", [trial(nothing, "react-active-badge-count", 1)]);
+  const campaign = (digest, reportId) => ({
+    campaign_digest: digest, status: "recommended", winner_id: nothing.identity, reasons: [],
+    lanes: {comparison: {members: [{report_id: reportId}], superseded_trials: [], comparison: {status: "recommended", winner_id: nothing.identity, reasons: [], unsolved_tasks: [], contenders: []}}}
+  });
+  const observations = applyCampaignCohort(
+    normalizeResults([older, newer], TOOLBOX_CATALOG, HARNESS_CATALOG),
+    [campaign("new-campaign", "newer"), campaign("old-campaign", "older")]
+  );
+  const tagged = observations.filter((row) => row.campaignCohort);
+  assert.deepEqual(tagged.map(({reportId}) => reportId), ["newer"]);
+  assert.equal(tagged[0].campaignCohort.digest, "new-campaign");
+});
