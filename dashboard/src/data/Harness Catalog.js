@@ -156,9 +156,9 @@ export const HARNESS_CATALOG = Object.freeze([
     commit: "75bf6c59ad9c87e7c91b6e537af471aee91cd931",
     collectionVersion: "2.0.0",
     superpowers: false,
-    identity: "sha256:23674af8933438393e8a2c39a3831e30c4faca1f4eea52ee1c94a7899298c371",
+    identity: "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
     changeSummary: "Lighter startup, one delegate skill, and report and end-state rules, driven by the v5 benchmark.",
-    changeDetails: ["Removes Superpowers and five domain plugins; most skills become slash-only or one-line", "Merges execute, review and computer-use into one delegate skill", "Adds ask-once, named end state, five-line Polish/Small reports and no delegation of small work", "Routing rubric falls back to Opus 5.5 at medium"],
+    changeDetails: ["Removes Superpowers and five domain plugins; most skills become slash-only or one-line", "Merges execute, review and computer-use into one delegate skill", "Adds ask-once, named end state, five-line Polish/Small reports and no delegation of small work", "Routing rubric falls back to Opus 5.5 at medium; GPT-6 Astra takes Fable's orchestration, taste and review routes"],
     latest: true
   }),
   studioVersion({
@@ -170,7 +170,7 @@ export const HARNESS_CATALOG = Object.freeze([
     collectionVersion: "2.0.0",
     superpowers: false,
     startup: "Harness baseline instructions plus one line: \"Time matters: reach the named end state in the fewest turns.\"",
-    identity: "sha256:1af29ad6a4d4a2dbacc9c53a1bdbcbbee590c906bdff7329da6f7136b0c219e2",
+    identity: "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
     changeSummary: "v6 with one added startup line asking for the fewest turns, testing the Opus 5.5 'time matters' advice.",
     changeDetails: ["Identical to v6 except the added startup line", "Measures whether the line cuts turns and cost without losing correctness"]
   }),
