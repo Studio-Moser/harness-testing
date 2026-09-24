@@ -155,6 +155,55 @@ def test_claude_records_progress_and_final_without_duplicate_result():
     assert state.transcript[-1]["content"] == "Done."
 
 
+def test_codex_records_scripted_user_question_options_and_answer():
+    state = Conversation(config("codex"))
+    state.handle(
+        {
+            "id": "server-9",
+            "method": "item/tool/requestUserInput",
+            "params": {
+                "questions": [
+                    {
+                        "id": "q1",
+                        "question": "Ready to proceed?",
+                        "options": [{"label": "Proceed", "description": "go"}],
+                    }
+                ]
+            },
+        }
+    )
+    assert [(row["role"], row["kind"], row["content"]) for row in state.transcript] == [
+        ("assistant", "progress", "Ready to proceed?\nProceed: go"),
+        ("user", "user", "Proceed"),
+    ]
+
+
+def test_claude_records_scripted_user_question_options_and_answer():
+    state = Conversation(config("claude"))
+    state.handle(
+        {
+            "type": "control_request",
+            "request_id": "request-9",
+            "request": {
+                "subtype": "can_use_tool",
+                "tool_name": "AskUserQuestion",
+                "input": {
+                    "questions": [
+                        {
+                            "question": "Ready to proceed?",
+                            "options": [{"label": "Proceed", "description": "go"}],
+                        }
+                    ]
+                },
+            },
+        }
+    )
+    assert [(row["role"], row["kind"], row["content"]) for row in state.transcript] == [
+        ("assistant", "progress", "Ready to proceed?\nProceed: go"),
+        ("user", "user", "Proceed"),
+    ]
+
+
 def test_native_pending_requests_keep_request_identity_and_claude_original_input():
     state = Conversation(config("claude"))
     request = {

@@ -393,6 +393,18 @@ class Conversation:
             }
         )
 
+    def _visible_question(self, question):
+        visible = [question.get("question", "")]
+        visible.extend(
+            ": ".join(
+                value
+                for key in ("label", "description")
+                if isinstance(value := option.get(key), str) and value
+            )
+            for option in question.get("options", [])
+        )
+        return "\n".join(visible)
+
     def reply(self, text):
         if self.simulated_user is not None:
             result = self.simulated_user.respond(
@@ -640,16 +652,7 @@ class Conversation:
             answers = {}
             for question in params.get("questions", []):
                 if self.simulated_user is not None:
-                    visible = [question.get("question", "")]
-                    visible.extend(
-                        ": ".join(
-                            value
-                            for key in ("label", "description")
-                            if isinstance(value := option.get(key), str) and value
-                        )
-                        for option in question.get("options", [])
-                    )
-                    self._record_visible("assistant", "final", "\n".join(visible))
+                    self._record_visible("assistant", "final", self._visible_question(question))
                 reply = self.reply(question.get("question", ""))
                 if reply["status"] != "reply":
                     self.fail(
@@ -668,8 +671,9 @@ class Conversation:
                         }
                     ]
                 answers[question["id"]] = {"answers": [reply["reply"]]}
-                if self.simulated_user is not None:
-                    self._record_visible("user", "user", reply["reply"])
+                if self.simulated_user is None:
+                    self._record_visible("assistant", "progress", self._visible_question(question))
+                self._record_visible("user", "user", reply["reply"])
             return [{"id": event["id"], "result": {"answers": answers}}]
         if "id" in event and method:
             self.fail("native_authority_request_denied", "task_definition_gap")
@@ -749,6 +753,11 @@ class Conversation:
                     if reply["status"] != "reply":
                         self.fail(reply["status"], "task_definition_gap")
                         break
+                    if self.simulated_user is None:
+                        self._record_visible(
+                            "assistant", "progress", self._visible_question(question)
+                        )
+                        self._record_visible("user", "user", reply["reply"])
                     answers[question["question"]] = reply["reply"]
                 else:
                     outcome = {
