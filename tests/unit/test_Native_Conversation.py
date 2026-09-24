@@ -1073,3 +1073,19 @@ def test_local_handoff_resumes_same_root_and_requires_final_acknowledgment(provi
     assert state.finish_turn() == []
     assert state.root_finished
     assert state.status == "completed"
+
+
+def test_claude_authentication_failure_is_infrastructure_not_agent_failure():
+    state = Conversation(config("claude"))
+    state.handle(
+        {"type": "system", "subtype": "api_retry", "error_status": 401,
+         "error": "authentication_failed"}
+    )
+    state.handle({"type": "result", "subtype": "success", "is_error": True})
+    assert (state.status, state.reason) == (
+        "infrastructure_failure",
+        "provider_authentication_failed",
+    )
+    state = Conversation(config("claude"))
+    state.handle({"type": "result", "subtype": "success", "is_error": True})
+    assert (state.status, state.reason) == ("agent_failed", "native_turn_failed")

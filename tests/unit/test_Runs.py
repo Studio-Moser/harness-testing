@@ -3056,3 +3056,19 @@ def test_claude_runtime_builtins_are_not_benchmark_delivery(tmp_path):
     event["skills"].append("unlisted-skill")
     path.write_text(json.dumps(event))
     assert check()
+
+
+def test_canary_reads_infrastructure_failures_from_trial_evidence(tmp_path):
+    agent = tmp_path / "trial" / "agent"
+    agent.mkdir(parents=True)
+    evidence = {
+        "status": "infrastructure_failure",
+        "terminal_reason": "provider_authentication_failed",
+    }
+    (agent / "Trial_Evidence.json").write_text(json.dumps(evidence))
+    assert Runs._infrastructure_failures(tmp_path) == [
+        "infrastructure failure: provider_authentication_failed"
+    ]
+    evidence["status"] = "agent_failed"
+    (agent / "Trial_Evidence.json").write_text(json.dumps(evidence))
+    assert Runs._infrastructure_failures(tmp_path) == []

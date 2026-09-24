@@ -323,6 +323,7 @@ class Conversation:
             type(configured_recovery) is int and 0 <= configured_recovery <= 3600
         )
         self.transport_error_count = 0
+        self.authentication_failed = False
         self.provider_recovery_applied = False
         self.simulated_user = (
             SimulatedUser(config["simulated_user"], config["policy"]["interaction_limit"])
@@ -777,7 +778,15 @@ class Conversation:
                 if item.get("type") == "text"
             )
             self._record_visible("assistant", "progress", self.text)
+        if (
+            event.get("type") == "system"
+            and event.get("subtype") == "api_retry"
+            and event.get("error") == "authentication_failed"
+        ):
+            self.authentication_failed = True
         if event.get("type") == "result":
+            if self.authentication_failed:
+                return self.fail("provider_authentication_failed")
             if event.get("is_error") or event.get("subtype") != "success":
                 return self.fail("native_turn_failed", "agent_failed")
             self.text = event.get("result") or self.text

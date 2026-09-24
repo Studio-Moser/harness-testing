@@ -2181,6 +2181,17 @@ def _read_json_object(path: Path) -> dict[str, object] | None:
     return value if isinstance(value, dict) else None
 
 
+def _infrastructure_failures(job_dir: Path) -> list[str]:
+    """Infrastructure failures in a job's trials. On the canary these are systemic
+    (bad credentials, broken runtime), so the run stops before spending on the rest."""
+    reasons = []
+    for evidence_path in sorted(job_dir.glob("*/agent/Trial_Evidence.json")):
+        evidence = _read_json_object(evidence_path)
+        if evidence and evidence.get("status") == "infrastructure_failure":
+            reasons.append(f"infrastructure failure: {evidence.get('terminal_reason')}")
+    return reasons
+
+
 def _completed_job_errors(
     root: Path,
     cell: RunCell,
@@ -2367,7 +2378,15 @@ def execute_run(root: Path, manifest_path: Path, approval: str) -> None:
                             if manifest.provenance.get("experiment")
                             else manifest.attempts,
                         )
-                    ][:_MAX_DELIVERY_ERRORS]
+                    ]
+                    errors += [
+                        f"{canary_job_name}: {reason}"
+                        for _, canary_job_name in canary_jobs
+                        for reason in _infrastructure_failures(
+                            root / "jobs" / "raw" / canary_job_name
+                        )
+                    ]
+                    errors = errors[:_MAX_DELIVERY_ERRORS]
                     if errors:
                         raise ValueError("delivery canary failed: " + "; ".join(errors))
                 continue
