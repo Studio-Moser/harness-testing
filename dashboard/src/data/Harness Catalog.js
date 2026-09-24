@@ -8,12 +8,12 @@ const SUPERPOWERS = Object.freeze({
   description: "Structured workflows for discovery, planning, debugging, test-driven development, review, and branch completion."
 });
 
-function studioSource(commit) {
+function studioSource(commit, version = "1.0.0") {
   return Object.freeze({
     sourceName: "Studio Harness",
     name: "Studio Moser",
     kind: "Plugin collection",
-    version: "1.0.0",
+    version,
     commit,
     url: "https://github.com/Studio-Moser/skills-n-stuff",
     description: "The complete Studio Moser collection: Harness routing, specialist development workflows, PM operations, research, capture, and design tools."
@@ -71,12 +71,13 @@ const COMMON_STUDIO_IDENTITY = Object.freeze([
   "The display label and test results do not affect identity"
 ]);
 
-function studioVersion({id, versionOrder, predecessorId, commit, identity, extraIdentities = [], changeSummary, changeDetails, latest = false}) {
-  const studio = studioSource(commit);
+function studioVersion({id, versionOrder, versionLabel = `v${versionOrder}`, predecessorId, commit, collectionVersion = "1.0.0", superpowers = true, startup = "Harness baseline instructions from the pinned collection", identity, extraIdentities = [], changeSummary, changeDetails, latest = false}) {
+  const studio = studioSource(commit, collectionVersion);
+  const layers = superpowers ? [studio, SUPERPOWERS] : [studio];
   return Object.freeze({
     id,
     family: "studio-moser",
-    versionLabel: `v${versionOrder}`,
+    versionLabel,
     versionOrder,
     predecessorId,
     latest,
@@ -84,10 +85,10 @@ function studioVersion({id, versionOrder, predecessorId, commit, identity, extra
     sourceLabel: `Source commit ${commit.slice(0, 7)}`,
     changeSummary,
     changeDetails,
-    layers: [studio, SUPERPOWERS],
-    sources: [studio, SUPERPOWERS],
+    layers,
+    sources: layers,
     rubric: {mode: "enabled", description: "Frozen, reviewed personal model-routing rubric"},
-    startup: "Harness baseline instructions from the pinned collection",
+    startup,
     delivery: COMMON_STUDIO_DELIVERY,
     identity,
     extraIdentities,
@@ -146,7 +147,32 @@ export const HARNESS_CATALOG = Object.freeze([
     extraIdentities: ["sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124"],
     changeSummary: "Adopt the Lite direct-by-default harness used by the Quill pilot.",
     changeDetails: ["Defaults ordinary work to direct execution", "Retains task-matched specialist skills and personality guidance", "Keeps the frozen model-routing rubric available"],
+    latest: false
+  }),
+  studioVersion({
+    id: "studio-moser-v6",
+    versionOrder: 6,
+    predecessorId: "studio-moser-v5",
+    commit: "75bf6c59ad9c87e7c91b6e537af471aee91cd931",
+    collectionVersion: "2.0.0",
+    superpowers: false,
+    identity: "sha256:23674af8933438393e8a2c39a3831e30c4faca1f4eea52ee1c94a7899298c371",
+    changeSummary: "Lighter startup, one delegate skill, and report and end-state rules, driven by the v5 benchmark.",
+    changeDetails: ["Removes Superpowers and five domain plugins; most skills become slash-only or one-line", "Merges execute, review and computer-use into one delegate skill", "Adds ask-once, named end state, five-line Polish/Small reports and no delegation of small work", "Routing rubric falls back to Opus 5.5 at medium"],
     latest: true
+  }),
+  studioVersion({
+    id: "studio-moser-v6-time-matters",
+    versionOrder: 7,
+    versionLabel: "v6 + time matters",
+    predecessorId: "studio-moser-v6",
+    commit: "75bf6c59ad9c87e7c91b6e537af471aee91cd931",
+    collectionVersion: "2.0.0",
+    superpowers: false,
+    startup: "Harness baseline instructions plus one line: \"Time matters: reach the named end state in the fewest turns.\"",
+    identity: "sha256:1af29ad6a4d4a2dbacc9c53a1bdbcbbee590c906bdff7329da6f7136b0c219e2",
+    changeSummary: "v6 with one added startup line asking for the fewest turns, testing the Opus 5.5 'time matters' advice.",
+    changeDetails: ["Identical to v6 except the added startup line", "Measures whether the line cuts turns and cost without losing correctness"]
   }),
   Object.freeze({
     id: "studio-personality-v1",
