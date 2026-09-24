@@ -172,7 +172,8 @@ function renderBaselines(catalog) {
 
 export function renderHarnesses(catalog) {
   const primary = primaryHarnesses(catalog);
-  const draftBaselines = catalog.filter(({family, state}) => HARNESS_FAMILIES[family]?.role === "baseline" && state === "draft");
+  const ready = catalog.filter(({state}) => state === "ready");
+  const drafts = catalog.length - ready.length;
   const root = element("section", "harnesses container-xl");
   root.setAttribute("aria-label", "Harness catalog");
 
@@ -180,7 +181,7 @@ export function renderHarnesses(catalog) {
   intro.append(
     element("h1", "page-title fs-1", "Harnesses"),
     element("p", "toolbox-intro-copy", "Track each harness revision as a distinct test input: what it contains, which version preceded it, and exactly what changed. This catalog contains definitions only—no results or recommendations."),
-    element("p", "harness-count", `${primary.length} ready harness versions, plus ${draftBaselines.length} draft baseline.`)
+    element("p", "harness-count", `${ready.length} ready harness versions${drafts ? `, plus ${drafts} draft` : ""}.`)
   );
 
   const primaryGroup = element("div", "harness-group harness-group-primary page-body");

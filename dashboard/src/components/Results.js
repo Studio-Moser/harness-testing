@@ -148,6 +148,13 @@ function readyHarnesses(harnesses) {
   return harnesses.filter(({identity, state}) => identity != null && state === "ready");
 }
 
+// A version delivered to more than one provider has one identity per delivery.
+function byAnyIdentity(versions) {
+  return new Map(versions.flatMap((version) =>
+    [version.identity, ...(version.extraIdentities ?? [])].map((identity) => [identity, version])
+  ));
+}
+
 function evidenceFlags(report) {
   const flags = [];
   const experiment = report.experiment ?? {};
@@ -272,7 +279,7 @@ function sessionsFromTrial(trial, pricing) {
 
 export function normalizeResults(reports, tests, harnesses, pricing = null) {
   const testById = new Map(tests.map((entry) => [entry.id, entry]));
-  const harnessByIdentity = new Map(readyHarnesses(harnesses).map((version) => [version.identity, version]));
+  const harnessByIdentity = byAnyIdentity(readyHarnesses(harnesses));
   const observations = new Map();
 
   for (const report of reports) {
@@ -1002,7 +1009,7 @@ function renderBehavior(columns) {
 
 export function campaignVerdict(campaign, harnesses) {
   if (campaign == null || typeof campaign !== "object") return null;
-  const byIdentity = new Map(harnesses.map((version) => [version.identity, version]));
+  const byIdentity = byAnyIdentity(harnesses.filter(({identity}) => identity != null));
   const label = (id) => {
     const version = byIdentity.get(id);
     return version ? `${HARNESS_FAMILIES[version.family].name} ${version.versionLabel}` : (id ?? "—");

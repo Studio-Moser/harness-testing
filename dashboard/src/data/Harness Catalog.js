@@ -71,7 +71,7 @@ const COMMON_STUDIO_IDENTITY = Object.freeze([
   "The display label and test results do not affect identity"
 ]);
 
-function studioVersion({id, versionOrder, predecessorId, commit, identity, changeSummary, changeDetails, latest = false}) {
+function studioVersion({id, versionOrder, predecessorId, commit, identity, extraIdentities = [], changeSummary, changeDetails, latest = false}) {
   const studio = studioSource(commit);
   return Object.freeze({
     id,
@@ -90,6 +90,7 @@ function studioVersion({id, versionOrder, predecessorId, commit, identity, chang
     startup: "Harness baseline instructions from the pinned collection",
     delivery: COMMON_STUDIO_DELIVERY,
     identity,
+    extraIdentities,
     identityNotes: COMMON_STUDIO_IDENTITY
   });
 }
@@ -112,6 +113,8 @@ export const HARNESS_CATALOG = Object.freeze([
     startup: "No added startup files",
     delivery: ["An empty harness bundle is delivered through the same comparison path", "Task resources, available executors, credentials, limits, and evaluator stay common", "The kickoff model controls only the root agent; normal native behavior remains available"],
     identity: "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+    // Claude Code delivery of the same empty bundle.
+    extraIdentities: ["sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4"],
     identityNotes: ["The empty effective bundle still receives a content-derived identity", "Changing shared test conditions does not create a new harness version", "The display name is descriptive and is not part of version identity"]
   }),
   Object.freeze({
@@ -139,6 +142,8 @@ export const HARNESS_CATALOG = Object.freeze([
     predecessorId: null,
     commit: "3fb970f32d2901b82e3d17c35dbe192604fc7762",
     identity: "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+    // Claude Code delivery of the same commit, with the rubric refreshed for Opus 5.5.
+    extraIdentities: ["sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124"],
     changeSummary: "Adopt the Lite direct-by-default harness used by the Quill pilot.",
     changeDetails: ["Defaults ordinary work to direct execution", "Retains task-matched specialist skills and personality guidance", "Keeps the frozen model-routing rubric available"],
     latest: true
@@ -146,11 +151,11 @@ export const HARNESS_CATALOG = Object.freeze([
   Object.freeze({
     id: "studio-personality-v1",
     family: "studio-personality",
-    versionLabel: "Template",
+    versionLabel: "v1",
     versionOrder: 1,
     predecessorId: null,
     latest: true,
-    state: "draft",
+    state: "ready",
     sourceLabel: "Startup guidance only",
     changeSummary: "Define a personality-only baseline that freezes one reviewed House Style snapshot per experiment.",
     changeDetails: ["No plugins", "No routing rubric", "One startup guidance file"],
@@ -159,8 +164,8 @@ export const HARNESS_CATALOG = Object.freeze([
     rubric: {mode: "disabled", description: "No routing rubric"},
     startup: "One frozen House Style.md snapshot",
     delivery: ["The selected startup file is copied into the contender bundle", "No Studio Moser or Superpowers plugin is installed", "Each materialized snapshot receives its own content-derived identity"],
-    identity: null,
-    identityNotes: ["This card is a baseline template, not one fixed materialized version", "Identity is created from the exact startup-file bytes and delivery configuration", "Editing the guidance creates a new baseline version"]
+    identity: "sha256:603239729f7be3b2b61bc87ee4230adc929bb1e1bbdf7e1fe2592294a49385e5",
+    identityNotes: ["Identity is created from the exact startup-file bytes and delivery configuration", "v1 is the House Style snapshot first run on Claude Code with Opus 5.5", "Editing the guidance creates a new baseline version"]
   })
 ]);
 
