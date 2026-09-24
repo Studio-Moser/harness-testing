@@ -11,7 +11,7 @@
     {
       "id": "export-product-choices",
       "kind": "clarification",
-      "pattern": "(?is)(?=.*\\?)(?=.*(?:\\b(?:format|csv|json|fields?|columns?|rows?|export|privacy|email|serializer|identifiers?|titles?|confidential)\\b|\\bfile\\s+type\\b|\\bdesired\\s+output\\b)).*",
+      "pattern": "(?is)(?=.*\\?)(?=.*(?:\\b(?:format|csv|json|fields?|columns?|rows?|export|privacy|private|sensitive|personal|pii|redact(?:ion)?|mask(?:ing)?|email|serializer|identifiers?|titles?|confidential)\\b|\\bfile\\s+type\\b|\\bdesired\\s+output\\b)).*",
       "fact": "task"
     },
     {
