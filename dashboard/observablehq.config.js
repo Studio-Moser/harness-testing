@@ -1,6 +1,6 @@
 export default {
   root: "src",
-  output: "dist",
+  output: process.env.HARNESS_DASHBOARD_OUTPUT ?? "dist",
   title: "Harness Testing",
   home: "Results",
   preserveExtension: true,

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "prebuild": "node 'Validate Results.js'",
-    "build": "OBSERVABLE_TELEMETRY_DISABLE=true observable build",
+    "build": "OBSERVABLE_TELEMETRY_DISABLE=true HARNESS_DASHBOARD_OUTPUT=.dist-staging observable build && node 'scripts/Sync Build.js'",
     "predev": "node 'Validate Results.js'",
     "dev": "OBSERVABLE_TELEMETRY_DISABLE=true observable preview",
     "test": "node --test test/*.test.js"
