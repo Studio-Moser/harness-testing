@@ -13,6 +13,7 @@ import {
   annoyanceFromTranscript,
   campaignVerdict,
   aggregateHarnesses,
+  harnessColors,
   behaviorFromTrial,
   defaultCohort,
   defaultModel,
@@ -50,6 +51,7 @@ class FakeElement {
     this.attributes = {};
     this.className = "";
     this.listeners = {};
+    this.style = {};
     this.value = "";
     this._text = "";
   }
@@ -789,4 +791,31 @@ test("a campaign is provisional only while a contender's code review is incomple
   };
   assert.equal(tagged("completed"), false);
   assert.equal(tagged("not_started"), true);
+});
+
+test("each harness version on screen gets its own color", () => {
+  const colors = harnessColors([
+    {id: "studio-moser-v6", family: "studio-moser"},
+    {id: "studio-moser-v6-time-matters", family: "studio-moser"},
+    {id: "studio-moser-v5", family: "studio-moser"},
+    {id: "nothing-v1", family: "nothing"},
+    {id: "superpowers-v1", family: "superpowers"}
+  ]);
+  assert.equal(new Set(colors.values()).size, 5);
+  assert.equal(colors.get("nothing-v1"), "var(--tblr-secondary)");
+});
+
+test("the newest campaign is judged by its reports, not by the order summaries arrive", () => {
+  const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
+  const older = report("older", [trial(nothing, "react-active-badge-count", 1)]);
+  const newer = report("newer", [trial(nothing, "react-active-badge-count", 1)], {finished_at: "2026-09-20T12:00:00Z", updated_at: "2026-09-20T12:00:00Z"});
+  const campaign = (digest, reportId) => ({
+    campaign_digest: digest, status: "recommended", winner_id: nothing.identity, reasons: [],
+    lanes: {comparison: {members: [{report_id: reportId}], superseded_trials: [], comparison: {status: "recommended", winner_id: nothing.identity, reasons: [], unsolved_tasks: [], contenders: []}}}
+  });
+  const observations = applyCampaignCohort(
+    normalizeResults([older, newer], TOOLBOX_CATALOG, HARNESS_CATALOG),
+    [campaign("old-campaign", "older"), campaign("new-campaign", "newer")]
+  );
+  assert.deepEqual(observations.filter((row) => row.campaignCohort).map(({campaignCohort}) => campaignCohort.digest), ["new-campaign"]);
 });

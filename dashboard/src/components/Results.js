@@ -395,10 +395,19 @@ export const CAMPAIGN_COHORT_ID = "campaign";
 // one kickoff model, so every trial belongs to at most one campaign.
 export function applyCampaignCohort(observations, campaigns) {
   const list = campaigns == null ? [] : Array.isArray(campaigns) ? campaigns : [campaigns];
-  // Summaries arrive newest first; the newest campaign for a model is its cohort, so an
-  // older campaign never tags trials of a model a newer one already covers.
+  // The newest campaign for a model is its cohort, so an older campaign never tags trials of
+  // a model a newer one already covers. Age comes from the member reports, not file times,
+  // which a git checkout resets.
+  const updatedAt = new Map();
+  for (const {reportId, updatedAt: time} of observations) {
+    if (time != null && !(updatedAt.get(reportId) >= time)) updatedAt.set(reportId, time);
+  }
+  const newest = (campaign) => Object.values(campaign?.lanes ?? {})
+    .flatMap((lane) => (lane.members ?? []).map(({report_id: id}) => updatedAt.get(id) ?? ""))
+    .sort().at(-1) ?? "";
+  const ordered = [...list].sort((left, right) => compareText(newest(right), newest(left)));
   const claimed = new Set();
-  for (const campaign of list) {
+  for (const campaign of ordered) {
     if (campaign == null || typeof campaign !== "object") continue;
     const models = tagCampaign(observations, campaign, claimed);
     for (const model of models) claimed.add(model);
@@ -1165,7 +1174,30 @@ export function harnessRead(rows, behaviorColumns, verdict = null, delegation = 
   };
 }
 
-function renderTradeoffChart(rows, {field, title, formatter, ariaLabel}) {
+// Versions of one family share its class color, so the read cards and charts give each
+// harness on screen its own color: Studio Moser versions take distinct hues in row order.
+const STUDIO_COLORS = ["var(--tblr-purple)", "var(--tblr-orange)", "var(--tblr-teal)", "var(--tblr-pink)", "var(--tblr-indigo)", "var(--tblr-green)"];
+const FAMILY_COLORS = {nothing: "var(--tblr-secondary)", superpowers: "var(--tblr-blue)", "studio-personality": "var(--tblr-cyan)"};
+
+export function harnessColors(rows) {
+  const colors = new Map();
+  let studio = 0;
+  for (const row of rows) {
+    if (colors.has(row.id)) continue;
+    colors.set(row.id, row.family === "studio-moser"
+      ? STUDIO_COLORS[studio++ % STUDIO_COLORS.length]
+      : FAMILY_COLORS[row.family] ?? "var(--tblr-secondary)");
+  }
+  return colors;
+}
+
+function colorMark(className, color) {
+  const mark = element("span", className);
+  if (color) mark.style.background = color;
+  return mark;
+}
+
+function renderTradeoffChart(rows, {field, title, formatter, ariaLabel, colors}) {
   const panel = element("article", "results-tradeoff-chart card");
   const header = element("header", "card-header");
   header.append(element("h3", "card-title", title));
@@ -1213,6 +1245,7 @@ function renderTradeoffChart(rows, {field, title, formatter, ariaLabel}) {
       role: "img",
       "aria-label": `${row.label}: ${formatPercent(tradeoff.quality)} Quality, ${formatter(tradeoff.value)}, ${plural(tradeoff.observations, "matched trial")}`
     });
+    if (colors?.has(row.id)) point.style.fill = colors.get(row.id);
     svg.append(point);
   });
   const scroll = element("div", "results-chart-scroll");
@@ -1223,7 +1256,7 @@ function renderTradeoffChart(rows, {field, title, formatter, ariaLabel}) {
   return panel;
 }
 
-function renderTradeoffCharts(rows) {
+function renderTradeoffCharts(rows, colors) {
   const section = element("div", "results-tradeoffs");
   const qualityRows = rows.filter(row => row.quality != null || row.communicationQuality != null || row.tradeoffs.runtime.quality != null);
   const legend = element("div", "results-chart-legend");
@@ -1231,7 +1264,7 @@ function renderTradeoffCharts(rows) {
   for (const row of qualityRows) {
     const item = element("span", "results-chart-legend-item");
     item.append(
-      element("span", `results-chart-legend-dot results-harness-${row.family}`),
+      colorMark(`results-chart-legend-dot results-harness-${row.family}`, colors?.get(row.id)),
       element("span", "", row.label)
     );
     legend.append(item);
@@ -1240,7 +1273,7 @@ function renderTradeoffCharts(rows) {
   for (const row of qualityRows) {
     const item = element("div", "results-mobile-efficiency-row");
     item.append(
-      element("span", `results-harness-mark results-harness-${row.family}`),
+      colorMark(`results-harness-mark results-harness-${row.family}`, colors?.get(row.id)),
       element("strong", "", row.label),
       element("span", "", formatPercent(row.quality ?? row.communicationQuality)),
       element("span", "", `${formatRuntime(row.runtime)} · ${formatTokens(row.tokens)} · ${formatCost(row.cost)}`)
@@ -1249,9 +1282,9 @@ function renderTradeoffCharts(rows) {
   }
   const charts = element("div", "results-tradeoff-grid");
   charts.append(
-    renderTradeoffChart(rows, {field: "runtime", title: "Quality vs runtime", formatter: formatRuntime, ariaLabel: "Quality versus average runtime by harness on matched trials"}),
-    renderTradeoffChart(rows, {field: "tokens", title: "Quality vs tokens", formatter: formatTokens, ariaLabel: "Quality versus average tokens by harness on matched trials"}),
-    renderTradeoffChart(rows, {field: "cost", title: "Quality vs cost", formatter: formatCost, ariaLabel: "Quality versus estimated API-equivalent cost by harness on matched trials"})
+    renderTradeoffChart(rows, {field: "runtime", title: "Quality vs runtime", formatter: formatRuntime, colors, ariaLabel: "Quality versus average runtime by harness on matched trials"}),
+    renderTradeoffChart(rows, {field: "tokens", title: "Quality vs tokens", formatter: formatTokens, colors, ariaLabel: "Quality versus average tokens by harness on matched trials"}),
+    renderTradeoffChart(rows, {field: "cost", title: "Quality vs cost", formatter: formatCost, colors, ariaLabel: "Quality versus estimated API-equivalent cost by harness on matched trials"})
   );
   section.append(legend, mobileSummary, charts);
   return section;
@@ -1268,12 +1301,13 @@ function renderHarnessRead(read, rows) {
   }
   heading.append(element("p", "results-read-recommendation", read.recommendation));
   section.append(heading);
+  const colors = harnessColors(rows);
   const grid = element("div", "results-read-grid");
   for (const card of read.cards) {
     const article = element("article", "results-read-card card");
     const body = element("div", "card-body");
     const title = element("h3", "card-title");
-    title.append(element("span", `results-harness-mark results-harness-${card.family}`), element("span", "", card.label));
+    title.append(colorMark(`results-harness-mark results-harness-${card.family}`, colors.get(card.id)), element("span", "", card.label));
     body.append(title);
     for (const [name, items] of [["Pros", card.pros], ["Cons", card.cons]]) {
       body.append(element("h4", "results-read-list-title", name));
@@ -1289,7 +1323,7 @@ function renderHarnessRead(read, rows) {
   const charts = element("div", "results-read-charts");
   charts.append(
     element("p", "results-scope-note", "Quality against runtime, tokens and cost. Better is toward the top right. Each point uses matched trials under the selected model; more runs add more points."),
-    renderTradeoffCharts(rows)
+    renderTradeoffCharts(rows, colors)
   );
   section.append(charts);
   return section;
