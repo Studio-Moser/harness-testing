@@ -46,7 +46,7 @@ body { margin: 0; background: var(--tblr-bg-surface-secondary); }
 .toolbox-context-stack { font-weight: 500; }
 .toolbox-context-source { display: flex; flex-wrap: wrap; gap: .25rem .75rem; color: var(--tblr-secondary); font-size: .8125rem; }
 .toolbox-context-id, .harness-pin code { margin-top: .5rem !important; font-size: .75rem; overflow-wrap: anywhere; color: var(--tblr-secondary); }
-.toolbox-prompt { margin: 1rem 0 0; padding: 1rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8125rem; background: var(--tblr-bg-surface-secondary); }
+.toolbox-prompt { margin: 1rem 0 0; padding: 1rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8125rem; color: var(--tblr-body-color); background: var(--tblr-bg-surface-secondary); }
 .toolbox-source-note { margin: 0; }
 .toolbox-facts { display: grid; grid-template-columns: minmax(90px, .4fr) minmax(0, 1fr); gap: .5rem 1rem; margin: 1rem 0 0; }
 .toolbox-facts dt { font-weight: 500; }
