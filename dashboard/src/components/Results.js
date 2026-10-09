@@ -300,9 +300,8 @@ export function normalizeResults(reports, tests, harnesses, pricing = null) {
     const kickoff = experiment.conditions.kickoff ?? {};
     const model = kickoff.model ?? "unknown";
     const effort = kickoff.effort ?? "unknown";
-    const provisional = decisionEligible && (
-      experiment.comparison?.provisional === true || report.evidence?.review_state !== "reviewed"
-    );
+    // Provisional means the blinded final-patch review is incomplete.
+    const provisional = decisionEligible && experiment.comparison?.provisional === true;
     const selectedIds = experiment.evaluation_binding?.trial_ids;
     const selectedTrials = selectedIds == null ? null : new Set(selectedIds);
 
@@ -339,7 +338,6 @@ export function normalizeResults(reports, tests, harnesses, pricing = null) {
         decisionPolicy: experiment.conditions.decision_policy,
         comparisonStatus: experiment.comparison?.status ?? null,
         provisional,
-        reviewState: report.evidence?.review_state ?? "unreviewed",
         limitations: report.evidence?.limitations ?? [],
         evidenceFlags: flags,
         evidenceState: primaryEvidenceState(flags),
@@ -426,6 +424,9 @@ function tagCampaign(observations, campaign, claimed = new Set()) {
   const models = new Set();
   if (!members.size) return models;
   const status = campaign.status ?? "unknown";
+  const provisional = Object.values(campaign.lanes ?? {}).some((lane) =>
+    (lane.comparison?.contenders ?? []).some((contender) => contender.code_review?.status !== "completed")
+  );
   const label = `Campaign · ${status.replaceAll("_", " ")}`;
   for (const observation of observations) {
     if (!members.has(observation.reportId) || superseded.has(observation.observationId)) continue;
@@ -437,7 +438,7 @@ function tagCampaign(observations, campaign, claimed = new Set()) {
     observation.evidenceFlags = [];
     observation.evidenceState = "campaign";
     observation.limitations = [];
-    observation.provisional = true;
+    observation.provisional = provisional;
   }
   return models;
 }
@@ -466,7 +467,7 @@ function reportGroups(observations, model = null) {
   if (campaign.length) {
     groups.set(CAMPAIGN_COHORT_ID, {
       id: CAMPAIGN_COHORT_ID, label: campaign[0].campaignCohort.label, campaign: true,
-      decisionEligible: true, provisional: true, observations: campaign.length,
+      decisionEligible: true, provisional: campaign.some((row) => row.provisional), observations: campaign.length,
       updatedAt: campaign.map((row) => row.updatedAt).sort().at(-1)
     });
   }
@@ -1299,13 +1300,15 @@ function renderHarnessRead(read, rows) {
 function scopeDescription(observations, cohort, model) {
   if (cohort === CAMPAIGN_COHORT_ID) {
     const selected = observations.filter((row) => row.campaignCohort && row.modelKey === model);
-    return `${selected.length} trials stitched from ${new Set(selected.map((row) => row.reportId)).size} reports · Decision-grade · Provisional until reviewed`;
+    const parts = [`${selected.length} trials stitched from ${new Set(selected.map((row) => row.reportId)).size} reports`, "Decision-grade"];
+    if (selected.some((row) => row.provisional)) parts.push("Provisional: code review incomplete");
+    return parts.join(" · ");
   }
   const primary = observations.find(({reportId}) => reportId === cohort);
   if (primary == null) return "No report cohort available";
   const parts = primary.evidenceFlags.map(titleCase);
   if (primary.decisionEligible) parts.push("Decision-grade");
-  if (primary.provisional) parts.push("Provisional");
+  if (primary.provisional) parts.push("Provisional: code review incomplete");
   parts.push("exact referenced reports only");
   return parts.join(" · ");
 }

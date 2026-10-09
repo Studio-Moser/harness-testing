@@ -59,17 +59,16 @@ export function safetyErrors(value, path = "$") {
 
 async function defaultReportsDirectory() {
   const configured = process.env.HARNESS_PUBLISHED_REPORTS_DIRECTORY?.trim();
-  if (configured) return {directory: configured, strict: true};
-  // A published data checkout wins; otherwise the local build reads the retained local
-  // evidence directly, so a developer sees their own runs without a publication step.
+  if (configured) return configured;
+  // A published data checkout wins; otherwise the build reads the tracked evidence.
   const published = resolve(repositoryRoot, "dashboard-data", "reports");
   try {
     await readdir(published);
-    return {directory: published, strict: true};
+    return published;
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
-  return {directory: resolve(repositoryRoot, "runs", "evidence"), strict: false};
+  return resolve(repositoryRoot, "runs", "evidence");
 }
 
 export async function loadPublishedReports({
@@ -80,11 +79,9 @@ export async function loadPublishedReports({
   const ajv = new Ajv2020({allErrors: true, strict: true});
   addFormats(ajv);
   const validate = ajv.compile(schema);
-  const selected = reportsDirectory == null ? await defaultReportsDirectory() : {directory: reportsDirectory, strict: true};
-  const {directory, strict} = selected;
-  // Published data must be public-safe; local evidence that fails the check is skipped
-  // with a warning rather than blanking the whole local dashboard.
-  const skipped = [];
+  const directory = reportsDirectory ?? await defaultReportsDirectory();
+  // Evidence is tracked in a public repository and deployed to Pages, so every report
+  // must validate and pass the public-safety screen or the build fails.
   let entries;
   try {
     entries = await readdir(directory, {withFileTypes: true});
@@ -103,15 +100,11 @@ export async function loadPublishedReports({
     }
     if (!validate(report)) {
       const details = (validate.errors ?? []).map((error) => `${error.instancePath || "$"} ${error.message}`).join("; ");
-      if (strict) throw new Error(`${entry.name}: schema validation failed: ${details}`);
-      skipped.push(`${entry.name}: not a run report`);
-      continue;
+      throw new Error(`${entry.name}: schema validation failed: ${details}`);
     }
     const unsafe = safetyErrors(report);
     if (unsafe.length) {
-      if (strict) throw new Error(`${entry.name}: public safety validation failed: ${unsafe.join("; ")}`);
-      skipped.push(`${entry.name}: ${unsafe[0]}`);
-      continue;
+      throw new Error(`${entry.name}: public safety validation failed: ${unsafe.join("; ")}`);
     }
     if (report.report_id != null && report.report_id !== reportId(report)) {
       throw new Error(`${entry.name}: report identity does not match its content`);
@@ -123,7 +116,6 @@ export async function loadPublishedReports({
       throw new Error(`${report.run_id}: run reports conflict at the same update time`);
     }
   }
-  if (skipped.length) process.stderr.write(`Skipped ${skipped.length} local file(s) that are not public-safe run reports:\n  ${skipped.join("\n  ")}\n`);
   return [...reportsByRun.values()].sort((left, right) => compareText(
     `${left.updated_at}\0${left.run_id}`,
     `${right.updated_at}\0${right.run_id}`

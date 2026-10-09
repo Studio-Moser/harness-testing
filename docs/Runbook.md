@@ -115,7 +115,7 @@ npm --prefix dashboard test
 npm --prefix dashboard run build
 ```
 
-The build emits ignored `dashboard/dist/`. Without a `dashboard-data/reports` directory it reads `runs/evidence` directly and skips files that are not public-safe run reports.
+The build emits ignored `dashboard/dist/`. It reads the tracked `runs/evidence/` reports and fails on any that are not schema-valid and public-safe. Commit new evidence and campaign summaries after a run; pushing to `main` redeploys the [public dashboard](https://studio-moser.github.io/harness-testing/).
 
 ## DeepSWE research lane
 

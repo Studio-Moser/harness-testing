@@ -771,3 +771,22 @@ test("only the newest campaign for a model forms its cohort", () => {
   const behavior = aggregateBehavior(observations, HARNESS_CATALOG).filter(({harnessId}) => harnessId === nothing.id);
   assert.equal(behavior[0].trials, 1);
 });
+
+test("a campaign is provisional only while a contender's code review is incomplete", () => {
+  const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
+  const tagged = (reviewStatus) => {
+    const observations = applyCampaignCohort(
+      normalizeResults([report("member", [trial(nothing, "react-active-badge-count", 1)])], TOOLBOX_CATALOG, HARNESS_CATALOG),
+      [{
+        campaign_digest: "campaign", status: "recommended", winner_id: nothing.identity, reasons: [],
+        lanes: {comparison: {members: [{report_id: "member"}], superseded_trials: [], comparison: {
+          status: "recommended", winner_id: nothing.identity, reasons: [], unsolved_tasks: [],
+          contenders: [{id: nothing.identity, code_review: {status: reviewStatus}}]
+        }}}
+      }]
+    );
+    return observations.find((row) => row.campaignCohort).provisional;
+  };
+  assert.equal(tagged("completed"), false);
+  assert.equal(tagged("not_started"), true);
+});

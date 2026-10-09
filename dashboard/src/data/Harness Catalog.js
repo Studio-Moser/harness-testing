@@ -35,7 +35,7 @@ export const HARNESS_FAMILIES = Object.freeze({
     shortName: "Workflow baseline",
     role: "primary",
     stage: 1,
-    purpose: "The bare runtime plus the pinned Superpowers plugin, with no Studio Moser collection or routing rubric.",
+    purpose: "The bare runtime plus the pinned Superpowers plugin, with no Studio Moser collection or routing rubric. Skipped on newer models: earlier testing showed it wasn't needed.",
     question: "How much do general software-engineering workflows help before Studio Moser adds its own routing and specialist capabilities?",
     effects: ["Introduces explicit discovery, planning, debugging, testing, and review workflows", "Provides a stronger baseline than a bare agent alone", "Leaves model selection to the native runtime"]
   }),
