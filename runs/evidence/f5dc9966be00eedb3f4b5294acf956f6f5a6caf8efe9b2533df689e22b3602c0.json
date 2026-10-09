@@ -1,0 +1,1633 @@
+{
+  "admission_estimate_usd": 49.056,
+  "completed_jobs": 3,
+  "completed_trials": 3,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 3,
+  "expected_trials": 3,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:9c7a7f5607876ecb3c213ca3633b626aea7a39d7045cb1315b9352f82138c25d",
+      "hypothesis": "Describe observed correctness, behavior, Quality and whole-tree resources across every level/type for Nothing, Superpowers and Studio Moser v5; one attempt cannot establish reliability or a preference winner.",
+      "rerun_reason": "Replace only the three task-definition-gap attempts from manifest sha256:af2fac50b3170eb3db1fe025318207b7299b78bdc107274fefc9ae3ff83b2271. The authored user facts, reference solution and protected oracle now explicitly cover exact values, fallback without rewriting, and storage-method exceptions. Preserve every original attempt; no successful task is rerun.",
+      "summary": "Targeted replacements after model-free apparatus corrections"
+    },
+    "code_review": {
+      "evaluation_cost_usd": 1.58576,
+      "plan_id": "sha256:dfa24842298ee34e11a06ff8ab7d4c5f09169d4534d90176664b0cbbc6112cab",
+      "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+      "results_digest": "sha256:f83fd8d2e8148b1418ac5f6f20205771c6a27edf8352a0301c7e03a20ee2328f",
+      "source_report_id": "sha256:7b82a1d84ac45c7940767d243012b8e3fda7902abc9cd8e02b65231a479edbc3"
+    },
+    "collaboration_evaluation": {
+      "evaluation_cost_usd": 1.6465,
+      "plan_id": "sha256:acdd1e090b9c50517a7524975fb1271bc42fdf8c54842d34e3a0a4038f5d0ad9",
+      "protocol_id": "sha256:1fae16b93fec59bfa17449a78d777762b31fca1d413acc9594587bdfb0d7ac4c",
+      "results_digest": "sha256:ee5073bd12eef74aa1f4dd8f640166339653b44d7244365e92ca9938c42b38da",
+      "rubric_version": "tim-work-quality-v2",
+      "source_report_id": "sha256:eb7b71f886a26241892f94700407388da96d9be9eec5ffdb12653f25da1f52b9"
+    },
+    "comparison": {
+      "bootstrap": {
+        "draws": 20000,
+        "pair_count": 3,
+        "per_tail_probability": 0.004166666666666667,
+        "seed": "sha256:43806b3d911fa26ed7a82f844a732da3afac1931eb58919377f4dcdeef56a976"
+      },
+      "contenders": [
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 0.52321,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.432076,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "nothing",
+          "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "label": "Nothing",
+          "mean_cost_usd": 0.432076,
+          "mean_duration_seconds": 185.18622900100002,
+          "original_estimates": [
+            {
+              "cost_usd": 0.432076,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:fc8f0c99cb5d8283e8286409667519cae4cb11b4b12dda8a090fa0cd8a2d1a91"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-saved-view-feature": 1
+          },
+          "total_cost_usd": 0.432076,
+          "total_tokens": 194066,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 0.5388400000000001,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 1
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.701362,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+          "label": "Studio Moser v5 \u2014 full collection",
+          "mean_cost_usd": 0.701362,
+          "mean_duration_seconds": 136.60774810500004,
+          "original_estimates": [
+            {
+              "cost_usd": 0.701362,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:f31b53286bd85a95285c3c9401b0f501a738c08d81d2c55cb7bbd0c4781272f8"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-saved-view-feature": 1
+          },
+          "total_cost_usd": 0.701362,
+          "total_tokens": 280565,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 0.52371,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 1.024564,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "superpowers",
+          "id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "label": "Superpowers",
+          "mean_cost_usd": 1.024564,
+          "mean_duration_seconds": 159.64599911500005,
+          "original_estimates": [
+            {
+              "cost_usd": 1.024564,
+              "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+              "trial_id": "sha256:b320aaf032bbf8658bd80391669b2d071aa88065e82425f0f682b155e6103fcf"
+            }
+          ],
+          "pricing_digest": "sha256:a9fedd162c7291c3f417e029967ed09d7435dead2c9798d983473a542d0e5240",
+          "repetitions": 1,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-saved-view-feature": 1
+          },
+          "total_cost_usd": 1.024564,
+          "total_tokens": 487882,
+          "usage_complete": true
+        }
+      ],
+      "history": {
+        "hypothesis": "Describe observed correctness, behavior, Quality and whole-tree resources across every level/type for Nothing, Superpowers and Studio Moser v5; one attempt cannot establish reliability or a preference winner.",
+        "predecessor_contenders": [],
+        "predecessor_ids": [],
+        "status": "first_version",
+        "summary": "No predecessor selected.",
+        "task_changes": []
+      },
+      "leaders": {
+        "observed_cost_ids": [
+          "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521"
+        ],
+        "observed_time_ids": [
+          "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7"
+        ]
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "Intervals describe repetition variation within the selected fixed tasks; they do not cover model drift, provider load changes, new tasks, or broad software quality.",
+        "Three repetitions are the default minimum. Identical repetitions can yield narrow intervals without proving universal stability.",
+        "Historical time comparisons are observational; they do not establish causality.",
+        "The 10% advantage and noninferiority thresholds are product defaults, not research findings.",
+        "No clear change does not establish equivalence.",
+        "A completed code review records confirmed remaining defects; finding none does not prove the code is defect-free. Evaluation cost is separate from harness execution cost."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": -0.269286,
+          "cost_ratio": {
+            "estimate": 0.6160527659040552,
+            "lower": 0.6160527659040552,
+            "upper": 0.6160527659040552
+          },
+          "left_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "left_report_id": null,
+          "right_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+          "right_report_id": null,
+          "time_difference_seconds": 48.578480895999974,
+          "time_ratio": {
+            "estimate": 1.355605604878732,
+            "lower": 1.355605604878732,
+            "upper": 1.355605604878732
+          }
+        },
+        {
+          "cost_difference_usd": -0.592488,
+          "cost_ratio": {
+            "estimate": 0.4217169449639066,
+            "lower": 0.4217169449639066,
+            "upper": 0.4217169449639066
+          },
+          "left_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "left_report_id": null,
+          "right_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "right_report_id": null,
+          "time_difference_seconds": 25.540229885999963,
+          "time_ratio": {
+            "estimate": 1.1599803942947684,
+            "lower": 1.1599803942947684,
+            "upper": 1.1599803942947684
+          }
+        },
+        {
+          "cost_difference_usd": -0.323202,
+          "cost_ratio": {
+            "estimate": 0.6845467925868955,
+            "lower": 0.6845467925868955,
+            "upper": 0.6845467925868955
+          },
+          "left_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+          "left_report_id": null,
+          "right_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "right_report_id": null,
+          "time_difference_seconds": -23.03825101000001,
+          "time_ratio": {
+            "estimate": 0.8556916481608503,
+            "lower": 0.8556916481608503,
+            "upper": 0.8556916481608503
+          }
+        }
+      ],
+      "policy_digest": "sha256:7af1c24f463adf1afdba26cb8d716c50854775fe58f52c4f6199bf784eba6504",
+      "policy_id": "benchmark-readiness-v2",
+      "provisional": true,
+      "reasons": [
+        "code_review_unconfirmed",
+        "insufficient_task_coverage",
+        "insufficient_repetitions",
+        "quality_ineligible",
+        "diagnostic_only"
+      ],
+      "status": "insufficient_evidence",
+      "summary": "Selected evidence is insufficient for a recommendation.",
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:97d683a6c75030ad7e61f4642e401a257edfabaf845367f86845ccddc7810f06",
+      "attempts": 1,
+      "authority_digest": "sha256:b9605accecb65598d57ed81ad28bd56e7fda5690a1ecb50fd9729530f7b8ad50",
+      "concurrency": 1,
+      "decision_policy": "benchmark-readiness-v2",
+      "evaluator_digest": "sha256:e51d21f816e5e3a285145e7605952239c4886ab29b8be02d3c57163d7451fc38",
+      "executor_inventory": [
+        {
+          "effort": "low",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "xhigh",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "ultra",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "xhigh",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "ultra",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "xhigh",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "ultra",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "xhigh",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "node": "sha256:b5f1ab077d0f8f2b826a47078ca35edf29297f74d58062e76f7386213e6ca265",
+        "verifier": "sha256:0c3ede073b49bedbf546c2f4a504e41a2933d0fd0534a0fd5ed16c2484e3a383"
+      },
+      "kickoff": {
+        "effort": "medium",
+        "model": "gpt-6-astra",
+        "provider": "codex",
+        "runtime_version": "0.153.4"
+      },
+      "provider_recovery_seconds": 600,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:54b6b74ed19f635604bae1f101047c36bb36a1f06fda6ba17482daba063417b0",
+      "simulated_user": {
+        "effort": "medium",
+        "max_context_chars": 64000,
+        "model": "gpt-5.6-sol",
+        "protocol": "semantic-user-v1",
+        "protocol_digest": "sha256:8384af911aa14cd8c5400ddded1c1004f0522ffc2a3eda545600d06371bce6d2",
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "timeout_seconds": 90
+      },
+      "task_digests": {
+        "react-saved-view-feature": "sha256:03773443f76a89f96d9b26a0592e077a9bc9f30b19e0fc37b7ee60875e6c5fdd"
+      },
+      "task_ids": [
+        "react-saved-view-feature"
+      ],
+      "task_variant": "comparison",
+      "timeout_seconds": 1800
+    },
+    "contenders": [
+      {
+        "family": "nothing",
+        "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Nothing",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "superpowers",
+        "id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "inventory_digest": "sha256:a20271abbad23875b570a7b86b351cb7fac7460e3f1475a92a3e842e49572ae9",
+        "label": "Superpowers",
+        "rubric_digest": null,
+        "source_commits": [
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser v5 \u2014 full collection",
+        "rubric_digest": "sha256:e99803bcee0c8823be04ddcf01a3506e39076bd1ce11dfdc8c1c7c0543ea557b",
+        "source_commits": [
+          "3fb970f32d2901b82e3d17c35dbe192604fc7762",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      }
+    ],
+    "evaluation_binding": {
+      "plan_id": "sha256:013d78a23727df911208fa5c19fcca6ea543a916c9248b7bef92c63447b8cbe1",
+      "source_report_id": "sha256:e9c3d5285f8f5df92c997546d0e79c76892731eb4468a5dd324cf4050ea6aebc",
+      "trial_ids": [
+        "sha256:b320aaf032bbf8658bd80391669b2d071aa88065e82425f0f682b155e6103fcf",
+        "sha256:f31b53286bd85a95285c3c9401b0f501a738c08d81d2c55cb7bbd0c4781272f8",
+        "sha256:fc8f0c99cb5d8283e8286409667519cae4cb11b4b12dda8a090fa0cd8a2d1a91"
+      ]
+    },
+    "first_version": true,
+    "grader_validation": {
+      "plan_id": "sha256:e5719041e4a8fe4198931a96ce433af8760c854ead22a7ceb13c06a72131c4a3",
+      "protocol_id": "sha256:1fae16b93fec59bfa17449a78d777762b31fca1d413acc9594587bdfb0d7ac4c",
+      "results_digest": "sha256:07728463d8905c1468e6aff1977fba13ca216df2b3a242747a16aeaa581420cf",
+      "status": "passed"
+    },
+    "label": "Full toolbox Astra Medium \u2014 corrected react-saved-view-feature",
+    "predecessor_result_ids": [],
+    "preference": {
+      "calibrated": false,
+      "contenders": [
+        {
+          "graded": 1,
+          "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "scheduled": 1,
+          "score": 0.9666666666666666
+        },
+        {
+          "graded": 1,
+          "id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "scheduled": 1,
+          "score": 0.9666666666666666
+        },
+        {
+          "graded": 1,
+          "id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+          "scheduled": 1,
+          "score": 0.9666666666666666
+        }
+      ],
+      "policy_id": "benchmark-readiness-v2",
+      "reasons": [
+        "exploratory_policy",
+        "engineering_evidence_incomplete"
+      ],
+      "status": "insufficient_evidence",
+      "winner_id": null
+    },
+    "purpose": "diagnostic",
+    "request_id": "sha256:3b833a42d979390823702263840dff84e9712e374808ca6172e64bb6485e36bf",
+    "supersedes_report_id": "sha256:7b82a1d84ac45c7940767d243012b8e3fda7902abc9cd8e02b65231a479edbc3",
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.52321,
+          "duration_seconds": 7.3525614620011766,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 51691,
+              "model": "gpt-6-astra",
+              "output_tokens": 126,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:d8741a28668a455503845ce702f72ca87e854cf5d98335e2749dca18e8e42bfd",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 3,
+                "minimum": 1
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "ambiguous_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:94c606d84550c02544243bdfe1c666f1f7ffcfe74cc569da62661201a899a15e",
+          "grade": {
+            "cost_usd": 0.53854,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "Clear questions, useful progress updates, and a concise completion summary. The second pre-implementation message unnecessarily repeats the proposed choices and baseline status.",
+                "score": 4
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Clarified persistence, fallback, and failure behavior before editing, waited for the user's decisions, then completed the local work without expanding scope.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "After the final edits, successfully ran the gate and production build: all 28 tests passed. Also inspected the final diff and checked protected files for changes.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "Separate domain and UI tests meaningfully cover exact strings, immediate persistence including all, remount restoration, invalid values remaining untouched, and silent storage exceptions.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The implementation matches the clarified behavior within the existing saved-view functions. Existing UI wiring preserves in-memory selections; protected tests, metadata, configuration, and scripts remain unchanged.",
+                "score": 5
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Inspected the UI, domain model, storage functions, existing tests, and check configuration before proposing choices. Investigation supported a minimal implementation without unnecessary redesign.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 15.532159340000362,
+            "model_usage": [
+              {
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "input_tokens": 51824,
+                "model": "gpt-6-astra",
+                "output_tokens": 406,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+            "protocol_id": "sha256:1fae16b93fec59bfa17449a78d777762b31fca1d413acc9594587bdfb0d7ac4c",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 1,
+            "assistant_message_count": 7,
+            "assistant_tokens": 500,
+            "assistant_words": 398,
+            "average_progress_words": 31.5,
+            "average_update_gap_seconds": 28.609,
+            "bullet_count": 10,
+            "communication_to_model_output_ratio": 0.178126,
+            "final_answer_tokens": 58,
+            "final_answer_words": 45,
+            "formatting_density": 0.0352,
+            "heading_count": 0,
+            "maximum_progress_words": 39,
+            "maximum_update_gap_seconds": 65.254,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 4,
+            "prompt_restatement": false,
+            "question_count": 1,
+            "repeated_sentence_count": 1,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 822,
+            "total_visible_words": 649,
+            "unnecessary_approval_request_count": 1,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 3,
+            "useful_progress_update_rate": 0.75,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 4
+              },
+              {
+                "detail": "Sentence repeats earlier text",
+                "kind": "repeated_sentence",
+                "ordinal": 5
+              },
+              {
+                "detail": "Approval request exceeds scenario budget",
+                "kind": "unnecessary_approval_request",
+                "ordinal": 5
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and complete saved dashboard view persistence. The existing UI and domain model already define the supported view states and storage boundary, but the product behavior for saving and restoring selections and for absent or invalid stored values has not been settled. Resolve those persistence and fallback choices with me before implementing them.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll inspect the dashboard state model and storage boundary, then discuss the persistence and fallback choices with you before implementing them. I\u2019ll leave existing tests and project configuration unchanged.",
+              "elapsed_seconds": 7.33,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The UI supports all, active, and archived and already saves on each click and loads on startup. Should I persist the most recently clicked view as its exact string under dashboard.saved-view and restore it on the next visit?\n- Yes\u2014save every selection and restore on startup (recommended)\n- Persist only active or archived; treat all as the default\n\nFor missing or invalid stored values, which fallback should the dashboard use? I recommend accepting only exact all/active/archived strings and leaving invalid storage untouched until the next selection.\n- Fall back to all; leave storage untouched (recommended)\n- Fall back to active; leave storage untouched\n- Fall back to all and overwrite invalid storage with all\n\nIf browser storage is unavailable or a read/write throws, should the dashboard remain usable with selections kept in memory for that visit?\n- Yes\u2014use the fallback on read failure and keep selections on write failure (recommended)\n- Show a visible persistence error while keeping the dashboard usable",
+              "elapsed_seconds": 26.775,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "The baseline checks pass. Parsing and saving are currently stubs; the UI already loads on startup and saves on each selection. I\u2019ve sent the behavior choices for your input and will wait before changing them.",
+              "elapsed_seconds": 35.842,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "Before I implement, please confirm or adjust these proposed behaviors:\n\n- Save every selection (`all`, `active`, or `archived`) and restore it on the next visit.\n- Accept only exact supported strings. For missing or invalid values, show `all` and leave storage untouched until another selection.\n- If storage fails, keep the dashboard usable with selections held in memory.\n\nBaseline checks pass. No source files or existing tests have been changed.",
+              "elapsed_seconds": 101.096,
+              "kind": "final",
+              "ordinal": 5,
+              "role": "assistant"
+            },
+            {
+              "content": "The existing UI and domain model already define the `all`, `active`, and `archived` states. Automatically save each selection immediately, including `all`, as its exact lowercase string under `dashboard.saved-view`; restore it on reload. Accept only those three exact strings: no trimming, case conversion, or JSON encoding. For absent, empty, or invalid values, display `all` and leave storage untouched until the user selects a view. Keep storage access behind the existing saved-view functions. If getItem throws, silently return `all`; if setItem throws, silently keep the selected view in memory without throwing or showing a warning. Storage failures here mean exceptions from these existing methods; do not expand this into a new storage API or error UI. These choices are approved for the original local task.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.",
+              "elapsed_seconds": 105.579,
+              "kind": "user",
+              "ordinal": 6,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll implement the approved behavior in the existing saved-view functions and add separate tests for persistence, exact-string validation, storage failures, and reload restoration.",
+              "elapsed_seconds": 108.558,
+              "kind": "progress",
+              "ordinal": 7,
+              "role": "assistant"
+            },
+            {
+              "content": "The implementation passes all 28 tests and the production build. The new UI tests cover immediate saving, restoration after remount, untouched invalid values, and continued selection changes when storage methods throw. I\u2019m checking the final diff for unintended changes.",
+              "elapsed_seconds": 172.476,
+              "kind": "progress",
+              "ordinal": 8,
+              "role": "assistant"
+            },
+            {
+              "content": "Implemented the approved persistence and fallback behavior in the existing saved-view functions, including silent handling of storage method failures.\n\nAdded separate domain and UI tests. All 28 tests, lint, typecheck, and production build pass.\n\nExisting tests, package metadata, build configuration, and check scripts remain unchanged.",
+              "elapsed_seconds": 178.981,
+              "kind": "final",
+              "ordinal": 9,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "correctness": true,
+        "cost_usd": 0.432076,
+        "duration_seconds": 185.18622900100002,
+        "incomplete_reasons": [],
+        "interaction_count": 1,
+        "model_usage": [
+          {
+            "cache_read_tokens": 180096,
+            "cache_write_tokens": 0,
+            "input_tokens": 11163,
+            "model": "gpt-6-astra",
+            "output_tokens": 2807,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 180096,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 11163,
+            "model": "gpt-6-astra",
+            "output_tokens": 2807,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 2,
+          "cost_usd": 0.021328,
+          "duration_seconds": 10.588140420999991,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 2243,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 58,
+              "provider": "openai"
+            },
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 2594,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 41,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:fc8f0c99cb5d8283e8286409667519cae4cb11b4b12dda8a090fa0cd8a2d1a91",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 1,
+        "code_review": {
+          "cost_usd": 0.52371,
+          "duration_seconds": 6.617470753000816,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 51796,
+              "model": "gpt-6-astra",
+              "output_tokens": 115,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:14df04c312badbeeac39fa4ee9a75627633fb0dfd81744dd4c210883ea66a465",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 3,
+                "minimum": 1
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "ambiguous_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:94c606d84550c02544243bdfe1c666f1f7ffcfe74cc569da62661201a899a15e",
+          "grade": {
+            "cost_usd": 0.55859,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "Clear recommendations, useful progress updates, and concise completion summary. Repeated skill announcements add minor process jargon.",
+                "score": 4
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Asked one focused question covering unresolved persistence choices, waited for the user's decision, then completed the authorized local work without unnecessary approvals.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "After the final edit, successfully ran targeted tests, the full 27-test project gate, and production build. Also inspected changes and successfully checked protected files against baseline hashes.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "Separate domain and UI tests meaningfully cover exact strings, invalid-value fallback without writes, immediate persistence including all, restoration after remount, and silent storage exceptions. The recorded failing-then-passing runs demonstrate defect detection.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The implementation matches the clarified behavior within the existing saved-view functions, preserves in-memory selections on write failure, and leaves existing tests, metadata, configuration, and scripts unchanged.",
+                "score": 5
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Inspected the UI, domain model, storage functions, existing tests, and project checks before proposing behavior. Correctly identified that existing UI wiring needed no changes and kept implementation narrowly scoped.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 17.075831965999896,
+            "model_usage": [
+              {
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "input_tokens": 53654,
+                "model": "gpt-6-astra",
+                "output_tokens": 441,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+            "protocol_id": "sha256:1fae16b93fec59bfa17449a78d777762b31fca1d413acc9594587bdfb0d7ac4c",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 6,
+            "assistant_tokens": 428,
+            "assistant_words": 307,
+            "average_progress_words": 34.0,
+            "average_update_gap_seconds": 29.267,
+            "bullet_count": 5,
+            "communication_to_model_output_ratio": 0.104441,
+            "final_answer_tokens": 77,
+            "final_answer_words": 51,
+            "formatting_density": 0.0423,
+            "heading_count": 0,
+            "maximum_progress_words": 37,
+            "maximum_update_gap_seconds": 68.75,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 4,
+            "prompt_restatement": false,
+            "question_count": 1,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 750,
+            "total_visible_words": 558,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 3,
+            "useful_progress_update_rate": 0.75,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and complete saved dashboard view persistence. The existing UI and domain model already define the supported view states and storage boundary, but the product behavior for saving and restoring selections and for absent or invalid stored values has not been settled. Resolve those persistence and fallback choices with me before implementing them.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll inspect the dashboard\u2019s view states and storage boundary, then discuss the persistence and fallback choices with you before implementing them. I\u2019m using the superpowers workflow and brainstorming skills for this step.",
+              "elapsed_seconds": 7.806,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "This is a bounded change: the UI already uses `localStorage` through `Saved_View.ts`; saving and parsing are unfinished.\n\nI recommend this behavior:\n\n- Save every selection\u2014`all`, `active`, or `archived`\u2014immediately under `dashboard.saved-view`.\n- Restore that selection on reload or a later visit.\n- Accept only those exact strings. Missing, empty, or invalid values display `all`.\n- Leave missing or invalid storage untouched until the user selects a view.\n- If storage fails, keep the dashboard usable: default to `all` on read failure and retain the current selection on write failure.\n\nI\u2019ll implement the agreed behavior and add separate persistence and UI tests, preserving existing tests, package metadata, configuration, and check scripts.\n\nWould you like these defaults, or different saving/restoring or fallback behavior?",
+              "elapsed_seconds": 31.036,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "The existing UI and domain model already define the `all`, `active`, and `archived` states. Automatically save each selection immediately, including `all`, as its exact lowercase string under `dashboard.saved-view`; restore it on reload. Accept only those three exact strings: no trimming, case conversion, or JSON encoding. For absent, empty, or invalid values, display `all` and leave storage untouched until the user selects a view. Keep storage access behind the existing saved-view functions. If getItem throws, silently return `all`; if setItem throws, silently keep the selected view in memory without throwing or showing a warning. Storage failures here mean exceptions from these existing methods; do not expand this into a new storage API or error UI. These choices are approved for the original local task.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.",
+              "elapsed_seconds": 34.582,
+              "kind": "user",
+              "ordinal": 4,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll implement those rules in the existing saved-view functions and add separate tests for exact parsing, storage failures, and saving and restoring through the UI. I\u2019m using the test-driven development and verification skills.",
+              "elapsed_seconds": 37.884,
+              "kind": "progress",
+              "ordinal": 5,
+              "role": "assistant"
+            },
+            {
+              "content": "The new tests fail on the expected gaps: selections aren\u2019t saved or restored, and read exceptions escape. I\u2019ll now fill in the saved-view functions; the existing UI already updates the in-memory selection before attempting to save it.",
+              "elapsed_seconds": 106.634,
+              "kind": "progress",
+              "ordinal": 6,
+              "role": "assistant"
+            },
+            {
+              "content": "All 23 new tests pass, including restoring the selected view after remount and retaining selections when storage throws. I\u2019m running the project checks and build, and using the code-review skill for an independent review.",
+              "elapsed_seconds": 119.348,
+              "kind": "progress",
+              "ordinal": 7,
+              "role": "assistant"
+            },
+            {
+              "content": "Implemented the approved persistence and fallback behavior in [Saved_View.ts](/app/src/domain/Saved_View.ts), including silent storage failure handling.\n\nAdded 23 tests in two new files. Verification passed: all 27 tests, project gate, production build, and independent review.\n\nExisting tests, package metadata, build configuration, and check scripts remain byte-for-byte unchanged.",
+              "elapsed_seconds": 154.139,
+              "kind": "final",
+              "ordinal": 8,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "correctness": true,
+        "cost_usd": 1.024564,
+        "duration_seconds": 159.64599911500005,
+        "incomplete_reasons": [],
+        "interaction_count": 1,
+        "model_usage": [
+          {
+            "cache_read_tokens": 446464,
+            "cache_write_tokens": 0,
+            "input_tokens": 37320,
+            "model": "gpt-6-astra",
+            "output_tokens": 4098,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 405120,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 30453,
+            "model": "gpt-6-astra",
+            "output_tokens": 3748,
+            "provider": "openai",
+            "session": "root"
+          },
+          {
+            "cache_read_tokens": 41344,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 6867,
+            "model": "gpt-6-astra",
+            "output_tokens": 350,
+            "provider": "openai",
+            "session": "child_1"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 2,
+          "cost_usd": 0.020076,
+          "duration_seconds": 8.955895503999955,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 2167,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 22,
+              "provider": "openai"
+            },
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 2532,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 42,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:b320aaf032bbf8658bd80391669b2d071aa88065e82425f0f682b155e6103fcf",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.5388400000000001,
+          "duration_seconds": 16.49170371600121,
+          "findings": [
+            {
+              "category": "correctness",
+              "evidence_digest": null,
+              "file": "src/App_Persistence.test.tsx",
+              "id": "F1",
+              "line": 38,
+              "severity": "P1",
+              "status": "unconfirmed",
+              "title": "New NodeList spreads break the preserved typecheck configuration"
+            }
+          ],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 52009,
+              "model": "gpt-6-astra",
+              "output_tokens": 375,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:a730f7ad431c588cc0c9aa47cbdcac2c04758192c7a6c36c51cbeb2a0ccaf7f1",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 3,
+                "minimum": 1
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "ambiguous_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:94c606d84550c02544243bdfe1c666f1f7ffcfe74cc569da62661201a899a15e",
+          "grade": {
+            "cost_usd": 0.5493699999999999,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "Clear questions, useful progress updates, and a concise completion summary. References to the \u201cHarness risk gate,\u201d change sizing, and delegation added unnecessary process jargon; recommendations were repeated while awaiting answers.",
+                "score": 4
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Asked three relevant questions about persistence, fallback, and storage failures before implementing. Waited for the user's decisions, then completed the authorized local work without unnecessary approval requests or scope expansion.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "After the final edits, successfully ran the project gate and build, with 28 tests passing. Also inspected the implementation diff, checked whitespace, and verified protected tests and configuration remained unchanged.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "Separate new tests meaningfully cover exact-value round trips, invalid inputs, untouched storage on fallback, method exceptions, immediate UI saving including all, restoration on remount, and retained in-memory selection after failed writes.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The implementation satisfies the clarified contract through existing saved-view helpers: exact lowercase strings, the existing storage key, non-writing all fallback, and silent method-exception handling. Existing UI integration remains intact, and protected files are unchanged.",
+                "score": 5
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Inspected the domain helpers, UI integration, existing tests, and project configuration before choosing a minimal implementation. Correctly identified that the UI already supplied the required save/load lifecycle and avoided unnecessary redesign.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 18.543390091999754,
+            "model_usage": [
+              {
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "input_tokens": 52577,
+                "model": "gpt-6-astra",
+                "output_tokens": 472,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+            "protocol_id": "sha256:1fae16b93fec59bfa17449a78d777762b31fca1d413acc9594587bdfb0d7ac4c",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 7,
+            "assistant_tokens": 581,
+            "assistant_words": 442,
+            "average_progress_words": 46.25,
+            "average_update_gap_seconds": 20.943,
+            "bullet_count": 7,
+            "communication_to_model_output_ratio": 0.179543,
+            "final_answer_tokens": 112,
+            "final_answer_words": 65,
+            "formatting_density": 0.0475,
+            "heading_count": 0,
+            "maximum_progress_words": 66,
+            "maximum_update_gap_seconds": 72.421,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 4,
+            "prompt_restatement": false,
+            "question_count": 1,
+            "repeated_sentence_count": 1,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 903,
+            "total_visible_words": 693,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 4,
+            "useful_progress_update_rate": 1.0,
+            "violations": [
+              {
+                "detail": "Sentence repeats earlier text",
+                "kind": "repeated_sentence",
+                "ordinal": 9
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and complete saved dashboard view persistence. The existing UI and domain model already define the supported view states and storage boundary, but the product behavior for saving and restoring selections and for absent or invalid stored values has not been settled. Resolve those persistence and fallback choices with me before implementing them.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll inspect the dashboard\u2019s view states and storage boundary, then work through the persistence and fallback choices with you before implementing. I\u2019ll keep existing tests and project configuration unchanged. This looks like a Small change, subject to what the code reveals.",
+              "elapsed_seconds": 7.055,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The UI already loads a view on startup and saves when a view button is clicked. The missing behavior is in the domain helpers: parsing always returns `all`, and saving does nothing.\n\nI\u2019m using the Harness risk gate because this touches persisted data. I\u2019ll implement locally, verify with new domain and UI tests, and keep changes bounded to view persistence. No delegation or migration is needed.",
+              "elapsed_seconds": 25.534,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Should each click on all, active, or archived immediately save that selection in this browser and restore it on the next visit?\n- Yes\u2014save every selection and restore on startup\n- Keep selections only for the current session\n\nFor missing or invalid stored values, I recommend showing all projects, accepting only the exact values all, active, and archived, and leaving storage untouched until the next selection. Which behavior do you want?\n- Use all; leave storage untouched until selection\n- Use all; immediately replace missing or invalid storage with all\n- Use active instead; leave storage untouched until selection\n\nIf browser storage is unavailable or throws an error, should the dashboard remain usable, starting at all on read failure and retaining the current selection on save failure?\n- Yes\u2014continue without persistence silently\n- Continue, but show a persistence warning",
+              "elapsed_seconds": 31.167,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "The baseline checks pass:\n\n```text\nTest Files  3 passed (3)\n     Tests  4 passed (4)\n```\n\nI recommend saving every selection immediately, restoring it on startup, falling back to `all` for missing or invalid values without rewriting storage, and silently continuing if storage fails.\n\nThe three pending questions capture these choices. I\u2019ll wait for your answers before implementing, as requested.",
+              "elapsed_seconds": 41.657,
+              "kind": "final",
+              "ordinal": 5,
+              "role": "assistant"
+            },
+            {
+              "content": "The existing UI and domain model already define the `all`, `active`, and `archived` states. Automatically save each selection immediately, including `all`, as its exact lowercase string under `dashboard.saved-view`; restore it on reload. Accept only those three exact strings: no trimming, case conversion, or JSON encoding. For absent, empty, or invalid values, display `all` and leave storage untouched until the user selects a view. Keep storage access behind the existing saved-view functions. If getItem throws, silently return `all`; if setItem throws, silently keep the selected view in memory without throwing or showing a warning. Storage failures here mean exceptions from these existing methods; do not expand this into a new storage API or error UI. These choices are approved for the original local task.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.",
+              "elapsed_seconds": 46.843,
+              "kind": "user",
+              "ordinal": 6,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll implement the approved behavior in the existing saved-view helpers and add separate tests for exact parsing, storage failures, and save/restore behavior through the UI. Existing tests and configuration will remain unchanged.",
+              "elapsed_seconds": 51.029,
+              "kind": "progress",
+              "ordinal": 7,
+              "role": "assistant"
+            },
+            {
+              "content": "The helpers now accept only the three exact strings and silently handle exceptions from `getItem` and `setItem`. The existing UI already saves every selection, so it needed no changes. Verification is running, including new UI tests for restoring selections and retaining them when writes fail.",
+              "elapsed_seconds": 123.45,
+              "kind": "progress",
+              "ordinal": 8,
+              "role": "assistant"
+            },
+            {
+              "content": "Implemented the approved behavior in [Saved_View.ts](/app/src/domain/Saved_View.ts): exact-string saving/restoring, `all` fallback without rewriting storage, and silent storage failure handling.\n\nAdded separate domain and UI tests. Existing tests, package metadata, build configuration, and check scripts remain unchanged.\n\n`npm run gate` and `npm run build` passed:\n\n```text\nTest Files  5 passed (5)\n     Tests  28 passed (28)\n```\n\nChanges are on `fix/saved-view-persistence`.",
+              "elapsed_seconds": 132.712,
+              "kind": "final",
+              "ordinal": 9,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+        "correctness": true,
+        "cost_usd": 0.701362,
+        "duration_seconds": 136.60774810500004,
+        "incomplete_reasons": [],
+        "interaction_count": 1,
+        "model_usage": [
+          {
+            "cache_read_tokens": 248192,
+            "cache_write_tokens": 0,
+            "input_tokens": 29137,
+            "model": "gpt-6-astra",
+            "output_tokens": 3236,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 248192,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 29137,
+            "model": "gpt-6-astra",
+            "output_tokens": 3236,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 2,
+          "cost_usd": 0.02146,
+          "duration_seconds": 8.858126921000007,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 2268,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 51,
+              "provider": "openai"
+            },
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 2747,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 19,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:d7b061f3a2731830e8be86c3e7a6af2c6370df4696e07d962ae711dd5daf7db1",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:f31b53286bd85a95285c3c9401b0f501a738c08d81d2c55cb7bbd0c4781272f8",
+        "usage_complete": true
+      }
+    ]
+  },
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-21T17:06:30.404495Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V6b0b5c24b83e9a5f",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-21T17:00:28.339930Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-4ccd29b05deae41f1d3e-r1-codex-V6b0b5c24b83e9a5f-baseline-react-saved-view-feature",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 217.221618,
+      "series_key": "sha256:206dd371a4b0c53c326adb24ba05316a0807f4fa09af61e59768d1a7c6c394ad",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-21T16:56:51.118312Z",
+      "status": "completed",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:03773443f76a89f96d9b26a0592e077a9bc9f30b19e0fc37b7ee60875e6c5fdd",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "Vffcf688e90c42843",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-21T17:03:40.731030Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-4ccd29b05deae41f1d3e-r1-codex-Vffcf688e90c42843-baseline-react-saved-view-feature",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 190.494607,
+      "series_key": "sha256:8a75de73fdc90643b280ac3ce6988bea222fcb3c9596f11897ddc5edb1971669",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-21T17:00:30.236423Z",
+      "status": "completed",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:03773443f76a89f96d9b26a0592e077a9bc9f30b19e0fc37b7ee60875e6c5fdd",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V7567e595abce3b09",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-21T17:06:30.404495Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-4ccd29b05deae41f1d3e-r1-codex-V7567e595abce3b09-candidate-react-saved-view-feature",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 168.168762,
+      "series_key": "sha256:3e04752b69ff36ba399d8cdc9665f4b9020cdabb5cfe0725c7d76b5116083eaf",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-21T17:03:42.235733Z",
+      "status": "completed",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:03773443f76a89f96d9b26a0592e077a9bc9f30b19e0fc37b7ee60875e6c5fdd",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:6f63aee773d585e121ca73374316da3ec204da35911ef801c785666add59aec5",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 2.158002,
+  "pending_jobs": 0,
+  "profile": "calibration",
+  "report_id": "sha256:f5dc9966be00eedb3f4b5294acf956f6f5a6caf8efe9b2533df689e22b3602c0",
+  "run_id": "run-4ccd29b05deae41f1d3e",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-21T16:56:48.270482Z",
+  "status": "completed",
+  "updated_at": "2026-09-22T22:51:05.554019Z"
+}

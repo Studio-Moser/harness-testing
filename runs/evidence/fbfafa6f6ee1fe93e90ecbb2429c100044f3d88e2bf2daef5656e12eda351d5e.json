@@ -1,0 +1,1050 @@
+{
+  "admission_estimate_usd": 18.0,
+  "completed_jobs": 3,
+  "completed_trials": 3,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 3,
+  "expected_trials": 3,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:30981204c1bf2581bd07d1cc429971a38c65ec49b306769cca99ce260c372776",
+      "hypothesis": "On Claude Code, where Studio hooks and plugins are delivered natively, the full collection or its personality file alone changes correctness, cost, time or behavior versus Nothing.",
+      "rerun_reason": "The saved-view rule missed an in-scope parsing question, ending one session as a task-definition gap.",
+      "summary": "Rerun react-saved-view-feature for every contender after widening its scripted-user product rule."
+    },
+    "comparison": {
+      "contenders": [
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 1,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.1619494,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "studio-personality",
+          "id": "sha256:603239729f7be3b2b61bc87ee4230adc929bb1e1bbdf7e1fe2592294a49385e5",
+          "label": "Studio personality only",
+          "mean_cost_usd": 0.1619494,
+          "mean_duration_seconds": 44.84293577000062,
+          "original_estimates": [
+            {
+              "cost_usd": 0.1619494,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:2760e5cc892d33102120dd4517caf779b655483eb4239b869abf08e3ac7ac046"
+            }
+          ],
+          "passed_all": true,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": false,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-saved-view-feature": 1
+          },
+          "total_cost_usd": 0.1619494,
+          "total_tokens": 169959,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 1,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.2102596,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "studio-moser",
+          "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "label": "Studio Moser v5 \u2014 full collection",
+          "mean_cost_usd": 0.2102596,
+          "mean_duration_seconds": 49.772142981004436,
+          "original_estimates": [
+            {
+              "cost_usd": 0.2102596,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:fa4b856210b383de89ad93fba4076a783018fa694d8fc5fb3f131191e0e8328c"
+            }
+          ],
+          "passed_all": true,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": false,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-saved-view-feature": 1
+          },
+          "total_cost_usd": 0.2102596,
+          "total_tokens": 193145,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 1,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.190553,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "nothing",
+          "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "label": "Nothing",
+          "mean_cost_usd": 0.190553,
+          "mean_duration_seconds": 54.00847006600088,
+          "original_estimates": [
+            {
+              "cost_usd": 0.190553,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:7130b3ae998629b4321db0355d7dc030a548ad41326c9322a7f57facf5884813"
+            }
+          ],
+          "passed_all": true,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": false,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-saved-view-feature": 1
+          },
+          "total_cost_usd": 0.190553,
+          "total_tokens": 162848,
+          "usage_complete": true
+        }
+      ],
+      "leaders": {
+        "observed_cost_ids": [
+          "sha256:603239729f7be3b2b61bc87ee4230adc929bb1e1bbdf7e1fe2592294a49385e5"
+        ],
+        "observed_time_ids": [
+          "sha256:603239729f7be3b2b61bc87ee4230adc929bb1e1bbdf7e1fe2592294a49385e5"
+        ]
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "One attempt per task is the default minimum; one flaky trial can change the verdict.",
+        "Cost and time ratios are point estimates over per-task means; the advantage and noninferiority thresholds are product defaults, not research findings.",
+        "Review is advisory: a missing or incomplete review leaves the verdict provisional and flagged, unconfirmed reviewer claims are listed, and confirmed remaining defects disqualify."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": -0.0483102,
+          "cost_ratio": 0.7702354613059285,
+          "left_id": "sha256:603239729f7be3b2b61bc87ee4230adc929bb1e1bbdf7e1fe2592294a49385e5",
+          "left_report_id": null,
+          "right_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "right_report_id": null,
+          "time_difference_seconds": -4.929207211003813,
+          "time_ratio": 0.9009645372736904
+        },
+        {
+          "cost_difference_usd": -0.028603600000000007,
+          "cost_ratio": 0.8498916311997187,
+          "left_id": "sha256:603239729f7be3b2b61bc87ee4230adc929bb1e1bbdf7e1fe2592294a49385e5",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": -9.16553429600026,
+          "time_ratio": 0.8302945022364169
+        },
+        {
+          "cost_difference_usd": 0.01970659999999999,
+          "cost_ratio": 1.1034179467129879,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": -4.2363270849964465,
+          "time_ratio": 0.9215618016985214
+        }
+      ],
+      "policy_digest": "sha256:fe41352f768685a51938f2bba79b5fcb37fdcaf45d5da5edf8ba79878aff24f5",
+      "policy_id": "benchmark-readiness-v2",
+      "provisional": true,
+      "reasons": [
+        "code_review_incomplete",
+        "insufficient_task_coverage"
+      ],
+      "status": "insufficient_evidence",
+      "summary": "Selected evidence is insufficient for a recommendation.",
+      "unsolved_tasks": [],
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:b7f9230d3c51d2f41d46c844c7cbaa412f41456ecaeb8bdee5dba359700387c5",
+      "attempts": 1,
+      "authority_digest": "sha256:e1da39cab3810d6031a079b984cddf53a22a47ded1f48f9b368f81d896154ed5",
+      "concurrency": 1,
+      "decision_policy": "benchmark-readiness-v2",
+      "evaluator_digest": "sha256:8dbf696715b8ca57d882bcfb34d05c0c16411a17ad8ce9110d0e12875b8b4b1a",
+      "executor_inventory": [
+        {
+          "effort": "medium",
+          "model": "claude-opus-5-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-opus-5-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-sonnet-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-fable-5-1",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "node": "sha256:d2f444b5b028b4ce66f43e8ef90d1dd0ca5f59e99ab337073e3882cb0567500b",
+        "verifier": "sha256:db6ad27a5ffb88c8d12bc8f046c9cb9c6489ddeca41493d52c90630fbf7c4f67"
+      },
+      "kickoff": {
+        "effort": "medium",
+        "model": "claude-opus-5-5",
+        "provider": "claude",
+        "runtime_version": "2.1.281"
+      },
+      "provider_recovery_seconds": 0,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:84879d915f812e75db237e8e98ed99f8cc694fe076462babdf76df154212c163",
+      "task_digests": {
+        "react-saved-view-feature": "sha256:331fa5995229a3d8f4c01d9e7e04abbc6170198360e7f55fbeef1bf039da3536"
+      },
+      "task_ids": [
+        "react-saved-view-feature"
+      ],
+      "task_variant": "comparison",
+      "timeout_seconds": 1800
+    },
+    "contenders": [
+      {
+        "family": "nothing",
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Nothing",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "studio-personality",
+        "id": "sha256:603239729f7be3b2b61bc87ee4230adc929bb1e1bbdf7e1fe2592294a49385e5",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Studio personality only",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser v5 \u2014 full collection",
+        "rubric_digest": "sha256:22a737b9ea7a68a527e135dfe09f90bc590d1980a8a20ba072688d9522781160",
+        "source_commits": [
+          "3fb970f32d2901b82e3d17c35dbe192604fc7762",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "Claude Opus 5.5 Medium \u2014 correction: react-saved-view-feature scripted user",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:0724c5d9bc561fa869d3b647add5c956714ae915081a8525f2406981b73dcf83",
+    "supersedes_report_id": null,
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 3,
+                "minimum": 1
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "ambiguous_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:94c606d84550c02544243bdfe1c666f1f7ffcfe74cc569da62661201a899a15e",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 855,
+            "assistant_words": 544,
+            "average_progress_words": 137.0,
+            "average_update_gap_seconds": 17.373,
+            "bullet_count": 10,
+            "communication_to_model_output_ratio": 0.156679,
+            "final_answer_tokens": 425,
+            "final_answer_words": 270,
+            "formatting_density": 0.1213,
+            "heading_count": 0,
+            "maximum_progress_words": 270,
+            "maximum_update_gap_seconds": 34.74,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 20,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 983,
+            "total_visible_words": 648,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 0.5,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 4
+              },
+              {
+                "detail": "Questions fall below the scenario minimum",
+                "kind": "missing_question",
+                "ordinal": 4
+              },
+              {
+                "detail": "Sentence repeats earlier text",
+                "kind": "repeated_sentence",
+                "ordinal": 4
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and complete saved dashboard view persistence. The existing UI and domain model already define the supported view states and storage boundary, but the product behavior for saving and restoring selections and for absent or invalid stored values has not been settled. Resolve those persistence and fallback choices with me before implementing them.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Implementing the approved behavior.",
+              "elapsed_seconds": 19.245,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "Saved view persistence now works the way you specified. The only source change is in `src/domain/Saved_View.ts`. `App.tsx` already called these functions, so it didn't need to change. Lint, typecheck and all tests pass (23 tests), and the production build succeeds.\n\n**What it does now:**\n- **Reading:** only the exact strings `all`, `active` and `archived` are accepted. Anything else \u2014 nothing stored, an empty string, `Active`, ` active`, a JSON-quoted value \u2014 shows `all`.\n- **Loading:** reads `dashboard.saved-view` and never writes on load, so an invalid stored value stays as it is until the user picks a view. If `getItem` throws, it silently returns `all`.\n- **Saving:** every selection, including `all`, is written straight away as its exact lowercase string. If `setItem` throws, the error is ignored: the new selection still shows and nothing is logged.\n\n**New test files** (the existing tests are unchanged):\n- `src/domain/Saved_View.persistence.test.ts` tests the three functions directly: exact matching, falling back without writing, the saved string and key, and a storage that throws.\n- `src/App.persistence.test.tsx` renders the real app in happy-dom. It covers the first visit, an invalid stored value, clicking a view then reloading to check it comes back, and storage whose `getItem`/`setItem` throw, with no console warnings or errors.\n\nOne gap: as you asked, only exceptions from `getItem` and `setItem` are handled. In some browsers, just reading `window.localStorage` in `App.tsx` can throw a `SecurityError` when storage is blocked, and that case still isn't covered. I can add it if you want.\n\nRunning the build created a `dist/` folder, which git already ignores. Nothing has been committed.",
+              "elapsed_seconds": 53.985,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Saved view persistence now works the way you specified. The only source change is in `src/domain/Saved_View.ts`. `App.tsx` already called these functions, so it didn't need to change. Lint, typecheck and all tests pass (23 tests), and the production build succeeds.\n\n**What it does now:**\n- **Reading:** only the exact strings `all`, `active` and `archived` are accepted. Anything else \u2014 nothing stored, an empty string, `Active`, ` active`, a JSON-quoted value \u2014 shows `all`.\n- **Loading:** reads `dashboard.saved-view` and never writes on load, so an invalid stored value stays as it is until the user picks a view. If `getItem` throws, it silently returns `all`.\n- **Saving:** every selection, including `all`, is written straight away as its exact lowercase string. If `setItem` throws, the error is ignored: the new selection still shows and nothing is logged.\n\n**New test files** (the existing tests are unchanged):\n- `src/domain/Saved_View.persistence.test.ts` tests the three functions directly: exact matching, falling back without writing, the saved string and key, and a storage that throws.\n- `src/App.persistence.test.tsx` renders the real app in happy-dom. It covers the first visit, an invalid stored value, clicking a view then reloading to check it comes back, and storage whose `getItem`/`setItem` throw, with no console warnings or errors.\n\nOne gap: as you asked, only exceptions from `getItem` and `setItem` are handled. In some browsers, just reading `window.localStorage` in `App.tsx` can throw a `SecurityError` when storage is blocked, and that case still isn't covered. I can add it if you want.\n\nRunning the build created a `dist/` folder, which git already ignores. Nothing has been committed.",
+              "elapsed_seconds": 53.99,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "correctness": true,
+        "cost_usd": 0.190553,
+        "duration_seconds": 54.00847006600088,
+        "incomplete_reasons": [],
+        "interaction_count": 4,
+        "model_usage": [
+          {
+            "cache_read_tokens": 146985,
+            "cache_write_tokens": 10392,
+            "input_tokens": 14,
+            "model": "claude-opus-5-5",
+            "output_tokens": 5457,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 146985,
+            "cache_write_tokens": 10392,
+            "effort": null,
+            "input_tokens": 14,
+            "model": "claude-opus-5-5",
+            "output_tokens": 5457,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:7130b3ae998629b4321db0355d7dc030a548ad41326c9322a7f57facf5884813",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 3,
+                "minimum": 1
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "ambiguous_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:94c606d84550c02544243bdfe1c666f1f7ffcfe74cc569da62661201a899a15e",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 783,
+            "assistant_words": 473,
+            "average_progress_words": 125.5,
+            "average_update_gap_seconds": 18.553,
+            "bullet_count": 10,
+            "communication_to_model_output_ratio": 0.158438,
+            "final_answer_tokens": 368,
+            "final_answer_words": 222,
+            "formatting_density": 0.148,
+            "heading_count": 0,
+            "maximum_progress_words": 222,
+            "maximum_update_gap_seconds": 37.092,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 15,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 911,
+            "total_visible_words": 577,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 0.5,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 4
+              },
+              {
+                "detail": "Questions fall below the scenario minimum",
+                "kind": "missing_question",
+                "ordinal": 4
+              },
+              {
+                "detail": "Sentence repeats earlier text",
+                "kind": "repeated_sentence",
+                "ordinal": 4
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and complete saved dashboard view persistence. The existing UI and domain model already define the supported view states and storage boundary, but the product behavior for saving and restoring selections and for absent or invalid stored values has not been settled. Resolve those persistence and fallback choices with me before implementing them.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "The storage boundary is in place, but `parseSavedView` always returns `'all'` and `saveSavedView` does nothing (`src/domain/Saved_View.ts`). I need four decisions from you before I implement them.",
+              "elapsed_seconds": 7.664,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "Saved view persistence now works as you specified. `npm run gate` passed (lint, typecheck, 23/23 tests) and `npm run build` succeeded.\n\nThe only source file changed is `src/domain/Saved_View.ts`:\n- **Restoring:** `parseSavedView` accepts only the exact strings `'all'`, `'active'` and `'archived'`. Anything else, including absent or empty values, returns `'all'`.\n- **Loading:** `loadSavedView` never writes to storage. If `getItem` throws, it returns `'all'`.\n- **Saving:** `saveSavedView` writes the exact view string, including `all`, under `dashboard.saved-view`. If `setItem` throws, it does nothing, and the selection stays in memory without any warning.\n\n`App.tsx` needed no changes because it already saved on every selection and loaded when it started.\n\nI added two new test files and left the existing tests unchanged:\n- `src/domain/Saved_View_Persistence.test.ts` tests exact matching, rejected values like `'Active'`, `' active'` and `'\"active\"'`, that loading never writes, saving each view, and both storage errors.\n- `src/App_Persistence.test.tsx` renders the app and checks the default view, that an invalid value stays until you pick a view, restoring after a remount, and that the UI keeps working when storage throws.\n\nOne case isn't covered: if the browser throws when the app reads `window.localStorage` itself, the error happens in `App.tsx` before the saved-view functions run. I left that alone because you limited error handling to exceptions from `getItem` and `setItem`.",
+              "elapsed_seconds": 44.756,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Saved view persistence now works as you specified. `npm run gate` passed (lint, typecheck, 23/23 tests) and `npm run build` succeeded.\n\nThe only source file changed is `src/domain/Saved_View.ts`:\n- **Restoring:** `parseSavedView` accepts only the exact strings `'all'`, `'active'` and `'archived'`. Anything else, including absent or empty values, returns `'all'`.\n- **Loading:** `loadSavedView` never writes to storage. If `getItem` throws, it returns `'all'`.\n- **Saving:** `saveSavedView` writes the exact view string, including `all`, under `dashboard.saved-view`. If `setItem` throws, it does nothing, and the selection stays in memory without any warning.\n\n`App.tsx` needed no changes because it already saved on every selection and loaded when it started.\n\nI added two new test files and left the existing tests unchanged:\n- `src/domain/Saved_View_Persistence.test.ts` tests exact matching, rejected values like `'Active'`, `' active'` and `'\"active\"'`, that loading never writes, saving each view, and both storage errors.\n- `src/App_Persistence.test.tsx` renders the app and checks the default view, that an invalid value stays until you pick a view, restoring after a remount, and that the UI keeps working when storage throws.\n\nOne case isn't covered: if the browser throws when the app reads `window.localStorage` itself, the error happens in `App.tsx` before the saved-view functions run. I left that alone because you limited error handling to exceptions from `getItem` and `setItem`.",
+              "elapsed_seconds": 44.77,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:603239729f7be3b2b61bc87ee4230adc929bb1e1bbdf7e1fe2592294a49385e5",
+        "correctness": true,
+        "cost_usd": 0.1619494,
+        "duration_seconds": 44.84293577000062,
+        "incomplete_reasons": [],
+        "interaction_count": 4,
+        "model_usage": [
+          {
+            "cache_read_tokens": 158742,
+            "cache_write_tokens": 6261,
+            "input_tokens": 14,
+            "model": "claude-opus-5-5",
+            "output_tokens": 4942,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 158742,
+            "cache_write_tokens": 6261,
+            "effort": null,
+            "input_tokens": 14,
+            "model": "claude-opus-5-5",
+            "output_tokens": 4942,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:2760e5cc892d33102120dd4517caf779b655483eb4239b869abf08e3ac7ac046",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 180,
+                "minimum": 1
+              },
+              "initial_update": "required",
+              "progress_updates": {
+                "maximum": 5,
+                "minimum": 1,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 3,
+                "minimum": 1
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "ambiguous_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:94c606d84550c02544243bdfe1c666f1f7ffcfe74cc569da62661201a899a15e",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 5,
+            "assistant_tokens": 904,
+            "assistant_words": 605,
+            "average_progress_words": 81.0,
+            "average_update_gap_seconds": 8.638,
+            "bullet_count": 12,
+            "communication_to_model_output_ratio": 0.160997,
+            "final_answer_tokens": 425,
+            "final_answer_words": 281,
+            "formatting_density": 0.0959,
+            "heading_count": 0,
+            "maximum_progress_words": 281,
+            "maximum_update_gap_seconds": 12.813,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 4,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 19,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 1032,
+            "total_visible_words": 709,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 4,
+            "useful_progress_update_rate": 1.0,
+            "violations": [
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 6
+              },
+              {
+                "detail": "Questions fall below the scenario minimum",
+                "kind": "missing_question",
+                "ordinal": 6
+              },
+              {
+                "detail": "Sentence repeats earlier text",
+                "kind": "repeated_sentence",
+                "ordinal": 6
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and complete saved dashboard view persistence. The existing UI and domain model already define the supported view states and storage boundary, but the product behavior for saving and restoring selections and for absent or invalid stored values has not been settled. Resolve those persistence and fallback choices with me before implementing them.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Your choices are clear. I'll create a branch and write the tests first.",
+              "elapsed_seconds": 15.154,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "Next, a UI-level test file covering restore on load and the setItem failure case:",
+              "elapsed_seconds": 25.699,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "The new tests fail for the expected reason: the functions are still stubs. Now the implementation:",
+              "elapsed_seconds": 36.874,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "Saved dashboard views now persist and restore the way you specified. `npm run gate` (lint, typecheck, all tests) passes with 33/33 tests, and `npm run build` succeeds.\n\n**What changed:** the only production file edited is `src/domain/Saved_View.ts`. `App.tsx` already loaded the view on startup and saved it on every click, so it needed no changes.\n- **Saving:** each selection, including `all`, is written straight away as its exact string under `dashboard.saved-view`.\n- **Restoring:** only the exact strings `all`, `active` and `archived` are accepted. No trimming, case changes or JSON.\n- **Absent, empty or invalid values:** the dashboard shows `all` and leaves storage untouched. A bad value is only overwritten when the user next picks a view.\n- **Storage errors:** if `getItem` throws, the dashboard silently shows `all`. If `setItem` throws, the selected view still applies on screen and nothing is thrown or shown. No new storage API or error UI.\n\n**Tests:** I added two new test files and left the existing ones byte-for-byte unchanged.\n- `src/domain/Saved_View_Persistence.test.ts` checks the rules directly: valid and invalid values, not writing on load, the stored format, save then load, and both storage errors.\n- `src/App_Persistence.test.tsx` renders the real app to check restore on reload, the default on first visit, that an invalid value is left alone, that each click is saved, and both storage errors.\n\nI ran the new tests before implementing and they failed against the stubs, as expected. Package metadata, build config, check scripts and the other test files are unchanged.\n\nThe work is on a new branch, `feat/saved-view-persistence`, and is **not committed yet**. Tell me if you'd like me to commit it and open a PR.",
+              "elapsed_seconds": 49.687,
+              "kind": "progress",
+              "ordinal": 5,
+              "role": "assistant"
+            },
+            {
+              "content": "Saved dashboard views now persist and restore the way you specified. `npm run gate` (lint, typecheck, all tests) passes with 33/33 tests, and `npm run build` succeeds.\n\n**What changed:** the only production file edited is `src/domain/Saved_View.ts`. `App.tsx` already loaded the view on startup and saved it on every click, so it needed no changes.\n- **Saving:** each selection, including `all`, is written straight away as its exact string under `dashboard.saved-view`.\n- **Restoring:** only the exact strings `all`, `active` and `archived` are accepted. No trimming, case changes or JSON.\n- **Absent, empty or invalid values:** the dashboard shows `all` and leaves storage untouched. A bad value is only overwritten when the user next picks a view.\n- **Storage errors:** if `getItem` throws, the dashboard silently shows `all`. If `setItem` throws, the selected view still applies on screen and nothing is thrown or shown. No new storage API or error UI.\n\n**Tests:** I added two new test files and left the existing ones byte-for-byte unchanged.\n- `src/domain/Saved_View_Persistence.test.ts` checks the rules directly: valid and invalid values, not writing on load, the stored format, save then load, and both storage errors.\n- `src/App_Persistence.test.tsx` renders the real app to check restore on reload, the default on first visit, that an invalid value is left alone, that each click is saved, and both storage errors.\n\nI ran the new tests before implementing and they failed against the stubs, as expected. Package metadata, build config, check scripts and the other test files are unchanged.\n\nThe work is on a new branch, `feat/saved-view-persistence`, and is **not committed yet**. Tell me if you'd like me to commit it and open a PR.",
+              "elapsed_seconds": 49.705,
+              "kind": "final",
+              "ordinal": 6,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "correctness": true,
+        "cost_usd": 0.2102596,
+        "duration_seconds": 49.772142981004436,
+        "incomplete_reasons": [],
+        "interaction_count": 4,
+        "model_usage": [
+          {
+            "cache_read_tokens": 174933,
+            "cache_write_tokens": 12585,
+            "input_tokens": 12,
+            "model": "claude-opus-5-5",
+            "output_tokens": 5615,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 174933,
+            "cache_write_tokens": 12585,
+            "effort": null,
+            "input_tokens": 12,
+            "model": "claude-opus-5-5",
+            "output_tokens": 5615,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-saved-view-feature",
+        "trial_id": "sha256:fa4b856210b383de89ad93fba4076a783018fa694d8fc5fb3f131191e0e8328c",
+        "usage_complete": true
+      }
+    ]
+  },
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-09-24T03:29:20.102383Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4cd1d72d67f36ca",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.22172899999999998,
+        "cached_tokens": 146985,
+        "completion_tokens": 5457,
+        "prompt_tokens": 157391
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-24T03:26:45.681712Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-7b9b516f0f255675dae7-r1-claude-Vc4cd1d72d67f36ca-baseline-react-saved-view-feature",
+      "provider": "claude",
+      "role": "baseline",
+      "runtime_seconds": 81.71422,
+      "series_key": "sha256:8bebd6b25a89fb030dba4db4acf22b583e45ebf5e34231383b16d34bb7328e3c",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-24T03:25:23.967492Z",
+      "status": "completed",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:331fa5995229a3d8f4c01d9e7e04abbc6170198360e7f55fbeef1bf039da3536",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "V603239729f7be3b2",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.18073240000000002,
+        "cached_tokens": 158742,
+        "completion_tokens": 4942,
+        "prompt_tokens": 165017
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-24T03:28:00.356246Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-7b9b516f0f255675dae7-r1-claude-V603239729f7be3b2-candidate-react-saved-view-feature",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 72.020285,
+      "series_key": "sha256:188a9ab23933ea7029214046e52545852a24195436dfe769e27060b77c43f5c5",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-24T03:26:48.335961Z",
+      "status": "completed",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:331fa5995229a3d8f4c01d9e7e04abbc6170198360e7f55fbeef1bf039da3536",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "V9bc3b03b4e15d5e4",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.2480146,
+        "cached_tokens": 174933,
+        "completion_tokens": 5615,
+        "prompt_tokens": 187530
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-09-24T03:29:20.102383Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-7b9b516f0f255675dae7-r1-claude-V9bc3b03b4e15d5e4-candidate-react-saved-view-feature",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 76.99991,
+      "series_key": "sha256:0ef9c5de0b7b2595bf22f22e3b7aad6e2f488b473c8b776cb645b631d819178d",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-09-24T03:28:03.102473Z",
+      "status": "completed",
+      "task": "react-saved-view-feature",
+      "task_digest": "sha256:331fa5995229a3d8f4c01d9e7e04abbc6170198360e7f55fbeef1bf039da3536",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:87ad3e8b6f2ee45e07c3374d7a83b1c2b23ff15903a4a071a8eb58c420969f6d",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 0.562762,
+  "pending_jobs": 0,
+  "profile": "calibration",
+  "report_id": "sha256:fbfafa6f6ee1fe93e90ecbb2429c100044f3d88e2bf2daef5656e12eda351d5e",
+  "run_id": "run-7b9b516f0f255675dae7",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-09-24T03:25:22.747086Z",
+  "status": "completed",
+  "updated_at": "2026-09-24T03:29:22.527436Z"
+}
