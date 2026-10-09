@@ -19,7 +19,6 @@ provider-homes/
 arms/materialized/
 runs/generated/
 runs/history/
-runs/evidence/
 runs/evaluations/
 runs/reviews/
 runs/collaboration/
@@ -43,6 +42,7 @@ output/playwright/
 # Playwright MCP screenshots and snapshots
 .playwright-mcp/
 
-# Local campaign plans and summaries; Superpowers plugin state
-runs/campaigns/
+# Campaign plans stay local; summaries are published with runs/evidence. Superpowers plugin state
+runs/campaigns/*/*
+!runs/campaigns/*/Summary.json
 .superpowers/

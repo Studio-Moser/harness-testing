@@ -2,9 +2,40 @@
 
 Harness Testing answers one question: **does a coding-agent harness make the agent more correct, cheaper, faster, or less annoying on Studio Moser's kind of work?** It runs the same frozen tasks against Nothing (the bare provider runtime), Superpowers, and the full Skills-n-Stuff collection, then shows correctness, cost, time, and behavior side by side.
 
+## Results
+
+**[Open the live dashboard →](https://studio-moser.github.io/harness-testing/)** Every trial, per-task result, cost, transcript metric and automated grade, rebuilt from the evidence in this repository on every push.
+
+[![The Results page of the dashboard: a plain-language read of each harness with pros and cons](docs/Images/Results%20Overview.png)](https://studio-moser.github.io/harness-testing/)
+
+### Claude Opus 5.5, medium effort
+
+19 workflow tasks, one attempt per task per harness, 76 trials.
+
+| Harness | Correct | Avg cost | Avg time | Work-quality grade | Words per task |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| **Studio Moser v6 + time matters** | **100%** | $0.12 | **26s** | 96% | **169** |
+| Studio Moser v6 | 100% | $0.13 | 28s | 96% | 183 |
+| Studio Moser v5 | 100% | $0.17 | 33s | 92% | 293 |
+| Nothing | 95% | **$0.12** | 29s | 92% | 249 |
+
+Studio Moser v6 + time matters is the pick: as correct as anything tested, the fastest, and the least talkative, at the cost of the bare runtime. Superpowers was skipped on this model: earlier testing showed it wasn't needed on newer models.
+
+### GPT-6 Astra, medium effort
+
+24 tasks, one attempt per task per harness, 72 trials. Every harness solved every task, so cost and time decide.
+
+| Harness | Correct | Avg cost | Avg time | Work-quality grade |
+| --- | ---: | ---: | ---: | ---: |
+| **Nothing** | 100% | **$0.91** | **3m 11s** | 96% |
+| Studio Moser v5 | 100% | $1.21 | 3m 29s | 94% |
+| Superpowers | 100% | $1.83 | 4m 06s | **97%** |
+
+Costs are API-equivalent estimates from list prices, not bills. Work-quality grades are blinded automated grades and never decide the ranking. One attempt per task is a real result, not a reliability guarantee: these cover the frozen tasks and kickoff conditions above, not every codebase.
+
 ## Start here in a new conversation
 
-Check `git status --short --branch` and recent commits in the intended checkout. Run commands through that checkout's `uv run`. Inspect retained local manifests and reports under `runs/` before claiming a run has happened; they are ignored and may be absent in a fresh clone. Planning and documentation requests do not authorize model execution: each exact manifest digest needs fresh approval before `run execute`.
+Check `git status --short --branch` and recent commits in the intended checkout. Run commands through that checkout's `uv run`. Inspect the tracked reports under `runs/evidence/` and the local manifests under `runs/generated/` before claiming a run has happened; manifests are ignored and may be absent in a fresh clone. Planning and documentation requests do not authorize model execution: each exact manifest digest needs fresh approval before `run execute`.
 
 ## What we compare
 
@@ -47,7 +78,7 @@ npm --prefix dashboard test
 npm --prefix dashboard run build
 ```
 
-Without a `dashboard-data/reports` directory the build reads `runs/evidence` directly, skipping files that are not public-safe run reports. The Results page opens with a plain-language read of each harness (pros, cons, one recommendation), then the per-task results by type and difficulty, then a Behavior section with transcript metrics, annoyance counts and automated grades for every kickoff model and harness version side by side.
+The build reads the tracked `runs/evidence/` reports and `runs/campaigns/*/Summary.json` and fails on any report that is not schema-valid and public-safe. Every push to `main` rebuilds it and deploys it to [GitHub Pages](https://studio-moser.github.io/harness-testing/). The Results page opens with a plain-language read of each harness (pros, cons, one recommendation), then the per-task results by type and difficulty, then a Behavior section with transcript metrics, annoyance counts and automated grades for every kickoff model and harness version side by side.
 
 ## Repository map
 
@@ -62,13 +93,14 @@ Without a `dashboard-data/reports` directory the build reads `runs/evidence` dir
 | `tests/`, task-local `tests/` | Python unit checks and protected model-free task QA |
 | `dashboard/` | Read-only Observable UI |
 
-Local artifacts are ignored: `runs/inputs/` (private requests and rubric), `runs/generated/<digest>/` (manifests and current `Run_Report.json`), `runs/evidence/` (immutable report revisions), `arms/materialized/` and `.cache/` (frozen bundles and task materializations), `jobs/raw/` and provider homes (raw traces), `dashboard/dist/`.
+Local artifacts are ignored: `runs/inputs/` (private requests and rubric), `runs/generated/<digest>/` (manifests and current `Run_Report.json`), `arms/materialized/` and `.cache/` (frozen bundles and task materializations), `jobs/raw/` and provider homes (raw traces), `dashboard/dist/`, and campaign `Plan.json` files. Run reports in `runs/evidence/` and campaign summaries are tracked and public; the dashboard build and the pre-commit hook reject any that fail the public-safety screen.
 
 Never copy raw provider traces, hidden reasoning, tool output, session IDs, credentials or host paths into tracked files or dashboard assets. Reports carry only the normalized user-visible root conversation.
 
 ## Local development
 
 ```bash
+git config core.hooksPath .githooks
 uv sync --frozen
 uv run harness-test validate --static-only
 uv run pytest -q tests/unit

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Evidence is public once pushed, so screen it before it can be committed.
+# ponytail: validates the working tree, not the index; stage whole files.
+git diff --cached --name-only | grep -q '^runs/\(evidence\|campaigns\)/' || exit 0
+exec node "dashboard/Validate Results.js"
