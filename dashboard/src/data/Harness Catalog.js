@@ -159,7 +159,7 @@ export const HARNESS_CATALOG = Object.freeze([
     identity: "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
     changeSummary: "Lighter startup, one delegate skill, and report and end-state rules, driven by the v5 benchmark.",
     changeDetails: ["Removes Superpowers and five domain plugins; most skills become slash-only or one-line", "Merges execute, review and computer-use into one delegate skill", "Adds ask-once, named end state, five-line Polish/Small reports and no delegation of small work", "Routing rubric falls back to Opus 5.5 at medium; GPT-6 Astra takes Fable's orchestration, taste and review routes"],
-    latest: true
+    latest: false
   }),
   studioVersion({
     id: "studio-moser-v6-time-matters",
@@ -173,6 +173,19 @@ export const HARNESS_CATALOG = Object.freeze([
     identity: "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
     changeSummary: "v6 with one added startup line asking for the fewest turns, testing the Opus 5.5 'time matters' advice.",
     changeDetails: ["Identical to v6 except the added startup line", "Measures whether the line cuts turns and cost without losing correctness"]
+  }),
+  studioVersion({
+    id: "studio-moser-v7",
+    versionOrder: 8,
+    versionLabel: "v7",
+    predecessorId: "studio-moser-v6-time-matters",
+    commit: "fef5d06c564cd82d8982267db53cce6ec963baa0",
+    collectionVersion: "2.2.0",
+    superpowers: false,
+    identity: "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+    changeSummary: "The time-matters line moves into the baseline, and skills are rewritten to Anthropic's current skill and prompting guidance.",
+    changeDetails: ["Builds the 'time matters' line into the Harness baseline instead of an added startup file", "Routes work by capability and total cost", "Adds the design plugin and the pm tidy-up skill; removes remaining Superpowers references", "Uses the live routing rubric reviewed 2026-09-29, which adds GPT-6.1 Sol for default, explore and review work"],
+    latest: true
   }),
   Object.freeze({
     id: "studio-personality-v1",

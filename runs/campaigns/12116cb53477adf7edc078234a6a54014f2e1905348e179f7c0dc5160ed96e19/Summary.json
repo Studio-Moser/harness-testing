@@ -1,0 +1,1854 @@
+{
+  "campaign_digest": "sha256:12116cb53477adf7edc078234a6a54014f2e1905348e179f7c0dc5160ed96e19",
+  "evaluation": {},
+  "lanes": {
+    "comparison": {
+      "comparison": {
+        "contenders": [
+          {
+            "attempted": 19,
+            "code_review": {
+              "completed": 19,
+              "confirmed": {
+                "P0": 0,
+                "P1": 0,
+                "P2": 0,
+                "P3": 0
+              },
+              "evaluation_cost_usd": 11.488168,
+              "internal_review": {
+                "fixed": null,
+                "found": null,
+                "recorded": 0,
+                "scheduled": 19,
+                "unresolved": null
+              },
+              "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+              "scheduled": 19,
+              "status": "completed",
+              "unconfirmed": 3
+            },
+            "completed": 19,
+            "cost_per_success_usd": 0.1721845052631579,
+            "counts": {
+              "agent_failed": 0,
+              "cancelled": 0,
+              "completed": 19,
+              "infrastructure_failure": 0,
+              "missing": 0,
+              "missing_grading": 0,
+              "pending": 0,
+              "task_definition_gap": 0,
+              "timeout": 0
+            },
+            "coverage_complete": true,
+            "eligible": true,
+            "family": "studio-moser",
+            "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+            "label": "Studio Moser v5 \u2014 full collection",
+            "mean_cost_usd": 0.1721845052631579,
+            "mean_duration_seconds": 32.91226129115813,
+            "original_estimates": [
+              {
+                "cost_usd": 0.0979402,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:b0e8ec7431a2e9b3f5349c3dc34b8485a36ac816b9a614bcd30c3d9cf03e2d4e"
+              },
+              {
+                "cost_usd": 0.15853499999999998,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:de2ebc0823cf3125a89a6fe075c6c49746b386040242e393f2ad04d3abaecec0"
+              },
+              {
+                "cost_usd": 0.2396822,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:d64fb81d0bce09bb125bb5291b54e701311c59f66f82a07cfabe17ea22f5f4a5"
+              },
+              {
+                "cost_usd": 0.1518614,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:9fc684794c49a4b77006f7610784d595b64297fc0aad579b8b45d81a3b13b975"
+              },
+              {
+                "cost_usd": 0.118029,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:30db09b14b926cb7a2280a0dd4e78df6f43dcbc10b9e7ecc40e057e1984ca853"
+              },
+              {
+                "cost_usd": 0.1685336,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:3407fbb22b496435ef129963708af9cdbf834db230e497d2016ab25c34485581"
+              },
+              {
+                "cost_usd": 0.0916892,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:ab0ba9d513a64696c4c783e82b306f4f140c614a8c0979560880c8ccdff02ca3"
+              },
+              {
+                "cost_usd": 0.0955606,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:2a636e44ebcc8a063afd8792992db92aa63566dae200313b054f11649ff73121"
+              },
+              {
+                "cost_usd": 0.1297362,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:1539033bdc086d26408f741fb793b469b7cfb0239a96d52cad508d1ba1633e52"
+              },
+              {
+                "cost_usd": 0.1297024,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:8e736f2b2a4ece6b2b82a4bfb79d30dcaced28aae3c59b5001a844aff029ce13"
+              },
+              {
+                "cost_usd": 0.22937400000000002,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:fa4b856210b383de89ad93fba4076a783018fa694d8fc5fb3f131191e0e8328c"
+              },
+              {
+                "cost_usd": 0.10996159999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:9e8134da09c300a694aa13b8aadd64ad27c0e210d9a7715b9eb2ec5e96c33a2c"
+              },
+              {
+                "cost_usd": 0.13028420000000002,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:065b216b929b2a50854bdb72ae3ecc27a92051a3786b5103440695fcd9a5277d"
+              },
+              {
+                "cost_usd": 0.16231260000000003,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:9ae49ff23a22f04577d5b284b4837fca9bf0202239abab32f2e5369fcc3162b0"
+              },
+              {
+                "cost_usd": 0.10762619999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:ffc341a7a02f99d352e44311b3071720ac1256b023059d9ccd8b331253a880aa"
+              },
+              {
+                "cost_usd": 0.1660976,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:7cfb95df3fad60091d1611a8900364331fed66c44ff8e83d32c87c6d8743bdd8"
+              },
+              {
+                "cost_usd": 0.0899814,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:75d680193b90107634da656d7d8a380bfce9d693abcae8562b813561991f0c0f"
+              },
+              {
+                "cost_usd": 0.2550196,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:529d63a578f7321e64046a286bd9024d2f4ef2498952b0eb1a8d60ded6898234"
+              },
+              {
+                "cost_usd": 0.6395785999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:c314d6b4b57cba20addbb463ed76f53ecb0243291567e3661e86aeaeb11764cf"
+              }
+            ],
+            "passed_all": true,
+            "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+            "repetitions": 1,
+            "review_clean": true,
+            "reviewed": true,
+            "scheduled": 19,
+            "success_fraction": {
+              "denominator": 19,
+              "numerator": 19
+            },
+            "successes": 19,
+            "task_successes": {
+              "node-capacity-boundary": 1,
+              "node-cross-module-permissions": 1,
+              "node-durable-queue-recovery": 1,
+              "node-export-ambiguous": 1,
+              "node-export-clear": 1,
+              "node-small-pagination": 1,
+              "node-toggle-completion": 1,
+              "react-accent-polish": 1,
+              "react-active-badge-count": 1,
+              "react-grouped-ui-updates": 1,
+              "react-saved-view-feature": 1,
+              "rust-quoted-value-parser": 1,
+              "rust-workspace-warning-summary": 1,
+              "static-accessible-disclosure": 1,
+              "static-grouped-page-updates": 1,
+              "static-notification-card-polish": 1,
+              "static-pricing-copy-polish": 1,
+              "static-responsive-settings-polish": 1,
+              "static-workspace-design-system-polish": 1
+            },
+            "total_cost_usd": 3.2715056000000002,
+            "total_tokens": 3033374,
+            "usage_complete": true
+          },
+          {
+            "attempted": 19,
+            "code_review": {
+              "completed": 19,
+              "confirmed": {
+                "P0": 0,
+                "P1": 0,
+                "P2": 0,
+                "P3": 0
+              },
+              "evaluation_cost_usd": 11.702002,
+              "internal_review": {
+                "fixed": null,
+                "found": null,
+                "recorded": 0,
+                "scheduled": 19,
+                "unresolved": null
+              },
+              "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+              "scheduled": 19,
+              "status": "completed",
+              "unconfirmed": 5
+            },
+            "completed": 19,
+            "cost_per_success_usd": 0.12201077894736843,
+            "counts": {
+              "agent_failed": 0,
+              "cancelled": 0,
+              "completed": 19,
+              "infrastructure_failure": 0,
+              "missing": 0,
+              "missing_grading": 0,
+              "pending": 0,
+              "task_definition_gap": 0,
+              "timeout": 0
+            },
+            "coverage_complete": true,
+            "eligible": true,
+            "family": "studio-moser",
+            "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+            "label": "Studio Moser v6 + time matters",
+            "mean_cost_usd": 0.12201077894736843,
+            "mean_duration_seconds": 25.784827277054365,
+            "original_estimates": [
+              {
+                "cost_usd": 0.0608058,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:5ce677df8a5e0882590acec3a1cbf81704ecd02e8c47e3c394d684e7f83ae2c7"
+              },
+              {
+                "cost_usd": 0.0965262,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:ed4f795ed0fecb1473f0fd6844d3ed78cdc8d2c9223d5334837a4c47ba73e881"
+              },
+              {
+                "cost_usd": 0.22698000000000002,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:ea13e4afa864eb01fbb5daa7acf0b86562b593f0561debf59c4713b167576fa3"
+              },
+              {
+                "cost_usd": 0.11573419999999998,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:08762da451e1ac46e92f2820abbd825f129fc946e6826fa62b6e0ba681a26c36"
+              },
+              {
+                "cost_usd": 0.0784084,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:f3f93c3992655420d926831dcf7e03e8ff6047402791036d534c28fe8867b595"
+              },
+              {
+                "cost_usd": 0.11624480000000001,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:3b2d8d190f5584252b3be62f763e5f4b0941fb33cee24046812ef22582ad8d2c"
+              },
+              {
+                "cost_usd": 0.06995399999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:542de5dd4a173891ee167e2faf6ff15905f4047d87faef6fecd0c82a657197f4"
+              },
+              {
+                "cost_usd": 0.0602856,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:abbb668db5fbd9e325b590e0c820d1b13ed4f7b8b759028ca3b16c335be5ba54"
+              },
+              {
+                "cost_usd": 0.0873408,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:ce4d381f8d4679e0096b3e3d4ff5153f3f9f410dd58155a4068097656d673e42"
+              },
+              {
+                "cost_usd": 0.0703406,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:179c9bab66afc6f984ec4c09a43e0c2a861ac53756bd8bcfa2a62ce383d9c623"
+              },
+              {
+                "cost_usd": 0.1902894,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:263b650fd6e51e399bde282ea3c2cc7eaded988c8af5e41ca683c7e75a14a802"
+              },
+              {
+                "cost_usd": 0.07310140000000001,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:57254a4a4102ef987a89ade203352ddb7c34984ffc37d1519aac95dc1bc93496"
+              },
+              {
+                "cost_usd": 0.08363100000000001,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:7738845b1e90f743a9f4e8f5e88e54daadcd61f77dd1201d61124595edb2c82b"
+              },
+              {
+                "cost_usd": 0.113508,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:4e946581f60a6f758c0e43640b53516718b1801fb2844d2fc0aa6d03d3b1b4ae"
+              },
+              {
+                "cost_usd": 0.0819438,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:b12cb2fa1c293d0c9e08ca85c8aaf2296b8a12e63ec28777e356fdeb85482563"
+              },
+              {
+                "cost_usd": 0.09513759999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:75284fdc4127da32001d52f8ee3be0924ff750034d6f48e29a00b2bd483ec447"
+              },
+              {
+                "cost_usd": 0.0758026,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:3502f3c5808ae16328c675ee5083dc0f9e479918c7e5489149fdc29c50a87c4e"
+              },
+              {
+                "cost_usd": 0.18138379999999998,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:e65b91ebbaa0d533aadfc1d42ab8465a14186e0db077b9d7fe712cff98b8f229"
+              },
+              {
+                "cost_usd": 0.44078680000000003,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:0a0ba6b2d2fd5619ebe7df07e6b4a1fd6e1bf11d52b1f9f7897dcb214ef7c53d"
+              }
+            ],
+            "passed_all": true,
+            "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+            "repetitions": 1,
+            "review_clean": true,
+            "reviewed": true,
+            "scheduled": 19,
+            "success_fraction": {
+              "denominator": 19,
+              "numerator": 19
+            },
+            "successes": 19,
+            "task_successes": {
+              "node-capacity-boundary": 1,
+              "node-cross-module-permissions": 1,
+              "node-durable-queue-recovery": 1,
+              "node-export-ambiguous": 1,
+              "node-export-clear": 1,
+              "node-small-pagination": 1,
+              "node-toggle-completion": 1,
+              "react-accent-polish": 1,
+              "react-active-badge-count": 1,
+              "react-grouped-ui-updates": 1,
+              "react-saved-view-feature": 1,
+              "rust-quoted-value-parser": 1,
+              "rust-workspace-warning-summary": 1,
+              "static-accessible-disclosure": 1,
+              "static-grouped-page-updates": 1,
+              "static-notification-card-polish": 1,
+              "static-pricing-copy-polish": 1,
+              "static-responsive-settings-polish": 1,
+              "static-workspace-design-system-polish": 1
+            },
+            "total_cost_usd": 2.3182048,
+            "total_tokens": 2302746,
+            "usage_complete": true
+          },
+          {
+            "attempted": 19,
+            "code_review": {
+              "completed": 19,
+              "confirmed": {
+                "P0": 0,
+                "P1": 0,
+                "P2": 0,
+                "P3": 0
+              },
+              "evaluation_cost_usd": 10.736318,
+              "internal_review": {
+                "fixed": null,
+                "found": null,
+                "recorded": 0,
+                "scheduled": 19,
+                "unresolved": null
+              },
+              "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+              "scheduled": 19,
+              "status": "completed",
+              "unconfirmed": 6
+            },
+            "completed": 19,
+            "cost_per_success_usd": 0.12653593333333332,
+            "counts": {
+              "agent_failed": 0,
+              "cancelled": 0,
+              "completed": 19,
+              "infrastructure_failure": 0,
+              "missing": 0,
+              "missing_grading": 0,
+              "pending": 0,
+              "task_definition_gap": 0,
+              "timeout": 0
+            },
+            "coverage_complete": true,
+            "eligible": false,
+            "family": "nothing",
+            "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+            "label": "Nothing",
+            "mean_cost_usd": 0.11987614736842105,
+            "mean_duration_seconds": 28.51998021878918,
+            "original_estimates": [
+              {
+                "cost_usd": 0.054999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:a9d96ff50361adc6142778532594c1c067eea0413886517421e60061b885f5a4"
+              },
+              {
+                "cost_usd": 0.08221719999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:ab12967aefcf1028dfb1eb0ebcb5e04da5f8557342913dfed7a59af417ee3f18"
+              },
+              {
+                "cost_usd": 0.20034760000000001,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:fcf842ed8335833f6839e2eecf7bc4cf80ff56a59d638c4d2e1bca4fb23634f6"
+              },
+              {
+                "cost_usd": 0.14914660000000002,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:a273d43e4f4806f01171ef86a61392e2f4916b29f325eeb66f92209a62792f2c"
+              },
+              {
+                "cost_usd": 0.0631514,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:9ba14c3c84453df19de5cd4819af2aa2b9b3fc8e475aeddd56139e9c6b60c21e"
+              },
+              {
+                "cost_usd": 0.11039080000000001,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:8c1267fa1bb628a913ecfbcc42d6ade829b09c35a6a1ecdb766951162918878d"
+              },
+              {
+                "cost_usd": 0.0468582,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:46a9efe93041651e5080dddaebae05cf582102da71f0b183ec1accebace2dc44"
+              },
+              {
+                "cost_usd": 0.0512808,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:cc46f216fbd93dbba6b65a0c70aa0783e0b6c48492081ca1308e0a570c7e1eea"
+              },
+              {
+                "cost_usd": 0.07420460000000001,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:6f79eab939ecb4a9fc290397f038b0a6ad7ca44b785ed04f9d39bc7efe7ab53f"
+              },
+              {
+                "cost_usd": 0.068731,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:f56cb8b762813c4041fed82039c337840aad9126c86d92c0724b1d484738d625"
+              },
+              {
+                "cost_usd": 0.1997484,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:7130b3ae998629b4321db0355d7dc030a548ad41326c9322a7f57facf5884813"
+              },
+              {
+                "cost_usd": 0.06803340000000001,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:4e4a17c9798435a1cfa2cf5fda423ef6772e50a4bcc33127cb7eef2b3e382b3b"
+              },
+              {
+                "cost_usd": 0.0648428,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:84be7f68fb6db2a6b5cb27574aa78f48558e720bf8891eea41234851e98df114"
+              },
+              {
+                "cost_usd": 0.0979722,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:a2251878acba2512649c5047858023004809f8053b2c8fb686f3e0d487f8d436"
+              },
+              {
+                "cost_usd": 0.057685,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:75047f695e5a99f5e0c2068c593f47ceb1d68c58830f060fb26dc185668456bb"
+              },
+              {
+                "cost_usd": 0.114763,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:3e2128a9ed33d3bc3141a189743dd56597858f0a4220b74822473363cbcb129b"
+              },
+              {
+                "cost_usd": 0.054814,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:74d574c5535a767870ae341107889b5515e754fb41856366798a39a64e1a64b7"
+              },
+              {
+                "cost_usd": 0.2027354,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:4d59d550775ac0fb86d77fb5b677dfe0340ad730d30a902eeece324bf3f06639"
+              },
+              {
+                "cost_usd": 0.5157254,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:381519007d6498768fc6f461f24a878ad0c0d6e0ad612d291b55b102d3e305db"
+              }
+            ],
+            "passed_all": false,
+            "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+            "repetitions": 1,
+            "review_clean": true,
+            "reviewed": true,
+            "scheduled": 19,
+            "success_fraction": {
+              "denominator": 19,
+              "numerator": 18
+            },
+            "successes": 18,
+            "task_successes": {
+              "node-capacity-boundary": 1,
+              "node-cross-module-permissions": 1,
+              "node-durable-queue-recovery": 1,
+              "node-export-ambiguous": 0,
+              "node-export-clear": 1,
+              "node-small-pagination": 1,
+              "node-toggle-completion": 1,
+              "react-accent-polish": 1,
+              "react-active-badge-count": 1,
+              "react-grouped-ui-updates": 1,
+              "react-saved-view-feature": 1,
+              "rust-quoted-value-parser": 1,
+              "rust-workspace-warning-summary": 1,
+              "static-accessible-disclosure": 1,
+              "static-grouped-page-updates": 1,
+              "static-notification-card-polish": 1,
+              "static-pricing-copy-polish": 1,
+              "static-responsive-settings-polish": 1,
+              "static-workspace-design-system-polish": 1
+            },
+            "total_cost_usd": 2.2776468,
+            "total_tokens": 2021234,
+            "usage_complete": true
+          },
+          {
+            "attempted": 19,
+            "code_review": {
+              "completed": 19,
+              "confirmed": {
+                "P0": 0,
+                "P1": 0,
+                "P2": 0,
+                "P3": 0
+              },
+              "evaluation_cost_usd": 12.617316,
+              "internal_review": {
+                "fixed": null,
+                "found": null,
+                "recorded": 0,
+                "scheduled": 19,
+                "unresolved": null
+              },
+              "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+              "scheduled": 19,
+              "status": "completed",
+              "unconfirmed": 6
+            },
+            "completed": 19,
+            "cost_per_success_usd": 0.1228380842105263,
+            "counts": {
+              "agent_failed": 0,
+              "cancelled": 0,
+              "completed": 19,
+              "infrastructure_failure": 0,
+              "missing": 0,
+              "missing_grading": 0,
+              "pending": 0,
+              "task_definition_gap": 0,
+              "timeout": 0
+            },
+            "coverage_complete": true,
+            "eligible": true,
+            "family": "studio-moser",
+            "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+            "label": "Studio Moser v7",
+            "mean_cost_usd": 0.1228380842105263,
+            "mean_duration_seconds": 22.766000374473823,
+            "original_estimates": [
+              {
+                "cost_usd": 0.0810166,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:af86f37982a95a85ba544630ca4f14a2e93fa71ffc1ad76ff25766e49ac7453a"
+              },
+              {
+                "cost_usd": 0.09871179999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:b41f15f86f02874403ecfd4e3657dac42939220fba971a3bbae2cfd14a50493b"
+              },
+              {
+                "cost_usd": 0.1841296,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:3a96ec7d985f1b40a5803a162a391551fc0b22273dff7e9c05c648b73aadd632"
+              },
+              {
+                "cost_usd": 0.10840659999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:96b33c2bf3cef12b1542b64bd22967983de8395060ce56b7616da3dbc81e6b3f"
+              },
+              {
+                "cost_usd": 0.080128,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:a34017b19218320080a1ad4ba29edaca6b92598888ad99dc7f2e847b8f669a97"
+              },
+              {
+                "cost_usd": 0.115446,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:fe436472b958527715979619c908043dd4e5d0e3ce20bad8c33c6458bfdefcf4"
+              },
+              {
+                "cost_usd": 0.072214,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:894b70b1cd4201fc8006ad38b3e25e1ecd6b656844f125ca36cc28e80ec90bfe"
+              },
+              {
+                "cost_usd": 0.0713328,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:3b86ab9bbd48d116ab6aafccba3d5b6d766e86ee1021c7ca7b4cfe52ed06e94c"
+              },
+              {
+                "cost_usd": 0.0935028,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:e777b367d08961f24b76cee6496af15fb770a94078e98a2b54d743819cc06d0f"
+              },
+              {
+                "cost_usd": 0.0769002,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:83cffbc61e5002e8514cb682f9c462e4dd191c1d4890fbd257ee54390c12212c"
+              },
+              {
+                "cost_usd": 0.2188798,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:9bb338356e58bdbd6c620ec6bde86171d7dbf8fd42ff36fba9ae1cc41d914f12"
+              },
+              {
+                "cost_usd": 0.08669779999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:782b3e8a57c76cdf3d6ea04f5caf81338736c8599d05289d7b5fe395911de965"
+              },
+              {
+                "cost_usd": 0.089027,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:5bc369923e150f6acdc1fcd531da8afaab3c5512fc47249723bfe320b2cdd536"
+              },
+              {
+                "cost_usd": 0.11161019999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:df96b7cb1d8a27454cdb53bc55507d12910ba80a5a34731701c3277c7e871a22"
+              },
+              {
+                "cost_usd": 0.0795306,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:92821d6fdc71006131dfeab508bc18798b1f5be4682b0658364bced95128bb68"
+              },
+              {
+                "cost_usd": 0.13227,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:0b394dd52986fe84ba4595157c8d5dc23e89179c0bd63b151f3fd2b4f86e4482"
+              },
+              {
+                "cost_usd": 0.078667,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:0fe056fb695a226894a3ad40e8df52f189ed91385e1a5119555572518b469526"
+              },
+              {
+                "cost_usd": 0.180777,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:40ddca2b52a2f83dece47bab24c4a93fa4e8998c4c336cf8dce39f8a92586da8"
+              },
+              {
+                "cost_usd": 0.3746758,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:bfef0cb9e1dce954d1fba9f24c965229efc74cb1c31137da3b59861aea5b37ae"
+              }
+            ],
+            "passed_all": true,
+            "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+            "repetitions": 1,
+            "review_clean": true,
+            "reviewed": true,
+            "scheduled": 19,
+            "success_fraction": {
+              "denominator": 19,
+              "numerator": 19
+            },
+            "successes": 19,
+            "task_successes": {
+              "node-capacity-boundary": 1,
+              "node-cross-module-permissions": 1,
+              "node-durable-queue-recovery": 1,
+              "node-export-ambiguous": 1,
+              "node-export-clear": 1,
+              "node-small-pagination": 1,
+              "node-toggle-completion": 1,
+              "react-accent-polish": 1,
+              "react-active-badge-count": 1,
+              "react-grouped-ui-updates": 1,
+              "react-saved-view-feature": 1,
+              "rust-quoted-value-parser": 1,
+              "rust-workspace-warning-summary": 1,
+              "static-accessible-disclosure": 1,
+              "static-grouped-page-updates": 1,
+              "static-notification-card-polish": 1,
+              "static-pricing-copy-polish": 1,
+              "static-responsive-settings-polish": 1,
+              "static-workspace-design-system-polish": 1
+            },
+            "total_cost_usd": 2.3339236,
+            "total_tokens": 2368492,
+            "usage_complete": true
+          },
+          {
+            "attempted": 19,
+            "code_review": {
+              "completed": 19,
+              "confirmed": {
+                "P0": 0,
+                "P1": 0,
+                "P2": 0,
+                "P3": 0
+              },
+              "evaluation_cost_usd": 12.378744,
+              "internal_review": {
+                "fixed": null,
+                "found": null,
+                "recorded": 0,
+                "scheduled": 19,
+                "unresolved": null
+              },
+              "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+              "scheduled": 19,
+              "status": "completed",
+              "unconfirmed": 5
+            },
+            "completed": 19,
+            "cost_per_success_usd": 0.1308821894736842,
+            "counts": {
+              "agent_failed": 0,
+              "cancelled": 0,
+              "completed": 19,
+              "infrastructure_failure": 0,
+              "missing": 0,
+              "missing_grading": 0,
+              "pending": 0,
+              "task_definition_gap": 0,
+              "timeout": 0
+            },
+            "coverage_complete": true,
+            "eligible": true,
+            "family": "studio-moser",
+            "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+            "label": "Studio Moser v6",
+            "mean_cost_usd": 0.1308821894736842,
+            "mean_duration_seconds": 27.55925837873809,
+            "original_estimates": [
+              {
+                "cost_usd": 0.06115040000000001,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:a64f77ccd11894c43cb1403b561bc3d392d026c98265dc31e651414adf7db5b2"
+              },
+              {
+                "cost_usd": 0.10341919999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:5081ae7aec3a59f40773d3c734abf3b69d29dfc8498cb1b8a28260f65c10e5a0"
+              },
+              {
+                "cost_usd": 0.2289854,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:2ea4d54a2fc8046d2979e9700abe433c3981040e1f261e2f4c3a646a36291939"
+              },
+              {
+                "cost_usd": 0.1175272,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:7f4f95a94e1c603f5a75c3f880db8bb4468e92c3150d93fed96e90adc761747c"
+              },
+              {
+                "cost_usd": 0.0783912,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:2c8e0eba109a481bff74e7b1f7467f46682f5c718a4351918145eb97c5b1e326"
+              },
+              {
+                "cost_usd": 0.115038,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:c266089d2c3f97d514ca9b7ce8702b350e021af546b4b1b1e02ef07925f62a97"
+              },
+              {
+                "cost_usd": 0.062829,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:e835931108791c24bc234b0a0273f9a348227dc5984d736c57e5aa435aab10d7"
+              },
+              {
+                "cost_usd": 0.0667586,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:1ad25ab8248bd305fa67f7aa0a12c86707912e09ccbf948aac217797a016bff6"
+              },
+              {
+                "cost_usd": 0.1034132,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:526b4bea2a53310e63a868a3cde9387c8601e620048fc85ca5f5b9b7ce6cc16e"
+              },
+              {
+                "cost_usd": 0.07400780000000001,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:5d5e20eec66b4b5d7ba95624b8bf4a35ae22d7ccf8bc946fab5478ac1f2884f6"
+              },
+              {
+                "cost_usd": 0.2303792,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:9491bdb5ccced0f853c523e39f17f2ec2c89a2e52288dbf0c604b7e852d9b5c3"
+              },
+              {
+                "cost_usd": 0.083036,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:79ab36e2c582199fdd546edbd4b9ae8fe331738f1e449492817321cca3194c1c"
+              },
+              {
+                "cost_usd": 0.08730840000000001,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:fb699eaf48649672409688d290ae33ee109d0be0b4e6a59ffadd840509f25f92"
+              },
+              {
+                "cost_usd": 0.1216866,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:38cc75c4d15bbae33cfd882ada09d705bad9a8ab0dc51b70fbbe7d1911b5818d"
+              },
+              {
+                "cost_usd": 0.08225299999999999,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:d85198c97c971f5d311ff8b5c8794481858621805bd057ae435ac3ebfb7766b1"
+              },
+              {
+                "cost_usd": 0.1259686,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:4e0aa57e9e662b0e77d736dcef626ade6240b3e2afed331a201aecdc770aa5cd"
+              },
+              {
+                "cost_usd": 0.076183,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:93754fabcda33af8717758a72c95cb3d3bd1a55fc09070fd0c215556719582e1"
+              },
+              {
+                "cost_usd": 0.15122780000000002,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:9beab791e7a5dab1ff42894e79def96e0688eeae33b3931e077bd725c83e3788"
+              },
+              {
+                "cost_usd": 0.517199,
+                "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+                "trial_id": "sha256:b0a4b4282a7b9f925ddab97caea9e25ec16a928dfffa2c0932351cffb3abd865"
+              }
+            ],
+            "passed_all": true,
+            "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+            "repetitions": 1,
+            "review_clean": true,
+            "reviewed": true,
+            "scheduled": 19,
+            "success_fraction": {
+              "denominator": 19,
+              "numerator": 19
+            },
+            "successes": 19,
+            "task_successes": {
+              "node-capacity-boundary": 1,
+              "node-cross-module-permissions": 1,
+              "node-durable-queue-recovery": 1,
+              "node-export-ambiguous": 1,
+              "node-export-clear": 1,
+              "node-small-pagination": 1,
+              "node-toggle-completion": 1,
+              "react-accent-polish": 1,
+              "react-active-badge-count": 1,
+              "react-grouped-ui-updates": 1,
+              "react-saved-view-feature": 1,
+              "rust-quoted-value-parser": 1,
+              "rust-workspace-warning-summary": 1,
+              "static-accessible-disclosure": 1,
+              "static-grouped-page-updates": 1,
+              "static-notification-card-polish": 1,
+              "static-pricing-copy-polish": 1,
+              "static-responsive-settings-polish": 1,
+              "static-workspace-design-system-polish": 1
+            },
+            "total_cost_usd": 2.4867616,
+            "total_tokens": 2433694,
+            "usage_complete": true
+          }
+        ],
+        "leaders": {
+          "observed_cost_ids": [
+            "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7"
+          ],
+          "observed_time_ids": [
+            "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56"
+          ]
+        },
+        "reasons": [
+          "code_review_unconfirmed",
+          "quality_ineligible",
+          "practical_advantage_supported",
+          "cost_time_tradeoff"
+        ],
+        "status": "recommended",
+        "summary": "A practical cost or time advantage with noninferiority is supported against every other eligible contender.",
+        "unsolved_tasks": [],
+        "winner_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56"
+      },
+      "limitations": [
+        "4 original trials were superseded by continuation or correction runs; the superseded trials are listed."
+      ],
+      "members": [
+        {
+          "adapter_corrected": false,
+          "adapter_digest": "sha256:859d11c45fc7059644331f26ca4354dc39e046aab24d53c4ab55b637d87e770f",
+          "evaluator_digest": "sha256:f76552402625bbe98330bac4f4619044a10fcade5b2068adac21747f34cdd571",
+          "label": "Claude Opus 5.5 Medium \u2014 Studio v6 versus v5, controlled toolbox",
+          "manifest_digest": "sha256:be08b380141f7db17c6238cf2ebaf3bed14b03fd3cdb0320250f3e6c22c101a1",
+          "report_id": "sha256:f3d98294dd211e1229832aad82c63ce2810823a83b4851a9161eb55e4a41a89d",
+          "trials_used": 72
+        },
+        {
+          "adapter_corrected": false,
+          "adapter_digest": "sha256:859d11c45fc7059644331f26ca4354dc39e046aab24d53c4ab55b637d87e770f",
+          "evaluator_digest": "sha256:377216222cd15f711140a236c9e0a2f3244eaec21cf0e74856bde07b3bc2f04e",
+          "label": "Claude Opus 5.5 Medium \u2014 v6 correction: node-export-ambiguous scripted user",
+          "manifest_digest": "sha256:7666ed2ce5bd04fc9d940e49a2a846d6ea9b70d232109c233522c0384c229630",
+          "report_id": "sha256:921ba8aceefb3debf859175bfd4630b13380ff96fefaec6838ce96c154549fc0",
+          "trials_used": 4
+        },
+        {
+          "adapter_corrected": false,
+          "adapter_digest": "sha256:859d11c45fc7059644331f26ca4354dc39e046aab24d53c4ab55b637d87e770f",
+          "evaluator_digest": "sha256:f76552402625bbe98330bac4f4619044a10fcade5b2068adac21747f34cdd571",
+          "label": "Claude Opus 5.5 Medium \u2014 Studio v7, controlled toolbox",
+          "manifest_digest": "sha256:e35fda020460bfd73a7dc9d83695942208b11148813909086dec5509d7c146dd",
+          "report_id": "sha256:e552d3993d611e12c476ecdfb7f186781317cefbcb329d084559c3dd08162b0f",
+          "trials_used": 19
+        }
+      ],
+      "superseded_trials": [
+        {
+          "replaced_by": "sha256:a273d43e4f4806f01171ef86a61392e2f4916b29f325eeb66f92209a62792f2c",
+          "report_id": "sha256:f3d98294dd211e1229832aad82c63ce2810823a83b4851a9161eb55e4a41a89d",
+          "status": "completed",
+          "task_corrected": true,
+          "trial_id": "sha256:a273d43e4f4806f01171ef86a61392e2f4916b29f325eeb66f92209a62792f2c"
+        },
+        {
+          "replaced_by": "sha256:9fc684794c49a4b77006f7610784d595b64297fc0aad579b8b45d81a3b13b975",
+          "report_id": "sha256:f3d98294dd211e1229832aad82c63ce2810823a83b4851a9161eb55e4a41a89d",
+          "status": "task_definition_gap",
+          "task_corrected": true,
+          "trial_id": "sha256:9fc684794c49a4b77006f7610784d595b64297fc0aad579b8b45d81a3b13b975"
+        },
+        {
+          "replaced_by": "sha256:08762da451e1ac46e92f2820abbd825f129fc946e6826fa62b6e0ba681a26c36",
+          "report_id": "sha256:f3d98294dd211e1229832aad82c63ce2810823a83b4851a9161eb55e4a41a89d",
+          "status": "completed",
+          "task_corrected": true,
+          "trial_id": "sha256:08762da451e1ac46e92f2820abbd825f129fc946e6826fa62b6e0ba681a26c36"
+        },
+        {
+          "replaced_by": "sha256:7f4f95a94e1c603f5a75c3f880db8bb4468e92c3150d93fed96e90adc761747c",
+          "report_id": "sha256:f3d98294dd211e1229832aad82c63ce2810823a83b4851a9161eb55e4a41a89d",
+          "status": "completed",
+          "task_corrected": true,
+          "trial_id": "sha256:7f4f95a94e1c603f5a75c3f880db8bb4468e92c3150d93fed96e90adc761747c"
+        }
+      ],
+      "task_digests": {
+        "node-capacity-boundary": "sha256:c57725dd9dadb8819a78527033239afbeff67d3603b5dfde370d9fa6d2ca65c8",
+        "node-cross-module-permissions": "sha256:4d4f098b7a7ec3e7586cdeebc673e0363a13d2d3222977394d02c855144e4fbb",
+        "node-durable-queue-recovery": "sha256:08aea66d7aefc9042ea73f5f6df9bbf7e18e63c5bd93bb69cb122b09fc99da12",
+        "node-export-ambiguous": "sha256:467cccb54eae75ed24d5e83252aa69826f0dd7733759a468c9da9661a6c392c3",
+        "node-export-clear": "sha256:62380bdc343066d88aaa1e46038f7b888449e371858f584ef32df1a9d919f8f4",
+        "node-small-pagination": "sha256:936572507b5082662e170b816b376dbdae62749d93cf059ed472b5644c2f39cf",
+        "node-toggle-completion": "sha256:db06a595b31088a4c119236402ae66da70ed011fd4017054b72652de3794342b",
+        "react-accent-polish": "sha256:9feeb1ee624e88bcf58dbed76b23d8b9c5c88e2f7a301cf4f52cf9375d046fbb",
+        "react-active-badge-count": "sha256:2005186e8e1a8b84acf600600708c9a668176075c5d435996285410de7de9d18",
+        "react-grouped-ui-updates": "sha256:3b70e2be32360f802a6f7b8c9f0557058da029f8e436c520ae8ce16ebbfc821f",
+        "react-saved-view-feature": "sha256:331fa5995229a3d8f4c01d9e7e04abbc6170198360e7f55fbeef1bf039da3536",
+        "rust-quoted-value-parser": "sha256:57c202dbf3b15bbeb78eb1e88cbf308e92e178087362acd749675715c2dc2504",
+        "rust-workspace-warning-summary": "sha256:da1225a80428c4663683d893b1ce14059446dc9585681297d7a73590612159cc",
+        "static-accessible-disclosure": "sha256:2b21bbd51582a70a864614f7150f31f32c7a2899bc75349d439fc967de43882f",
+        "static-grouped-page-updates": "sha256:e48108cd7dbc23822586d79b45feaaa156c55242d034cfd4d63f959f7de151ef",
+        "static-notification-card-polish": "sha256:3aa8ce5ddacf5b2f89570907d38f0345d894244e592da8105fffb265c4bed836",
+        "static-pricing-copy-polish": "sha256:f0eab52be0e0c9796c435ac852badf22f8e57b0e3ada1a8f40e6552d4c5f7da6",
+        "static-responsive-settings-polish": "sha256:ed299b51cc9a3147e00517a49bdb7dcaf43eb17244f7bbc7d209f94acddcce15",
+        "static-workspace-design-system-polish": "sha256:2d56ce11b2326b90438a72480f10fa8a08d4a54a5bb953a96b0ce8e6d46d834a"
+      }
+    }
+  },
+  "reasons": [],
+  "report_ids": {
+    "comparison": [
+      "sha256:f3d98294dd211e1229832aad82c63ce2810823a83b4851a9161eb55e4a41a89d",
+      "sha256:921ba8aceefb3debf859175bfd4630b13380ff96fefaec6838ce96c154549fc0",
+      "sha256:e552d3993d611e12c476ecdfb7f186781317cefbcb329d084559c3dd08162b0f"
+    ]
+  },
+  "scope": "Frozen toolbox and kickoff conditions only; not universal harness reliability.",
+  "status": "recommended",
+  "summaries": {
+    "L1/bug": [
+      {
+        "correct": 1,
+        "cost_usd": 0.0979402,
+        "duration_seconds": 13.464163130003726,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.0608058,
+        "duration_seconds": 9.578901337998104,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 1.0,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.054999,
+        "duration_seconds": 8.562326378989383,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.0810166,
+        "duration_seconds": 9.509429504003492,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 1.0,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.06115040000000001,
+        "duration_seconds": 9.65239467000356,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 1.0,
+        "trials": 1,
+        "usage_complete": true
+      }
+    ],
+    "L1/feature": [
+      {
+        "correct": 1,
+        "cost_usd": 0.0916892,
+        "duration_seconds": 11.499931047001155,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.06995399999999999,
+        "duration_seconds": 11.25299796400941,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 1.0,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.0468582,
+        "duration_seconds": 8.662120919994777,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.072214,
+        "duration_seconds": 9.839579880004749,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.062829,
+        "duration_seconds": 9.778800713000237,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 1.0,
+        "trials": 1,
+        "usage_complete": true
+      }
+    ],
+    "L1/polish": [
+      {
+        "correct": 2,
+        "cost_usd": 0.18554199999999998,
+        "duration_seconds": 23.697027803005767,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 2
+        },
+        "quality": null,
+        "trials": 2,
+        "usage_complete": true
+      },
+      {
+        "correct": 2,
+        "cost_usd": 0.1360882,
+        "duration_seconds": 20.4767570910044,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 2
+        },
+        "quality": null,
+        "trials": 2,
+        "usage_complete": true
+      },
+      {
+        "correct": 2,
+        "cost_usd": 0.1060948,
+        "duration_seconds": 19.4571873399982,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 2
+        },
+        "quality": 0.9833333333333333,
+        "trials": 2,
+        "usage_complete": true
+      },
+      {
+        "correct": 2,
+        "cost_usd": 0.14999980000000002,
+        "duration_seconds": 20.424387175997254,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 2
+        },
+        "quality": null,
+        "trials": 2,
+        "usage_complete": true
+      },
+      {
+        "correct": 2,
+        "cost_usd": 0.1429416,
+        "duration_seconds": 21.877864802008844,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 2
+        },
+        "quality": null,
+        "trials": 2,
+        "usage_complete": true
+      }
+    ],
+    "L2/bug": [
+      {
+        "correct": 3,
+        "cost_usd": 0.4020104,
+        "duration_seconds": 76.8673653670121,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9333333333333332,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.27395020000000003,
+        "duration_seconds": 53.42374360800022,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9666666666666667,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.2402102,
+        "duration_seconds": 58.184931693002,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9555555555555555,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.2918108,
+        "duration_seconds": 50.45819489800488,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9666666666666667,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.3081358,
+        "duration_seconds": 64.95881557300163,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9666666666666667,
+        "trials": 3,
+        "usage_complete": true
+      }
+    ],
+    "L2/feature": [
+      {
+        "correct": 3,
+        "cost_usd": 0.43842400000000004,
+        "duration_seconds": 78.56841157699819,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.8833333333333333,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.3103874,
+        "duration_seconds": 65.31033090500569,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9166666666666666,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 2,
+        "cost_usd": 0.3226888,
+        "duration_seconds": 82.33116803699522,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.8166666666666667,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.3039806,
+        "duration_seconds": 56.05312139999296,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9583333333333333,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.3109564,
+        "duration_seconds": 61.99482319501112,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9416666666666667,
+        "trials": 3,
+        "usage_complete": true
+      }
+    ],
+    "L2/polish": [
+      {
+        "correct": 1,
+        "cost_usd": 0.1660976,
+        "duration_seconds": 24.864148219989147,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.09513759999999999,
+        "duration_seconds": 17.314785132999532,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9333333333333333,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.114763,
+        "duration_seconds": 22.919118718011305,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.13227,
+        "duration_seconds": 18.18250025899033,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9333333333333333,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.1259686,
+        "duration_seconds": 21.420044550002785,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      }
+    ],
+    "L3/bug": [
+      {
+        "correct": 1,
+        "cost_usd": 0.15853499999999998,
+        "duration_seconds": 29.92732767999405,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9333333333333333,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.0965262,
+        "duration_seconds": 17.663589925010456,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 1.0,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.08221719999999999,
+        "duration_seconds": 21.0564862589963,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9333333333333333,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.09871179999999999,
+        "duration_seconds": 18.89166354999179,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 1.0,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.10341919999999999,
+        "duration_seconds": 24.25962788600009,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      }
+    ],
+    "L3/feature": [
+      {
+        "correct": 2,
+        "cost_usd": 0.35965820000000004,
+        "duration_seconds": 65.6294183620048,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 2
+        },
+        "quality": 0.8500000000000001,
+        "trials": 2,
+        "usage_complete": true
+      },
+      {
+        "correct": 2,
+        "cost_usd": 0.2739204,
+        "duration_seconds": 51.48796473100083,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 2
+        },
+        "quality": 0.8999999999999999,
+        "trials": 2,
+        "usage_complete": true
+      },
+      {
+        "correct": 2,
+        "cost_usd": 0.2645912,
+        "duration_seconds": 63.20902565300639,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 2
+        },
+        "quality": 0.9166666666666665,
+        "trials": 2,
+        "usage_complete": true
+      },
+      {
+        "correct": 2,
+        "cost_usd": 0.30790680000000004,
+        "duration_seconds": 60.27328394299548,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 2
+        },
+        "quality": 0.9166666666666667,
+        "trials": 2,
+        "usage_complete": true
+      },
+      {
+        "correct": 2,
+        "cost_usd": 0.3176876,
+        "duration_seconds": 67.7077485720074,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 2
+        },
+        "quality": 0.95,
+        "trials": 2,
+        "usage_complete": true
+      }
+    ],
+    "L3/polish": [
+      {
+        "correct": 3,
+        "cost_usd": 0.4923482,
+        "duration_seconds": 76.32146345100773,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9333333333333332,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.33366819999999997,
+        "duration_seconds": 66.27574615500635,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": null,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.3291514,
+        "duration_seconds": 69.61503665600321,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9444444444444444,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.3372078,
+        "duration_seconds": 56.024331527005415,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": null,
+        "trials": 3,
+        "usage_complete": true
+      },
+      {
+        "correct": 3,
+        "cost_usd": 0.3074886,
+        "duration_seconds": 53.264789857988944,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 3
+        },
+        "quality": 0.9666666666666667,
+        "trials": 3,
+        "usage_complete": true
+      }
+    ],
+    "L4/bug": [
+      {
+        "correct": 1,
+        "cost_usd": 0.2396822,
+        "duration_seconds": 58.59411123600148,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.22698000000000002,
+        "duration_seconds": 57.606561942986446,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.20034760000000001,
+        "duration_seconds": 54.43158215000585,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.1841296,
+        "duration_seconds": 42.899200352010666,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 1.0,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.2289854,
+        "duration_seconds": 56.41058615100337,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9333333333333333,
+        "trials": 1,
+        "usage_complete": true
+      }
+    ],
+    "L4/feature": [
+      {
+        "correct": 0,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {},
+        "quality": null,
+        "trials": 0,
+        "usage_complete": false
+      },
+      {
+        "correct": 0,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {},
+        "quality": null,
+        "trials": 0,
+        "usage_complete": false
+      },
+      {
+        "correct": 0,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {},
+        "quality": null,
+        "trials": 0,
+        "usage_complete": false
+      },
+      {
+        "correct": 0,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {},
+        "quality": null,
+        "trials": 0,
+        "usage_complete": false
+      },
+      {
+        "correct": 0,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {},
+        "quality": null,
+        "trials": 0,
+        "usage_complete": false
+      }
+    ],
+    "L4/polish": [
+      {
+        "correct": 1,
+        "cost_usd": 0.6395785999999999,
+        "duration_seconds": 165.8995966589864,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9333333333333333,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.44078680000000003,
+        "duration_seconds": 119.52033947101154,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9333333333333333,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.5157254,
+        "duration_seconds": 133.45064035199175,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.8666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.3746758,
+        "duration_seconds": 89.9983146260056,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.8666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      },
+      {
+        "correct": 1,
+        "cost_usd": 0.517199,
+        "duration_seconds": 132.30041322599573,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 1
+        },
+        "quality": 0.9666666666666666,
+        "trials": 1,
+        "usage_complete": true
+      }
+    ],
+    "holdouts": [
+      {
+        "correct": 0,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {},
+        "quality": null,
+        "trials": 0,
+        "usage_complete": false
+      },
+      {
+        "correct": 0,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {},
+        "quality": null,
+        "trials": 0,
+        "usage_complete": false
+      },
+      {
+        "correct": 0,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {},
+        "quality": null,
+        "trials": 0,
+        "usage_complete": false
+      },
+      {
+        "correct": 0,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {},
+        "quality": null,
+        "trials": 0,
+        "usage_complete": false
+      },
+      {
+        "correct": 0,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {},
+        "quality": null,
+        "trials": 0,
+        "usage_complete": false
+      }
+    ],
+    "overall": [
+      {
+        "correct": 19,
+        "cost_usd": 3.2715056,
+        "duration_seconds": 625.3329645320046,
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "outcomes": {
+          "completed": 19
+        },
+        "quality": null,
+        "trials": 19,
+        "usage_complete": true
+      },
+      {
+        "correct": 19,
+        "cost_usd": 2.3182048,
+        "duration_seconds": 489.91171826403297,
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "outcomes": {
+          "completed": 19
+        },
+        "quality": null,
+        "trials": 19,
+        "usage_complete": true
+      },
+      {
+        "correct": 18,
+        "cost_usd": 2.2776468,
+        "duration_seconds": 541.8796241569944,
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "outcomes": {
+          "completed": 19
+        },
+        "quality": 0.9259259259259259,
+        "trials": 19,
+        "usage_complete": true
+      },
+      {
+        "correct": 19,
+        "cost_usd": 2.3339236,
+        "duration_seconds": 432.5540071150026,
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "outcomes": {
+          "completed": 19
+        },
+        "quality": null,
+        "trials": 19,
+        "usage_complete": true
+      },
+      {
+        "correct": 19,
+        "cost_usd": 2.4867616,
+        "duration_seconds": 523.6259091960237,
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "outcomes": {
+          "completed": 19
+        },
+        "quality": null,
+        "trials": 19,
+        "usage_complete": true
+      }
+    ]
+  },
+  "winner_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56"
+}

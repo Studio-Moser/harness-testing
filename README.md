@@ -6,20 +6,21 @@ Harness Testing answers one question: **does a coding-agent harness make the age
 
 **[Open the live dashboard →](https://studio-moser.github.io/harness-testing/)** Every trial, per-task result, cost, transcript metric and automated grade, rebuilt from the evidence in this repository on every push.
 
-[![The Results page of the dashboard: a plain-language read of each harness with pros and cons](docs/Images/Results%20Overview.png)](https://studio-moser.github.io/harness-testing/)
+[![The Results page of the dashboard: quality against runtime, tokens and cost for every harness and kickoff model](docs/Images/Results%20Overview.png)](https://studio-moser.github.io/harness-testing/)
 
 ### Claude Opus 5.5, medium effort
 
-19 workflow tasks, one attempt per task per harness, 76 trials.
+19 workflow tasks, one attempt per task per harness, 95 trials. Each new harness version runs alone and is judged against the results already retained for the same model and effort.
 
 | Harness | Correct | Avg cost | Avg time | Work-quality grade | Words per task |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| **Studio Moser v6 + time matters** | **100%** | $0.12 | **26s** | 96% | **169** |
+| **Studio Moser v7** | **100%** | $0.12 | **23s** | 96% | **162** |
+| Studio Moser v6 + time matters | 100% | $0.12 | 26s | 96% | 169 |
 | Studio Moser v6 | 100% | $0.13 | 28s | 96% | 183 |
 | Studio Moser v5 | 100% | $0.17 | 33s | 92% | 293 |
 | Nothing | 95% | **$0.12** | 29s | 92% | 249 |
 
-Studio Moser v6 + time matters is the pick: as correct as anything tested, the fastest, and the least talkative, at the cost of the bare runtime. Superpowers was skipped on this model: earlier testing showed it wasn't needed on newer models.
+Studio Moser v7 is the pick: as correct as anything tested, the fastest, and the least talkative, at the cost of the bare runtime. Superpowers was skipped on this model: earlier testing showed it wasn't needed on newer models.
 
 ### GPT-6 Astra, medium effort
 
@@ -63,7 +64,7 @@ These are frozen benchmark projects. A harder test means selecting or authoring 
 1. Copy a template from `runs/examples/`, set the harness commits, kickoff model and tasks, and put the reviewed personal rubric at ignored `runs/inputs/Model Rubric.yml`.
 2. Plan: `uv run harness-test run plan --request 'runs/inputs/Experiment Request.json'`. This installs plugins and inspects images but starts no model.
 3. Obtain approval of the printed manifest digest, then `uv run harness-test run execute --manifest … --approve sha256:…`.
-4. Evaluate the retained submissions: `review prepare` and `review record` for the blinded final-patch review, `collaboration prepare` and `collaboration record` for the blinded automated work-quality grades. Grader sessions are model work and need their own approval.
+4. Evaluate the retained submissions: `review prepare` and `review record` for the blinded final-patch review, `collaboration prepare` and `collaboration record` for the blinded automated work-quality grades. Reviewer and grader sessions are model work covered by the run's approval, so an approved run continues through them without a second request.
 5. For a full toolbox pass, run `campaign summarize` with each lane's original report followed by any recovery or correction reports in execution order. It fills every scheduled slot once, never replaces a completed trial unless the task itself was corrected, and writes the summary the dashboard reads.
 
 The [Runbook](docs/Runbook.md) has the exact commands; [Methodology](docs/Methodology.md) explains the measurements and rules.
