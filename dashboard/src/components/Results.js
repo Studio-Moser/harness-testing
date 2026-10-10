@@ -1246,6 +1246,7 @@ function renderTradeoffChart(rows, {field, title, formatter, ariaLabel, colors})
   const tip = element("div", "results-chart-tip");
   tip.setAttribute("role", "status");
   tip.hidden = true;
+  const plot = element("div", "results-chart-plot");
   for (const score of [0, 0.25, 0.5, 0.75, 1].map((step) => qualityFloor + step * qualityRange)) {
     const y = margin.top + (qualityCeiling - score) / qualityRange * plotHeight;
     svg.append(
@@ -1273,12 +1274,15 @@ function renderTradeoffChart(rows, {field, title, formatter, ariaLabel, colors})
         element("strong", "", row.label),
         element("span", "", `${qualityTick(tradeoff.quality)} quality · ${formatter(tradeoff.value)} · ${plural(tradeoff.observations, "trial")}`)
       );
-      // Anchor toward the middle so a tip at either edge stays inside the card.
-      const side = x / width;
-      tip.style.left = `${side * 100}%`;
-      tip.style.top = `${y / height * 100}%`;
-      tip.style.transform = `translate(${side > 0.6 ? "-100%" : side < 0.4 ? "0" : "-50%"}, calc(-100% - 14px))`;
       tip.hidden = false;
+      // Center the tip on the mark, then keep it inside the plot on every side.
+      const plotWidth = plot.clientWidth || 0;
+      const tipWidth = tip.offsetWidth || 0;
+      const markX = x / width * plotWidth;
+      const markY = y / height * (plot.clientHeight || 0);
+      const above = markY - (tip.offsetHeight || 0) - 14;
+      tip.style.left = `${Math.max(0, Math.min(markX - tipWidth / 2, plotWidth - tipWidth))}px`;
+      tip.style.top = `${above >= 0 ? above : markY + 14}px`;
     };
     const hide = () => { tip.hidden = true; };
     for (const name of ["pointerenter", "focus"]) point.addEventListener(name, show);
@@ -1288,7 +1292,6 @@ function renderTradeoffChart(rows, {field, title, formatter, ariaLabel, colors})
   const scroll = element("div", "results-chart-scroll");
   scroll.setAttribute("tabindex", "0");
   scroll.setAttribute("aria-label", ariaLabel);
-  const plot = element("div", "results-chart-plot");
   plot.append(svg, tip);
   scroll.append(plot);
   panel.append(element("p", "results-scroll-cue", "Swipe horizontally to inspect every harness point."), scroll);

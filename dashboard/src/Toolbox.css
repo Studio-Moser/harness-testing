@@ -112,7 +112,7 @@ body { margin: 0; background: var(--tblr-bg-surface-secondary); }
 .results-chart-plot { position: relative; }
 .results-chart-point { cursor: pointer; outline: none; }
 .results-chart-point:hover, .results-chart-point:focus-visible { stroke: var(--tblr-body-color); }
-.results-chart-tip { position: absolute; z-index: 2; display: grid; gap: .125rem; padding: .375rem .625rem; border: 1px solid var(--tblr-border-color); border-radius: var(--tblr-border-radius); background: var(--tblr-bg-surface); box-shadow: var(--tblr-box-shadow); color: var(--tblr-body-color); font-size: .8125rem; white-space: nowrap; pointer-events: none; }
+.results-chart-tip { position: absolute; z-index: 2; display: grid; gap: .125rem; padding: .375rem .625rem; border: 1px solid var(--tblr-border-color); border-radius: var(--tblr-border-radius); background: var(--tblr-bg-surface); box-shadow: var(--tblr-box-shadow); color: var(--tblr-body-color); font-size: .8125rem; width: max-content; max-width: 100%; pointer-events: none; }
 .results-chart-tip[hidden] { display: none; }
 .results-chart-tip span { color: var(--tblr-secondary); }
 .results-chart-superpowers { fill: var(--tblr-blue); }
