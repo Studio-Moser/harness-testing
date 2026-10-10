@@ -137,9 +137,9 @@ def test_campaign_declares_complete_lanes_and_total_evaluation_workload():
     policy, _, plan, reports = fixture()
     profiles = tomllib.loads((ROOT / "runs/Profiles.toml").read_text())["profiles"]
     assert profiles["research"]["max_sessions"] >= 5 * 3 * 3
-    assert len(policy["tasks"]) == 27
-    assert plan["workload"]["coding_trials"] == 243
-    assert plan["workload"]["minimum_model_sessions"] == 729
+    assert len(policy["tasks"]) == 24
+    assert plan["workload"]["coding_trials"] == 216
+    assert plan["workload"]["minimum_model_sessions"] == 648
     assert "human_pairs" not in plan["workload"]
     result = summarize(plan, reports)
     assert result["status"] == "recommended" and result["winner_id"] == "a"
@@ -147,11 +147,11 @@ def test_campaign_declares_complete_lanes_and_total_evaluation_workload():
     assert result["lanes"]["comparison"]["superseded_trials"] == []
     assert result["summaries"]["overall"][0] == {
         "id": "a",
-        "trials": 81,
-        "correct": 81,
-        "outcomes": {"completed": 81},
-        "duration_seconds": 810,
-        "cost_usd": 40.5,
+        "trials": 72,
+        "correct": 72,
+        "outcomes": {"completed": 72},
+        "duration_seconds": 720,
+        "cost_usd": 36.0,
         "usage_complete": True,
         "quality": 0.8,
     }
@@ -159,7 +159,7 @@ def test_campaign_declares_complete_lanes_and_total_evaluation_workload():
     document = request_document()
     document["conditions"].update(plan["lanes"]["comparison"]["conditions"])
     document["conditions"]["kickoff"] = request_document()["conditions"]["kickoff"]
-    document["limits"]["max_sessions"] = 66
+    document["limits"]["max_sessions"] = 57
     assert validate_experiment_request(document) == []
 
 
@@ -210,7 +210,7 @@ def test_campaign_unresolved_review_claims_failures_and_duplicate_trials_cannot_
     result = summarize(plan, reports)
     assert result["winner_id"] is None and result["status"] == "no_clear_winner"
     assert result["lanes"]["comparison"]["comparison"]["contenders"][0]["eligible"] is False
-    assert result["summaries"]["overall"][0]["correct"] == 80
+    assert result["summaries"]["overall"][0]["correct"] == 71
     reports = copy.deepcopy(original)
     reports[0]["experiment"]["trials"].append(reports[0]["experiment"]["trials"][0])
     with pytest.raises(ValueError, match="duplicated"):
@@ -225,12 +225,12 @@ def test_campaign_weights_export_variants_as_one_task_block():
                 for dimension in trial["collaboration"]["grade"]["dimensions"]:
                     dimension["score"] = 1
     result = summarize(plan, reports)
-    assert result["summaries"]["overall"][0]["quality"] == pytest.approx((25 * 0.8 + 0.2) / 26)
+    assert result["summaries"]["overall"][0]["quality"] == pytest.approx((22 * 0.8 + 0.2) / 23)
 
 
 def test_one_attempt_diagnostic_campaign_is_decision_evidence():
     policy, manifests, plan, reports = fixture(attempts=1, purpose="diagnostic")
-    assert plan["workload"]["coding_trials"] == 81
+    assert plan["workload"]["coding_trials"] == 72
     result = summarize(plan, reports)
     assert result["status"] == "recommended" and result["winner_id"] == "a"
     assert result["reasons"] == []
@@ -239,8 +239,8 @@ def test_one_attempt_diagnostic_campaign_is_decision_evidence():
     trial.update(status="timeout", usage_complete=False, cost_usd=None)
     result = summarize(plan, reports)
     row = result["summaries"]["overall"][0]
-    assert row["correct"] == 26 and row["outcomes"]["timeout"] == 1
-    assert row["duration_seconds"] == 270 and row["cost_usd"] is None
+    assert row["correct"] == 23 and row["outcomes"]["timeout"] == 1
+    assert row["duration_seconds"] == 240 and row["cost_usd"] is None
     assert row["usage_complete"] is False
     assert result["winner_id"] is None
     trial["duration_seconds"] = None
@@ -285,7 +285,7 @@ def test_campaign_assembles_original_recovery_and_correction_reports():
     # Unstarted slots and an infrastructure failure are completed by a recovery run.
     recovery = _split(
         original,
-        ["react-accent-polish", "node-export-clear"],
+        ["react-accent-polish-committed", "node-export-clear"],
         continuation_id="recovery",
         statuses={"node-export-clear": {"status": "infrastructure_failure"}},
     )
@@ -299,7 +299,7 @@ def test_campaign_assembles_original_recovery_and_correction_reports():
     result = summarize(plan, [original, recovery, correction, reports[1]])
     lane = result["lanes"]["comparison"]
     assert result["status"] == "recommended" and result["winner_id"] == "a"
-    assert [m["trials_used"] for m in lane["members"]] == [19 * 3, 2 * 3, 3]
+    assert [m["trials_used"] for m in lane["members"]] == [16 * 3, 2 * 3, 3]
     assert [m["adapter_corrected"] for m in lane["members"]] == [False, True, False]
     assert lane["task_digests"]["react-saved-view-feature"] == digest(
         "task-react-saved-view-feature-v2"
@@ -311,7 +311,7 @@ def test_campaign_assembles_original_recovery_and_correction_reports():
     assert all(row["task_corrected"] for row in lane["superseded_trials"]
                if row["status"] == "completed")
     assert len(lane["limitations"]) == 2
-    assert lane["comparison"]["contenders"][0]["completed"] == 22
+    assert lane["comparison"]["contenders"][0]["completed"] == 19
     # Order is authoritative: listing the original last would try to undo the correction.
     with pytest.raises(ValueError, match="first report must belong"):
         summarize(plan, [recovery, original, correction, reports[1]])
@@ -321,8 +321,9 @@ def test_campaign_assembly_refuses_cherry_picking_gaps_and_uneven_corrections():
     _, _, plan, reports = fixture(attempts=1, purpose="diagnostic")
     original = reports[0]
     # A completed trial on an unchanged task cannot be replaced by a rerun.
-    retry = _split(copy.deepcopy(original), ["react-accent-polish"], continuation_id="retry",
-                   statuses={"react-accent-polish": {"status": "completed"}})
+    task = "react-accent-polish-committed"
+    retry = _split(copy.deepcopy(original), [task], continuation_id="retry",
+                   statuses={task: {"status": "completed"}})
     with pytest.raises(ValueError, match="cannot be replaced without a task correction"):
         assemble_lane(plan, "comparison", [original, retry])
     # A slot that never completed leaves the lane incomplete.
@@ -402,3 +403,27 @@ def test_a_later_report_adds_a_harness_version_without_rerunning_the_others():
     with pytest.raises(ValueError, match="incompatible conditions"):
         summarize(implicit_plan(policy, stitched), stitched)
 
+
+def test_a_later_report_adds_a_task_only_when_every_harness_runs_it():
+    policy, _, _, reports = fixture(attempts=1, purpose="diagnostic")
+    source = reports[0]["experiment"]["conditions"]["task_ids"][0]
+    extra = copy.deepcopy(reports[0])
+    extra["report_id"] = extra["manifest_digest"] = digest("added-task")
+    experiment = extra["experiment"]
+    experiment["conditions"] = dict(
+        experiment["conditions"], task_ids=["new-task"], task_digests={"new-task": digest("new")}
+    )
+    experiment["trials"] = [
+        dict(t, task_id="new-task", trial_id=f"new-{t['trial_id']}")
+        for t in experiment["trials"] if t["task_id"] == source
+    ]
+    stitched = [reports[0], extra]
+    lane = assemble_lane(implicit_plan(policy, reports), "comparison", stitched)
+    conditions = lane["experiment"]["conditions"]
+    original = reports[0]["experiment"]["conditions"]["task_ids"]
+    assert conditions["task_ids"] == original + ["new-task"]
+    assert conditions["task_digests"]["new-task"] == digest("new")
+    # A task that only some harnesses ran leaves the lane incomplete.
+    experiment["trials"] = experiment["trials"][:1]
+    with pytest.raises(ValueError, match="incomplete"):
+        assemble_lane(implicit_plan(policy, reports), "comparison", stitched)

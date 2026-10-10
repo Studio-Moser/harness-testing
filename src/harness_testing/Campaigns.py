@@ -215,16 +215,14 @@ def assemble_lane(plan: dict, lane: str, reports: list[dict]) -> dict:
         if (
             {k: v for k, v in conditions.items() if k not in continuation_fields} != shared
             or conditions["task_variant"] != lane
-            or not set(conditions["task_ids"]) <= set(frozen["conditions"]["task_ids"])
             or not {row["id"] for row in experiment["contenders"]} <= ids
         ):
             raise ValueError(f"{lane}: continuation report has incompatible conditions")
-    expected = {
-        (c, task, a)
-        for c in ids
-        for task in frozen["conditions"]["task_ids"]
-        for a in range(1, attempts + 1)
-    }
+    # A later report may add tasks; every contender in the lane must then cover them.
+    tasks = list(frozen["conditions"]["task_ids"])
+    for report in reports[1:]:
+        tasks += [t for t in report["experiment"]["conditions"]["task_ids"] if t not in tasks]
+    expected = {(c, task, a) for c in ids for task in tasks for a in range(1, attempts + 1)}
     chosen: dict[tuple, tuple[dict, dict]] = {}
     superseded = []
     for report in reports:
@@ -275,7 +273,8 @@ def assemble_lane(plan: dict, lane: str, reports: list[dict]) -> dict:
     known = {row["id"] for row in experiment["contenders"]}
     experiment["contenders"] += [row for row in plan["contenders"] if row["id"] not in known]
     experiment["conditions"] = dict(
-        frozen["conditions"], task_digests=task_digests, image_digests=image_digests
+        frozen["conditions"], task_ids=tasks, task_digests=task_digests,
+        image_digests=image_digests,
     )
     experiment["trials"] = [
         trial for _, (trial, _) in sorted(chosen.items(), key=lambda item: item[0])

@@ -3,16 +3,6 @@
   "minimum_attempts": 1,
   "weighting": "equal-task-blocks",
   "tasks": {
-    "react-accent-polish": [
-      "comparison",
-      1,
-      "polish"
-    ],
-    "static-pricing-copy-polish": [
-      "comparison",
-      1,
-      "polish"
-    ],
     "react-active-badge-count": [
       "comparison",
       2,
@@ -107,11 +97,6 @@
       "comparison",
       1,
       "bug"
-    ],
-    "node-toggle-completion": [
-      "comparison",
-      1,
-      "feature"
     ],
     "static-notification-card-polish": [
       "comparison",
