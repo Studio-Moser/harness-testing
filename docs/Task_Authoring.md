@@ -29,6 +29,7 @@ task-id/
     reward/
     workflow/
     efficiency/
+    conventions/   (optional)
 ```
 
 Rust tasks use the frozen crate and lockfile instead of the Node verifier subset.
@@ -45,7 +46,7 @@ The task configuration must preserve these boundaries:
 
 Record the byte digest of the complete `environment/` tree in `metadata.fixture_digest`. Protect every source file that the instruction does not authorize changing in `tests/Protected_Files.json`; list intended mutable files separately with their baseline hashes. Static validation fails if either boundary drifts.
 
-## Three independent criteria
+## Independent criteria
 
 Every task supplies one or more deterministic RewardKit criteria in exactly these directories:
 
@@ -53,7 +54,13 @@ Every task supplies one or more deterministic RewardKit criteria in exactly thes
 - `workflow/`: task-specific sequence requirements that are necessary to satisfy the instruction.
 - `efficiency/`: absolute policy violations such as a premature comprehensive suite or duplicate successful command.
 
-Do not reward plans, reviews, tool calls, or verbosity by themselves. Do not lower correctness because required workflow calls were omitted or a correct solution was inefficient; keep the dimensions separate. Correctness compares the semantic attempt multiset and requires each protected semantic evidence prefix to begin a distinct nonblank check; optional prose may follow the prefix. Missing required calls affect workflow, while invalid, duplicate, or extra calls affect efficiency. The verifier must use preinstalled dependencies and must never download packages at runtime.
+A fourth directory is optional:
+
+- `conventions/`: house conventions for committed work, scored by `house_conventions` in `Workflow_Criteria.py`. The work is committed on a `{type}/{kebab-case-desc}` branch with no commit on `main`, commit subjects are Conventional Commits, and files the agent creates and names are Title Case outside a small tooling allowlist.
+
+Add `conventions/` only to a task whose instruction asks for committed work, so the check applies to every harness instead of passing vacuously for one that never commits. The instruction must not state or hint at a naming, branching or commit-message convention, and the scripted user must not either. The verifier has the trajectory and `/app` but not `.git`: Git state is replayed from the recorded commands, and a history it cannot determine fails. A trial on a task with this directory succeeds only when conventions passed too. Never add the directory to an existing task: its digest backs retained results. Clone the fixture under a new task ID instead, as the `-committed` tasks do.
+
+Do not reward plans, reviews, tool calls, or verbosity by themselves. Do not lower correctness because required workflow calls were omitted, a correct solution was inefficient, or a convention was broken; keep the dimensions separate. Correctness compares the semantic attempt multiset and requires each protected semantic evidence prefix to begin a distinct nonblank check; optional prose may follow the prefix. Missing required calls affect workflow, while invalid, duplicate, or extra calls affect efficiency. The verifier must use preinstalled dependencies and must never download packages at runtime.
 
 ## Five model-free QA cases
 
@@ -67,7 +74,7 @@ Do not reward plans, reviews, tool calls, or verbosity by themselves. Do not low
 | `adversarial` | Fabricated evidence cannot pass the dimension it targets; a correct final artifact without required calls may pass correctness while failing workflow. |
 | `source-tamper` | Editing protected source is detected even when visible behavior appears correct. |
 
-The local `ScriptAgent` applies each frozen mutation and emits the declared command evidence; it never calls a model. Expected scores in `QA.json` are part of the task contract. A task is not eligible for a model-backed run until all five cases pass.
+The local `ScriptAgent` applies each frozen mutation and emits the declared command evidence; it never calls a model. Expected scores in `QA.json` are part of the task contract and name every dimension the task scores. A task with `conventions/` also needs a case that is functionally correct but breaks a convention, expecting `reward` 1 and `conventions` 0. A task is not eligible for a model-backed run until all five cases pass.
 
 ## Surgical authoring cadence
 

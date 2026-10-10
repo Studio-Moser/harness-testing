@@ -56,7 +56,7 @@ The kickoff fixes the orchestrator's model and effort; normal child routing stay
 
 | Lane | Scope |
 | --- | --- |
-| `tasks/workflow/` | Nineteen controlled React/TypeScript, JavaScript, static-web and Rust fixtures, each with a neutral `Comparison Instruction.md`, a scripted user, a protected verifier and five model-free QA cases |
+| `tasks/workflow/` | Twenty-two controlled React/TypeScript, JavaScript, static-web and Rust fixtures, each with a neutral `Comparison Instruction.md`, a scripted user, a protected verifier and five model-free QA cases. Three `-committed` tasks also ask for a notes document and a commit, and score house conventions |
 | DeepSWE research | Five pinned tasks from real open-source repositories, fetched into ignored `.cache/deepswe/`. pest-character-class-coalescing was dropped: its hidden test expects a side effect of the reference implementation that contradicts the instruction, so every harness failed it identically. |
 
 These are frozen benchmark projects. A harder test means selecting or authoring a frozen task with a protected verifier, not a more demanding prompt. See [Task Authoring](docs/Task_Authoring.md).
