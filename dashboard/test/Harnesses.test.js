@@ -45,17 +45,19 @@ test("catalog distinguishes families and orders every version by explicit ancest
   assert.deepEqual(Object.keys(HARNESS_FAMILIES), [
     "nothing", "superpowers", "studio-moser", "studio-personality"
   ]);
-  assert.equal(primaryHarnesses(HARNESS_CATALOG).length, 6);
+  assert.equal(primaryHarnesses(HARNESS_CATALOG).length, 8);
   assert.deepEqual(familyVersions(HARNESS_CATALOG, "studio-moser").map(({id}) => id), [
-    "studio-moser-v5", "studio-moser-v6", "studio-moser-v6-time-matters", "studio-moser-v7"
+    "studio-moser-v5", "studio-moser-v6", "studio-moser-v6-time-matters", "studio-moser-v7",
+    "studio-moser-v7-personal-instructions", "studio-moser-v7-personal-layer"
   ]);
   assert.deepEqual(familyVersions(HARNESS_CATALOG, "studio-moser").map(({predecessorId}) => predecessorId), [
-    null, "studio-moser-v5", "studio-moser-v6", "studio-moser-v6-time-matters"
+    null, "studio-moser-v5", "studio-moser-v6", "studio-moser-v6-time-matters",
+    "studio-moser-v7", "studio-moser-v7-personal-instructions"
   ]);
   assert.equal(familyVersions(HARNESS_CATALOG, "studio-moser").filter(({latest}) => latest).map(({id}) => id).join(), "studio-moser-v7");
   assert.equal(HARNESS_FAMILIES["studio-personality"].role, "baseline");
   assert.equal(HARNESS_CATALOG.find(({id}) => id === "studio-personality-v1").state, "ready");
-  assert.equal(HARNESS_CATALOG.filter(({state}) => state === "ready").length, 7);
+  assert.equal(HARNESS_CATALOG.filter(({state}) => state === "ready").length, 9);
   assert.equal(HARNESS_CATALOG.find(({id}) => id === "nothing-v1").layers.length, 0);
   assert.equal(HARNESS_CATALOG.find(({id}) => id === "superpowers-v1").layers.length, 1);
   assert.equal(HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5").rubric.mode, "enabled");
@@ -109,8 +111,10 @@ test("Harnesses page exposes the comparison chain and structured details", () =>
     assert.ok(cards.every(card => card.className.split(" ").includes("card")));
     assert.equal(nodes.filter(node => node.className.includes("card-status-top")).length, cards.length);
     assert.equal(nodes.filter(node => node.className.includes("card-body")).length, cards.length);
-    assert.match(root.textContent, /7 ready harness versions\./);
+    assert.match(root.textContent, /9 ready harness versions\./);
     assert.deepEqual(cards.map((card) => card.attributes["data-harness-id"]), [
+      "studio-moser-v7-personal-layer",
+      "studio-moser-v7-personal-instructions",
       "studio-moser-v7",
       "studio-moser-v6-time-matters",
       "studio-moser-v6",
@@ -129,7 +133,7 @@ test("Harnesses page exposes the comparison chain and structured details", () =>
     assert.match(root.textContent, /Studio Moser v5/);
     assert.match(root.textContent, /Source commit 3fb970f/);
     assert.doesNotMatch(root.textContent, /Collection 1\.0\.0 at/);
-    assert.match(root.textContent, /Studio Moser4 versions/);
+    assert.match(root.textContent, /Studio Moser6 versions/);
     assert.match(root.textContent, /Version summary/);
     assert.match(root.textContent, /Changes from previous version/);
     assert.match(root.textContent, /Adopt the Lite direct-by-default harness used by the Quill pilot/);

@@ -187,6 +187,32 @@ export const HARNESS_CATALOG = Object.freeze([
     changeDetails: ["Builds the 'time matters' line into the Harness baseline instead of an added startup file", "Routes work by capability and total cost", "Adds the design plugin and the pm tidy-up skill; removes remaining Superpowers references", "Uses the live routing rubric reviewed 2026-09-29, which adds GPT-6.1 Sol for default, explore and review work"],
     latest: true
   }),
+  studioVersion({
+    id: "studio-moser-v7-personal-instructions",
+    versionOrder: 9,
+    versionLabel: "v7 + personal instructions",
+    predecessorId: "studio-moser-v7",
+    commit: "fef5d06c564cd82d8982267db53cce6ec963baa0",
+    collectionVersion: "2.2.0",
+    superpowers: false,
+    startup: "Harness baseline instructions plus the developer's House Style and global CLAUDE.md",
+    identity: "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+    changeSummary: "v7 with the developer's own House Style and global instructions added at startup, as on their machine.",
+    changeDetails: ["Identical to v7 except two added startup files", "Measures the personal instructions the public collection does not ship"]
+  }),
+  studioVersion({
+    id: "studio-moser-v7-personal-layer",
+    versionOrder: 10,
+    versionLabel: "v7 + personal instructions and skills",
+    predecessorId: "studio-moser-v7-personal-instructions",
+    commit: "fef5d06c564cd82d8982267db53cce6ec963baa0",
+    collectionVersion: "2.2.0",
+    superpowers: false,
+    startup: "Harness baseline instructions plus the developer's House Style and global CLAUDE.md",
+    identity: "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+    changeSummary: "The personal instructions plus 16 personal skills and six subagents, to measure what installed skills cost or add.",
+    changeDetails: ["Identical to v7 + personal instructions except one added plugin of personal skills and subagents", "Isolates the effect of skills that are installed but not needed by the task"]
+  }),
   Object.freeze({
     id: "studio-personality-v1",
     family: "studio-personality",
