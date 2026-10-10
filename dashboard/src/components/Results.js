@@ -1197,6 +1197,16 @@ function colorMark(className, color) {
   return mark;
 }
 
+// One mark shape per kickoff model, so color can stay with the harness.
+const MODEL_SHAPES = ["circle", "square", "diamond", "triangle"];
+
+function pointMark(shape, x, y, attributes) {
+  if (shape === "square") return svgElement("rect", {x: x - 8, y: y - 8, width: 16, height: 16, ...attributes});
+  if (shape === "diamond") return svgElement("path", {d: `M${x} ${y - 11}L${x + 11} ${y}L${x} ${y + 11}L${x - 11} ${y}Z`, ...attributes});
+  if (shape === "triangle") return svgElement("path", {d: `M${x} ${y - 10}L${x + 10} ${y + 8}L${x - 10} ${y + 8}Z`, ...attributes});
+  return svgElement("circle", {cx: x, cy: y, r: 9, ...attributes});
+}
+
 function renderTradeoffChart(rows, {field, title, formatter, ariaLabel, colors}) {
   const panel = element("article", "results-tradeoff-chart card");
   const header = element("header", "card-header");
@@ -1216,64 +1226,106 @@ function renderTradeoffChart(rows, {field, title, formatter, ariaLabel, colors})
   const margin = {top: 20, right: 24, bottom: 42, left: 48};
   const observedMaximum = Math.max(...points.map(({tradeoff}) => tradeoff.value));
   const observedMinimum = Math.min(...points.map(({tradeoff}) => tradeoff.value));
-  const padding = (observedMaximum - observedMinimum || observedMaximum || 1) * 0.1;
-  const minValue = Math.max(0, observedMinimum - padding);
-  const maxValue = observedMaximum + padding;
+  // Models an order of magnitude apart share one chart, so a wide spread uses a log scale.
+  const log = observedMinimum > 0 && observedMaximum / observedMinimum >= 4;
+  const scale = log ? Math.log : (value) => value;
+  const unscale = log ? Math.exp : (value) => value;
+  const padding = (scale(observedMaximum) - scale(observedMinimum) || (log ? 1 : observedMaximum || 1)) * 0.1;
+  const minValue = log ? scale(observedMinimum) - padding : Math.max(0, observedMinimum - padding);
+  const maxValue = scale(observedMaximum) + padding;
   const valueRange = maxValue - minValue;
+  // Grades cluster, so the quality axis spans only the whole percents around them.
+  const qualities = points.map(({tradeoff}) => tradeoff.quality);
+  const qualityFloor = Math.max(0, Math.floor(Math.min(...qualities) * 100 - 0.5) / 100);
+  const qualityCeiling = Math.min(1, Math.ceil(Math.max(...qualities) * 100 + 0.5) / 100);
+  const qualityRange = qualityCeiling - qualityFloor;
+  const qualityTick = (score) => `${Number((score * 100).toFixed(1))}%`;
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
   const svg = svgElement("svg", {viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": `${ariaLabel}. Higher Quality is up; lower ${field} is right.`});
-  for (const score of [0, 0.25, 0.5, 0.75, 1]) {
-    const y = margin.top + (1 - score) * plotHeight;
+  const tip = element("div", "results-chart-tip");
+  tip.setAttribute("role", "status");
+  tip.hidden = true;
+  for (const score of [0, 0.25, 0.5, 0.75, 1].map((step) => qualityFloor + step * qualityRange)) {
+    const y = margin.top + (qualityCeiling - score) / qualityRange * plotHeight;
     svg.append(
       svgElement("line", {x1: margin.left, x2: margin.left + plotWidth, y1: y, y2: y, class: "results-chart-grid"}),
-      svgElement("text", {x: margin.left - 9, y: y + 4, class: "results-chart-axis", "text-anchor": "end"}, formatPercent(score))
+      svgElement("text", {x: margin.left - 9, y: y + 4, class: "results-chart-axis", "text-anchor": "end"}, qualityTick(score))
     );
   }
   for (const ratio of [0, 0.5, 1]) {
     const x = margin.left + ratio * plotWidth;
-    svg.append(svgElement("text", {x, y: height - 14, class: "results-chart-axis", "text-anchor": "middle"}, formatter(maxValue - valueRange * ratio)));
+    svg.append(svgElement("text", {x, y: height - 14, class: "results-chart-axis", "text-anchor": "middle"}, formatter(unscale(maxValue - valueRange * ratio))));
   }
   points.forEach(({row, tradeoff}) => {
-    const x = margin.left + (maxValue - tradeoff.value) / valueRange * plotWidth;
-    const y = margin.top + (1 - tradeoff.quality) * plotHeight;
-    const point = svgElement("circle", {
-      cx: x,
-      cy: y,
-      r: 7,
+    const x = margin.left + (maxValue - scale(tradeoff.value)) / valueRange * plotWidth;
+    const y = margin.top + (qualityCeiling - tradeoff.quality) / qualityRange * plotHeight;
+    const point = pointMark(row.shape, x, y, {
       class: `results-chart-point results-chart-${row.family}`,
       role: "img",
+      tabindex: 0,
       "aria-label": `${row.label}: ${formatPercent(tradeoff.quality)} Quality, ${formatter(tradeoff.value)}, ${plural(tradeoff.observations, "matched trial")}`
     });
-    if (colors?.has(row.id)) point.style.fill = colors.get(row.id);
+    const color = colors?.get(row.harnessId ?? row.id);
+    if (color) point.style.fill = color;
+    const show = () => {
+      tip.replaceChildren(
+        element("strong", "", row.label),
+        element("span", "", `${qualityTick(tradeoff.quality)} quality · ${formatter(tradeoff.value)} · ${plural(tradeoff.observations, "trial")}`)
+      );
+      // Anchor toward the middle so a tip at either edge stays inside the card.
+      const side = x / width;
+      tip.style.left = `${side * 100}%`;
+      tip.style.top = `${y / height * 100}%`;
+      tip.style.transform = `translate(${side > 0.6 ? "-100%" : side < 0.4 ? "0" : "-50%"}, calc(-100% - 14px))`;
+      tip.hidden = false;
+    };
+    const hide = () => { tip.hidden = true; };
+    for (const name of ["pointerenter", "focus"]) point.addEventListener(name, show);
+    for (const name of ["pointerleave", "blur"]) point.addEventListener(name, hide);
     svg.append(point);
   });
   const scroll = element("div", "results-chart-scroll");
   scroll.setAttribute("tabindex", "0");
   scroll.setAttribute("aria-label", ariaLabel);
-  scroll.append(svg);
+  const plot = element("div", "results-chart-plot");
+  plot.append(svg, tip);
+  scroll.append(plot);
   panel.append(element("p", "results-scroll-cue", "Swipe horizontally to inspect every harness point."), scroll);
   return panel;
 }
 
-function renderTradeoffCharts(rows, colors) {
+function renderTradeoffCharts(rows, colors, models = []) {
   const section = element("div", "results-tradeoffs");
   const qualityRows = rows.filter(row => row.quality != null || row.communicationQuality != null || row.tradeoffs.runtime.quality != null);
   const legend = element("div", "results-chart-legend");
   legend.setAttribute("aria-label", "Harness color key");
+  const keyed = new Set();
   for (const row of qualityRows) {
+    const harnessId = row.harnessId ?? row.id;
+    if (keyed.has(harnessId)) continue;
+    keyed.add(harnessId);
     const item = element("span", "results-chart-legend-item");
     item.append(
-      colorMark(`results-chart-legend-dot results-harness-${row.family}`, colors?.get(row.id)),
-      element("span", "", row.label)
+      colorMark(`results-chart-legend-dot results-harness-${row.family}`, colors?.get(harnessId)),
+      element("span", "", row.harnessLabel ?? row.label)
     );
     legend.append(item);
+  }
+  if (models.length > 1) {
+    for (const {label, shape} of models) {
+      const item = element("span", "results-chart-legend-item");
+      const key = svgElement("svg", {viewBox: "0 0 18 18", width: 14, height: 14, class: "results-chart-legend-shape", "aria-hidden": "true"});
+      key.append(pointMark(shape, 9, 9, {class: "results-chart-point"}));
+      item.append(key, element("span", "", label));
+      legend.append(item);
+    }
   }
   const mobileSummary = element("div", "results-mobile-efficiency");
   for (const row of qualityRows) {
     const item = element("div", "results-mobile-efficiency-row");
     item.append(
-      colorMark(`results-harness-mark results-harness-${row.family}`, colors?.get(row.id)),
+      colorMark(`results-harness-mark results-harness-${row.family}`, colors?.get(row.harnessId ?? row.id)),
       element("strong", "", row.label),
       element("span", "", formatPercent(row.quality ?? row.communicationQuality)),
       element("span", "", `${formatRuntime(row.runtime)} · ${formatTokens(row.tokens)} · ${formatCost(row.cost)}`)
@@ -1290,7 +1342,7 @@ function renderTradeoffCharts(rows, colors) {
   return section;
 }
 
-function renderHarnessRead(read, rows) {
+function renderHarnessRead(read, colors) {
   const section = element("section", "results-panel results-read card card-body");
   const heading = element("header", "results-section-heading");
   heading.append(element("h2", "card-title", "The read"));
@@ -1301,7 +1353,6 @@ function renderHarnessRead(read, rows) {
   }
   heading.append(element("p", "results-read-recommendation", read.recommendation));
   section.append(heading);
-  const colors = harnessColors(rows);
   const grid = element("div", "results-read-grid");
   for (const card of read.cards) {
     const article = element("article", "results-read-card card");
@@ -1320,12 +1371,52 @@ function renderHarnessRead(read, rows) {
     grid.append(article);
   }
   section.append(grid);
-  const charts = element("div", "results-read-charts");
-  charts.append(
-    element("p", "results-scope-note", "Quality against runtime, tokens and cost. Better is toward the top right. Each point uses matched trials under the selected model; more runs add more points."),
-    renderTradeoffCharts(rows, colors)
+  return section;
+}
+
+// Every kickoff model's harness rows, measured on the tasks all charted models ran, so a
+// point for one model is comparable with a point for another.
+export function aggregateOverview(observations, harnesses) {
+  const models = [...new Map(observations.map(({modelKey, model, effort}) => [modelKey, `${model} · ${effort}`]))]
+    .sort((left, right) => compareText(left[1], right[1]));
+  const charted = (pool, modelKey) => aggregateHarnesses(pool, harnesses, {model: modelKey})
+    .filter((row) => Object.values(row.tradeoffs).some(({quality}) => quality != null));
+  const measured = models.filter(([modelKey]) => charted(observations, modelKey).length);
+  let shared = null;
+  for (const [modelKey] of measured) {
+    const tasks = new Set(admitResults(
+      filterResults(observations, {model: modelKey, cohort: defaultCohort(observations, modelKey)})
+    ).map(({taskId}) => taskId));
+    shared = shared == null ? tasks : new Set([...shared].filter((task) => tasks.has(task)));
+  }
+  const pool = shared?.size ? observations.filter(({taskId}) => shared.has(taskId)) : observations;
+  const rows = [];
+  const shown = [];
+  for (const [modelKey, modelLabel] of measured) {
+    const modelRows = charted(pool, modelKey);
+    if (!modelRows.length) continue;
+    const shape = MODEL_SHAPES[shown.length % MODEL_SHAPES.length];
+    shown.push({modelKey, label: modelLabel, shape});
+    for (const row of modelRows) {
+      rows.push({
+        ...row, modelKey, shape, harnessId: row.id, harnessLabel: row.label,
+        id: `${modelKey}\0${row.id}`,
+        label: measured.length > 1 ? `${modelLabel} · ${row.label}` : row.label
+      });
+    }
+  }
+  return {rows, models: shown, sharedTasks: shown.length > 1 ? shared?.size ?? 0 : null};
+}
+
+function renderOverview({rows, models, sharedTasks}, colors) {
+  const section = element("section", "results-panel results-overview card card-body");
+  if (!rows.length) return section;
+  const heading = element("header", "results-section-heading");
+  heading.append(
+    element("h2", "card-title", "At a glance"),
+    element("p", "results-scope-note", `Quality against runtime, tokens and cost for every harness${models.length > 1 ? ` and kickoff model, on the ${plural(sharedTasks, "task")} every model ran` : ""}. Better is toward the top right.`)
   );
-  section.append(charts);
+  section.append(heading, renderTradeoffCharts(rows, colors, models));
   return section;
 }
 
@@ -1360,10 +1451,13 @@ export function renderResults({tests, harnesses, reports, campaign = null, prici
   const intro = element("header", "results-intro page-header");
   intro.append(
     element("h1", "page-title fs-1", "Results"),
-    element("p", "", "Does the harness make the agent more correct, cheaper, faster or less annoying? Read the summary, then the per-task results by type and difficulty, then how each harness behaves across models."),
+    element("p", "", "Does the harness make the agent more correct, cheaper, faster or less annoying? Start with every model and harness at a glance, then pick a model for its summary, per-task results and behavior."),
     element("p", "results-evidence-line", `${plural(admitted.length, "trial")} across ${new Set(admitted.map(({taskId}) => taskId)).size} of ${tests.length} tasks`)
   );
 
+  // One color per harness for the whole page, so the overview and a model's read agree.
+  const colors = harnessColors(displayHarnesses(harnesses).filter(({id}) => admitted.some(({harnessId}) => harnessId === id)));
+  const overview = renderOverview(aggregateOverview(observations, harnesses), colors);
   const filters = element("nav", "results-filters card card-body");
   filters.setAttribute("aria-label", "Results scope");
   const body = element("div", "results-body");
@@ -1391,7 +1485,7 @@ export function renderResults({tests, harnesses, reports, campaign = null, prici
       .filter((column) => column.modelKey === effective.model);
     const delegation = aggregateDelegation(observations, harnesses, effective, pricing);
     body.replaceChildren(
-      renderHarnessRead(harnessRead(rows, behavior, verdict, delegation), rows),
+      renderHarnessRead(harnessRead(rows, behavior, verdict, delegation), colors),
       renderMatrix(observations, tests, harnesses, effective),
       renderDelegation(delegation),
       renderBehavior(behavior)
@@ -1399,6 +1493,6 @@ export function renderResults({tests, harnesses, reports, campaign = null, prici
   }
 
   update();
-  root.append(intro, filters, body);
+  root.append(intro, overview, filters, body);
   return root;
 }

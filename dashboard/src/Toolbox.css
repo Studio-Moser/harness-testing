@@ -99,6 +99,8 @@ body { margin: 0; background: var(--tblr-bg-surface-secondary); }
 .results-chart-legend { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; margin-bottom: 1rem; }
 .results-chart-legend-item { display: inline-flex; align-items: center; gap: .5rem; }
 .results-chart-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+.results-chart-legend-shape .results-chart-point { fill: var(--tblr-secondary); stroke: none; }
+.results-overview { margin-bottom: 1.5rem; }
 .results-tradeoff-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
 .results-tradeoff-chart { min-width: 0; }
 .results-chart-scroll { padding: .5rem; }
@@ -107,6 +109,12 @@ body { margin: 0; background: var(--tblr-bg-surface-secondary); }
 .results-chart-axis { fill: var(--tblr-secondary); font-size: 12px; }
 .results-chart-point { fill: var(--tblr-secondary); stroke: var(--tblr-bg-surface); stroke-width: 2; }
 .results-chart-studio-moser { fill: var(--tblr-purple); }
+.results-chart-plot { position: relative; }
+.results-chart-point { cursor: pointer; outline: none; }
+.results-chart-point:hover, .results-chart-point:focus-visible { stroke: var(--tblr-body-color); }
+.results-chart-tip { position: absolute; z-index: 2; display: grid; gap: .125rem; padding: .375rem .625rem; border: 1px solid var(--tblr-border-color); border-radius: var(--tblr-border-radius); background: var(--tblr-bg-surface); box-shadow: var(--tblr-box-shadow); color: var(--tblr-body-color); font-size: .8125rem; white-space: nowrap; pointer-events: none; }
+.results-chart-tip[hidden] { display: none; }
+.results-chart-tip span { color: var(--tblr-secondary); }
 .results-chart-superpowers { fill: var(--tblr-blue); }
 .results-empty { margin: 0; padding: 1.5rem; color: var(--tblr-secondary); }
 .results-scroll-cue, .results-mobile-efficiency { display: none; }
@@ -150,7 +158,6 @@ summary:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid var(--t
 .results-read-list { margin: 0; padding-left: 1.1rem; }
 .results-read-none { color: var(--tblr-secondary); list-style: none; margin-left: -1.1rem; }
 
-.results-read-charts { margin-top: 1.25rem; }
 
 .results-cell-failure { display: block; color: var(--tblr-red); font-weight: 600; }
 

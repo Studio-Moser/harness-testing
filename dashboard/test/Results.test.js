@@ -13,6 +13,7 @@ import {
   annoyanceFromTranscript,
   campaignVerdict,
   aggregateHarnesses,
+  aggregateOverview,
   harnessColors,
   behaviorFromTrial,
   defaultCohort,
@@ -641,6 +642,15 @@ test("trade-off charts put higher quality and lower resource use toward the top 
         const ys = points.map(point => Number(point.attributes.cy));
         assert.ok(xs.every(Number.isFinite) && ys.every(Number.isFinite));
         assert.ok(ys[0] < ys[1] && ys[1] < ys[2]);
+        // The quality axis hugs the observed grades, and hovering a mark names it with its scores.
+        assert.ok(ys[2] - ys[0] > 238 * 0.8);
+        const tip = descendants(root).filter(node => node.className === "results-chart-tip")[charts.indexOf(chart)];
+        assert.equal(tip.hidden, true);
+        points[0].listeners.pointerenter();
+        assert.equal(tip.hidden, false);
+        assert.match(tip.textContent, /^Nothing v1100% quality · .+ · 1 trial$/);
+        points[0].listeners.pointerleave();
+        assert.equal(tip.hidden, true);
         if (values[0] !== values[2]) assert.ok(xs[0] > xs[1] && xs[1] > xs[2]);
         else assert.ok(xs.every(x => x === xs[0]));
         const ticks = descendants(chart).filter(node => node.tag === "text" && node.attributes["text-anchor"] === "middle");
@@ -819,3 +829,28 @@ test("the newest campaign is judged by its reports, not by the order summaries a
   );
   assert.deepEqual(observations.filter((row) => row.campaignCohort).map(({campaignCohort}) => campaignCohort.digest), ["new-campaign"]);
 });
+
+test("the overview charts every model's harnesses on the tasks all models ran", () => {
+  const [nothing, studio] = ["nothing-v1", "studio-moser-v5"].map((id) => HARNESS_CATALOG.find((row) => row.id === id));
+  const graded = (harness, task, seconds) => trial(harness, task, 1, {duration_seconds: seconds, collaboration: {grade: completedGrade(4)}});
+  const opus = {provider: "claude", runtime_version: "2.1.281", model: "claude-opus-5-5", effort: "medium"};
+  const reports = [
+    report("astra", [
+      graded(nothing, "react-active-badge-count", 200), graded(studio, "react-active-badge-count", 300),
+      graded(nothing, "react-accent-polish", 1000), graded(studio, "react-accent-polish", 1000)
+    ]),
+    report("opus", [graded(nothing, "react-active-badge-count", 20), graded(studio, "react-active-badge-count", 30)],
+      {experiment: {conditions: conditions({kickoff: opus})}})
+  ];
+  const overview = aggregateOverview(normalizeResults(reports, TOOLBOX_CATALOG, HARNESS_CATALOG), HARNESS_CATALOG);
+  assert.deepEqual(overview.models.map(({label, shape}) => [label, shape]), [
+    ["claude-opus-5-5 · medium", "circle"], ["gpt-6-astra · high", "square"]
+  ]);
+  assert.equal(overview.sharedTasks, 1);
+  assert.equal(overview.rows.length, 4);
+  // The task only Astra ran is left out, so its 1000s trials do not move the Astra points.
+  const runtime = (model, harness) => overview.rows.find((row) => row.modelKey.startsWith(model) && row.harnessId === harness.id).tradeoffs.runtime.value;
+  assert.deepEqual([runtime("gpt", nothing), runtime("gpt", studio), runtime("claude", nothing)], [200, 300, 20]);
+  assert.equal(new Set(overview.rows.map(({id}) => id)).size, 4);
+});
+
