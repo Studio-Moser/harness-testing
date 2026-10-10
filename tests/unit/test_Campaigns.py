@@ -204,6 +204,13 @@ def test_campaign_unresolved_review_claims_failures_and_duplicate_trials_cannot_
     result = summarize(plan, reports)
     assert result["winner_id"] is None and result["status"] == "no_clear_winner"
     assert result["lanes"]["comparison"]["comparison"]["contenders"][0]["eligible"] is False
+    # Broken conventions on a task that scores them are a genuine failure too.
+    reports = copy.deepcopy(original)
+    reports[0]["experiment"]["trials"][0].update(conventions=False)
+    result = summarize(plan, reports)
+    assert result["winner_id"] is None and result["status"] == "no_clear_winner"
+    assert result["lanes"]["comparison"]["comparison"]["contenders"][0]["eligible"] is False
+    assert result["summaries"]["overall"][0]["correct"] == 71
     reports = copy.deepcopy(original)
     reports[0]["experiment"]["trials"].append(reports[0]["experiment"]["trials"][0])
     with pytest.raises(ValueError, match="duplicated"):
@@ -278,7 +285,7 @@ def test_campaign_assembles_original_recovery_and_correction_reports():
     # Unstarted slots and an infrastructure failure are completed by a recovery run.
     recovery = _split(
         original,
-        ["react-accent-polish", "node-export-clear"],
+        ["react-accent-polish-committed", "node-export-clear"],
         continuation_id="recovery",
         statuses={"node-export-clear": {"status": "infrastructure_failure"}},
     )
@@ -314,8 +321,9 @@ def test_campaign_assembly_refuses_cherry_picking_gaps_and_uneven_corrections():
     _, _, plan, reports = fixture(attempts=1, purpose="diagnostic")
     original = reports[0]
     # A completed trial on an unchanged task cannot be replaced by a rerun.
-    retry = _split(copy.deepcopy(original), ["react-accent-polish"], continuation_id="retry",
-                   statuses={"react-accent-polish": {"status": "completed"}})
+    task = "react-accent-polish-committed"
+    retry = _split(copy.deepcopy(original), [task], continuation_id="retry",
+                   statuses={task: {"status": "completed"}})
     with pytest.raises(ValueError, match="cannot be replaced without a task correction"):
         assemble_lane(plan, "comparison", [original, retry])
     # A slot that never completed leaves the lane incomplete.
@@ -395,3 +403,27 @@ def test_a_later_report_adds_a_harness_version_without_rerunning_the_others():
     with pytest.raises(ValueError, match="incompatible conditions"):
         summarize(implicit_plan(policy, stitched), stitched)
 
+
+def test_a_later_report_adds_a_task_only_when_every_harness_runs_it():
+    policy, _, _, reports = fixture(attempts=1, purpose="diagnostic")
+    source = reports[0]["experiment"]["conditions"]["task_ids"][0]
+    extra = copy.deepcopy(reports[0])
+    extra["report_id"] = extra["manifest_digest"] = digest("added-task")
+    experiment = extra["experiment"]
+    experiment["conditions"] = dict(
+        experiment["conditions"], task_ids=["new-task"], task_digests={"new-task": digest("new")}
+    )
+    experiment["trials"] = [
+        dict(t, task_id="new-task", trial_id=f"new-{t['trial_id']}")
+        for t in experiment["trials"] if t["task_id"] == source
+    ]
+    stitched = [reports[0], extra]
+    lane = assemble_lane(implicit_plan(policy, reports), "comparison", stitched)
+    conditions = lane["experiment"]["conditions"]
+    original = reports[0]["experiment"]["conditions"]["task_ids"]
+    assert conditions["task_ids"] == original + ["new-task"]
+    assert conditions["task_digests"]["new-task"] == digest("new")
+    # A task that only some harnesses ran leaves the lane incomplete.
+    experiment["trials"] = experiment["trials"][:1]
+    with pytest.raises(ValueError, match="incomplete"):
+        assemble_lane(implicit_plan(policy, reports), "comparison", stitched)

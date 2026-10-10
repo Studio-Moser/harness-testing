@@ -103,6 +103,9 @@
         },
         "efficiency_policy": {
           "$ref": "#/$defs/nullableScore"
+        },
+        "conventions": {
+          "$ref": "#/$defs/nullableScore"
         }
       }
     },
@@ -1102,6 +1105,16 @@
           ]
         },
         "protected_state": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conventions": {
           "anyOf": [
             {
               "type": "boolean"

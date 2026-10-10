@@ -4,8 +4,6 @@ import {join} from "node:path";
 
 const DEEP_SWE_COMMIT = "8cae5984d5dd0ee37445beff0e928dc10c331116";
 const APPROVED_IDS = new Set([
-  "react-accent-polish",
-  "static-pricing-copy-polish",
   "react-active-badge-count",
   "rust-quoted-value-parser",
   "static-accessible-disclosure",
@@ -20,8 +18,10 @@ const APPROVED_IDS = new Set([
   "wasmi-trap-coredumps",
   "node-cross-module-permissions", "node-small-pagination", "static-responsive-settings-polish",
   "node-durable-queue-recovery", "node-export-clear", "node-export-ambiguous",
-  "node-capacity-boundary", "node-toggle-completion", "static-notification-card-polish",
-  "static-workspace-design-system-polish"
+  "node-capacity-boundary", "static-notification-card-polish",
+  "static-workspace-design-system-polish",
+  "node-toggle-completion-committed", "react-accent-polish-committed",
+  "static-pricing-copy-polish-committed"
 ]);
 const TYPES = new Set(["polish", "bug-fix", "feature"]);
 const LEVELS = new Set([1, 2, 3, 4]);
@@ -119,17 +119,6 @@ export const TOOLBOX_CATALOG = Object.freeze([
     learningGoal: "Whether an atomic bug receives useful verification without unnecessary ceremony."
   }),
   controlled({
-    id: "node-toggle-completion", title: "Immutable completion toggle", type: "feature", level: 1,
-    purpose: "Tests a fully specified, atomic feature with a small immutability contract.",
-    promptSummary: "Return a new task with done toggled; preserve every other property and never mutate the input.",
-    stack: ["JavaScript", "Node.js", "Vitest"], taskPath: "tasks/workflow/node-toggle-completion",
-    setupSummary: "One stub export, frozen public smoke test, and separate protected behavioral checks.",
-    existingTests: ["test/Behavior.test.js"], expectedProcess: ["Read the complete contract", "Implement the helper", "Verify both directions and input preservation"],
-    expectedHarnessBehavior: ["Proceed from a complete brief", "Avoid scope expansion", "Use direct verification"],
-    verification: ["Both toggle directions", "Frozen input, identity and property preservation", "Five-case verifier QA"],
-    learningGoal: "Whether the harness completes a tiny feature directly while respecting nonmutation."
-  }),
-  controlled({
     id: "static-notification-card-polish", title: "Notification card polish", type: "polish", level: 2,
     purpose: "Tests a bounded visual refinement requiring a few coordinated layout and typography decisions.",
     promptSummary: "Polish one notification card while preserving copy and the Save interaction.",
@@ -165,38 +154,6 @@ export const TOOLBOX_CATALOG = Object.freeze([
     verification: ["Identical protected behavioral tests", "Scripted product facts", "Question/approval evidence", "Five-case verifier QA"],
     learningGoal: "Whether the harness recognizes when clarification adds value, without asking unnecessary questions on the matched clear task."
   })),
-  controlled({
-    id: "react-accent-polish",
-    title: "React accent polish",
-    type: "polish",
-    level: 1,
-    purpose: "Tests whether an agent can make one exact visual-token change without disturbing component behavior.",
-    promptSummary: "Change one CSS custom property from the existing blue to a specified violet.",
-    stack: ["React", "TypeScript", "CSS", "Vite"],
-    taskPath: "tasks/workflow/react-accent-polish",
-    setupSummary: "A small React fixture with one mutable CSS token and protected application, test, and build files.",
-    existingTests: ["src/App.test.tsx", "scripts/Check_Token.mjs"],
-    expectedProcess: ["Inspect the token definition", "Make the one-value edit", "Run the narrow token check"],
-    expectedHarnessBehavior: ["Classify as polish", "Avoid unnecessary planning or delegation", "Select direct proof instead of a broad test cycle"],
-    verification: ["Source-token check", "Protected-file hashes", "Separate correctness, workflow, and efficiency verifiers", "Five-case verifier QA"],
-    learningGoal: "Whether the harness keeps a trivial polish request fast, precise, and proportionate."
-  }),
-  controlled({
-    id: "static-pricing-copy-polish",
-    title: "Static pricing-card polish",
-    type: "polish",
-    level: 1,
-    purpose: "Tests a tiny copy-and-spacing polish request in a static page.",
-    promptSummary: "Replace one pricing sentence and change one spacing token without altering other behavior.",
-    stack: ["HTML", "CSS", "Node.js"],
-    taskPath: "tasks/workflow/static-pricing-copy-polish",
-    setupSummary: "A static pricing-card fixture with exact copy and CSS-token checks.",
-    existingTests: ["test/Pricing_Card.test.js", "scripts/Check_Pricing_Card.mjs"],
-    expectedProcess: ["Locate the card copy and spacing token", "Make two bounded edits", "Run the targeted pricing-card check"],
-    expectedHarnessBehavior: ["Keep the work in the polish lane", "Use the existing test seam", "Avoid unrelated cleanup"],
-    verification: ["Pricing-card source check", "Protected-file hashes", "Separate correctness, workflow, and efficiency verifiers", "Five-case verifier QA"],
-    learningGoal: "Whether the harness handles a two-value visual edit without process overhead or collateral changes."
-  }),
   controlled({
     id: "react-active-badge-count",
     title: "React active badge count",
@@ -394,6 +351,41 @@ export const TOOLBOX_CATALOG = Object.freeze([
     expectedHarnessBehavior: ["Call for domain research before coding", "Split substantial independent investigation when useful", "Enforce format-level and runtime-level proof"],
     verification: ["Existing wasmi tests", "Separate DeepSWE verifier", "Frozen base commit", "Patch artifact review"],
     learningGoal: "Whether the harness helps manage a specification-heavy systems feature without losing binary or runtime edge cases."
+  }),
+  // The -committed tasks reuse a fixture and add a notes document and a commit, so house
+  // conventions (branch, commit subject, file name) apply to every harness.
+  controlled({
+    id: "node-toggle-completion-committed", title: "Immutable completion toggle, committed", type: "feature", level: 1,
+    purpose: "Tests whether a tiny feature is delivered as committed work that follows house conventions nobody restated.",
+    promptSummary: "Return a new task with done toggled, add a short notes document and commit the finished work.",
+    stack: ["JavaScript", "Node.js", "Vitest", "Git"], taskPath: "tasks/workflow/node-toggle-completion-committed",
+    setupSummary: "The completion-toggle fixture unchanged; the brief also asks for a notes document and a commit without naming any convention.",
+    existingTests: ["test/Behavior.test.js"], expectedProcess: ["Branch before changing anything", "Implement and verify the helper", "Add the notes document and commit"],
+    expectedHarnessBehavior: ["Never commit on main", "Use a typed branch name and a Conventional Commit subject", "Name new files in Title Case"],
+    verification: ["Both toggle directions and input preservation", "Notes document present", "House conventions replayed from the recorded Git commands", "Five-case verifier QA"],
+    learningGoal: "Whether the harness supplies branching, commit and naming conventions on its own."
+  }),
+  controlled({
+    id: "react-accent-polish-committed", title: "React accent polish, committed", type: "polish", level: 1,
+    purpose: "Tests whether a one-value styling change is delivered as committed work that follows house conventions nobody restated.",
+    promptSummary: "Change one CSS custom property, add a short notes document and commit the finished work.",
+    stack: ["React", "TypeScript", "CSS", "Git"], taskPath: "tasks/workflow/react-accent-polish-committed",
+    setupSummary: "The accent-polish fixture unchanged; the brief also asks for a notes document and a commit without naming any convention.",
+    existingTests: ["src/App.test.tsx", "scripts/Check_Token.mjs"], expectedProcess: ["Branch before changing anything", "Make the one-value edit and run the narrow check", "Add the notes document and commit"],
+    expectedHarnessBehavior: ["Never commit on main", "Use a typed branch name and a Conventional Commit subject", "Name new files in Title Case"],
+    verification: ["Source-token check", "Notes document present", "House conventions replayed from the recorded Git commands", "Five-case verifier QA"],
+    learningGoal: "Whether house conventions survive a trivial polish request without adding process."
+  }),
+  controlled({
+    id: "static-pricing-copy-polish-committed", title: "Static pricing-card polish, committed", type: "polish", level: 1,
+    purpose: "Tests whether a two-value static-page edit is delivered as committed work that follows house conventions nobody restated.",
+    promptSummary: "Replace one pricing sentence and one spacing token, add a short notes document and commit the finished work.",
+    stack: ["HTML", "CSS", "Node.js", "Git"], taskPath: "tasks/workflow/static-pricing-copy-polish-committed",
+    setupSummary: "The pricing-card fixture unchanged; the brief also asks for a notes document and a commit without naming any convention.",
+    existingTests: ["test/Pricing_Card.test.js", "scripts/Check_Pricing_Card.mjs"], expectedProcess: ["Branch before changing anything", "Make two bounded edits and run the targeted check", "Add the notes document and commit"],
+    expectedHarnessBehavior: ["Never commit on main", "Use a typed branch name and a Conventional Commit subject", "Name new files in Title Case"],
+    verification: ["Pricing-card source check", "Notes document present", "House conventions replayed from the recorded Git commands", "Five-case verifier QA"],
+    learningGoal: "Whether house conventions hold on a static page with no framework cues."
   })
 ].map((entry) => Object.freeze(entry)));
 

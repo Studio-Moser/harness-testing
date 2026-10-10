@@ -255,7 +255,7 @@ test("decision admission counts genuine failed attempts, ignores old quarantine 
     trial(studio, "react-active-badge-count", 2, {status: "agent_failed", correctness: null})
   ]);
   const diagnostic = report("diagnostic", [trial(studio)], {experiment: {purpose: "diagnostic", comparison: {status: "insufficient_evidence", provisional: true, policy_id: "benchmark-readiness-v2"}}});
-  const quarantined = report("quarantined", [trial(studio, "react-accent-polish")], {evidence: {review_state: "quarantined"}});
+  const quarantined = report("quarantined", [trial(studio, "react-accent-polish-committed")], {evidence: {review_state: "quarantined"}});
   const oldPolicy = report("old-policy", [trial(studio)], {
     experiment: {conditions: conditions({decision_policy: "development-comparison-v1"})}
   });
@@ -351,7 +351,7 @@ test("grades join by report and trial identity, count once, and require every Qu
 
 test("quality trade-offs use shared trial samples and incompatible pricing stays separate", () => {
   const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
-  const anotherTask = "react-accent-polish";
+  const anotherTask = "react-accent-polish-committed";
   const reportConditions = conditions({
     task_ids: ["react-active-badge-count", anotherTask],
     task_digests: {"react-active-badge-count": DIGEST, [anotherTask]: DIGEST}
@@ -580,7 +580,7 @@ test("the stitched campaign is the default decision cohort and excludes supersed
 test("the read turns the numbers into pros, cons and one recommendation", () => {
   const nothing = HARNESS_CATALOG.find(({id}) => id === "nothing-v1");
   const studio = HARNESS_CATALOG.find(({id}) => id === "studio-moser-v5");
-  const tasks = ["react-active-badge-count", "react-accent-polish"];
+  const tasks = ["react-active-badge-count", "react-accent-polish-committed"];
   const source = report("read", tasks.flatMap((task) => [
     trial(nothing, task, 1, {cost_usd: 0.10, duration_seconds: 30, collaboration: {metrics: metrics({assistant_words: 100}), grade: completedGrade(5)}}),
     trial(studio, task, 1, {cost_usd: 0.25, duration_seconds: 60, collaboration: {metrics: metrics({assistant_words: 300, unnecessary_approval_request_count: 1}), grade: completedGrade(4)}})
@@ -610,8 +610,12 @@ test("the read turns the numbers into pros, cons and one recommendation", () => 
     assert.match(root.textContent, /The readUse Nothing v1/);
     assert.match(root.textContent, /Results by task/);
     assert.match(root.textContent, /\$0\.10 · 30s · 100% quality/);
-    assert.doesNotMatch(root.textContent, /Failed|% correct/);
+    assert.doesNotMatch(root.textContent, /Failed|% correct|Conventions broken/);
     assert.match(root.textContent, /Difficulty 1 · Polish/);
+    source.experiment.trials[0].conventions = false;
+    const broken = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: [source]});
+    assert.match(broken.textContent, /Conventions broken/);
+    assert.doesNotMatch(broken.textContent, /Failed|% correct/);
     assert.doesNotMatch(root.textContent, /Decision-grade ranking|Quality trade-offs|Evidence cohort/);
   } finally {globalThis.document = previousDocument;}
 });
@@ -697,7 +701,7 @@ test("delegation shows subagent counts, models, cost share and whether routing w
     "openai/gpt-5.6-terra": {input: 2, output: 12, cache_read: 0.2, cache_write: 2.5}
   };
   const session = (name, model, effort, input) => ({session: name, provider: "openai", model, effort, input_tokens: input, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0});
-  const tasks = ["react-active-badge-count", "react-accent-polish"];
+  const tasks = ["react-active-badge-count", "react-accent-polish-committed"];
   const source = report("delegation", [
     trial(nothing, tasks[0], 1, {session_usage: [session("root", "gpt-6-astra", "medium", 100000)]}),
     trial(nothing, tasks[1], 1, {session_usage: [session("root", "gpt-6-astra", "medium", 100000)]}),
@@ -837,7 +841,7 @@ test("the overview charts every model's harnesses on the tasks all models ran", 
   const reports = [
     report("astra", [
       graded(nothing, "react-active-badge-count", 200), graded(studio, "react-active-badge-count", 300),
-      graded(nothing, "react-accent-polish", 1000), graded(studio, "react-accent-polish", 1000)
+      graded(nothing, "react-accent-polish-committed", 1000), graded(studio, "react-accent-polish-committed", 1000)
     ]),
     report("opus", [graded(nothing, "react-active-badge-count", 20), graded(studio, "react-active-badge-count", 30)],
       {experiment: {conditions: conditions({kickoff: opus})}})

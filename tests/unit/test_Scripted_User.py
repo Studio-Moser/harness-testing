@@ -93,7 +93,7 @@ def test_all_comparison_tasks_answer_authored_questions():
     from pathlib import Path
 
     policies = list((Path(__file__).parents[2] / "tasks/workflow").glob("*/Scripted User.json"))
-    assert len(policies) == 20
+    assert len(policies) == 23
     for path in policies:
         frozen = json.loads(path.read_text())
         for kind, text in [

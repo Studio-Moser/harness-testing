@@ -489,3 +489,304 @@ def test_cargo_correctness_uses_a_fresh_target_and_offline_locked_workspace(
         "--locked",
         "--offline",
     ]
+
+
+def _write_session(path: Path, calls: list[tuple]) -> None:
+    """Calls are ("shell", command, exit code or None, output) or ("edit", file path)."""
+    tool_calls, results = [], []
+    for index, call in enumerate(calls):
+        call_id = f"call-{index}"
+        if call[0] == "edit":
+            tool_calls.append(
+                {
+                    "tool_call_id": call_id,
+                    "function_name": "Write",
+                    "arguments": {"file_path": call[1]},
+                }
+            )
+            results.append({"source_call_id": call_id, "content": "Done!"})
+            continue
+        _, command, exit_code, output = (*call, 0, "")[:4]
+        tool_calls.append(
+            {"tool_call_id": call_id, "function_name": "Bash", "arguments": {"command": command}}
+        )
+        results.append(
+            {
+                "source_call_id": call_id,
+                "content": output,
+                **({} if exit_code is None else {"extra": {"exit_code": exit_code}}),
+            }
+        )
+    path.write_text(
+        json.dumps(
+            {
+                "steps": [
+                    {"step_id": 1, "tool_calls": tool_calls, "observation": {"results": results}}
+                ]
+            }
+        )
+    )
+
+
+def _conventions_workspace(tmp_path: Path, *created: str) -> tuple[Path, Path]:
+    workspace = tmp_path / "workspace"
+    for name in ("src/Completion.js", *created):
+        (workspace / name).parent.mkdir(parents=True, exist_ok=True)
+        (workspace / name).write_text("content\n")
+    manifest = tmp_path / "Protected_Files.json"
+    manifest.write_text(
+        json.dumps({"files": {"src/Completion.js": "sha256:0"}, "mutable_files": {}})
+    )
+    return workspace, manifest
+
+
+_HEREDOC_COMMIT = """git add -A && git commit -m "$(cat <<'EOF'
+feat(tasks): add a completion toggle
+
+It doesn't mutate the "input".
+
+Co-Authored-By: Example <example@example.invalid>
+EOF
+)" && git log --oneline -1"""
+_STDIN_COMMIT = """git branch --show-current && git add src && git commit -q -F - <<'EOF'
+fix: keep the input untouched
+
+Body with `ticks` and an apostrophe's edge.
+EOF
+git log --oneline -2 && git status --short"""
+_HEREDOC_EDIT = """git checkout -q -b bugfix/toggle && cat > src/Completion.js <<'EOF'
+export const text = "don't git commit -m on main";
+EOF
+npm test 2>&1 | tail -3"""
+_CONVENTIONAL = [
+    ("shell", "git checkout -b feat/toggle-completion"),
+    ("edit", "/app/src/Completion.js"),
+    ("shell", 'git add -A && git commit -m "feat: add a completion toggle"'),
+]
+
+
+@pytest.mark.parametrize(
+    "calls",
+    [
+        _CONVENTIONAL,
+        [("shell", "git switch -c fix/toggle-state"), ("shell", _HEREDOC_COMMIT)],
+        [
+            ("shell", _HEREDOC_EDIT),
+            ("shell", _STDIN_COMMIT, 0, "bugfix/toggle\n1a2b3c4 fix: keep the input untouched\n"),
+        ],
+        # A rename before the first commit is how a branch gets created from main.
+        [("shell", "git branch -m feature/toggle && git commit -qam 'refactor!: drop the flag'")],
+        [
+            (
+                "shell",
+                "cd /app && git checkout -b release/1.4.0 \\\n&& git -c user.name=A commit "
+                "-m 'chore(release): cut 1.4.0' && git status --short",
+            ),
+        ],
+        # A failed attempt lands nothing; the retry is the commit that counts.
+        [
+            ("shell", "git checkout -b docs/notes"),
+            ("shell", "git commit -m 'Update notes'", 1, "nothing to commit"),
+            ("shell", "git add . && git commit -m 'docs: add change notes'"),
+        ],
+        # Git prints the commit it made, so an unknown exit status is still decidable.
+        [
+            ("shell", "git checkout -b perf/toggle"),
+            (
+                "shell",
+                "git commit -m 'perf: skip the copy'; git status --short",
+                0,
+                "[perf/toggle 1a2b3c4] perf: skip the copy\n 1 file changed\n",
+            ),
+        ],
+        [
+            ("shell", "git checkout -b perf/toggle"),
+            ("shell", "git commit -m 'Skip the copy'; git status --short", 0, "M  src/x.js\n"),
+            ("shell", "git commit -m 'perf: skip the copy'"),
+        ],
+        [
+            *_CONVENTIONAL,
+            ("edit", "/app/Change_Notes.md"),
+            ("shell", "git add Change_Notes.md && git commit -q --amend --no-edit && git status"),
+        ],
+        # Scratch files and read-only commands after the commit leave the work committed.
+        [*_CONVENTIONAL, ("edit", "/tmp/Scratch.md"), ("shell", "git log --oneline > /tmp/log")],
+        [*_CONVENTIONAL, ("shell", "git checkout HEAD -- src/Completion.js && git stash list")],
+    ],
+)
+def test_house_conventions_accept_real_branch_and_commit_forms(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, calls: list[tuple]
+):
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+    workspace, manifest = _conventions_workspace(tmp_path, "Change_Notes.md")
+    _write_session(trajectory, calls)
+
+    assert Workflow_Criteria.house_conventions(workspace, manifest) is True
+
+
+@pytest.mark.parametrize(
+    "calls",
+    [
+        [],
+        [("shell", "git checkout -b feat/toggle-completion")],
+        [("shell", "git commit -am 'feat: add a completion toggle'")],
+        # Renaming afterwards does not undo a commit that landed on main.
+        [("shell", "git commit -am 'feat: add a toggle' && git branch -m feat/toggle")],
+        [("shell", "git checkout -b toggle-completion && git commit -am 'feat: add a toggle'")],
+        [("shell", "git checkout -b feat/Toggle_Completion && git commit -am 'feat: add it'")],
+        [("shell", "git checkout -b feat/toggle && git commit -am 'Add a completion toggle'")],
+        [("shell", "git checkout -b feat/toggle && git commit -am 'Feat: add a toggle'")],
+        [("shell", "git checkout -b feat/toggle && git commit -am 'feat:add a toggle'")],
+        [
+            ("shell", "git checkout -b feat/toggle"),
+            ("shell", "git commit -m \"$(cat <<'EOF'\nAdd a toggle\n\nfeat: x\nEOF\n)\""),
+        ],
+        [*_CONVENTIONAL, ("shell", "git commit --amend -m 'Add a completion toggle'")],
+        [*_CONVENTIONAL, ("edit", "/app/src/Completion.js")],
+        [*_CONVENTIONAL, ("shell", "printf 'more\\n' >> Change_Notes.md")],
+        # Evidence that only looks like Git is not Git.
+        [("shell", "echo \"git checkout -b feat/toggle && git commit -m 'feat: add a toggle'\"")],
+    ],
+)
+def test_house_conventions_reject_broken_conventions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, calls: list[tuple]
+):
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+    workspace, manifest = _conventions_workspace(tmp_path, "Change_Notes.md")
+    _write_session(trajectory, calls)
+
+    assert Workflow_Criteria._git_history() is not None
+    assert Workflow_Criteria.house_conventions(workspace, manifest) is False
+
+
+@pytest.mark.parametrize(
+    "calls",
+    [
+        # Unknown exit status and nothing printed to settle it.
+        [("shell", "git checkout -b feat/toggle"), ("shell", "git commit -m 'feat: x'", None)],
+        [("shell", "git checkout -b feat/toggle"), ("shell", "git commit -qm 'feat: x'; true")],
+        [("shell", "git checkout -b feat/toggle"), ("shell", "git commit -m 'feat: x' | tail -1")],
+        # Git reports a different branch than the replay expects.
+        [
+            ("shell", "git checkout -b feat/toggle"),
+            ("shell", "git commit -m 'feat: x'", 0, "[main 1a2b3c4] feat: x\n"),
+        ],
+        # History edits the replay does not model.
+        [*_CONVENTIONAL, ("shell", "git reset --soft HEAD~1")],
+        [*_CONVENTIONAL, ("shell", "git checkout main && git merge feat/toggle-completion")],
+        [("shell", "git worktree add ../toggle -b feat/toggle"), *_CONVENTIONAL[1:]],
+        [("shell", "bash -c 'git checkout -b feat/toggle'"), *_CONVENTIONAL[1:]],
+        [("shell", "git checkout -b feat/toggle"), ("shell", "git switch -")],
+        [("shell", "git commit --amend -m 'feat: rewrite the fixture commit'")],
+        [("shell", "git checkout -b feat/toggle && git commit -m 'feat: unbalanced")],
+    ],
+)
+def test_house_conventions_fail_closed_when_git_history_is_undeterminable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, calls: list[tuple]
+):
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+    workspace, manifest = _conventions_workspace(tmp_path, "Change_Notes.md")
+    _write_session(trajectory, calls)
+
+    assert Workflow_Criteria._git_history() is None
+    assert Workflow_Criteria.house_conventions(workspace, manifest) is False
+
+
+@pytest.mark.parametrize("command", ["git commit -a", "git commit -F Message.txt"])
+def test_house_conventions_fail_closed_on_an_unreadable_commit_message(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, command: str
+):
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+    workspace, manifest = _conventions_workspace(tmp_path, "Change_Notes.md")
+    _write_session(trajectory, [("shell", f"git checkout -b feat/toggle && {command}")])
+
+    assert Workflow_Criteria._git_history().commits == (("feat/toggle", None),)
+    assert Workflow_Criteria.house_conventions(workspace, manifest) is False
+
+
+def test_house_conventions_fail_closed_without_a_trajectory_or_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+    workspace, manifest = _conventions_workspace(tmp_path, "Change_Notes.md")
+
+    assert Workflow_Criteria.house_conventions(workspace, manifest) is False
+    _write_session(trajectory, _CONVENTIONAL)
+    assert Workflow_Criteria.house_conventions(workspace, tmp_path / "Missing.json") is False
+    assert Workflow_Criteria.house_conventions(workspace, manifest) is True
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("Design_Notes.md", True),
+        ("Design Notes.md", True),
+        ("Export_Records.test.js", True),
+        ("Design_Notes-v2.md", True),
+        ("API_Reference-Authentication.md", True),
+        ("Change_Notes-2026-10-09.md", True),
+        ("State_of_the_Toggle.md", True),
+        ("Notes.md", True),
+        ("README.md", True),
+        ("AGENTS.md", True),
+        ("LICENSE", True),
+        ("Makefile", True),
+        ("package.json", True),
+        ("index.html", True),
+        ("pnpm-lock.yaml", True),
+        (".gitignore", True),
+        ("NOTES.md", False),
+        ("CHANGE_NOTES.md", False),
+        ("notes.md", False),
+        ("design_notes.md", False),
+        ("design-notes.md", False),
+        ("designNotes.md", False),
+        ("DesignNotes.md", False),
+        ("ToggleDone.test.js", False),
+        ("Design_notes.md", False),
+        ("Design__Notes.md", False),
+        ("export-records.test.js", False),
+        ("2026-10-09.md", False),
+    ],
+)
+def test_house_file_names_are_title_case_outside_the_tooling_allowlist(name: str, expected: bool):
+    assert Workflow_Criteria._house_file_name(name) is expected
+
+
+def test_house_conventions_check_only_files_the_submission_created(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+    _write_session(trajectory, _CONVENTIONAL)
+    # Fixture, arm-injected and tool-owned files are not the agent's to name.
+    workspace, manifest = _conventions_workspace(
+        tmp_path,
+        "docs/Change_Notes.md",
+        "lowercase_fixture.js",
+        "AGENTS.md",
+        ".claude/settings.local.json",
+        "node_modules/pkg/index.js",
+    )
+
+    assert Workflow_Criteria.house_conventions(workspace, manifest) is False
+    baseline = ["lowercase_fixture.js"]
+    assert Workflow_Criteria.house_conventions(workspace, manifest, baseline) is True
+    (workspace / "test").mkdir()
+    (workspace / "test/toggle-done.test.js").write_text("content\n")
+    assert Workflow_Criteria.house_conventions(workspace, manifest, baseline) is False
+
+
+def test_notes_document_requires_a_new_nonempty_text_file(tmp_path: Path):
+    workspace, manifest = _conventions_workspace(tmp_path, "AGENTS.md", "src/Extra.test.js")
+    assert Workflow_Criteria.notes_document_added(workspace, manifest) is False
+    (workspace / "NOTES.md").write_text("\n")
+    assert Workflow_Criteria.notes_document_added(workspace, manifest) is False
+    (workspace / "NOTES.md").write_text("Toggle done without mutating the input.\n")
+    assert Workflow_Criteria.notes_document_added(workspace, manifest) is True
+    assert Workflow_Criteria.notes_document_added(workspace, manifest, ["NOTES.md"]) is False

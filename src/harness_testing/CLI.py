@@ -260,9 +260,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     if arguments.variant == "comparison"
                     else run_task_qa(_repository_root(), task_id, case)
                 )
-                summary = " ".join(
-                    f"{name}={scores[name]:g}" for name in ("reward", "workflow", "efficiency")
-                )
+                summary = " ".join(f"{name}={score:g}" for name, score in scores.items())
                 prefix = f"{task_id}:{case} " if show_identity else ""
                 print(f"{prefix}{summary}")
     return 0

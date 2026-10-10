@@ -93,6 +93,29 @@ def test_equal_contenders_have_no_clear_winner_and_full_tables():
     assert "history" not in result
 
 
+@pytest.mark.parametrize("conventions", [True, None])
+def test_passed_or_inapplicable_conventions_leave_success_unchanged(conventions):
+    request, reports = fixture()
+    expected = run(request, copy.deepcopy(reports))
+    for trial in trials(reports, "a"):
+        trial["conventions"] = conventions
+    assert run(request, reports) == expected
+
+
+def test_failed_conventions_fail_an_otherwise_correct_trial():
+    request, reports = fixture()
+    failed = trials(reports, "a")[0]
+    failed["conventions"] = False
+    result = run(request, reports)
+    assert [row["successes"] for row in result["contenders"]] == [26, 27]
+    assert result["contenders"][0]["task_successes"][failed["task_id"]] == 2
+    assert result["contenders"][0]["eligible"] is False
+    assert result["contenders"][0]["counts"]["missing_grading"] == 0
+    failed["conventions"] = 0
+    with pytest.raises(ValueError, match="conventions must be boolean or null"):
+        run(request, reports)
+
+
 @pytest.mark.parametrize("attempts", [1, 2])
 def test_single_and_double_attempts_are_decision_grade(attempts):
     request, reports = fixture(attempts=attempts)

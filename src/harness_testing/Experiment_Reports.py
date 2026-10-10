@@ -261,6 +261,8 @@ def _safe_trial(
         )
     score = (rewards or {}).get("reward")
     correctness = score == 1 if type(score) in {int, float} and score in {0, 1} else None
+    # Scored only by tasks with a conventions criterion; absent means not applicable.
+    conventions = (rewards or {}).get("conventions")
     workspace = directory / "artifacts/workspace" if directory else None
     protected = (
         protected_files_intact(workspace, task_path / "tests/Protected_Files.json")
@@ -401,6 +403,7 @@ def _safe_trial(
         "interaction_count": native.get("interaction_count", 0),
         "child_count": native.get("child_count"),
         "incomplete_reasons": native.get("incomplete_reasons", []),
+        **({"conventions": conventions == 1} if type(conventions) in {int, float} else {}),
         **({"collaboration": collaboration} if collaboration is not None else {}),
         **({"provider_recovery": recovery} if recovery is not None else {}),
         **({"simulated_user": responder} if responder is not None else {}),

@@ -17,6 +17,7 @@ from harness_testing.Harbor_CLI import harbor_command
 from harness_testing.Materialize import build_images, image_is_current
 
 QA_CASES = ("oracle", "nop", "near-miss", "adversarial", "source-tamper")
+_DIMENSIONS = ("reward", "workflow", "efficiency")
 _EFFICIENCY_AUDITS = {
     "react-grouped-ui-updates": "Grouped_Premature.json",
     "react-accent-polish": "Polish_Unnecessary_Gate.json",
@@ -48,6 +49,12 @@ def _task_root(root: Path, task_id: str) -> Path:
     return matches[0]
 
 
+def _dimensions(root: Path, task_id: str) -> tuple[str, ...]:
+    """Conventions are scored only by tasks that ship a conventions criterion."""
+    scored = (_task_root(root, task_id) / "tests" / "conventions").is_dir()
+    return (*_DIMENSIONS, "conventions") if scored else _DIMENSIONS
+
+
 def _case_spec(root: Path, task_id: str, case: str) -> dict[str, object]:
     path = _task_root(root, task_id) / "tests" / "QA.json"
     try:
@@ -68,7 +75,7 @@ def _case_spec(root: Path, task_id: str, case: str) -> dict[str, object]:
         or not all(isinstance(path, str) for path in mutation_paths)
         or not isinstance(expected, dict)
         or not isinstance(run_oracle_first, bool)
-        or set(expected) != {"reward", "workflow", "efficiency"}
+        or set(expected) != set(_dimensions(root, task_id))
         or not all(isinstance(score, (int, float)) for score in expected.values())
     ):
         raise ValueError(f"invalid QA evidence for {task_id}:{case}")
@@ -165,7 +172,9 @@ def _ensure_base_images(root: Path, task_id: str) -> None:
         build_images(root, selected)
 
 
-def _score_document(jobs_dir: Path) -> tuple[dict[str, float], Path]:
+def _score_document(
+    jobs_dir: Path, dimensions: tuple[str, ...] = _DIMENSIONS
+) -> tuple[dict[str, float], Path]:
     reward_paths = sorted(jobs_dir.rglob("reward.json"))
     if len(reward_paths) != 1:
         exception_paths = sorted(jobs_dir.rglob("exception.txt"))
@@ -179,7 +188,7 @@ def _score_document(jobs_dir: Path) -> tuple[dict[str, float], Path]:
             f"expected one Harbor reward.json, found {len(reward_paths)} in {jobs_dir}{details}"
         )
     raw = json.loads(reward_paths[0].read_text())
-    scores = {name: float(raw[name]) for name in ("reward", "workflow", "efficiency")}
+    scores = {name: float(raw[name]) for name in dimensions}
     return scores, reward_paths[0]
 
 
@@ -268,7 +277,7 @@ def run_task_qa(
             env=environment,
             check=True,
         )
-        scores, reward_path = _score_document(jobs_dir)
+        scores, reward_path = _score_document(jobs_dir, _dimensions(root, task_id))
         _assert_scores(
             task_id,
             case,

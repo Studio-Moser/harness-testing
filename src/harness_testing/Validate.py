@@ -105,7 +105,9 @@ def _validate_benchmark_task_assets(
         for relative in required_files
         if not (task_root / relative).is_file()
     ]
-    for dimension in ("reward", "workflow", "efficiency"):
+    # Conventions are optional: only tasks that ask for committed work score them.
+    conventions = ("conventions",) if (task_root / "tests" / "conventions").exists() else ()
+    for dimension in ("reward", "workflow", "efficiency", *conventions):
         directory = task_root / "tests" / dimension
         if not directory.is_dir() or not any(directory.glob("*.py")):
             failures.append(

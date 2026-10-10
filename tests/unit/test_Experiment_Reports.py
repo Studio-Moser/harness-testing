@@ -424,6 +424,37 @@ def test_protected_local_tree_failure_is_not_a_functional_verdict(tmp_path, monk
     assert trial["correctness"] is False
 
 
+@pytest.mark.parametrize(
+    "rewards, expected",
+    [
+        ({"reward": 1}, "absent"),
+        ({"reward": 1, "conventions": 1.0}, True),
+        ({"reward": 1, "conventions": 0.0}, False),
+    ],
+)
+def test_conventions_are_reported_only_when_the_task_scores_them(
+    tmp_path, monkeypatch, rewards, expected
+):
+    from harness_testing.Experiment_Reports import _safe_trial
+    from harness_testing.Run_Reports import validate_run_report
+
+    (tmp_path / "artifacts/workspace").mkdir(parents=True)
+    (tmp_path / "verifier").mkdir()
+    (tmp_path / "verifier/reward.json").write_text(json.dumps(rewards))
+    monkeypatch.setattr(
+        "harness_testing.Experiment_Reports.protected_files_intact", lambda *a: True
+    )
+    trial = _safe_trial(ROOT, "react-active-badge-count", "fixture", 1, tmp_path)
+    # Conventions never decide correctness; the verdict combines them later.
+    assert trial["correctness"] is True
+    assert trial.get("conventions", "absent") is expected
+
+    report = json.loads((ROOT / "tests/Fixtures/Run_Reports/Comparison.json").read_text())
+    if expected != "absent":
+        report["experiment"]["trials"][0]["conventions"] = expected
+    assert not [e for e in validate_run_report(ROOT, report) if "conventions" in e]
+
+
 def test_safe_trial_keeps_research_protected_state_unknown(tmp_path: Path):
     from harness_testing.Experiment_Reports import _safe_trial
 

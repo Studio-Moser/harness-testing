@@ -82,7 +82,7 @@ test("catalog validation rejects duplicate IDs and unsupported classifications",
 
 test("controlled tests are enriched from their tracked task apparatus", async () => {
   const tests = await enrichCatalog(TOOLBOX_CATALOG, {repositoryRoot});
-  const accent = tests.find(({id}) => id === "react-accent-polish");
+  const accent = tests.find(({id}) => id === "react-accent-polish-committed");
 
   assert.match(accent.prompt.exact, /change the `--cta-background` custom property/);
   assert.equal(accent.prompt.url, null);

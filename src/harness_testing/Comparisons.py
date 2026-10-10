@@ -59,10 +59,12 @@ def _mean(values):
 
 
 def _success(trial):
+    # Conventions are absent on tasks that do not score them; only a failure counts.
     return (
         trial["status"] == "completed"
         and trial.get("correctness") is True
         and trial.get("protected_state") is True
+        and trial.get("conventions") is not False
     )
 
 
@@ -143,8 +145,8 @@ def _dataset(report, contender, conditions, pricing):
     repetitions = conditions["attempts"]
     fields = (
         "trial_id", "task_id", "attempt", "contender_id", "status", "correctness",
-        "protected_state", "duration_seconds", "usage_complete", "cost_usd", "pricing_digest",
-        "model_usage", "code_review",
+        "protected_state", "conventions", "duration_seconds", "usage_complete", "cost_usd",
+        "pricing_digest", "model_usage", "code_review",
     )
     selected = [
         {field: t.get(field) for field in fields}
@@ -165,7 +167,7 @@ def _dataset(report, contender, conditions, pricing):
         ids.add(trial["trial_id"])
         if trial.get("status") not in _STATUSES:
             raise ValueError("unknown trial status")
-        for field in ("correctness", "protected_state"):
+        for field in ("correctness", "protected_state", "conventions"):
             if trial.get(field) is not None and type(trial[field]) is not bool:
                 raise ValueError(f"{field} must be boolean or null")
         if type(trial.get("usage_complete")) is not bool:

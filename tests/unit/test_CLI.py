@@ -38,6 +38,13 @@ def test_task_qa_dispatches_one_named_deterministic_case(monkeypatch, capsys):
     assert calls[0][1:] == ("react-grouped-ui-updates", "oracle")
     assert capsys.readouterr().out == "reward=1 workflow=1 efficiency=1\n"
 
+    def fake_conventions_run(root, task_id, case):
+        return {"reward": 1.0, "workflow": 1.0, "efficiency": 1.0, "conventions": 0.0}
+
+    monkeypatch.setattr("harness_testing.QA.run_task_qa", fake_conventions_run)
+    assert main(["task", "qa", "--task", "react-accent-polish-committed", "--case", "oracle"]) == 0
+    assert capsys.readouterr().out == "reward=1 workflow=1 efficiency=1 conventions=0\n"
+
 
 def test_task_qa_batches_one_pack_and_all_cases(monkeypatch, capsys):
     from harness_testing.CLI import main

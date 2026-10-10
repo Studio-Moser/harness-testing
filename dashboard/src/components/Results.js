@@ -347,6 +347,8 @@ export function normalizeResults(reports, tests, harnesses, pricing = null) {
         status: trial.status,
         correctness: trialCorrectness(trial),
         protectedState: trial.protected_state ?? null,
+        // Scored only on tasks that ask for committed work; null means not applicable.
+        conventions: trial.conventions ?? null,
         codeReview: trial.code_review ?? null,
         incompleteReasons: trial.incomplete_reasons ?? [],
         quality: qualityFromGrade(grade),
@@ -802,6 +804,7 @@ function renderMatrix(observations, tests, harnesses, filters) {
         const quality = mean(values.map((value) => value.quality));
         cell.append(element("strong", "", `${formatCost(mean(values.map(({cost}) => cost)))} · ${formatRuntime(mean(values.map(({runtime}) => runtime)))} · ${quality == null ? "—" : formatPercent(quality)} quality`));
         if (score < 1) cell.append(element("small", "results-cell-failure", score === 0 ? "Failed" : `${formatPercent(score)} correct`));
+        if (values.some(({conventions}) => conventions === false)) cell.append(element("small", "results-cell-failure", "Conventions broken"));
         const children = values.flatMap(({sessions}) => sessions.filter(({child}) => child));
         if (children.length) cell.append(element("small", "results-cell-subagents", `${plural(children.length, "subagent")} · ${modelMix(children)}`));
       }

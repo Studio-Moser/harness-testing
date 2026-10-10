@@ -7,6 +7,45 @@
   "pricing": null,
   "scopes": [
     [
+      "react-active-badge-count",
+      "react-grouped-ui-updates",
+      "react-saved-view-feature",
+      "rust-quoted-value-parser",
+      "rust-workspace-warning-summary",
+      "static-accessible-disclosure",
+      "static-grouped-page-updates",
+      "node-cross-module-permissions",
+      "node-small-pagination",
+      "static-responsive-settings-polish",
+      "node-durable-queue-recovery",
+      "node-export-clear",
+      "node-export-ambiguous",
+      "node-capacity-boundary",
+      "static-notification-card-polish",
+      "static-workspace-design-system-polish",
+      "node-toggle-completion-committed",
+      "react-accent-polish-committed",
+      "static-pricing-copy-polish-committed"
+    ],
+    [
+      "react-active-badge-count",
+      "react-grouped-ui-updates",
+      "react-saved-view-feature",
+      "rust-quoted-value-parser",
+      "rust-workspace-warning-summary",
+      "static-accessible-disclosure",
+      "static-grouped-page-updates",
+      "node-cross-module-permissions",
+      "node-small-pagination",
+      "static-responsive-settings-polish",
+      "node-durable-queue-recovery",
+      "node-export-clear",
+      "node-export-ambiguous",
+      "node-capacity-boundary",
+      "static-notification-card-polish",
+      "static-workspace-design-system-polish"
+    ],
+    [
       "react-accent-polish",
       "react-active-badge-count",
       "react-grouped-ui-updates",
@@ -117,6 +156,11 @@
     ],
     [
       "static-workspace-design-system-polish"
+    ],
+    [
+      "node-toggle-completion-committed",
+      "react-accent-polish-committed",
+      "static-pricing-copy-polish-committed"
     ]
   ]
 }

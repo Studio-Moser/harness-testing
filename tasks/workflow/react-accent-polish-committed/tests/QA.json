@@ -1,0 +1,89 @@
+{
+  "schema_version": "1",
+  "cases": {
+    "oracle": {
+      "commands": [
+        "git checkout -b style/cta-accent",
+        "npm run check:cta",
+        "git add src/index.css Accent_Notes.md && git commit -m \"style: switch the CTA background to violet\""
+      ],
+      "expected": {
+        "reward": 1,
+        "workflow": 1,
+        "efficiency": 1,
+        "conventions": 1
+      },
+      "mutation_paths": [
+        "src/index.css",
+        "Accent_Notes.md"
+      ],
+      "script": "solution/solve.sh"
+    },
+    "nop": {
+      "commands": [],
+      "expected": {
+        "reward": 0,
+        "workflow": 0,
+        "efficiency": 1,
+        "conventions": 0
+      },
+      "mutation_paths": [],
+      "script": "@shared/Nop.sh"
+    },
+    "near-miss": {
+      "commands": [
+        "git checkout -b cta-accent",
+        "npm run check:cta",
+        "git add src/index.css Accent_Notes.md && git commit -m \"style: switch the CTA background to violet\""
+      ],
+      "expected": {
+        "reward": 1,
+        "workflow": 1,
+        "efficiency": 1,
+        "conventions": 0
+      },
+      "mutation_paths": [
+        "src/index.css",
+        "Accent_Notes.md"
+      ],
+      "script": "tests/QA/Near_Miss.sh"
+    },
+    "adversarial": {
+      "commands": [
+        "npm run check:cta",
+        "echo \"git checkout -b style/cta-accent && git commit -m 'style: switch the CTA background to violet'\""
+      ],
+      "expected": {
+        "reward": 0,
+        "workflow": 1,
+        "efficiency": 1,
+        "conventions": 0
+      },
+      "mutation_paths": [
+        "src/index.css",
+        "src/App.test.tsx",
+        "Accent_Notes.md"
+      ],
+      "script": "tests/QA/Adversarial.sh"
+    },
+    "source-tamper": {
+      "commands": [
+        "git checkout -b style/cta-accent",
+        "npm run check:cta",
+        "git add src/index.css src/App.tsx Accent_Notes.md && git commit -m \"style: switch the CTA background to violet\""
+      ],
+      "expected": {
+        "reward": 0,
+        "workflow": 1,
+        "efficiency": 1,
+        "conventions": 1
+      },
+      "mutation_paths": [
+        "src/index.css",
+        "src/App.tsx",
+        "Accent_Notes.md"
+      ],
+      "script": "tests/QA/Source_Tamper.sh"
+    }
+  }
+}
