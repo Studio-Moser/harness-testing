@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import shutil
+import subprocess
 import tarfile
 import tempfile
 from pathlib import Path
@@ -111,6 +112,15 @@ def materialize_contender(
                 all_skills = {skill.resolve() for skill in tree.rglob("SKILL.md")}
                 if all_skills != accounted:
                     raise ValueError("collection has skills outside its declared plugin inventory")
+                # A collection that ships the Harness profile also supplies the developer's
+                # global instructions, built by its own renderer so trials match machines.
+                renderer = tree / "plugins/harness/scripts/render-global-instructions.sh"
+                if renderer.is_file():
+                    built = work / f"profile-{index}"
+                    subprocess.run(
+                        ["bash", str(renderer), str(built)], check=True, capture_output=True
+                    )
+                    instructions.append((built / "claude/CLAUDE.md").read_text())
                 baseline = tree / "plugins/harness/templates/AGENTS_Baseline.md"
                 if baseline.is_file():
                     instructions.append(baseline.read_text())

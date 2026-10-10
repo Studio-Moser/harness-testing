@@ -10,7 +10,7 @@ Every workflow task contains a frozen starting project, a neutral comparison ins
 
 Tasks use no live product repositories or private data. Workflow projects begin as clean Git worktrees with a deterministic baseline commit; the environment and the separate verifier have no network. `/app` and the agent trajectory are retained as local artifacts for verification. The research lane uses five pinned DeepSWE tasks materialized into ignored local storage; the upstream tree has no license file, so nothing fetched is redistributed.
 
-Each contender is an immutable, content-addressed bundle: source commits, plugin and skill inventory, injected startup instructions, rubric bytes and delivery configuration. Changing any of those creates a new harness version. Claude receives plugin directories through `--plugin-dir`; Codex receives its native marketplace layout, where plugins are skills-only.
+Each contender is an immutable, content-addressed bundle: source commits, plugin and skill inventory, injected startup instructions, rubric bytes and delivery configuration. Changing any of those creates a new harness version. A collection that ships the Harness profile also supplies the developer's global instructions, built by the collection's own renderer at the pinned commit, so a trial reads the text a developer's machine does. Claude receives plugin directories through `--plugin-dir`; Codex receives its native marketplace layout, where plugins are skills-only.
 
 ## Runs
 
