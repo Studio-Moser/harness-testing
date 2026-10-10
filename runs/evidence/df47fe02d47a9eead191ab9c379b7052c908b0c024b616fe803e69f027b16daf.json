@@ -1,0 +1,2740 @@
+{
+  "admission_estimate_usd": 42.0,
+  "completed_jobs": 7,
+  "completed_trials": 7,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 7,
+  "expected_trials": 7,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:2a2d511b2d038cb13c0f583076750f0b5a12ab8ef82559df5bae18c522f5de99",
+      "hypothesis": "Studio Moser versions follow the house branch, commit and file-naming conventions on these tasks; Nothing completes the work but breaks at least one convention.",
+      "rerun_reason": "Recovery: the run stopped on an infrastructure failure before this task started.",
+      "summary": "Add three tasks that require a notes document and a commit, scored on a fourth conventions dimension."
+    },
+    "code_review": {
+      "evaluation_cost_usd": 3.83621,
+      "plan_id": "sha256:d7afc51e0f21b69e9609aecfabf4f596803c152a76ae4adcad2341b01dd91312",
+      "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+      "results_digest": "sha256:e73665b73d411502d29ee16e5f12de5493db4cd6c030ddd3251811c188f14fc8",
+      "source_report_id": "sha256:570a1f3a27fc81924e4ecc97dc21dd97f0a319464adbad1c79bd4e376f7e92be"
+    },
+    "collaboration_evaluation": {
+      "evaluation_cost_usd": 4.174952,
+      "plan_id": "sha256:b819f7a7e2853bd54d6672612dc93bb6c709261e2ddb7cafd2e947ef7cb3c8a6",
+      "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+      "results_digest": "sha256:0a345c825d718ffd1769fab201179e02e5611b2542100a9d9d0e174f932d1853",
+      "rubric_version": "tim-work-quality-v2",
+      "source_report_id": "sha256:d6ce804eda1c9666b39f9b43b91af1793277c4fe1c98250caa54535e11238f8c"
+    },
+    "comparison": {
+      "contenders": [
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 0.49518799999999996,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.13257560000000002,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "studio-moser",
+          "id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "label": "Studio Moser v7 + personal instructions and skills",
+          "mean_cost_usd": 0.13257560000000002,
+          "mean_duration_seconds": 11.631700713995087,
+          "original_estimates": [
+            {
+              "cost_usd": 0.13257560000000002,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:e436ef7126a654d081ca9021d2af9145b6c0529647514db428cb963569a98dab"
+            }
+          ],
+          "passed_all": true,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "static-pricing-copy-polish-committed": 1
+          },
+          "total_cost_usd": 0.13257560000000002,
+          "total_tokens": 146439,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 0.60097,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "label": "Studio Moser v5 \u2014 full collection",
+          "mean_cost_usd": 0.12722440000000002,
+          "mean_duration_seconds": 15.794106089997513,
+          "original_estimates": [
+            {
+              "cost_usd": 0.12722440000000002,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:d20b4e9d84360383fc09f2faf90aa4dfe6be9046c928251090ccfe7d262d3be3"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.12722440000000002,
+          "total_tokens": 154343,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 0.60085,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.0794672,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "studio-moser",
+          "id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "label": "Studio Moser v7 + personal instructions",
+          "mean_cost_usd": 0.0794672,
+          "mean_duration_seconds": 16.4810074670022,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0794672,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:dcd8098f4a34aaf415dc5c0e1c3eeb9b526b9cc0f75bf73329746ab7f96b4835"
+            }
+          ],
+          "passed_all": true,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "static-pricing-copy-polish-committed": 1
+          },
+          "total_cost_usd": 0.0794672,
+          "total_tokens": 128922,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 0.59973,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.0821944,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "studio-moser",
+          "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "label": "Studio Moser v6 + time matters",
+          "mean_cost_usd": 0.0821944,
+          "mean_duration_seconds": 11.622833420995448,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0821944,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:5767bdf458cf20f900fe2ec594be78720cbf8aec671a28ed738e63a3dff69575"
+            }
+          ],
+          "passed_all": true,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "static-pricing-copy-polish-committed": 1
+          },
+          "total_cost_usd": 0.0821944,
+          "total_tokens": 103348,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 0.442894,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "nothing",
+          "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "label": "Nothing",
+          "mean_cost_usd": 0.070243,
+          "mean_duration_seconds": 11.942213338996226,
+          "original_estimates": [
+            {
+              "cost_usd": 0.070243,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:5d5ede02ed322e17d6ea7450c5248834f0cc5752cfdd62bbc5329f9f7c145f6f"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.070243,
+          "total_tokens": 93022,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 0.6008899999999999,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "label": "Studio Moser v7",
+          "mean_cost_usd": 0.0924354,
+          "mean_duration_seconds": 12.690834506000101,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0924354,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:6a195626d784111261a6a44c382405a87a94cfdb42ee2bef3eb4bdbf1a757058"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.0924354,
+          "total_tokens": 109502,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 0.495688,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.0899436,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "studio-moser",
+          "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "label": "Studio Moser v6",
+          "mean_cost_usd": 0.0899436,
+          "mean_duration_seconds": 13.333040548001009,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0899436,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:2575a40c9f8f771ce03a72f24db4bd5a0f4a58479b75945663d246f5108a616d"
+            }
+          ],
+          "passed_all": true,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "static-pricing-copy-polish-committed": 1
+          },
+          "total_cost_usd": 0.0899436,
+          "total_tokens": 104717,
+          "usage_complete": true
+        }
+      ],
+      "leaders": {
+        "observed_cost_ids": [
+          "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8"
+        ],
+        "observed_time_ids": [
+          "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7"
+        ]
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "One attempt per task is the default minimum; one flaky trial can change the verdict.",
+        "Cost and time ratios are point estimates over per-task means; the advantage and noninferiority thresholds are product defaults, not research findings.",
+        "Review is advisory: a missing or incomplete review leaves the verdict provisional and flagged, unconfirmed reviewer claims are listed, and confirmed remaining defects disqualify."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": 0.0053512,
+          "cost_ratio": 1.0420611140630256,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "right_report_id": null,
+          "time_difference_seconds": -4.162405376002425,
+          "time_ratio": 0.736458312215688
+        },
+        {
+          "cost_difference_usd": 0.053108400000000014,
+          "cost_ratio": 1.6683059174099504,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "right_report_id": null,
+          "time_difference_seconds": -4.849306753007113,
+          "time_ratio": 0.7057639369003227
+        },
+        {
+          "cost_difference_usd": 0.050381200000000015,
+          "cost_ratio": 1.6129517339380788,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "right_report_id": null,
+          "time_difference_seconds": 0.008867292999639176,
+          "time_ratio": 1.0007629200796788
+        },
+        {
+          "cost_difference_usd": 0.062332600000000016,
+          "cost_ratio": 1.887385219879561,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": -0.3105126250011381,
+          "time_ratio": 0.9739987374042979
+        },
+        {
+          "cost_difference_usd": 0.040140200000000015,
+          "cost_ratio": 1.4342513798825993,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": -1.0591337920050137,
+          "time_ratio": 0.9165434084335222
+        },
+        {
+          "cost_difference_usd": 0.04263200000000002,
+          "cost_ratio": 1.4739859200654635,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": -1.7013398340059211,
+          "time_ratio": 0.8723967104216901
+        },
+        {
+          "cost_difference_usd": 0.047757200000000014,
+          "cost_ratio": 1.6009674431715224,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "right_report_id": null,
+          "time_difference_seconds": -0.6869013770046877,
+          "time_ratio": 0.958321639112173
+        },
+        {
+          "cost_difference_usd": 0.045030000000000014,
+          "cost_ratio": 1.5478475419249975,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "right_report_id": null,
+          "time_difference_seconds": 4.1712726690020645,
+          "time_ratio": 1.358886040771013
+        },
+        {
+          "cost_difference_usd": 0.056981400000000015,
+          "cost_ratio": 1.811203963384252,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": 3.8518927510012873,
+          "time_ratio": 1.3225442923903625
+        },
+        {
+          "cost_difference_usd": 0.034789000000000014,
+          "cost_ratio": 1.376360139080915,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": 3.1032715839974117,
+          "time_ratio": 1.2445285676470066
+        },
+        {
+          "cost_difference_usd": 0.03728080000000002,
+          "cost_ratio": 1.4144908587159066,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": 2.461065541996504,
+          "time_ratio": 1.1845839689106388
+        },
+        {
+          "cost_difference_usd": -0.002727199999999999,
+          "cost_ratio": 0.9668201239987152,
+          "left_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "left_report_id": null,
+          "right_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "right_report_id": null,
+          "time_difference_seconds": 4.858174046006752,
+          "time_ratio": 1.4179853457446068
+        },
+        {
+          "cost_difference_usd": 0.009224200000000002,
+          "cost_ratio": 1.1313184231880757,
+          "left_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": 4.538794128005975,
+          "time_ratio": 1.3800630585944191
+        },
+        {
+          "cost_difference_usd": -0.0129682,
+          "cost_ratio": 0.8597052644333232,
+          "left_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": 3.7901729610020993,
+          "time_ratio": 1.298654352415528
+        },
+        {
+          "cost_difference_usd": -0.010476399999999997,
+          "cost_ratio": 0.8835225630283867,
+          "left_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": 3.147966919001192,
+          "time_ratio": 1.236102703480727
+        },
+        {
+          "cost_difference_usd": 0.011951400000000001,
+          "cost_ratio": 1.1701436442065403,
+          "left_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": -0.31937991800077725,
+          "time_ratio": 0.9732562206908605
+        },
+        {
+          "cost_difference_usd": -0.010241,
+          "cost_ratio": 0.8892091125261534,
+          "left_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": -1.0680010850046529,
+          "time_ratio": 0.9158446921280304
+        },
+        {
+          "cost_difference_usd": -0.007749199999999998,
+          "cost_ratio": 0.9138437865506829,
+          "left_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": -1.7102071270055603,
+          "time_ratio": 0.8717316488426965
+        },
+        {
+          "cost_difference_usd": -0.0221924,
+          "cost_ratio": 0.7599144916341575,
+          "left_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": -0.7486211670038756,
+          "time_ratio": 0.9410108794145937
+        },
+        {
+          "cost_difference_usd": -0.0197006,
+          "cost_ratio": 0.7809671838796757,
+          "left_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": -1.390827209004783,
+          "time_ratio": 0.8956856686966795
+        },
+        {
+          "cost_difference_usd": 0.0024918000000000023,
+          "cost_ratio": 1.0277040278574574,
+          "left_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": -0.6422060420009075,
+          "time_ratio": 0.9518334891663408
+        }
+      ],
+      "policy_digest": "sha256:c7fc404a81e3e45cbe91a46879d1f8b603469d4c8e851b075a1a6ef58c9db3cd",
+      "policy_id": "benchmark-readiness-v2",
+      "provisional": false,
+      "reasons": [
+        "insufficient_task_coverage",
+        "quality_ineligible"
+      ],
+      "status": "insufficient_evidence",
+      "summary": "Selected evidence is insufficient for a recommendation.",
+      "unsolved_tasks": [],
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:859d11c45fc7059644331f26ca4354dc39e046aab24d53c4ab55b637d87e770f",
+      "attempts": 1,
+      "authority_digest": "sha256:e1da39cab3810d6031a079b984cddf53a22a47ded1f48f9b368f81d896154ed5",
+      "concurrency": 1,
+      "decision_policy": "benchmark-readiness-v2",
+      "evaluator_digest": "sha256:0f8c3dd80966743b78a847c0580e753560eb86fe98c720b3f03b40f890b0c50e",
+      "executor_inventory": [
+        {
+          "effort": "medium",
+          "model": "claude-opus-5-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-opus-5-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-sonnet-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-fable-5-1",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "node": "sha256:d2f444b5b028b4ce66f43e8ef90d1dd0ca5f59e99ab337073e3882cb0567500b",
+        "verifier": "sha256:a981c3f34d1daab6ad1eb7f7c15b5c053bf8f54cd79075fc30ffa0c3e8cb7b92"
+      },
+      "kickoff": {
+        "effort": "medium",
+        "model": "claude-opus-5-5",
+        "provider": "claude",
+        "runtime_version": "2.1.281"
+      },
+      "provider_recovery_seconds": 0,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:9daeba37abb48ebfad1a91feade8803a1dc221a167f0a5d128da652f75f69971",
+      "task_digests": {
+        "static-pricing-copy-polish-committed": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df"
+      },
+      "task_ids": [
+        "static-pricing-copy-polish-committed"
+      ],
+      "task_variant": "comparison",
+      "timeout_seconds": 1800
+    },
+    "contenders": [
+      {
+        "family": "nothing",
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Nothing",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser v5 \u2014 full collection",
+        "rubric_digest": "sha256:22a737b9ea7a68a527e135dfe09f90bc590d1980a8a20ba072688d9522781160",
+        "source_commits": [
+          "3fb970f32d2901b82e3d17c35dbe192604fc7762",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "inventory_digest": "sha256:127e9f1b8268322483d378436d5acff3f19ff8909acbb9ef426758463bf5273a",
+        "label": "Studio Moser v6",
+        "rubric_digest": "sha256:2713cd849eaefabd77a615cecb2bea2b33042a09b606f0fc3c6803111999404f",
+        "source_commits": [
+          "75bf6c59ad9c87e7c91b6e537af471aee91cd931"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "inventory_digest": "sha256:127e9f1b8268322483d378436d5acff3f19ff8909acbb9ef426758463bf5273a",
+        "label": "Studio Moser v6 + time matters",
+        "rubric_digest": "sha256:2713cd849eaefabd77a615cecb2bea2b33042a09b606f0fc3c6803111999404f",
+        "source_commits": [
+          "75bf6c59ad9c87e7c91b6e537af471aee91cd931"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "inventory_digest": "sha256:bdcd217cfc9141887dfcebb53b6e2684066aeb31559809bedd6545c0735de532",
+        "label": "Studio Moser v7",
+        "rubric_digest": "sha256:0f9695bd9fb54d933c8f9215e8f25fa37009aa60899b797896d6f54734cd8116",
+        "source_commits": [
+          "fef5d06c564cd82d8982267db53cce6ec963baa0"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+        "inventory_digest": "sha256:bdcd217cfc9141887dfcebb53b6e2684066aeb31559809bedd6545c0735de532",
+        "label": "Studio Moser v7 + personal instructions",
+        "rubric_digest": "sha256:0f9695bd9fb54d933c8f9215e8f25fa37009aa60899b797896d6f54734cd8116",
+        "source_commits": [
+          "fef5d06c564cd82d8982267db53cce6ec963baa0"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+        "inventory_digest": "sha256:ee2649ca9911f383b3554121ea3cceeb2196fdfd1fe36f187911b08010a1038e",
+        "label": "Studio Moser v7 + personal instructions and skills",
+        "rubric_digest": "sha256:0f9695bd9fb54d933c8f9215e8f25fa37009aa60899b797896d6f54734cd8116",
+        "source_commits": [
+          "fef5d06c564cd82d8982267db53cce6ec963baa0",
+          "00ce38cd48935563b63947952b93873bb601ba30"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "Claude Opus Convention Tasks - Recovery Static",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:6e94f1b0c93f0e7b29bc41bff52dd8ced59ecb48214301a307f226dfde21c16c",
+    "supersedes_report_id": "sha256:d6ce804eda1c9666b39f9b43b91af1793277c4fe1c98250caa54535e11238f8c",
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.442894,
+          "duration_seconds": 6.57,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 17664,
+              "cache_write_tokens": 0,
+              "input_tokens": 42128,
+              "model": "gpt-6-astra",
+              "output_tokens": 79,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:b9ab914d114408b4e367ce86527b7ecfe013e585ea43464dc61866daf2b87a30",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 0.6391399999999999,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "The final response is concise, leads with completion and the commit, and clearly identifies the changes and checks without filler.",
+                "score": 5
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicitly authorized edits, notes, and commit without unnecessary questions, approvals, or scope expansion.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "After editing, ran the existing test covering the exact sentence, computed gap, and CSS token. Recorded results show success; also ran the pricing-card check and checked Git status.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "The preserved existing test meaningfully asserts both requested values and the applied card gap. Additional tests were unnecessary for this narrow change.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The patch contains the requested sentence, gap, and notes, but no rendered visual evidence is supplied. The rubric requires null for visual work without viewable rendered evidence.",
+                "score": null
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Inspected the relevant HTML, CSS, package scripts, existing test, and pricing-card checker before editing. Investigation was proportionate to the precisely specified change.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 17.689,
+            "model_usage": [
+              {
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "input_tokens": 61469,
+                "model": "gpt-6-astra",
+                "output_tokens": 489,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 1,
+            "assistant_tokens": 140,
+            "assistant_words": 77,
+            "average_progress_words": null,
+            "average_update_gap_seconds": null,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.140987,
+            "final_answer_tokens": 140,
+            "final_answer_words": 77,
+            "formatting_density": 0.1818,
+            "heading_count": 0,
+            "maximum_progress_words": null,
+            "maximum_update_gap_seconds": null,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 0,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 274,
+            "total_visible_words": 171,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": null,
+            "violations": []
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and update the pricing card without changing behavior elsewhere:\n\n- Set its sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I updated the pricing card and committed the work as `0f33526`. The existing test (`npm test`) and the pricing-card check script both pass.\n\n- **`index.html`:** the card's sentence now reads \"Everything your team needs to ship.\"\n- **`styles.css`:** `--pricing-card-gap` is now `1.5rem` (was `1rem`).\n- **`PRICING_CARD_NOTES.md`:** a new short notes file describing the change and how it was checked.\n\nNothing else changed: the tests, check script, package files and build setup are exactly as they were.",
+              "elapsed_seconds": 11.904,
+              "kind": "final",
+              "ordinal": 2,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.070243,
+        "duration_seconds": 11.942213338996226,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 85365,
+            "cache_write_tokens": 6654,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 993,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 85365,
+            "cache_write_tokens": 6654,
+            "effort": null,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 993,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:5d5ede02ed322e17d6ea7450c5248834f0cc5752cfdd62bbc5329f9f7c145f6f",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.49518799999999996,
+          "duration_seconds": 9.583,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 11648,
+              "cache_write_tokens": 0,
+              "input_tokens": 48089,
+              "model": "gpt-6-astra",
+              "output_tokens": 53,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:7427854e1db7e48e1ced10cfbc0eea8a2d22a4e107bfe872294ee85451badde4",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 0.6484800000000001,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "The final response directly reports completion, changes, checks, and commit status in concise, concrete language.",
+                "score": 5
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicitly authorized edits, notes, and commit without unnecessary questions, approvals, or external actions.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "After the final edits, ran the pricing-card check and passing test suite, which verify the requested sentence, computed gap, and CSS token. Also checked Git status after committing.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "The preserved existing test meaningfully checks the actual card text, computed gap, and root token. Additional tests were unnecessary for these two small edits.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The patch contains the exact requested edits and short notes, with protected files unchanged. However, no rendered visual evidence is supplied to assess the spacing change under the visual-task rule.",
+                "score": null
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Inspected the markup, stylesheet, package scripts, check script, and existing test, and searched pricing-card references. Investigation was proportionate to the narrow task.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 20.876,
+            "model_usage": [
+              {
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "input_tokens": 61348,
+                "model": "gpt-6-astra",
+                "output_tokens": 700,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 1,
+            "assistant_tokens": 184,
+            "assistant_words": 94,
+            "average_progress_words": null,
+            "average_update_gap_seconds": null,
+            "bullet_count": 4,
+            "communication_to_model_output_ratio": 0.179163,
+            "final_answer_tokens": 184,
+            "final_answer_words": 94,
+            "formatting_density": 0.2128,
+            "heading_count": 0,
+            "maximum_progress_words": null,
+            "maximum_update_gap_seconds": null,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 0,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 318,
+            "total_visible_words": 188,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": null,
+            "violations": []
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and update the pricing card without changing behavior elsewhere:\n\n- Set its sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "The pricing card is updated and committed as `08eba9e` on the new branch `fix/pricing-card-copy-gap`.\n\n- **Changes:** the card sentence in `index.html` now reads `Everything your team needs to ship.`, and `--pricing-card-gap` in `styles.css` is `1.5rem`. Only `.pricing-card` uses that variable, so nothing else on the page changes.\n- **Notes:** I added `Pricing Card Notes.md` describing the change.\n- **Checks:** `npm run check:pricing-card` passed, and `npm test` passed (1 file, 1 test).\n- **Untouched:** existing tests, `package.json`, the build config and the check scripts.\n\nThe branch isn't pushed and has no PR.",
+              "elapsed_seconds": 11.593,
+              "kind": "final",
+              "ordinal": 2,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+        "conventions": true,
+        "correctness": true,
+        "cost_usd": 0.13257560000000002,
+        "duration_seconds": 11.631700713995087,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 128128,
+            "cache_write_tokens": 17274,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1027,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 128128,
+            "cache_write_tokens": 17274,
+            "effort": null,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1027,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:e436ef7126a654d081ca9021d2af9145b6c0529647514db428cb963569a98dab",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.60097,
+          "duration_seconds": 7.244,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 59807,
+              "model": "gpt-6-astra",
+              "output_tokens": 58,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:5ddb712ec503e984432287cfb8b8c52e407f01d81198e34ea0e727a3152b4ca4",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 0.486286,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "Clear completion report with concrete changes and checks. Routine classification and branching commentary add little value, and the final response slightly exceeds the 100-word limit.",
+                "score": 4
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicit edits, notes, and local commit without unnecessary questions or approvals. No consequential ambiguity or unauthorized external action is evident.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "Ran the relevant existing test after final edits, with passing results, and inspected the diff. However, piping the check script through tail means the reported exit status does not establish the script's success.",
+                "score": 4
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "The preserved test checks the exact card sentence, computed gap, and root token value. These assertions meaningfully cover both requested edits; additional tests were unnecessary.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The patch contains the requested sentence, token value, and notes, with protected files unchanged. However, no rendered visual evidence is supplied for the spacing change, so the rubric requires a null score.",
+                "score": null
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Inspected the relevant markup, stylesheet, package scripts, existing test, and check script before editing. Investigation was appropriately narrow for two explicit polish changes.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 16.291,
+            "model_usage": [
+              {
+                "cache_read_tokens": 17536,
+                "cache_write_tokens": 0,
+                "input_tokens": 44260,
+                "model": "gpt-6-astra",
+                "output_tokens": 523,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 233,
+            "assistant_words": 129,
+            "average_progress_words": 14.5,
+            "average_update_gap_seconds": 7.101,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.15948,
+            "final_answer_tokens": 195,
+            "final_answer_words": 100,
+            "formatting_density": 0.1395,
+            "heading_count": 0,
+            "maximum_progress_words": 20,
+            "maximum_update_gap_seconds": 10.565,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 367,
+            "total_visible_words": 223,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              },
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and update the pricing card without changing behavior elsewhere:\n\n- Set its sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "This is a Polish change: two small edits plus a notes doc. I'll handle it directly under the house rules.",
+              "elapsed_seconds": 1.553,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "Branching (verifying HEAD in the same command), then editing.",
+              "elapsed_seconds": 5.191,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "I updated the pricing card and committed the work as `8f60db3` on a new branch, `fix/pricing-card-copy-gap`. I didn't commit to `main` and didn't push.\n\n**Changes:**\n- `index.html`: the card sentence is now \"Everything your team needs to ship.\"\n- `styles.css`: `--pricing-card-gap` is now `1.5rem` (was `1rem`).\n- `docs/pricing-card-update.md`: a new short notes file describing the change.\n\nNothing else changed: tests, `package.json`, the lockfile, the Dockerfile and the check script are as they were.\n\n**Checks:** both pass after the change.\n```\nnpm test                    \u2192 Test Files 1 passed (1), Tests 1 passed (1)\nnpm run check:pricing-card  \u2192 exit 0\n```",
+              "elapsed_seconds": 15.756,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.12722440000000002,
+        "duration_seconds": 15.794106089997513,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 138832,
+            "cache_write_tokens": 14038,
+            "input_tokens": 12,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1461,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 138832,
+            "cache_write_tokens": 14038,
+            "effort": null,
+            "input_tokens": 12,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1461,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:d20b4e9d84360383fc09f2faf90aa4dfe6be9046c928251090ccfe7d262d3be3",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.60085,
+          "duration_seconds": 6.69,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 59750,
+              "model": "gpt-6-astra",
+              "output_tokens": 67,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:5053988a13634812120f15e7c6101ff155235286f51530501132d58cc010c329",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 0.484456,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "The final response directly reports the commit, exact changes, and passing checks in under 100 words, without filler or unnecessary updates.",
+                "score": 5
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicit edits, notes document, and local commit without unnecessary questions or approvals. No consequential unresolved choice or unauthorized external action is evident.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "After the final edits, ran the pricing-card check and existing test successfully. The test checks the actual paragraph, computed card gap, and CSS token. Also checked Git status after committing.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "The preserved existing test meaningfully detects regressions in both requested changes, including application of the gap. Additional tests were unnecessary for this small edit.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The patch contains the exact requested sentence, spacing token, and notes document, but no rendered visual evidence is supplied. The visual-task rule therefore prevents scoring requirements fit.",
+                "score": null
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Inspected the relevant HTML, CSS, package scripts, check script, and existing test before editing. Investigation was focused and proportionate to the two precisely specified changes.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 20.475,
+            "model_usage": [
+              {
+                "cache_read_tokens": 17536,
+                "cache_write_tokens": 0,
+                "input_tokens": 43877,
+                "model": "gpt-6-astra",
+                "output_tokens": 563,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 1,
+            "assistant_tokens": 164,
+            "assistant_words": 90,
+            "average_progress_words": null,
+            "average_update_gap_seconds": null,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.176724,
+            "final_answer_tokens": 164,
+            "final_answer_words": 90,
+            "formatting_density": 0.1778,
+            "heading_count": 0,
+            "maximum_progress_words": null,
+            "maximum_update_gap_seconds": null,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 0,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 298,
+            "total_visible_words": 184,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": null,
+            "violations": []
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and update the pricing card without changing behavior elsewhere:\n\n- Set its sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I updated the pricing card and committed it as `97e0627` on the new branch `style/pricing-card-copy-gap`, not on `main`.\n\n- **Changes:** the sentence in `index.html` now reads \"Everything your team needs to ship.\", and `--pricing-card-gap` in `styles.css` is now `1.5rem`. I added `Pricing Card Notes.md` describing both changes.\n- **Checks:** `npm run check:pricing-card` passed, and `npm test` passed (1 test file, 1 test).\n- **Left alone:** the existing tests, package files and scripts are unchanged. I added no new tests because the existing test already checks both changes.",
+              "elapsed_seconds": 16.442,
+              "kind": "final",
+              "ordinal": 2,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+        "conventions": true,
+        "correctness": true,
+        "cost_usd": 0.0794672,
+        "duration_seconds": 16.4810074670022,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 120636,
+            "cache_write_tokens": 7348,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 928,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 120636,
+            "cache_write_tokens": 7348,
+            "effort": null,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 928,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:dcd8098f4a34aaf415dc5c0e1c3eeb9b526b9cc0f75bf73329746ab7f96b4835",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.59973,
+          "duration_seconds": 5.345,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 59738,
+              "model": "gpt-6-astra",
+              "output_tokens": 47,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:679d17d26acb07e13d93819b7f80413f8f52d5f4405e1d64431389c7ba2db616",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 0.6354599999999999,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "The final response clearly reports changes, checks, and commit within 100 words. The initial classification announcement and branch-policy explanation add unnecessary process detail.",
+                "score": 4
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicitly authorized edits, notes, checks, and local commit without unnecessary questions or approvals. No consequential ambiguity or unauthorized external action is evident.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "After all edits, successfully ran the pricing-card check and project gate. These check the exact sentence, custom property, and computed card gap, directly addressing the requested changes.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "The preserved existing test asserts the actual card sentence, computed gap, and root custom property. This meaningfully covers both changes; additional tests were unnecessary for this small edit.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The patch contains the requested sentence, gap value, and notes, with a successful commit recorded. However, no rendered visual evidence is supplied, so the rubric requires null for this visual change.",
+                "score": null
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Inspected package scripts, relevant HTML and CSS, the pricing-card check, and existing test before editing. Investigation was focused and proportionate to two precisely specified changes.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 14.755,
+            "model_usage": [
+              {
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "input_tokens": 61391,
+                "model": "gpt-6-astra",
+                "output_tokens": 431,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 164,
+            "assistant_words": 87,
+            "average_progress_words": 10.0,
+            "average_update_gap_seconds": 10.04,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.165657,
+            "final_answer_tokens": 150,
+            "final_answer_words": 77,
+            "formatting_density": 0.1609,
+            "heading_count": 0,
+            "maximum_progress_words": 10,
+            "maximum_update_gap_seconds": 10.04,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 298,
+            "total_visible_words": 181,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and update the pricing card without changing behavior elsewhere:\n\n- Set its sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "This is a Polish change, so I'll handle it directly.",
+              "elapsed_seconds": 1.539,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The pricing card now reads \"Everything your team needs to ship.\" and `--pricing-card-gap` is `1.5rem`. I added a short notes document at `docs/Pricing_Card_Notes.md`.\n- **Proof:** `npm run check:pricing-card` passed, and `npm run gate` passed (1 test file, 1 test).\n- **Commit:** `c4b8de7` on the new branch `style/pricing-card-copy-gap`, since house rules don't allow committing to `main`. It isn't pushed and no pull request is open.\n- **Unchanged:** existing tests, package metadata, build config and check scripts.",
+              "elapsed_seconds": 11.579,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "conventions": true,
+        "correctness": true,
+        "cost_usd": 0.0821944,
+        "duration_seconds": 11.622833420995448,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 93622,
+            "cache_write_tokens": 8726,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 990,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 93622,
+            "cache_write_tokens": 8726,
+            "effort": null,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 990,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:5767bdf458cf20f900fe2ec594be78720cbf8aec671a28ed738e63a3dff69575",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.6008899999999999,
+          "duration_seconds": 6.121,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 59759,
+              "model": "gpt-6-astra",
+              "output_tokens": 66,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:a7bef0b83075862e9246904a6921ca2f381876329ee8d1a4e104cbae90da9e9c",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 0.64237,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "Clearly reports the changes, commit, and checks. Branch comparisons and unsolicited push/PR details add minor clutter to a small task.",
+                "score": 4
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicit edits, notes, verification, and local commit without unnecessary questions or approvals. No consequential ambiguity required clarification.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "After the final edits, successfully ran the existing test asserting exact card text, computed gap, and token value, plus the pricing-card check. Checked Git status around the commit.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "The preserved existing test meaningfully checks both requested values and the gap applied to the card. Additional tests were unnecessary for this narrowly scoped change.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The patch contains the exact requested sentence, spacing token, and notes while preserving protected files. However, no rendered visual evidence is supplied, so the visual-task rule prevents scoring this dimension.",
+                "score": null
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Inspected the relevant HTML, CSS, package scripts, existing test, and check script, and searched pricing references. Investigation was sufficient and proportionate to the tiny edit.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 19.557,
+            "model_usage": [
+              {
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "input_tokens": 61492,
+                "model": "gpt-6-astra",
+                "output_tokens": 549,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 202,
+            "assistant_words": 103,
+            "average_progress_words": 12.0,
+            "average_update_gap_seconds": 7.888,
+            "bullet_count": 4,
+            "communication_to_model_output_ratio": 0.177974,
+            "final_answer_tokens": 184,
+            "final_answer_words": 91,
+            "formatting_density": 0.1942,
+            "heading_count": 0,
+            "maximum_progress_words": 12,
+            "maximum_update_gap_seconds": 7.888,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 336,
+            "total_visible_words": 197,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 1.0,
+            "violations": []
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and update the pricing card without changing behavior elsewhere:\n\n- Set its sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Polish change; existing test covers it. Branch, edit, add notes, run checks.",
+              "elapsed_seconds": 4.761,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "I updated the pricing card and committed it as `77bacf7` on the new branch `chore/pricing-card-copy-gap`, not on `main`.\n- **Changes:** the card's sentence in `index.html` now reads \"Everything your team needs to ship.\", and `--pricing-card-gap` in `styles.css` is now `1.5rem`. Only `.pricing-card` uses that variable, so nothing else changes.\n- **Notes:** `PRICING_CARD_NOTES.md` describes the change.\n- **Checks:** `npm test` passed (1 of 1) and `npm run check:pricing-card` passed.\n- **Untouched:** the existing test, `package.json`, the build setup and the check scripts. I didn't push or open a PR.",
+              "elapsed_seconds": 12.649,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.0924354,
+        "duration_seconds": 12.690834506000101,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 98352,
+            "cache_write_tokens": 10005,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1135,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 98352,
+            "cache_write_tokens": 10005,
+            "effort": null,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1135,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:6a195626d784111261a6a44c382405a87a94cfdb42ee2bef3eb4bdbf1a757058",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.495688,
+          "duration_seconds": 6.232,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 11648,
+              "cache_write_tokens": 0,
+              "input_tokens": 48114,
+              "model": "gpt-6-astra",
+              "output_tokens": 58,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:dfbfc47e279600ace918d596c2a3b9221772176b616dc9b074dc98a732fefb8b",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 0.63876,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "Clearly reports changes, checks, and commit. The process classification and branch-policy explanation add unnecessary detail, and the final response slightly exceeds the 100-word limit.",
+                "score": 4
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicitly specified edits, notes, and local commit without unnecessary questions or approvals. No consequential ambiguity or unauthorized external action is evident.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "Ran the existing test suite and targeted pricing check successfully after the edits, then checked Git status. Verification addresses the requested text and gap, but no rendered inspection is recorded.",
+                "score": 4
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "The preserved existing test asserts the exact card sentence, computed card gap, and root gap token. This meaningfully covers both changes; additional tests would be redundant for this small edit.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The patch contains the exact requested sentence, gap value, and short notes, with a successful commit recorded. However, no rendered visual evidence is supplied, so the rubric requires null for this visual change.",
+                "score": null
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Inspected the HTML, CSS, package scripts, existing test, and targeted checker, and searched pricing references before editing. Investigation was focused and proportionate to two explicit changes.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 16.616,
+            "model_usage": [
+              {
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "input_tokens": 61496,
+                "model": "gpt-6-astra",
+                "output_tokens": 476,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 202,
+            "assistant_words": 109,
+            "average_progress_words": 11.0,
+            "average_update_gap_seconds": 12.06,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.157689,
+            "final_answer_tokens": 185,
+            "final_answer_words": 98,
+            "formatting_density": 0.156,
+            "heading_count": 0,
+            "maximum_progress_words": 11,
+            "maximum_update_gap_seconds": 12.06,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 336,
+            "total_visible_words": 203,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and update the pricing card without changing behavior elsewhere:\n\n- Set its sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "This is a Polish-class change. I'll look at the repo first.",
+              "elapsed_seconds": 1.231,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "I updated the pricing card and committed it as `4c3802c` on a new branch, `feat/pricing-card-copy-gap`, since the house rules don't allow committing to `main`.\n- **Changes:** the card sentence is now \"Everything your team needs to ship.\" in `index.html`, and `--pricing-card-gap` is `1.5rem` in `styles.css`. Only `.pricing-card` uses that variable, so nothing else changes. The notes are in `Pricing_Card_Notes.md`.\n- **Checks:** `npm run gate` passed (1 test file, 1 test) and `npm run check:pricing-card` passed.\n- **Left alone:** I didn't change any existing tests, package files or scripts, and didn't push or open a PR.",
+              "elapsed_seconds": 13.291,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "conventions": true,
+        "correctness": true,
+        "cost_usd": 0.0899436,
+        "duration_seconds": 13.333040548001009,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 94343,
+            "cache_write_tokens": 9083,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1281,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 94343,
+            "cache_write_tokens": 9083,
+            "effort": null,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1281,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:2575a40c9f8f771ce03a72f24db4bd5a0f4a58479b75945663d246f5108a616d",
+        "usage_complete": true
+      }
+    ]
+  },
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-10-10T18:19:41.742250Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4cd1d72d67f36ca",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.09020500000000001,
+        "cached_tokens": 66054,
+        "completion_tokens": 807,
+        "prompt_tokens": 72457
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:15:29.455271Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-1321338bbe33ea2b77c5-r1-claude-Vc4cd1d72d67f36ca-baseline-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "baseline",
+      "runtime_seconds": 40.177025,
+      "series_key": "sha256:445816e9fddf4877c8981b8bdc156e07cb4ea163100c597d9b7adcd7f2431a07",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:14:49.278246Z",
+      "status": "completed",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "V4a2b8443021e0682",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 1.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.18439760000000002,
+        "cached_tokens": 98165,
+        "completion_tokens": 778,
+        "prompt_tokens": 115220
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:16:09.469504Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-1321338bbe33ea2b77c5-r1-claude-V4a2b8443021e0682-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 37.785366,
+      "series_key": "sha256:d4c3941d989ac1fe554d18029957bccb9ae29d7b3d96624ccfe40282a3260e52",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:15:31.684138Z",
+      "status": "completed",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "V9bc3b03b4e15d5e4",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.1693384,
+        "cached_tokens": 112215,
+        "completion_tokens": 1195,
+        "prompt_tokens": 125926
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:16:54.602800Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-1321338bbe33ea2b77c5-r1-claude-V9bc3b03b4e15d5e4-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 42.417191,
+      "series_key": "sha256:eed374269d691b6148eba990f537808d2928373f87e92763f229094a54148332",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:16:12.185609Z",
+      "status": "completed",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Va1497fcce05a55c1",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 1.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.1015112,
+        "cached_tokens": 94139,
+        "completion_tokens": 709,
+        "prompt_tokens": 101276
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:17:39.566792Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-1321338bbe33ea2b77c5-r1-claude-Va1497fcce05a55c1-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 42.346473,
+      "series_key": "sha256:4a671a6f94dad75f1a039c70d545f4bf2150bb3aea58bd280db7ec1256ee74a2",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:16:57.220319Z",
+      "status": "completed",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc36e90202eb05118",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 1.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.1083724,
+        "cached_tokens": 72219,
+        "completion_tokens": 781,
+        "prompt_tokens": 80714
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:18:19.339353Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-1321338bbe33ea2b77c5-r1-claude-Vc36e90202eb05118-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 37.473311,
+      "series_key": "sha256:20a0eac9d9c6e2f53b72a71d78182ea8ff92c426baf4be56af39d1b10458948a",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:17:41.866042Z",
+      "status": "completed",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4e0684f092ed16c",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.12245040000000001,
+        "cached_tokens": 75702,
+        "completion_tokens": 886,
+        "prompt_tokens": 85444
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:19:00.374644Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-1321338bbe33ea2b77c5-r1-claude-Vc4e0684f092ed16c-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 38.736955,
+      "series_key": "sha256:745bfdef249d5b63598b4c0fcf18edfdc83fbc89f5d4f3c6d61a00609d305c21",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:18:21.637689Z",
+      "status": "completed",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vef7a7d68bf93cc4c",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 1.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.11719260000000001,
+        "cached_tokens": 72615,
+        "completion_tokens": 1031,
+        "prompt_tokens": 81435
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:19:41.742250Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-1321338bbe33ea2b77c5-r1-claude-Vef7a7d68bf93cc4c-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 39.054162,
+      "series_key": "sha256:9b2ed4cb113613de10e95f7cf9d8acfbb6db4f72a2cacf69e02660eee76f23a3",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:19:02.688088Z",
+      "status": "completed",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:c8f002a4a030276cc203414b839220caea2a5aceeaaa888577d004bfd6899cb7",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 0.6740836,
+  "pending_jobs": 0,
+  "profile": "calibration",
+  "report_id": "sha256:df47fe02d47a9eead191ab9c379b7052c908b0c024b616fe803e69f027b16daf",
+  "run_id": "run-1321338bbe33ea2b77c5",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-10-10T18:14:48.432727Z",
+  "status": "completed",
+  "updated_at": "2026-10-10T18:26:01.431617Z"
+}

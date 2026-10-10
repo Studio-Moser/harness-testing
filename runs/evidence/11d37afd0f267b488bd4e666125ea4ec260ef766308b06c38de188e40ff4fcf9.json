@@ -1,0 +1,3982 @@
+{
+  "admission_estimate_usd": 126.0,
+  "completed_jobs": 10,
+  "completed_trials": 11,
+  "evidence": {
+    "limitations": [
+      "partial-run",
+      "failed-run",
+      "infrastructure-failure"
+    ],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 21,
+  "expected_trials": 21,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:2a2d511b2d038cb13c0f583076750f0b5a12ab8ef82559df5bae18c522f5de99",
+      "hypothesis": "Studio Moser versions follow the house branch, commit and file-naming conventions on these tasks; Nothing completes the work but breaks at least one convention.",
+      "rerun_reason": "New tasks: every contender in the Claude Opus 5.5 medium lane runs them once.",
+      "summary": "Add three tasks that require a notes document and a commit, scored on a fourth conventions dimension."
+    },
+    "comparison": {
+      "contenders": [
+        {
+          "attempted": 2,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 3,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 3,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 2,
+          "cost_per_success_usd": 0.11868429999999999,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 2,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 1,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "label": "Studio Moser v7 + personal instructions and skills",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": null,
+          "original_estimates": [
+            {
+              "cost_usd": 0.1181296,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:c382324ee7e3082789d9bad4cf4830b293a314a630b168c2cf1fb3db16771e5c"
+            },
+            {
+              "cost_usd": 0.11923900000000001,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:0b3828e193b71c5160391f68be2aad90b34d8eeb919a9cec46a47502998c6490"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": false,
+          "scheduled": 3,
+          "success_fraction": {
+            "denominator": 3,
+            "numerator": 2
+          },
+          "successes": 2,
+          "task_successes": {
+            "node-toggle-completion-committed": 1,
+            "react-accent-polish-committed": 1,
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.23736859999999999,
+          "total_tokens": 229209,
+          "usage_complete": true
+        },
+        {
+          "attempted": 2,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 3,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 3,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 2,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 2,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 1,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "label": "Studio Moser v5 \u2014 full collection",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": null,
+          "original_estimates": [
+            {
+              "cost_usd": 0.1214192,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:cc3599aca57773fb47277b4eaab9bb79de8d6049471bfc9893e3d791075c3ca0"
+            },
+            {
+              "cost_usd": 0.116663,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:20d595ebc8c6a1a766d43b5c6e5adf5f211d2c67f3fa361c10694b75116fd5d0"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": false,
+          "scheduled": 3,
+          "success_fraction": {
+            "denominator": 3,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "node-toggle-completion-committed": 0,
+            "react-accent-polish-committed": 0,
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.23808220000000002,
+          "total_tokens": 276517,
+          "usage_complete": true
+        },
+        {
+          "attempted": 2,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 3,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 3,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 2,
+          "cost_per_success_usd": 0.06805739999999999,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 2,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 1,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "label": "Studio Moser v7 + personal instructions",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": null,
+          "original_estimates": [
+            {
+              "cost_usd": 0.06693160000000001,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:79a9e75186bf6c7ecd3ffe868821361b62ebf6656fb4ee21e2da16b9959efd63"
+            },
+            {
+              "cost_usd": 0.0691832,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:d8980cad2d3576f13cb15364960a1ee162ccb327f89052ea5ed2a9247e128b00"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": false,
+          "scheduled": 3,
+          "success_fraction": {
+            "denominator": 3,
+            "numerator": 2
+          },
+          "successes": 2,
+          "task_successes": {
+            "node-toggle-completion-committed": 1,
+            "react-accent-polish-committed": 1,
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.13611479999999998,
+          "total_tokens": 200363,
+          "usage_complete": true
+        },
+        {
+          "attempted": 2,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 3,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 3,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 1,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 1,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "label": "Studio Moser v6 + time matters",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": null,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0698754,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:38a6a466a0ae16a3a1ee27f64a4ec759c871356d08461cfee74decad856f5700"
+            },
+            {
+              "cost_usd": 0.0729628,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:b6c9e0b12a276b898c615a306c2e411e77b7806f48e787293eb7d01e69df43ea"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": false,
+          "scheduled": 3,
+          "success_fraction": {
+            "denominator": 3,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "node-toggle-completion-committed": 0,
+            "react-accent-polish-committed": 0,
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.1428382,
+          "total_tokens": 160414,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 3,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 3,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 2,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "nothing",
+          "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "label": "Nothing",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": null,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0683344,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:4a6323fa9a1d94aaab179ae3a83cef33f93623fb923635267fb41dad9598e30b"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": false,
+          "scheduled": 3,
+          "success_fraction": {
+            "denominator": 3,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "node-toggle-completion-committed": 0,
+            "react-accent-polish-committed": 0,
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.0683344,
+          "total_tokens": 71160,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 3,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 3,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 2,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "label": "Studio Moser v7",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": null,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0744504,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:ac97f662a29f4ee8a2e4458edca15aee4a7f70a575644efd8367b0e424aa3ab7"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": false,
+          "scheduled": 3,
+          "success_fraction": {
+            "denominator": 3,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "node-toggle-completion-committed": 0,
+            "react-accent-polish-committed": 0,
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.0744504,
+          "total_tokens": 83503,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 0,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": null,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 3,
+              "unresolved": null
+            },
+            "protocol_id": null,
+            "scheduled": 3,
+            "status": "not_reviewed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 2,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": false,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "label": "Studio Moser v6",
+          "mean_cost_usd": null,
+          "mean_duration_seconds": null,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0694546,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:87709a3cb553435b119c6aa94e8c1479f593d9a8ee5fa88adb7f1a1121493e83"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": false,
+          "scheduled": 3,
+          "success_fraction": {
+            "denominator": 3,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "node-toggle-completion-committed": 0,
+            "react-accent-polish-committed": 0,
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.0694546,
+          "total_tokens": 79350,
+          "usage_complete": true
+        }
+      ],
+      "leaders": {
+        "observed_cost_ids": [],
+        "observed_time_ids": []
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "One attempt per task is the default minimum; one flaky trial can change the verdict.",
+        "Cost and time ratios are point estimates over per-task means; the advantage and noninferiority thresholds are product defaults, not research findings.",
+        "Review is advisory: a missing or incomplete review leaves the verdict provisional and flagged, unconfirmed reviewer claims are listed, and confirmed remaining defects disqualify.",
+        "Some tasks were solved by no contender; they cannot separate the contenders and are listed under unsolved_tasks."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "left_report_id": null,
+          "right_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        },
+        {
+          "cost_difference_usd": null,
+          "cost_ratio": null,
+          "left_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": null,
+          "time_ratio": null
+        }
+      ],
+      "policy_digest": "sha256:c045a5632bcf5a9b7d30c42a2c266b4101e8b5d286d77bd92e5c608007f9b2b8",
+      "policy_id": "benchmark-readiness-v2",
+      "provisional": true,
+      "reasons": [
+        "code_review_incomplete",
+        "incomplete_coverage",
+        "quality_ineligible",
+        "duration_unavailable"
+      ],
+      "status": "insufficient_evidence",
+      "summary": "Selected evidence is insufficient for a recommendation.",
+      "unsolved_tasks": [
+        "static-pricing-copy-polish-committed"
+      ],
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:859d11c45fc7059644331f26ca4354dc39e046aab24d53c4ab55b637d87e770f",
+      "attempts": 1,
+      "authority_digest": "sha256:e1da39cab3810d6031a079b984cddf53a22a47ded1f48f9b368f81d896154ed5",
+      "concurrency": 1,
+      "decision_policy": "benchmark-readiness-v2",
+      "evaluator_digest": "sha256:72c2f62b5259c61dda2160de26265d64ce7ec1519c4beae8c316ee5dff87407b",
+      "executor_inventory": [
+        {
+          "effort": "medium",
+          "model": "claude-opus-5-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-opus-5-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-sonnet-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-fable-5-1",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "node": "sha256:d2f444b5b028b4ce66f43e8ef90d1dd0ca5f59e99ab337073e3882cb0567500b",
+        "verifier": "sha256:673a29bccc7d6e8cef69839ab04552c16d6471950d549ded844dc91e613f51a8"
+      },
+      "kickoff": {
+        "effort": "medium",
+        "model": "claude-opus-5-5",
+        "provider": "claude",
+        "runtime_version": "2.1.281"
+      },
+      "provider_recovery_seconds": 0,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:150df31f77e75288a1fe8361c2a56bf0d0db00a76b1321c0345b500154f7ae4a",
+      "task_digests": {
+        "node-toggle-completion-committed": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+        "react-accent-polish-committed": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+        "static-pricing-copy-polish-committed": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df"
+      },
+      "task_ids": [
+        "node-toggle-completion-committed",
+        "react-accent-polish-committed",
+        "static-pricing-copy-polish-committed"
+      ],
+      "task_variant": "comparison",
+      "timeout_seconds": 1800
+    },
+    "contenders": [
+      {
+        "family": "nothing",
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Nothing",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser v5 \u2014 full collection",
+        "rubric_digest": "sha256:22a737b9ea7a68a527e135dfe09f90bc590d1980a8a20ba072688d9522781160",
+        "source_commits": [
+          "3fb970f32d2901b82e3d17c35dbe192604fc7762",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "inventory_digest": "sha256:127e9f1b8268322483d378436d5acff3f19ff8909acbb9ef426758463bf5273a",
+        "label": "Studio Moser v6",
+        "rubric_digest": "sha256:2713cd849eaefabd77a615cecb2bea2b33042a09b606f0fc3c6803111999404f",
+        "source_commits": [
+          "75bf6c59ad9c87e7c91b6e537af471aee91cd931"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "inventory_digest": "sha256:127e9f1b8268322483d378436d5acff3f19ff8909acbb9ef426758463bf5273a",
+        "label": "Studio Moser v6 + time matters",
+        "rubric_digest": "sha256:2713cd849eaefabd77a615cecb2bea2b33042a09b606f0fc3c6803111999404f",
+        "source_commits": [
+          "75bf6c59ad9c87e7c91b6e537af471aee91cd931"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "inventory_digest": "sha256:bdcd217cfc9141887dfcebb53b6e2684066aeb31559809bedd6545c0735de532",
+        "label": "Studio Moser v7",
+        "rubric_digest": "sha256:0f9695bd9fb54d933c8f9215e8f25fa37009aa60899b797896d6f54734cd8116",
+        "source_commits": [
+          "fef5d06c564cd82d8982267db53cce6ec963baa0"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+        "inventory_digest": "sha256:bdcd217cfc9141887dfcebb53b6e2684066aeb31559809bedd6545c0735de532",
+        "label": "Studio Moser v7 + personal instructions",
+        "rubric_digest": "sha256:0f9695bd9fb54d933c8f9215e8f25fa37009aa60899b797896d6f54734cd8116",
+        "source_commits": [
+          "fef5d06c564cd82d8982267db53cce6ec963baa0"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+        "inventory_digest": "sha256:ee2649ca9911f383b3554121ea3cceeb2196fdfd1fe36f187911b08010a1038e",
+        "label": "Studio Moser v7 + personal instructions and skills",
+        "rubric_digest": "sha256:0f9695bd9fb54d933c8f9215e8f25fa37009aa60899b797896d6f54734cd8116",
+        "source_commits": [
+          "fef5d06c564cd82d8982267db53cce6ec963baa0",
+          "00ce38cd48935563b63947952b93873bb601ba30"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "Claude Opus 5.5 medium convention tasks",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:4f8278040cf3dc35ab0c612f33242cb14511082dd21705174ac8e24774f58ca3",
+    "supersedes_report_id": null,
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "atomic_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:45b2777b7763182d191c02aef0996c60ea63402d81d0b863324638e4cc3e27e5",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 1,
+            "assistant_tokens": 195,
+            "assistant_words": 116,
+            "average_progress_words": null,
+            "average_update_gap_seconds": null,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.17536,
+            "final_answer_tokens": 195,
+            "final_answer_words": 116,
+            "formatting_density": 0.1379,
+            "heading_count": 0,
+            "maximum_progress_words": null,
+            "maximum_update_gap_seconds": null,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 0,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 344,
+            "total_visible_words": 230,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": null,
+            "violations": [
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 2
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app`. Implement toggleDone(task) in src/Completion.js. Return a new object with done toggled and every other property preserved. Never mutate the input. The input is a task object whose done property is boolean. No persistence, UI, dependencies, or additional validation is needed.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing tests, package metadata and build configuration. You may add a separate regression test. Complete the local task; do not publish or deploy.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I implemented `toggleDone` and committed it (`7c1e54e`). All 4 tests pass, the existing one plus 3 new ones.\n\n- **`src/Completion.js`:** `toggleDone(task)` now returns `{ ...task, done: !task.done }`. That's a new object with `done` flipped and every other property kept. The input is never changed.\n- **`test/ToggleDone.regression.test.js`:** a new test file. It checks that `done` flips both ways (false to true and true to false), that other properties are kept, that a new object comes back, and that a frozen input is left unchanged.\n- **`NOTES.md`:** a short notes document describing the change.\n\nThe existing test file, `package.json`, the lockfile and the build configuration are unchanged. Nothing was published or deployed.",
+              "elapsed_seconds": 15.124,
+              "kind": "final",
+              "ordinal": 2,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.0683344,
+        "duration_seconds": 15.162639382993802,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 63362,
+            "cache_write_tokens": 6678,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1112,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 63362,
+            "cache_write_tokens": 6678,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1112,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "node-toggle-completion-committed",
+        "trial_id": "sha256:4a6323fa9a1d94aaab179ae3a83cef33f93623fb923635267fb41dad9598e30b",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "atomic_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:45b2777b7763182d191c02aef0996c60ea63402d81d0b863324638e4cc3e27e5",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 1,
+            "assistant_tokens": 178,
+            "assistant_words": 112,
+            "average_progress_words": null,
+            "average_update_gap_seconds": null,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.184647,
+            "final_answer_tokens": 178,
+            "final_answer_words": 112,
+            "formatting_density": 0.1339,
+            "heading_count": 0,
+            "maximum_progress_words": null,
+            "maximum_update_gap_seconds": null,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 0,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 327,
+            "total_visible_words": 226,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": null,
+            "violations": [
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 2
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app`. Implement toggleDone(task) in src/Completion.js. Return a new object with done toggled and every other property preserved. Never mutate the input. The input is a task object whose done property is boolean. No persistence, UI, dependencies, or additional validation is needed.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing tests, package metadata and build configuration. You may add a separate regression test. Complete the local task; do not publish or deploy.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "`toggleDone(task)` is implemented and committed as `2d87b87` on the new branch `feat/toggle-done`. It returns `{ ...task, done: !task.done }`, which copies every other property into a new object and leaves the input unchanged.\n\n- **Proof:** `npm test` shows 2 test files and 2 tests passed. The new test in `test/Toggle_Done.test.js` passes a frozen task, so any change to the input would fail it. The test also checks that other properties are kept and that toggling twice gives `false` again.\n- **Notes:** the notes document is `Toggle Done Notes.md` in the repo root.\n- **Untouched:** the existing test, `package.json` and the build files are unchanged. Nothing was pushed or deployed.",
+              "elapsed_seconds": 11.159,
+              "kind": "final",
+              "ordinal": 2,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+        "conventions": true,
+        "correctness": true,
+        "cost_usd": 0.1181296,
+        "duration_seconds": 11.19878908800456,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 97113,
+            "cache_write_tokens": 15879,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 964,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 97113,
+            "cache_write_tokens": 15879,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 964,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "node-toggle-completion-committed",
+        "trial_id": "sha256:c382324ee7e3082789d9bad4cf4830b293a314a630b168c2cf1fb3db16771e5c",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "atomic_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:45b2777b7763182d191c02aef0996c60ea63402d81d0b863324638e4cc3e27e5",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 276,
+            "assistant_words": 160,
+            "average_progress_words": 14.0,
+            "average_update_gap_seconds": 19.492,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.165269,
+            "final_answer_tokens": 258,
+            "final_answer_words": 146,
+            "formatting_density": 0.1437,
+            "heading_count": 0,
+            "maximum_progress_words": 14,
+            "maximum_update_gap_seconds": 19.492,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 425,
+            "total_visible_words": 274,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app`. Implement toggleDone(task) in src/Completion.js. Return a new object with done toggled and every other property preserved. Never mutate the input. The input is a task object whose done property is boolean. No persistence, UI, dependencies, or additional validation is needed.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing tests, package metadata and build configuration. You may add a separate regression test. Complete the local task; do not publish or deploy.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "This is a Small change, so I'll handle it directly under the house rules.",
+              "elapsed_seconds": 2.189,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "`toggleDone` is implemented and committed as `3719387` on a new branch, `feat/toggle-done-immutable`. I didn't commit to `main`, push, or publish anything.\n\n- **`src/Completion.js`:** `toggleDone` now returns `{ ...task, done: !task.done }`. That's a new object with `done` flipped and all other properties copied over; the input is never changed. The copy is shallow, so nested values like arrays are shared with the original rather than duplicated.\n- **`test/ToggleDone.test.js`** (new file): checks that `done` flips in both directions, that other properties are kept, and that the input isn't changed. The last check uses a frozen input object.\n- **`docs/toggle-done.md`:** a short notes document describing the change.\n\nAll 4 tests pass (2 test files):\n```\n Test Files  2 passed (2)\n      Tests  4 passed (4)\n```\n\n`test/Behavior.test.js`, `package.json` and the build configuration are unchanged; a diff against `main` for those files is empty.",
+              "elapsed_seconds": 21.681,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.1214192,
+        "duration_seconds": 21.718571093995706,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 111196,
+            "cache_write_tokens": 13148,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1670,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 111196,
+            "cache_write_tokens": 13148,
+            "effort": null,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1670,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "node-toggle-completion-committed",
+        "trial_id": "sha256:cc3599aca57773fb47277b4eaab9bb79de8d6049471bfc9893e3d791075c3ca0",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "atomic_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:45b2777b7763182d191c02aef0996c60ea63402d81d0b863324638e4cc3e27e5",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 1,
+            "assistant_tokens": 181,
+            "assistant_words": 111,
+            "average_progress_words": null,
+            "average_update_gap_seconds": null,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.187954,
+            "final_answer_tokens": 181,
+            "final_answer_words": 111,
+            "formatting_density": 0.1441,
+            "heading_count": 0,
+            "maximum_progress_words": null,
+            "maximum_update_gap_seconds": null,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 0,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 330,
+            "total_visible_words": 225,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": null,
+            "violations": [
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 2
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app`. Implement toggleDone(task) in src/Completion.js. Return a new object with done toggled and every other property preserved. Never mutate the input. The input is a task object whose done property is boolean. No persistence, UI, dependencies, or additional validation is needed.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing tests, package metadata and build configuration. You may add a separate regression test. Complete the local task; do not publish or deploy.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I implemented `toggleDone` and committed it as `aaa5135` on the new branch `feat/toggle-done`, not `main`. It returns `{ ...task, done: !task.done }`, so it builds a new object, flips `done`, keeps every other property and leaves the input unchanged.\n\n- **Tests:** `npm test` passed 2 of 2. The new test in `test/Toggle_Done.test.js` passes a frozen task, checks that the result is a different object with the other properties kept, confirms the input still has `done: false`, and checks that toggling twice restores the original value.\n- **Notes:** I added `Toggle Done Notes.md` describing the change.\n- **Unchanged:** the existing test, package files and build configuration. Nothing was pushed or published.",
+              "elapsed_seconds": 15.761,
+              "kind": "final",
+              "ordinal": 2,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+        "conventions": true,
+        "correctness": true,
+        "cost_usd": 0.06693160000000001,
+        "duration_seconds": 15.785634089996165,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 92823,
+            "cache_write_tokens": 5815,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 963,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 92823,
+            "cache_write_tokens": 5815,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 963,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "node-toggle-completion-committed",
+        "trial_id": "sha256:79a9e75186bf6c7ecd3ffe868821361b62ebf6656fb4ee21e2da16b9959efd63",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "atomic_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:45b2777b7763182d191c02aef0996c60ea63402d81d0b863324638e4cc3e27e5",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 201,
+            "assistant_words": 125,
+            "average_progress_words": 5.0,
+            "average_update_gap_seconds": 9.89,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.207859,
+            "final_answer_tokens": 194,
+            "final_answer_words": 120,
+            "formatting_density": 0.128,
+            "heading_count": 0,
+            "maximum_progress_words": 5,
+            "maximum_update_gap_seconds": 9.89,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 350,
+            "total_visible_words": 239,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app`. Implement toggleDone(task) in src/Completion.js. Return a new object with done toggled and every other property preserved. Never mutate the input. The input is a task object whose done property is boolean. No persistence, UI, dependencies, or additional validation is needed.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing tests, package metadata and build configuration. You may add a separate regression test. Complete the local task; do not publish or deploy.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Small change. Let me look.",
+              "elapsed_seconds": 1.446,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "I implemented `toggleDone` and committed it as `5524da6` on the new branch `feat/toggle-done`, since the repo rules say not to commit to `main`.\n\n- **Change:** `src/Completion.js` now returns `{ ...task, done: !task.done }`, a new object with every other property kept and the input left alone.\n- **Proof:** `npm test` passed 2 of 2 tests: the original test and a new one in `test/ToggleDone.test.js`. The new test uses a frozen input, checks that other properties survive, that the result is a new object, and that toggling twice gets back the original value.\n- **Notes:** the change is described in `docs/toggle-done.md`. The existing test, `package.json` and build config are unchanged, and nothing was pushed or published.",
+              "elapsed_seconds": 11.336,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.0698754,
+        "duration_seconds": 11.376239546996658,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 71192,
+            "cache_write_tokens": 7253,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 967,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 71192,
+            "cache_write_tokens": 7253,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 967,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "node-toggle-completion-committed",
+        "trial_id": "sha256:38a6a466a0ae16a3a1ee27f64a4ec759c871356d08461cfee74decad856f5700",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "atomic_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:45b2777b7763182d191c02aef0996c60ea63402d81d0b863324638e4cc3e27e5",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 1,
+            "assistant_tokens": 146,
+            "assistant_words": 87,
+            "average_progress_words": null,
+            "average_update_gap_seconds": null,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.160263,
+            "final_answer_tokens": 146,
+            "final_answer_words": 87,
+            "formatting_density": 0.1609,
+            "heading_count": 0,
+            "maximum_progress_words": null,
+            "maximum_update_gap_seconds": null,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 0,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 295,
+            "total_visible_words": 201,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": null,
+            "violations": []
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app`. Implement toggleDone(task) in src/Completion.js. Return a new object with done toggled and every other property preserved. Never mutate the input. The input is a task object whose done property is boolean. No persistence, UI, dependencies, or additional validation is needed.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing tests, package metadata and build configuration. You may add a separate regression test. Complete the local task; do not publish or deploy.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I implemented `toggleDone`, and the change is committed on branch `feat/toggle-done` as `f97c1bc`. It returns a new object with `done` flipped and every other property kept, and it doesn't change the input.\n- **Proof:** `npm test` shows 2 test files and 2 tests passing. The new test is in `test/ToggleDone.test.js` and uses a frozen input to show the original isn't mutated.\n- **Notes:** the Markdown notes are in `docs/toggle-done.md`.\n- **Unchanged:** existing tests, `package.json` and the build configuration. Nothing was pushed or published.",
+              "elapsed_seconds": 10.466,
+              "kind": "final",
+              "ordinal": 2,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.0744504,
+        "duration_seconds": 10.506296338004177,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 74317,
+            "cache_write_tokens": 8267,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 911,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 74317,
+            "cache_write_tokens": 8267,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 911,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "node-toggle-completion-committed",
+        "trial_id": "sha256:ac97f662a29f4ee8a2e4458edca15aee4a7f70a575644efd8367b0e424aa3ab7",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "atomic_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:45b2777b7763182d191c02aef0996c60ea63402d81d0b863324638e4cc3e27e5",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 182,
+            "assistant_words": 111,
+            "average_progress_words": 8.0,
+            "average_update_gap_seconds": 9.061,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.190976,
+            "final_answer_tokens": 172,
+            "final_answer_words": 103,
+            "formatting_density": 0.1351,
+            "heading_count": 0,
+            "maximum_progress_words": 8,
+            "maximum_update_gap_seconds": 9.061,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 331,
+            "total_visible_words": 225,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app`. Implement toggleDone(task) in src/Completion.js. Return a new object with done toggled and every other property preserved. Never mutate the input. The input is a task object whose done property is boolean. No persistence, UI, dependencies, or additional validation is needed.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing tests, package metadata and build configuration. You may add a separate regression test. Complete the local task; do not publish or deploy.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Small change. Let me look at the repo.",
+              "elapsed_seconds": 1.239,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "I implemented `toggleDone(task)` in `src/Completion.js`. It returns a new object with `done` flipped and every other property kept, and it never changes the input.\n\n- **Proof:** `npm test` passed both test files (2 tests). The new test in `test/ToggleDone.test.js` toggles a frozen task (one that can't be modified) and checks that the original is unchanged.\n- **Notes:** the Markdown notes are in `docs/toggle-done.md`.\n- **Commit:** `66f113e` on branch `fix/toggle-done`, since the house rules say never to commit to `main`. I didn't push or open a PR, and the existing test, package metadata and build config are unchanged.",
+              "elapsed_seconds": 10.3,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.0694546,
+        "duration_seconds": 10.321828586995252,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 71163,
+            "cache_write_tokens": 7226,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 953,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 71163,
+            "cache_write_tokens": 7226,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 953,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "node-toggle-completion-committed",
+        "trial_id": "sha256:87709a3cb553435b119c6aa94e8c1479f593d9a8ee5fa88adb7f1a1121493e83",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 191,
+            "assistant_words": 95,
+            "average_progress_words": 6.0,
+            "average_update_gap_seconds": 10.569,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.218535,
+            "final_answer_tokens": 179,
+            "final_answer_words": 89,
+            "formatting_density": 0.2,
+            "heading_count": 0,
+            "maximum_progress_words": 6,
+            "maximum_update_gap_seconds": 10.569,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 317,
+            "total_visible_words": 184,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Only line 10 changes; `--accent` stays.",
+              "elapsed_seconds": 8.835,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "I changed `--cta-background` to `#6d28d9` and committed it as `d542663` on the new branch `style/cta-background-violet`. I didn't commit to `main`.\n\n- **Change:** the only source edit is one line in `src/index.css`. `--accent` stays `#2563eb`. Components get the color through `var(--cta-background)`, so their behavior doesn't change.\n- **Notes:** I added `Notes-CTA_Background.md`, which describes the change.\n- **Checks:** `npm run check:cta` and `npm run gate` both pass. The gate covers lint, type-checking, and the tests (2 of 2 passed). I didn't modify any existing test or config file.",
+              "elapsed_seconds": 19.404,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+        "conventions": true,
+        "correctness": true,
+        "cost_usd": 0.11923900000000001,
+        "duration_seconds": 19.44383242600452,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 97935,
+            "cache_write_tokens": 16428,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 874,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 97935,
+            "cache_write_tokens": 16428,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 874,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:0b3828e193b71c5160391f68be2aad90b34d8eeb919a9cec46a47502998c6490",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 4,
+            "assistant_tokens": 298,
+            "assistant_words": 157,
+            "average_progress_words": 13.0,
+            "average_update_gap_seconds": 5.04,
+            "bullet_count": 7,
+            "communication_to_model_output_ratio": 0.23764,
+            "final_answer_tokens": 242,
+            "final_answer_words": 118,
+            "formatting_density": 0.1783,
+            "heading_count": 0,
+            "maximum_progress_words": 17,
+            "maximum_update_gap_seconds": 8.714,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 3,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 424,
+            "total_visible_words": 246,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              },
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 3
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 4
+              },
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 4
+              },
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 5
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "This is a Polish change, so I'll do it directly under the house rules.",
+              "elapsed_seconds": 1.54,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "Only line 10 changes; `--accent` stays as is.",
+              "elapsed_seconds": 3.514,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Build output (`dist/`) is ignored or absent from the status, so only the intended files are staged.",
+              "elapsed_seconds": 12.228,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "I changed `--cta-background` from `#2563eb` to `#6d28d9` and committed it on a new branch, `style/cta-background-violet`.\n\n- **The change:** one line in `src/index.css:10`. `--accent` was also `#2563eb`, and I left it as it was. Components still read `var(--cta-background)` (in `src/App.css`), so their behavior hasn't changed.\n- **Notes:** `docs/cta-background-change.md` describes what changed, the scope, and how it was checked.\n- **Checks:** everything passed.\n  - `npm run check:cta` exited 0.\n  - `npm run gate` passed: lint, typecheck, and tests (2 of 2 passed).\n  - `npm run build` succeeded.\n- **Unchanged files:** I didn't touch any tests, `package.json`, the build config or the check scripts.\n\nThe commit is `7dbab7c`. It hasn't been pushed and there's no PR yet.",
+              "elapsed_seconds": 16.659,
+              "kind": "final",
+              "ordinal": 5,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.116663,
+        "duration_seconds": 16.703501549003704,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 136375,
+            "cache_write_tokens": 12852,
+            "input_tokens": 12,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1254,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 136375,
+            "cache_write_tokens": 12852,
+            "effort": null,
+            "input_tokens": 12,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1254,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:20d595ebc8c6a1a766d43b5c6e5adf5f211d2c67f3fa361c10694b75116fd5d0",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 165,
+            "assistant_words": 87,
+            "average_progress_words": 6.0,
+            "average_update_gap_seconds": 8.553,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.178186,
+            "final_answer_tokens": 153,
+            "final_answer_words": 81,
+            "formatting_density": 0.2069,
+            "heading_count": 0,
+            "maximum_progress_words": 6,
+            "maximum_update_gap_seconds": 8.553,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 291,
+            "total_visible_words": 176,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Only line 10 changes; `--accent` stays.",
+              "elapsed_seconds": 2.836,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "I changed `--cta-background` in `src/index.css:10` from `#2563eb` to `#6d28d9` and committed it as `0053e76` on the new branch `style/cta-background-violet`.\n\n- **Checks:** `npm run check:cta` and lint both exited 0, typecheck passed, and the tests passed (1 file, 2 tests). Those three are what `npm run gate` runs.\n- **Scope:** `--accent` still uses `#2563eb`. No tests, package metadata, build config or scripts were changed.\n- **Notes:** I added `CTA Background Change.md` in the repo root to describe the change.",
+              "elapsed_seconds": 11.389,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+        "conventions": true,
+        "correctness": true,
+        "cost_usd": 0.0691832,
+        "duration_seconds": 11.421201380006096,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 93431,
+            "cache_write_tokens": 6389,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 926,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 93431,
+            "cache_write_tokens": 6389,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 926,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:d8980cad2d3576f13cb15364960a1ee162ccb327f89052ea5ed2a9247e128b00",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 163,
+            "assistant_words": 95,
+            "average_progress_words": 5.5,
+            "average_update_gap_seconds": 6.854,
+            "bullet_count": 0,
+            "communication_to_model_output_ratio": 0.171941,
+            "final_answer_tokens": 143,
+            "final_answer_words": 84,
+            "formatting_density": 0.1158,
+            "heading_count": 0,
+            "maximum_progress_words": 6,
+            "maximum_update_gap_seconds": 11.208,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 289,
+            "total_visible_words": 184,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              },
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Polish change. Let me look.",
+              "elapsed_seconds": 4.837,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "Only line 10 changes (`--accent` stays).",
+              "elapsed_seconds": 7.338,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "I changed `--cta-background` in `src/index.css` from `#2563eb` to `#6d28d9`. `--accent` still uses the old blue, since you only asked for the CTA value. The notes are in `docs/cta-background-change.md`, and both files are committed as `9cb3ed9` on the new branch `style/cta-background-violet`.\n\n`npm run check:cta` and `npm run gate` (lint, typecheck and tests) both passed, with 2 of 2 tests passing.\n\nI didn't change any tests, package metadata or config, and I haven't pushed the branch or opened a PR.",
+              "elapsed_seconds": 18.546,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "correctness": null,
+        "cost_usd": 0.0729628,
+        "duration_seconds": 18.591271800003597,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 72129,
+            "cache_write_tokens": 7909,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 948,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 72129,
+            "cache_write_tokens": 7909,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 948,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "infrastructure_failure",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:b6c9e0b12a276b898c615a306c2e411e77b7806f48e787293eb7d01e69df43ea",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:0b7e093947bb100c7fb53829b7a43d24b51a0ca4ed8130cfeb2e1779fdced893",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:137c62dea568942093d0207b7ece887f0b85b5acedf8085f464772c6d66f8bb1",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:e397e0dd52dd2ba1f472588061c448115d187b6144abfe8a642055a7357e5835",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:9bc3b03b4e15d5e45907d301a86a36bd4fb4cfb9389146a3d812bcc41789b124",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:d20b4e9d84360383fc09f2faf90aa4dfe6be9046c928251090ccfe7d262d3be3",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:a1497fcce05a55c1da6c543ccbba60eee4640cc61b73a5d61881cb8c40d2fbc8",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:dcd8098f4a34aaf415dc5c0e1c3eeb9b526b9cc0f75bf73329746ab7f96b4835",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:5767bdf458cf20f900fe2ec594be78720cbf8aec671a28ed738e63a3dff69575",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:6a195626d784111261a6a44c382405a87a94cfdb42ee2bef3eb4bdbf1a757058",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:2575a40c9f8f771ce03a72f24db4bd5a0f4a58479b75945663d246f5108a616d",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:5d5ede02ed322e17d6ea7450c5248834f0cc5752cfdd62bbc5329f9f7c145f6f",
+        "usage_complete": false
+      },
+      {
+        "attempt": 1,
+        "child_count": null,
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": null,
+          "reasons": [
+            "missing_transcript"
+          ],
+          "status": "unavailable",
+          "transcript": []
+        },
+        "contender_id": "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
+        "correctness": null,
+        "cost_usd": null,
+        "duration_seconds": null,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": null,
+        "session_usage": [],
+        "status": "pending",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:e436ef7126a654d081ca9021d2af9145b6c0529647514db428cb963569a98dab",
+        "usage_complete": false
+      }
+    ]
+  },
+  "failed_jobs": 1,
+  "failed_trials": 1,
+  "finished_at": "2026-10-10T16:56:26.542056Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4cd1d72d67f36ca",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.0883684,
+        "cached_tokens": 45446,
+        "completion_tokens": 852,
+        "prompt_tokens": 51927
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:49:07.746009Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vc4cd1d72d67f36ca-baseline-node-toggle-completion-committed",
+      "provider": "claude",
+      "role": "baseline",
+      "runtime_seconds": 41.321251,
+      "series_key": "sha256:faac8ae41945fe7514d79757652bf148b353312c10bab197260a1f13eeeefd08",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:48:26.424758Z",
+      "status": "completed",
+      "task": "node-toggle-completion-committed",
+      "task_digest": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "V4a2b8443021e0682",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 1.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.1657666,
+        "cached_tokens": 68521,
+        "completion_tokens": 714,
+        "prompt_tokens": 84203
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:49:47.900411Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-V4a2b8443021e0682-candidate-node-toggle-completion-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 37.186405,
+      "series_key": "sha256:246449ba39df4aba80308c85aea39fc318eac62863cf0f8c8be0b850919dcc97",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:49:10.714006Z",
+      "status": "completed",
+      "task": "node-toggle-completion-committed",
+      "task_digest": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "V9bc3b03b4e15d5e4",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.16086319999999998,
+        "cached_tokens": 85589,
+        "completion_tokens": 1327,
+        "prompt_tokens": 98288
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:50:38.369166Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-V9bc3b03b4e15d5e4-candidate-node-toggle-completion-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 47.804268,
+      "series_key": "sha256:f48ad0ba04769c750f25206e7375342521e0d50af560b7432f658aa9ec1d92a1",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:49:50.564898Z",
+      "status": "completed",
+      "task": "node-toggle-completion-committed",
+      "task_digest": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Va1497fcce05a55c1",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 1.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.0843766,
+        "cached_tokens": 67822,
+        "completion_tokens": 711,
+        "prompt_tokens": 73440
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:51:23.426254Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Va1497fcce05a55c1-candidate-node-toggle-completion-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 41.963541,
+      "series_key": "sha256:f22d4edbda7289c15c8486016f478f4b1617f30e6b86b9a85bb8c5855e6e6b86",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:50:41.462713Z",
+      "status": "completed",
+      "task": "node-toggle-completion-committed",
+      "task_digest": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc36e90202eb05118",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.0916344,
+        "cached_tokens": 51238,
+        "completion_tokens": 714,
+        "prompt_tokens": 58282
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:52:03.783845Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vc36e90202eb05118-candidate-node-toggle-completion-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 37.588564,
+      "series_key": "sha256:61919382116d8ff3232383efe73da4197c0637693619d12eed7f46f3e4164de8",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:51:26.195281Z",
+      "status": "completed",
+      "task": "node-toggle-completion-committed",
+      "task_digest": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4e0684f092ed16c",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.0992514,
+        "cached_tokens": 53333,
+        "completion_tokens": 703,
+        "prompt_tokens": 61407
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:52:43.169961Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vc4e0684f092ed16c-candidate-node-toggle-completion-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 36.542055,
+      "series_key": "sha256:44c2ea6a852c2d071df0282fb70e775029e4663f4db228234273754b1995e2af",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:52:06.627906Z",
+      "status": "completed",
+      "task": "node-toggle-completion-committed",
+      "task_digest": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vef7a7d68bf93cc4c",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.0911326,
+        "cached_tokens": 51214,
+        "completion_tokens": 724,
+        "prompt_tokens": 58253
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:53:23.366943Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vef7a7d68bf93cc4c-candidate-node-toggle-completion-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 37.398255,
+      "series_key": "sha256:2d3932ee952f413510288c047f1b077a6a539cf23c5fa0777bb90729babadb80",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:52:45.968688Z",
+      "status": "completed",
+      "task": "node-toggle-completion-committed",
+      "task_digest": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "V4a2b8443021e0682",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 1.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.168523,
+        "cached_tokens": 68852,
+        "completion_tokens": 647,
+        "prompt_tokens": 85025
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:54:12.453318Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-V4a2b8443021e0682-candidate-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 45.821971,
+      "series_key": "sha256:fadcdc80b0fa0899f665fac59c84133f8ec0cc05a9d1864dc80f7ffd705e8b71",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:53:26.631347Z",
+      "status": "completed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "V9bc3b03b4e15d5e4",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.155219,
+        "cached_tokens": 110869,
+        "completion_tokens": 939,
+        "prompt_tokens": 123469
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:54:59.672147Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-V9bc3b03b4e15d5e4-candidate-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 43.847704,
+      "series_key": "sha256:223b23ea9cae1876a8b59b4e7a80519bb20a7d01c96eb4e1b30eb40b57a61fbc",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:54:15.824443Z",
+      "status": "completed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Va1497fcce05a55c1",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 1.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.08835019999999999,
+        "cached_tokens": 68025,
+        "completion_tokens": 719,
+        "prompt_tokens": 74086
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:55:40.795507Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Va1497fcce05a55c1-candidate-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 37.830148,
+      "series_key": "sha256:fe5334636285f48e730d41aef3d19f483859957626da376e7017ef5102882708",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:55:02.965359Z",
+      "status": "completed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc36e90202eb05118",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.09668979999999999,
+        "cached_tokens": 51603,
+        "completion_tokens": 751,
+        "prompt_tokens": 59219
+      },
+      "effort": "medium",
+      "errored_trials": 1,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T16:56:26.542056Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vc36e90202eb05118-candidate-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 42.970103,
+      "series_key": "sha256:633cc4e31f7a60d1218fbb498303a6e33076174e87ebb059b73674c2a100e353",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T16:55:43.571953Z",
+      "status": "failed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4e0684f092ed16c",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vc4e0684f092ed16c-candidate-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": null,
+      "series_key": "sha256:d16e1f7b603f33ac13a061c47b7980688f857f20cfc8f7ca0643b2dfeaf2d76c",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vef7a7d68bf93cc4c",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vef7a7d68bf93cc4c-candidate-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": null,
+      "series_key": "sha256:f364b1651156d1d9e20db34c8c2bfea2ab6a0e9251e9a2d72ffed8133a855fa6",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4cd1d72d67f36ca",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vc4cd1d72d67f36ca-baseline-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "baseline",
+      "runtime_seconds": null,
+      "series_key": "sha256:9b3738473345c2e828c2b34c28b95f6c02d985dbed1d712fbb44130ae7082715",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "V9bc3b03b4e15d5e4",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-V9bc3b03b4e15d5e4-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": null,
+      "series_key": "sha256:6b2dfe7020ee116f95cf10347a97d00be2a15701e6655ae35849c6d5a422fd02",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Va1497fcce05a55c1",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Va1497fcce05a55c1-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": null,
+      "series_key": "sha256:1da03083489390d2cbe4beb1a2522fbe16fd67078533ba330c5c4c1c92192ff6",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc36e90202eb05118",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vc36e90202eb05118-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": null,
+      "series_key": "sha256:00534b947163d715425837e786f12fa0324558010e15e7d932f53e7ee63e9cba",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4e0684f092ed16c",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vc4e0684f092ed16c-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": null,
+      "series_key": "sha256:1bc9a4168f451b7b19dcfd7e40077920d9debe299d438a505a919f4ca42b04ed",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vef7a7d68bf93cc4c",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vef7a7d68bf93cc4c-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": null,
+      "series_key": "sha256:b6a2a290f5ed37f0c8b45fef65b914ae94db7f885351287e8080fa034e0cfc83",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4cd1d72d67f36ca",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-Vc4cd1d72d67f36ca-baseline-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "baseline",
+      "runtime_seconds": null,
+      "series_key": "sha256:c57ffd1eeda56bfdadffc6cfcfd01197f305170e14b89b248c942e51bde0eb7c",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "V4a2b8443021e0682",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 0,
+      "dimensions": {
+        "correctness": null,
+        "efficiency_policy": null,
+        "workflow": null
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": null,
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-c506449d4bea16b0bd87-r1-claude-V4a2b8443021e0682-candidate-static-pricing-copy-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": null,
+      "series_key": "sha256:7bb77c6119b325a382b5ca75a8b109f4f7bfe8f60b7b9739ed148570d27e57ab",
+      "series_key_unavailable_reason": null,
+      "started_at": null,
+      "status": "pending",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:f0cabb4ae5915ae7ecf76f1ba8d705202e760b6a71d6bd91059e780415b94b15",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": null,
+  "pending_jobs": 10,
+  "profile": "calibration",
+  "report_id": "sha256:11d37afd0f267b488bd4e666125ea4ec260ef766308b06c38de188e40ff4fcf9",
+  "run_id": "run-c506449d4bea16b0bd87",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-10-10T16:48:23.192176Z",
+  "status": "failed",
+  "updated_at": "2026-10-10T16:56:29.018875Z"
+}

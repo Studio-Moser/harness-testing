@@ -1,0 +1,1641 @@
+{
+  "admission_estimate_usd": 24.0,
+  "completed_jobs": 4,
+  "completed_trials": 4,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 4,
+  "expected_trials": 4,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:8017d6b39bff3e8794ac7f54211cceed83253a602b2c789b22d4f369a2df1fc5",
+      "hypothesis": "Studio Moser versions follow the house branch, commit and file-naming conventions on these tasks; Nothing completes the work but breaks at least one convention.",
+      "rerun_reason": "Recovery: the verifier crashed on one trial (import race, no reward file) and the run stopped before three more.",
+      "summary": "Add three tasks that require a notes document and a commit, scored on a fourth conventions dimension."
+    },
+    "code_review": {
+      "evaluation_cost_usd": 4.04907,
+      "plan_id": "sha256:843c5d39e0647c73423d29a5cbbdf64b1feb2041002bb360e70c54188ace1d42",
+      "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+      "results_digest": "sha256:8c134dc9da63296461ad0586b0f74130ff2ca3ea76d501681f546624e9107f1f",
+      "source_report_id": "sha256:7cb1ba86673803c5620bd20c66e19603253c9bdbadb5edb0af692ce1c85711a9"
+    },
+    "collaboration_evaluation": {
+      "evaluation_cost_usd": 3.722308,
+      "plan_id": "sha256:45322b9798bd5a506eb3d3295cccc2d920e05e4cd962eac788dced1ae51d648f",
+      "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+      "results_digest": "sha256:4868e5d09dc426dcfbf597d7e0e1596cb716c456cb3ee2d2cdc57fbd9d583524",
+      "rubric_version": "tim-work-quality-v2",
+      "source_report_id": "sha256:01db80760838f4c69c95014a8772cf84a0127808fb939be8c330ba070aca86a0"
+    },
+    "comparison": {
+      "contenders": [
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 1.01313,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "label": "Studio Moser v6 + time matters",
+          "mean_cost_usd": 0.0717124,
+          "mean_duration_seconds": 11.209163546998752,
+          "original_estimates": [
+            {
+              "cost_usd": 0.07171240000000001,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:b6c9e0b12a276b898c615a306c2e411e77b7806f48e787293eb7d01e69df43ea"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "react-accent-polish-committed": 0
+          },
+          "total_cost_usd": 0.0717124,
+          "total_tokens": 80844,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 1.01233,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "nothing",
+          "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "label": "Nothing",
+          "mean_cost_usd": 0.0677642,
+          "mean_duration_seconds": 10.44625204699696,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0677642,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:e397e0dd52dd2ba1f472588061c448115d187b6144abfe8a642055a7357e5835"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "react-accent-polish-committed": 0
+          },
+          "total_cost_usd": 0.0677642,
+          "total_tokens": 73040,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 1.0122,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "studio-moser",
+          "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "label": "Studio Moser v7",
+          "mean_cost_usd": 0.0854454,
+          "mean_duration_seconds": 14.399374505999731,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0854454,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:0b7e093947bb100c7fb53829b7a43d24b51a0ca4ed8130cfeb2e1779fdced893"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "react-accent-polish-committed": 0
+          },
+          "total_cost_usd": 0.0854454,
+          "total_tokens": 106319,
+          "usage_complete": true
+        },
+        {
+          "attempted": 1,
+          "code_review": {
+            "completed": 1,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 1.01141,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 1,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 1,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 1,
+          "cost_per_success_usd": 0.0698224,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 1,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "studio-moser",
+          "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "label": "Studio Moser v6",
+          "mean_cost_usd": 0.0698224,
+          "mean_duration_seconds": 10.23505746400042,
+          "original_estimates": [
+            {
+              "cost_usd": 0.0698224,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:137c62dea568942093d0207b7ece887f0b85b5acedf8085f464772c6d66f8bb1"
+            }
+          ],
+          "passed_all": true,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 1,
+          "success_fraction": {
+            "denominator": 1,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "react-accent-polish-committed": 1
+          },
+          "total_cost_usd": 0.0698224,
+          "total_tokens": 80610,
+          "usage_complete": true
+        }
+      ],
+      "leaders": {
+        "observed_cost_ids": [
+          "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0"
+        ],
+        "observed_time_ids": [
+          "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0"
+        ]
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "One attempt per task is the default minimum; one flaky trial can change the verdict.",
+        "Cost and time ratios are point estimates over per-task means; the advantage and noninferiority thresholds are product defaults, not research findings.",
+        "Review is advisory: a missing or incomplete review leaves the verdict provisional and flagged, unconfirmed reviewer claims are listed, and confirmed remaining defects disqualify."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": 0.003948199999999999,
+          "cost_ratio": 1.0582638030110294,
+          "left_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "left_report_id": null,
+          "right_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "right_report_id": null,
+          "time_difference_seconds": 0.7629115000017919,
+          "time_ratio": 1.0730320785454444
+        },
+        {
+          "cost_difference_usd": -0.013733000000000009,
+          "cost_ratio": 0.8392774801218087,
+          "left_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": -3.1902109590009786,
+          "time_ratio": 0.7784479487166803
+        },
+        {
+          "cost_difference_usd": 0.001889999999999989,
+          "cost_ratio": 1.0270686771007584,
+          "left_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": 0.9741060829983326,
+          "time_ratio": 1.0951734845089574
+        },
+        {
+          "cost_difference_usd": -0.017681200000000008,
+          "cost_ratio": 0.7930701945335851,
+          "left_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "left_report_id": null,
+          "right_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "right_report_id": null,
+          "time_difference_seconds": -3.9531224590027705,
+          "time_ratio": 0.7254656820436445
+        },
+        {
+          "cost_difference_usd": -0.00205820000000001,
+          "cost_ratio": 0.9705223538577876,
+          "left_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": 0.2111945829965407,
+          "time_ratio": 1.0206344306067037
+        },
+        {
+          "cost_difference_usd": 0.015622999999999998,
+          "cost_ratio": 1.2237534086482273,
+          "left_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+          "left_report_id": null,
+          "right_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+          "right_report_id": null,
+          "time_difference_seconds": 4.164317041999311,
+          "time_ratio": 1.4068679689045605
+        }
+      ],
+      "policy_digest": "sha256:7d6cb379919300ebc23436cf5b12ef3da7a805fcb70188a189878cb9f76466e6",
+      "policy_id": "benchmark-readiness-v2",
+      "provisional": false,
+      "reasons": [
+        "insufficient_task_coverage",
+        "quality_ineligible"
+      ],
+      "status": "insufficient_evidence",
+      "summary": "Selected evidence is insufficient for a recommendation.",
+      "unsolved_tasks": [],
+      "winner_id": null
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:859d11c45fc7059644331f26ca4354dc39e046aab24d53c4ab55b637d87e770f",
+      "attempts": 1,
+      "authority_digest": "sha256:e1da39cab3810d6031a079b984cddf53a22a47ded1f48f9b368f81d896154ed5",
+      "concurrency": 1,
+      "decision_policy": "benchmark-readiness-v2",
+      "evaluator_digest": "sha256:decf3895995f75a6e06fc38dcf18e2ef345e73a2f6e13dd1f7611e2c4efaa460",
+      "executor_inventory": [
+        {
+          "effort": "medium",
+          "model": "claude-opus-5-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-opus-5-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-sonnet-5",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "claude-fable-5-1",
+          "provider": "claude",
+          "runtime_version": "2.1.281"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "node": "sha256:d2f444b5b028b4ce66f43e8ef90d1dd0ca5f59e99ab337073e3882cb0567500b",
+        "verifier": "sha256:a981c3f34d1daab6ad1eb7f7c15b5c053bf8f54cd79075fc30ffa0c3e8cb7b92"
+      },
+      "kickoff": {
+        "effort": "medium",
+        "model": "claude-opus-5-5",
+        "provider": "claude",
+        "runtime_version": "2.1.281"
+      },
+      "provider_recovery_seconds": 0,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:392cdbc6185125e743185f9cdb2b3520f65155f4b2791c86a9db24e6cf54989e",
+      "task_digests": {
+        "react-accent-polish-committed": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41"
+      },
+      "task_ids": [
+        "react-accent-polish-committed"
+      ],
+      "task_variant": "comparison",
+      "timeout_seconds": 1800
+    },
+    "contenders": [
+      {
+        "family": "nothing",
+        "id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Nothing",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "inventory_digest": "sha256:127e9f1b8268322483d378436d5acff3f19ff8909acbb9ef426758463bf5273a",
+        "label": "Studio Moser v6",
+        "rubric_digest": "sha256:2713cd849eaefabd77a615cecb2bea2b33042a09b606f0fc3c6803111999404f",
+        "source_commits": [
+          "75bf6c59ad9c87e7c91b6e537af471aee91cd931"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "inventory_digest": "sha256:127e9f1b8268322483d378436d5acff3f19ff8909acbb9ef426758463bf5273a",
+        "label": "Studio Moser v6 + time matters",
+        "rubric_digest": "sha256:2713cd849eaefabd77a615cecb2bea2b33042a09b606f0fc3c6803111999404f",
+        "source_commits": [
+          "75bf6c59ad9c87e7c91b6e537af471aee91cd931"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "inventory_digest": "sha256:bdcd217cfc9141887dfcebb53b6e2684066aeb31559809bedd6545c0735de532",
+        "label": "Studio Moser v7",
+        "rubric_digest": "sha256:0f9695bd9fb54d933c8f9215e8f25fa37009aa60899b797896d6f54734cd8116",
+        "source_commits": [
+          "fef5d06c564cd82d8982267db53cce6ec963baa0"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "Claude Opus Convention Tasks - Recovery React",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:3d0ba074480e2d08ec7b15bd4563e62f482de6b34f6b1def419fbd7cdd3975f2",
+    "supersedes_report_id": "sha256:01db80760838f4c69c95014a8772cf84a0127808fb939be8c330ba070aca86a0",
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 1.01233,
+          "duration_seconds": 7.582,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 100853,
+              "model": "gpt-6-astra",
+              "output_tokens": 76,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:5450ccabc5bf1805dd98b0f5b6101bb3ce40c44de63d0d1114a661bc2c3fd6d5",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 0.890496,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "Clear, concrete completion report with useful verification details. It slightly exceeds the 100-word limit and repeats the change and notes information.",
+                "score": 4
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicitly authorized edit, notes document, and commit without unnecessary questions, approvals, or scope expansion.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "Inspected the source diff after editing and ran the token check and project gate. Recorded results show both existing tests passing; commit and status checks followed.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "The preserved existing test parses the CSS and asserts the exact requested custom-property value. Another checks dashboard rendering. This adequately covers the tiny source change without additional tests.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The patch changes only the requested source value to #6d28d9 and adds short Markdown notes. Component behavior and protected files remain unchanged, and the recorded commit succeeds.",
+                "score": 5
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Investigation proportionately located token definitions and consumers, inspected package scripts and existing checks, and distinguished the unchanged accent token. No unnecessary research was performed.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 17.658,
+            "model_usage": [
+              {
+                "cache_read_tokens": 17536,
+                "cache_write_tokens": 0,
+                "input_tokens": 84936,
+                "model": "gpt-6-astra",
+                "output_tokens": 472,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 208,
+            "assistant_words": 115,
+            "average_progress_words": 5.0,
+            "average_update_gap_seconds": 7.553,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.252734,
+            "final_answer_tokens": 191,
+            "final_answer_words": 110,
+            "formatting_density": 0.1739,
+            "heading_count": 0,
+            "maximum_progress_words": 5,
+            "maximum_update_gap_seconds": 7.553,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 334,
+            "total_visible_words": 204,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Final answer exceeds scenario budget",
+                "kind": "long_final_answer",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Only `--cta-background` changes; `--accent` stays.",
+              "elapsed_seconds": 2.866,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "I changed `--cta-background` in `src/index.css` from `#2563eb` to `#6d28d9`, added a short notes file, and committed both as `eeebb47`.\n\n- **Scope:** That one line is the only source change. `--accent` uses the same old blue and stays `#2563eb`. The button style in `src/App.css` still reads `var(--cta-background)`, so it picks up the new color without any edits.\n- **Notes:** `CTA_COLOR_CHANGE.md` describes the change and how it was checked.\n- **Verification:** `npm run check:cta` and `npm run gate` both pass: lint, typecheck, and the two existing tests, one of which checks for the new value. I didn't change any existing tests, package metadata, build config or check scripts.",
+              "elapsed_seconds": 10.419,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c4cd1d72d67f36caaa77f353351e2d96db3a1e7c4770ab226f73af10fe84e1b4",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.0677642,
+        "duration_seconds": 10.44625204699696,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 64536,
+            "cache_write_tokens": 7673,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 823,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 64536,
+            "cache_write_tokens": 7673,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 823,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:e397e0dd52dd2ba1f472588061c448115d187b6144abfe8a642055a7357e5835",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 1.01313,
+          "duration_seconds": 7.017,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 100868,
+              "model": "gpt-6-astra",
+              "output_tokens": 89,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:8b72ee08dced5069c74a4bc85076207ef150561ea140ee4685c348ebde672b0c",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 1.04818,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "The final clearly reports the change, checks, notes, and commit within 100 words. The progress aside about a 'kebab-ish doc path' adds unnecessary process chatter.",
+                "score": 4
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicitly authorized source edit, notes, and local commit without unnecessary questions or approvals. No consequential ambiguity required clarification.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "Inspected the diff after editing and ran the existing gate. Recorded results show both tests passed; the gate runs lint and typecheck before tests. The tests directly check the requested source value and dashboard rendering.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "The unchanged existing tests parse the CSS custom property and assert #6d28d9, and check dashboard rendering. This meaningfully covers the narrow change without redundant new tests.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The final patch changes only the requested source value and adds short Markdown notes. Component code, existing tests, metadata, configuration, and scripts remain unchanged. Recorded actions include the requested commit.",
+                "score": 5
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Searched the token and original color across the repository and inspected package scripts before editing. This investigation was proportionate to an explicit, one-value source change.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 17.251,
+            "model_usage": [
+              {
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "input_tokens": 102578,
+                "model": "gpt-6-astra",
+                "output_tokens": 448,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 195,
+            "assistant_words": 98,
+            "average_progress_words": 12.0,
+            "average_update_gap_seconds": 5.008,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.217149,
+            "final_answer_tokens": 150,
+            "final_answer_words": 74,
+            "formatting_density": 0.1939,
+            "heading_count": 0,
+            "maximum_progress_words": 19,
+            "maximum_update_gap_seconds": 8.121,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 321,
+            "total_visible_words": 187,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              },
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Polish change. Let me look.",
+              "elapsed_seconds": 1.151,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "Only `--cta-background` changes; `--accent` stays. Notes file name: house rules mention file naming \u2014 I'll use a kebab-ish doc path.",
+              "elapsed_seconds": 3.045,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "I changed `--cta-background` in `src/index.css` from `#2563eb` to `#6d28d9`, and that is the only source change. `--accent` and the components are unchanged.\n- **Checks:** `npm run check:cta` passes. `npm run gate` also passes: lint, typecheck, and tests (2 of 2).\n- **Notes:** the notes document is at `docs/cta-background-change.md`.\n- **Commit:** both files are in commit `eb804cd` on the new branch `style/cta-background-violet`, not `main`. Nothing was pushed and no PR was opened.",
+              "elapsed_seconds": 11.166,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c36e90202eb05118e05ee03d6824c9fd263831b2629d4f76ebb87aadd776e7f7",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.07171240000000001,
+        "duration_seconds": 11.209163546998752,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 72077,
+            "cache_write_tokens": 7861,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 898,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 72077,
+            "cache_write_tokens": 7861,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 898,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:b6c9e0b12a276b898c615a306c2e411e77b7806f48e787293eb7d01e69df43ea",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 1.0122,
+          "duration_seconds": 7.325,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 100860,
+              "model": "gpt-6-astra",
+              "output_tokens": 72,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:e3db2a3488157caa212782304e6b7388867ab103b085df3bf92c819370d58ff7",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 0.893216,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "Brief update and concise final clearly identify the change, notes, commit, checks, and preserved files. No unnecessary questions, repetition, or lengthy explanation.",
+                "score": 5
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicitly authorized source edit, notes, and local commit without unnecessary approvals or clarification. No consequential choice was unresolved and no external action was recorded.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "Inspected the source diff and ran relevant checks after the edits. Recorded results show both existing tests passing, including the exact custom-property assertion. Also checked commit history and working-tree status.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "Existing tests parse the root custom property and assert #6d28d9, plus check dashboard rendering. These provide proportionate coverage for a source-value-only edit; additional tests were unnecessary and protected tests remained unchanged.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The complete patch changes only the requested CSS value and adds short Markdown notes. Component code, other tokens, tests, metadata, and configuration remain unchanged. The commit is recorded. This contract requires a specific source value, not a visual redesign.",
+                "score": 5
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Located existing color occurrences and inspected package scripts before making the narrow edit. Investigation was sufficient for the explicit requirement without unnecessary research or design exploration.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 17.249,
+            "model_usage": [
+              {
+                "cache_read_tokens": 17536,
+                "cache_write_tokens": 0,
+                "input_tokens": 85053,
+                "model": "gpt-6-astra",
+                "output_tokens": 503,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 185,
+            "assistant_words": 96,
+            "average_progress_words": 13.0,
+            "average_update_gap_seconds": 10.997,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.173546,
+            "final_answer_tokens": 161,
+            "final_answer_words": 83,
+            "formatting_density": 0.1771,
+            "heading_count": 0,
+            "maximum_progress_words": 13,
+            "maximum_update_gap_seconds": 10.997,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 311,
+            "total_visible_words": 185,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Only line 10 changes; `--accent` stays. Polish change \u2014 branch, edit, notes, run gates.",
+              "elapsed_seconds": 3.363,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "I changed `--cta-background` from `#2563eb` to `#6d28d9` in `src/index.css:10` and committed it as `a4ea647` on the new branch `style/cta-background-violet`. `--accent` keeps its original value.\n\n- **Notes:** the change is described in a new file, `docs/cta-background-color.md`.\n- **Checks:** `npm run check:cta` and `npm run gate` (lint, typecheck and tests, 2 of 2 passing) both exited with code 0.\n- **Unchanged:** existing tests, package metadata, build configuration and check scripts were not edited. I didn't add new tests and didn't push.",
+              "elapsed_seconds": 14.36,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.0854454,
+        "duration_seconds": 14.399374505999731,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 96277,
+            "cache_write_tokens": 8966,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1066,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 96277,
+            "cache_write_tokens": 8966,
+            "effort": null,
+            "input_tokens": 10,
+            "model": "claude-opus-5-5",
+            "output_tokens": 1066,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:0b7e093947bb100c7fb53829b7a43d24b51a0ca4ed8130cfeb2e1779fdced893",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 1.01141,
+          "duration_seconds": 6.155,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 100881,
+              "model": "gpt-6-astra",
+              "output_tokens": 52,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:a0387592e43e4da24cac9c4dfe433f3b144f23fe2f402f1406cb77e61555dc44",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "grade": {
+            "cost_usd": 0.8904160000000001,
+            "dimensions": [
+              {
+                "name": "plain_language",
+                "rationale": "Concise updates and a final answer under 100 words clearly identify the change, notes, checks, and commit. The progress update adds the useful finding that --accent remains unchanged.",
+                "score": 5
+              },
+              {
+                "name": "appropriate_autonomy",
+                "rationale": "Completed the explicitly authorized source edit, notes document, and local commit without unnecessary questions or approvals. No consequential choice was unresolved, and no external action was taken.",
+                "score": 5
+              },
+              {
+                "name": "self_verification",
+                "rationale": "After the final edits, inspected the diff and ran check:cta and the project gate. Recorded results show both tests passed; the gate reaches tests after lint and typecheck. Also checked Git status after committing.",
+                "score": 5
+              },
+              {
+                "name": "regression_coverage",
+                "rationale": "Existing tests meaningfully verify the parsed --cta-background value equals #6d28d9 and that the dashboard still renders. Reusing these unchanged tests is proportionate to a one-value edit; additional tests were unnecessary.",
+                "score": 5
+              },
+              {
+                "name": "requirements_fit",
+                "rationale": "The patch meets the explicit source-only contract: changes only the requested CSS value and adds short Markdown notes. Component code, existing tests, metadata, configuration, and scripts remain unchanged. The recorded commit succeeded.",
+                "score": 5
+              },
+              {
+                "name": "research_depth",
+                "rationale": "Investigation appropriately covered repository status, token definitions and references, and available package scripts. This established the narrow edit and relevant checks without unnecessary research or design work.",
+                "score": 5
+              }
+            ],
+            "duration_seconds": 19.099,
+            "model_usage": [
+              {
+                "cache_read_tokens": 17536,
+                "cache_write_tokens": 0,
+                "input_tokens": 85013,
+                "model": "gpt-6-astra",
+                "output_tokens": 455,
+                "provider": "openai"
+              }
+            ],
+            "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+            "protocol_id": "sha256:8c62b0cfd905ace93e57ab05d41b2c09db6b9c8f7c93e8c68c0f0b4aead89c8a",
+            "rubric_version": "tim-work-quality-v2",
+            "status": "completed",
+            "usage_complete": true,
+            "would_work_again": true
+          },
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 170,
+            "assistant_words": 97,
+            "average_progress_words": 6.5,
+            "average_update_gap_seconds": 4.58,
+            "bullet_count": 0,
+            "communication_to_model_output_ratio": 0.205811,
+            "final_answer_tokens": 147,
+            "final_answer_words": 84,
+            "formatting_density": 0.134,
+            "heading_count": 0,
+            "maximum_progress_words": 8,
+            "maximum_update_gap_seconds": 7.638,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 296,
+            "total_visible_words": 186,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 0,
+            "useful_progress_update_rate": 0.0,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              },
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "Polish change. Let me look.",
+              "elapsed_seconds": 1.031,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "Only line 10 changes (`--accent` stays). Branching first.",
+              "elapsed_seconds": 2.554,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "I changed `--cta-background` from `#2563eb` to `#6d28d9` in `src/index.css`. That is the only source edit, and `--accent` is still `#2563eb`. I added the notes file at `docs/CTA_Background_Change.md`.\n\n`npm run check:cta` and `npm run gate` both pass: lint, typecheck, and 2 of 2 tests. No existing test, package or config file was changed.\n\nIt's committed as `b861e9b` on a new branch, `style/cta-background-violet`, because the repo rules don't allow commits to `main`. I haven't pushed it or opened a PR.",
+              "elapsed_seconds": 10.192,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:ef7a7d68bf93cc4cd3b8153215fff58f554387ccb06e02084ff328c2b3e2f8f0",
+        "conventions": true,
+        "correctness": true,
+        "cost_usd": 0.0698224,
+        "duration_seconds": 10.23505746400042,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 72002,
+            "cache_write_tokens": 7774,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 826,
+            "provider": "anthropic"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 0,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 72002,
+            "cache_write_tokens": 7774,
+            "effort": null,
+            "input_tokens": 8,
+            "model": "claude-opus-5-5",
+            "output_tokens": 826,
+            "provider": "anthropic",
+            "session": "root"
+          }
+        ],
+        "status": "completed",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:137c62dea568942093d0207b7ece887f0b85b5acedf8085f464772c6d66f8bb1",
+        "usage_complete": true
+      }
+    ]
+  },
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-10-10T18:14:32.772473Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4cd1d72d67f36ca",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.09078320000000001,
+        "cached_tokens": 45772,
+        "completion_tokens": 571,
+        "prompt_tokens": 53101
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:12:31.342289Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-4d58442a3fb77d2405a9-r1-claude-Vc4cd1d72d67f36ca-baseline-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "baseline",
+      "runtime_seconds": 37.909921,
+      "series_key": "sha256:0e1bd6b337f3c4cf724448bb6bd9d8706fe5836cb0e47787e684ec6cf3279069",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:11:53.432368Z",
+      "status": "completed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc36e90202eb05118",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.0952954,
+        "cached_tokens": 51575,
+        "completion_tokens": 702,
+        "prompt_tokens": 59167
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:13:11.472872Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-4d58442a3fb77d2405a9-r1-claude-Vc36e90202eb05118-candidate-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 37.542671,
+      "series_key": "sha256:cc1588a34194b529c1fc4ad52894b0992f92855d4cc91c2dfa125ef2f22724d2",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:12:33.930201Z",
+      "status": "completed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vc4e0684f092ed16c",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.11234340000000001,
+        "cached_tokens": 74689,
+        "completion_tokens": 852,
+        "prompt_tokens": 83369
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:13:54.062066Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-4d58442a3fb77d2405a9-r1-claude-Vc4e0684f092ed16c-candidate-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 40.346705,
+      "series_key": "sha256:2797722af51d9ea79ee6e11f0053b566623603db75c28f038f9c4d439de52062",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:13:13.715361Z",
+      "status": "completed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Claude_Agent:HarnessClaude",
+      "agent_version": "2.1.281",
+      "arm": "Vef7a7d68bf93cc4c",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 1.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": 0.09314440000000002,
+        "cached_tokens": 51515,
+        "completion_tokens": 623,
+        "prompt_tokens": 59092
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-10T18:14:32.772473Z",
+      "harness_commit": null,
+      "model": "claude-opus-5-5",
+      "name": "run-4d58442a3fb77d2405a9-r1-claude-Vef7a7d68bf93cc4c-candidate-react-accent-polish-committed",
+      "provider": "claude",
+      "role": "candidate",
+      "runtime_seconds": 36.397264,
+      "series_key": "sha256:0f805021a6bf87cd53e04b14e0a6fce501fd4fd7791572aa943c485f677fa1ae",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-10T18:13:56.375209Z",
+      "status": "completed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:80d33b5f2cf7cc0eeb2048b7a000d52c466f961de79a7836391f21f7a38532b3",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 0.2947444,
+  "pending_jobs": 0,
+  "profile": "calibration",
+  "report_id": "sha256:dc4716702aabf260af61113d0d480de4d4a143dff1cae62ba9bfe7c49409532b",
+  "run_id": "run-4d58442a3fb77d2405a9",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-10-10T18:11:52.181844Z",
+  "status": "completed",
+  "updated_at": "2026-10-10T18:25:22.740556Z"
+}

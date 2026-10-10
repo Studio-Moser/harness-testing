@@ -10,19 +10,19 @@ Harness Testing answers one question: **does a coding-agent harness make the age
 
 ### Claude Opus 5.5, medium effort
 
-19 workflow tasks, one attempt per task per harness, 133 trials. Each new harness version runs alone and is judged against the results already retained for the same model and effort.
+19 workflow tasks, one attempt per task per harness, 133 trials. Three of the tasks ask for committed work and also score house conventions: branch naming, commit format and file naming. A trial that does the work but breaks a convention does not count as correct.
 
-| Harness | Correct | Avg cost | Avg time | Work-quality grade | Words per task |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| **Studio Moser v7** | **100%** | **$0.12** | 22s | 96% | **160** |
-| Studio Moser v7 + personal instructions and skills | 100% | $0.13 | **21s** | 96% | 163 |
-| Studio Moser v7 + personal instructions | 100% | $0.15 | 24s | 96% | 170 |
-| Studio Moser v6 + time matters | 100% | $0.12 | 26s | 96% | 171 |
-| Studio Moser v6 | 100% | $0.13 | 27s | 96% | 183 |
-| Studio Moser v5 | 100% | $0.17 | 34s | 92% | 299 |
-| Nothing | 95% | $0.12 | 29s | 91% | 247 |
+| Harness | Correct | Conventions followed | Avg cost | Avg time |
+| --- | ---: | ---: | ---: | ---: |
+| **Studio Moser v7 + personal instructions** | **19 of 19** | **3 of 3** | $0.13 | **22s** |
+| Studio Moser v7 + personal instructions and skills | 19 of 19 | 3 of 3 | $0.16 | 24s |
+| Studio Moser v6 | 18 of 19 | 2 of 3 | $0.13 | 27s |
+| Studio Moser v6 + time matters | 17 of 19 | 1 of 3 | $0.12 | 26s |
+| Studio Moser v7 | 16 of 19 | 0 of 3 | $0.12 | 23s |
+| Studio Moser v5 | 16 of 19 | 0 of 3 | $0.18 | 35s |
+| Nothing | 15 of 19 | 0 of 3 | $0.12 | 29s |
 
-Studio Moser v7 is the pick: as correct as anything tested and the least talkative, at the cost of the bare runtime. The two "personal" rows add the developer's own House Style, global instructions and personal skills to v7; on these small tasks they raised cost without improving correctness, grade or brevity, and the one-second time lead of the skills row leaves the formal verdict at no clear winner. Superpowers was skipped on this model: earlier testing showed it wasn't needed on newer models.
+Studio Moser v7 with the developer's personal instructions is the pick: the only versions that followed every convention are the two that carry those instructions, and this one is cheaper and faster than the one that also adds personal skills. Every Studio Moser version named its branch and wrote its commit to the house format; the versions without the personal instructions failed on file naming, a rule the shared baseline did not state. Nothing also committed on `main`. Three convention tasks at one attempt each is thin evidence for ordering the versions between them. Superpowers was skipped on this model: earlier testing showed it wasn't needed on newer models.
 
 ### GPT-6 Astra, medium effort
 
