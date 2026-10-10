@@ -368,3 +368,30 @@ def test_lanes_can_be_inferred_from_the_reports_without_a_frozen_plan():
     changed[1]["experiment"]["conditions"]["kickoff"] = {"model": "other"}
     with pytest.raises(ValueError, match="incompatible"):
         implicit_plan(policy, changed)
+
+
+
+def test_a_later_report_adds_a_harness_version_without_rerunning_the_others():
+    policy, _, _, reports = fixture(attempts=1, purpose="diagnostic")
+    added = []
+    for index, report in enumerate(reports):
+        extra = copy.deepcopy(report)
+        extra["report_id"] = extra["manifest_digest"] = digest(f"added-{index}")
+        experiment = extra["experiment"]
+        experiment["contenders"] = [dict(experiment["contenders"][0], id="d")]
+        experiment["trials"] = [
+            dict(t, contender_id="d", trial_id=f"d-{t['trial_id']}")
+            for t in experiment["trials"] if t["contender_id"] == "a"
+        ]
+        added.append(extra)
+    stitched = [reports[0], added[0], reports[1], added[1]]
+    plan = implicit_plan(policy, stitched)
+    assert [row["id"] for row in plan["contenders"]] == ["a", "b", "c", "d"]
+    lane = summarize(plan, stitched)["lanes"]["comparison"]
+    assert {row["id"] for row in lane["comparison"]["contenders"]} == {"a", "b", "c", "d"}
+    assert lane["superseded_trials"] == []
+    # A harness cannot be added under different conditions.
+    added[0]["experiment"]["conditions"]["kickoff"] = {"model": "other"}
+    with pytest.raises(ValueError, match="incompatible conditions"):
+        summarize(implicit_plan(policy, stitched), stitched)
+

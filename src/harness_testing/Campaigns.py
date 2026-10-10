@@ -116,15 +116,22 @@ def build_campaign(policy: dict, manifests: list[dict]) -> dict:
             "minimum_model_sessions": trials * 3,
             "confirmation_sessions": "additional-per-finding",
             "native_child_sessions": "additional-observed",
-            "approval": "Each coding manifest and evaluation plan needs separate exact approval.",
+            "approval": "Approving a coding manifest covers its review and grading sessions.",
         },
     }
 
 
 def implicit_plan(policy: dict, reports: list[dict]) -> dict:
     """A campaign plan read off the reports themselves: the first report of each lane is
-    the original run, and its conditions, contenders and identity define the lane."""
+    the original run, and its conditions and identity define the lane. The roster is every
+    contender any of the lane's reports ran, so a later report can add a harness version
+    measured under the same conditions without rerunning the others."""
     lanes: dict[str, dict] = {}
+    rosters: dict[str, dict] = defaultdict(dict)
+    for report in reports:
+        experiment = report["experiment"]
+        for row in experiment["contenders"]:
+            rosters[experiment["conditions"]["task_variant"]].setdefault(row["id"], row)
     shared = contenders = None
     for report in reports:
         experiment = report["experiment"]
@@ -132,7 +139,7 @@ def implicit_plan(policy: dict, reports: list[dict]) -> dict:
         if lane in lanes:
             continue
         common = {k: v for k, v in experiment["conditions"].items() if k not in _LANE_FIELDS}
-        roster = sorted(experiment["contenders"], key=lambda row: row["id"])
+        roster = sorted(rosters[lane].values(), key=lambda row: row["id"])
         if shared is not None and (common != shared or roster != contenders):
             raise ValueError("campaign lanes have incompatible harnesses or conditions")
         shared, contenders = common, roster
@@ -265,6 +272,8 @@ def assemble_lane(plan: dict, lane: str, reports: list[dict]) -> dict:
             if key in (conditions.get("image_digests") or {}):
                 image_digests[key] = conditions["image_digests"][key]
     experiment = copy.deepcopy(frozen["report_identity"])
+    known = {row["id"] for row in experiment["contenders"]}
+    experiment["contenders"] += [row for row in plan["contenders"] if row["id"] not in known]
     experiment["conditions"] = dict(
         frozen["conditions"], task_digests=task_digests, image_digests=image_digests
     )

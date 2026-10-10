@@ -69,7 +69,7 @@ Do not resume an approved manifest with changed inputs. Prepare a new request co
 
 ## Evaluate the finished code
 
-Final-patch review, model-free preparation then one fresh reviewer session per packet:
+An approved run is carried through review, grading and the campaign summary without further approval. Final-patch review, model-free preparation then one fresh reviewer session per packet:
 
 ```bash
 uv run harness-test review prepare \
@@ -101,7 +101,7 @@ uv run harness-test campaign summarize \
   --report RESEARCH_REPORT --report RESEARCH_CORRECTION …
 ```
 
-List each lane's original report first, then its recovery and correction reports in execution order; the lanes and their contenders are read off the reports. A later report may replace a slot only when the earlier trial did not complete or the task digest changed, and a corrected task must be rerun for every contender. Tasks dropped from the current campaign policy are left out of the verdict. The summary is written to `runs/campaigns/<digest>/Summary.json`, which the dashboard reads. `campaign plan` can still bind two manifests up front if you want the lanes checked before running.
+List each lane's original report first, then its recovery and correction reports in execution order; the lanes and their contenders are read off the reports. A later report may replace a slot only when the earlier trial did not complete or the task digest changed, and a corrected task must be rerun for every contender. To add a harness version, run it alone with the same kickoff, runtime, child inventory and limits, then append its report to the lane's existing reports; the earlier contenders are not rerun. Tasks dropped from the current campaign policy are left out of the verdict. The summary is written to `runs/campaigns/<digest>/Summary.json`, which the dashboard reads. `campaign plan` can still bind two manifests up front if you want the lanes checked before running.
 
 ## Inspect and classify
 
