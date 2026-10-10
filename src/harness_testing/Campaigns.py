@@ -8,7 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 from statistics import mean
 
-from harness_testing.Comparisons import build_comparison, load_comparison_policy
+from harness_testing.Comparisons import _success, build_comparison, load_comparison_policy
 from harness_testing.Experiments import contender_identity
 from harness_testing.Quality import quality_score
 from harness_testing.Run_Reports import load_run_report
@@ -410,11 +410,7 @@ def summarize_campaign(
                 {
                     "id": contender,
                     "trials": len(selected_trials),
-                    "correct": sum(
-                        t["status"] == "completed"
-                        and t["correctness"] is True and t["protected_state"] is True
-                        for t in selected_trials
-                    ),
+                    "correct": sum(_success(t) for t in selected_trials),
                     "outcomes": dict(Counter(t["status"] for t in selected_trials)),
                     "duration_seconds": _complete_total(selected_trials, "duration_seconds"),
                     "cost_usd": _complete_total(selected_trials, "cost_usd")

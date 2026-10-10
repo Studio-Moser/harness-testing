@@ -417,6 +417,12 @@ def build_job_report(
             "correctness": _score(stats, "reward"),
             "workflow": _score(stats, "workflow"),
             "efficiency_policy": _score(stats, "efficiency"),
+            # Present only for tasks that score house conventions.
+            **(
+                {"conventions": conventions}
+                if (conventions := _score(stats, "conventions")) is not None
+                else {}
+            ),
         },
         "efficiency": {
             "prompt_tokens": _integer(stats.get("n_input_tokens")),

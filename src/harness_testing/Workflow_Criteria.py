@@ -18,6 +18,7 @@ from typing import Any
 
 from harness_testing.Trajectory_Events import (
     ShellComponent,
+    _content_text,
     component_successes,
     normalize_command,
     patch_paths,
@@ -63,6 +64,55 @@ _RELEVANT_PATH_PATTERNS = (
     r"(^|/)(?:src|app|lib|tests|crates|packages)(?:/|$)",
     r"\.(?:css|html|jsx?|json|py|rs|toml|tsx?|ya?ml)$",
 )
+# House conventions: {type}/{kebab-case-desc} branches and Conventional Commit subjects.
+_BRANCH_NAME = re.compile(
+    r"(?:feat|fix|style|chore|docs|refactor|test|perf|hotfix|release|feature|bugfix)"
+    r"/[a-z0-9]+(?:[-.][a-z0-9]+)*"
+)
+_COMMIT_SUBJECT = re.compile(
+    r"(?:feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)"
+    r"(?:\([^()\s]+\))?!?: \S.*"
+)
+_COMMIT_CONFIRMATION = re.compile(r"^\[(\S+)(?: \(root-commit\))? [0-9a-f]{7,40}\] ", re.MULTILINE)
+_HEREDOC_MESSAGE = re.compile(
+    r'"\$\(\s*cat\s*<<-?\s*([\'"]?)(\w+)\1[ \t]*\n(.*?)\n[ \t]*\2\s*\)"', re.DOTALL
+)
+_HEREDOC_STDIN_MESSAGE = re.compile(
+    r"""(?:-F|--file)[ =]?-(?=\s)([^\n]*?)<<-?[ \t]*(['"]?)(\w+)\2([^\n]*)\n"""
+    r"""(.*?)\n[ \t]*\3[ \t]*$""",
+    re.DOTALL | re.MULTILINE,
+)
+_HEREDOC = re.compile(
+    r"""<<-?[ \t]*(['"]?)(\w+)\1([^\n]*)\n(?:.*?\n)??[ \t]*\2[ \t]*$""",
+    re.DOTALL | re.MULTILINE,
+)
+# Names fixed by tooling or ecosystem convention; everything else follows the house rule.
+_TOOLING_FILE_NAMES = frozenset(
+    {
+        "README.md", "AGENTS.md", "CLAUDE.md", "SKILL.md", "CHANGELOG.md", "LICENSE",
+        "Makefile", "Dockerfile", "package.json", "package-lock.json", "yarn.lock",
+        "pnpm-lock.yaml", "tsconfig.json", "Cargo.toml", "Cargo.lock", "index.html",
+        "index.css", "index.js", "index.ts", "index.tsx", "main.rs", "lib.rs", "mod.rs",
+    }
+)
+_ARM_INJECTED_FILE_NAMES = {"AGENTS.md", "CLAUDE.md"}
+_TITLE_MINOR_WORDS = {
+    "a", "an", "and", "as", "at", "by", "for", "in", "of", "on", "or", "the", "to", "vs", "with",
+}
+_NOTES_SUFFIXES = {".md", ".markdown", ".txt"}
+# Git subcommands that cannot move a branch or create a commit.
+_GIT_HISTORY_NEUTRAL = {
+    "add", "apply", "blame", "cat-file", "check-ignore", "clean", "config", "describe", "diff",
+    "fetch", "grep", "help", "log", "ls-files", "ls-tree", "merge-base", "mv", "push", "reflog",
+    "remote", "restore", "rev-list", "rev-parse", "rm", "shortlog", "show", "show-ref", "status",
+    "tag", "version",
+}
+_GIT_WORKTREE_CHANGING = {"apply", "mv", "rm"}
+_GIT_UNREADABLE_MESSAGE = {
+    "-F", "--file", "-C", "-c", "--reuse-message", "--reedit-message", "--fixup", "--squash",
+    "-t", "--template",
+}
+_SHELL_WRAPPERS = {"bash", "sh", "zsh", "env", "sudo", "time", "xargs", "eval", "exec", "nohup"}
 
 
 def _trajectory_path() -> Path:
@@ -553,3 +603,352 @@ def no_testing_churn() -> bool:
                 return False
             previous[event.command] = event
     return True
+
+
+def _strip_heredocs(command: str) -> str:
+    """Inline heredoc commit messages and drop other heredoc bodies before splitting."""
+    command = _HEREDOC_MESSAGE.sub(lambda match: shlex.quote(match[3]), command)
+    command = _HEREDOC_STDIN_MESSAGE.sub(
+        lambda match: f"-m {shlex.quote(match[5])}{match[1]}{match[4]}", command
+    )
+    return _HEREDOC.sub(lambda match: match[3], command).replace("\\\n", " ")
+
+
+def _proven_successes(
+    components: Sequence[ShellComponent], overall: bool | None
+) -> list[bool | None]:
+    """Extend component outcomes with the trailing `&&` chain a zero exit proves."""
+    statuses = list(component_successes(components, overall))
+    index = len(components) - 1
+    if overall is True and index >= 0 and components[index].operator_before != "||":
+        statuses[index] = True
+        while (
+            index > 0
+            and components[index].operator_before == "&&"
+            and components[index - 1].operator_before != "||"
+        ):
+            index -= 1
+            statuses[index] = True
+    return statuses
+
+
+def _inside_workspace(path: str) -> bool:
+    return not path.startswith("/") or path.startswith("/app")
+
+
+def _git_segments(component: str) -> tuple[list[list[str]], bool] | None:
+    """Argument lists of each Git invocation and whether their output and status are visible."""
+    lexer = shlex.shlex(component, posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    try:
+        tokens = list(lexer)
+    except ValueError:
+        return None if re.search(r"\bgit\b", component) else ([], False)
+    segments: list[list[str]] = [[]]
+    for token in tokens:
+        if token in {"|", "|&"}:
+            segments.append([])
+        else:
+            segments[-1].append(token)
+    found: list[list[str]] = []
+    visible = len(segments) == 1
+    for segment in segments:
+        while segment and (segment[0] == "(" or re.match(r"[A-Za-z_]\w*=", segment[0])):
+            segment = segment[1:]
+        for index, token in enumerate(segment):
+            if not token.strip("();<>&"):
+                segment, visible = segment[:index], visible and token == ")"
+                break
+        if not segment:
+            continue
+        if segment[0] in _SHELL_WRAPPERS and re.search(r"\bgit\b", " ".join(segment)):
+            return None
+        if segment[0] == "git":
+            found.append(segment[1:])
+    return found, visible
+
+
+def _git_action(arguments: list[str]) -> tuple:
+    """Classify one Git invocation by its effect on branches and commits."""
+    index = 0
+    while index < len(arguments) and arguments[index].startswith("-"):
+        option = arguments[index]
+        if option == "-C" and not _inside_workspace("".join(arguments[index + 1 : index + 2])):
+            return ("none",)  # another repository cannot move this one
+        if option in {"-c", "-C"}:
+            index += 2
+        elif option == "--no-pager":
+            index += 1
+        else:
+            return ("unknown",)
+    if index >= len(arguments):
+        return ("none",)
+    subcommand, rest = arguments[index], arguments[index + 1 :]
+    before_paths = rest[: rest.index("--")] if "--" in rest else rest
+    positional = [value for value in before_paths if not value.startswith("-")]
+
+    def after(pattern: str) -> str | None:
+        for position, value in enumerate(before_paths[:-1]):
+            if re.fullmatch(pattern, value):
+                return before_paths[position + 1]
+        return None
+
+    if subcommand in {"checkout", "switch"}:
+        create = (
+            r"-[A-Za-z]*[bB]|--orphan"
+            if subcommand == "checkout"
+            else r"-[A-Za-z]*[cC]|--create|--force-create|--orphan"
+        )
+        if name := after(create):
+            return ("create", name)
+        if "-" in before_paths or "--detach" in before_paths:
+            return ("unknown",)
+        if not positional or "--" in rest:
+            return ("none",)  # restores paths; HEAD stays where it is
+        return ("switch", positional[0], subcommand == "switch")
+    if subcommand == "branch":
+        if any(re.fullmatch(r"-[mM]|--move", value) for value in before_paths):
+            if len(positional) not in {1, 2}:
+                return ("unknown",)
+            return ("rename", positional[0] if len(positional) == 2 else None, positional[-1])
+        if any(re.fullmatch(r"-[dD]|--delete", value) for value in before_paths):
+            return ("delete", *positional)
+        if "--show-current" in before_paths or not positional:
+            return ("none",)
+        if any(re.fullmatch(r"-[cC]|--copy", value) for value in before_paths):
+            return ("add", positional[-1])
+        return ("add", positional[0])
+    if subcommand == "commit":
+        if "--dry-run" in rest:
+            return ("none",)
+        message = after(r"-[A-Za-z]*m|--message")
+        for value in rest:
+            if message is None and value.startswith("--message="):
+                message = value.removeprefix("--message=")
+        subject = message.strip().splitlines()[0].strip() if message and message.strip() else None
+        unreadable = subject is None and bool(_GIT_UNREADABLE_MESSAGE & set(rest))
+        quiet = any(re.fullmatch(r"-[A-Za-z]*q[A-Za-z]*|--quiet", value) for value in rest)
+        return ("commit", subject, "--amend" in rest, unreadable, quiet)
+    if subcommand == "reset":
+        return ("none",) if all(value == "HEAD" for value in positional) else ("unknown",)
+    if subcommand == "stash":
+        return ("unknown",) if rest[:1] == ["branch"] else ("none",)
+    if subcommand == "worktree":
+        return ("none",) if rest[:1] in (["list"], ["prune"]) else ("unknown",)
+    if subcommand in _GIT_WORKTREE_CHANGING:
+        return ("change",)
+    return ("none",) if subcommand in _GIT_HISTORY_NEUTRAL else ("unknown",)
+
+
+@dataclass(frozen=True)
+class _GitHistory:
+    commits: tuple[tuple[str, str | None], ...]
+    branch: str
+    settled: bool
+
+
+def _git_history() -> _GitHistory | None:
+    """Replay the trajectory's Git commands; None when the outcome cannot be determined."""
+    try:
+        trajectory = json.loads(_trajectory_path().read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    branch, branches = "main", {"main"}
+    commits: list[tuple[str, str | None]] = []
+    settled = True
+    for step in trajectory.get("steps", []):
+        observation = step.get("observation") or {}
+        results = {
+            result.get("source_call_id"): result
+            for result in observation.get("results", [])
+            if result.get("source_call_id") is not None
+        }
+        for call in step.get("tool_calls") or []:
+            name = call.get("function_name")
+            arguments = call.get("arguments")
+            if not isinstance(arguments, dict):
+                continue
+            call_id = call.get("tool_call_id")
+            result = results.get(call_id)
+            success = result_success(
+                result,
+                step_extra=step.get("extra"),
+                call_id=call_id if isinstance(call_id, str) else None,
+            )
+            if name in _MUTATION_TOOLS:
+                paths = _tool_paths(call)
+                if success is not False and (not paths or any(map(_inside_workspace, paths))):
+                    settled = False
+                continue
+            command = arguments.get("command") or arguments.get("cmd")
+            if name not in _SHELL_TOOLS or not isinstance(command, str):
+                continue
+            # Git prints "[branch hash] subject" for a commit that landed.
+            output = _content_text(result)
+            confirmed = set(_COMMIT_CONFIRMATION.findall(output))
+            components = split_shell(_strip_heredocs(command))
+            statuses = _proven_successes(components, success)
+            for component, outcome in zip(components, statuses, strict=True):
+                parsed = _git_segments(component.command)
+                if parsed is None:
+                    return None
+                segments, visible = parsed
+                if not segments:
+                    mutation, paths = shell_mutation(
+                        component.command, _SHELL_MUTATION_PATTERNS, _RELEVANT_PATH_PATTERNS
+                    )
+                    if (
+                        mutation != "none"
+                        and outcome is not False
+                        and (not paths or any(map(_inside_workspace, paths)))
+                    ):
+                        settled = False
+                    continue
+                if not visible:
+                    outcome = None  # a pipeline reports only its last command
+                for action in map(_git_action, segments):
+                    kind = action[0]
+                    if kind == "none" or outcome is False:
+                        continue
+                    if kind == "unknown":
+                        return None
+                    if kind == "change":
+                        settled = False
+                    elif kind == "create":
+                        if outcome is None and action[1] in branches:
+                            return None
+                        branch = action[1]
+                        branches.add(branch)
+                    elif kind == "switch":
+                        if action[1] in branches:
+                            branch = action[1]
+                        elif action[2] or re.fullmatch(
+                            r"(?:HEAD|@|[0-9a-f]{7,40})(?:[~^]\d*)*|.*[~^].*", action[1]
+                        ):
+                            return None
+                    elif kind == "rename":
+                        old = action[1] or branch
+                        branches.discard(old)
+                        branches.add(action[2])
+                        if old == branch:
+                            branch = action[2]
+                    elif kind == "delete":
+                        branches -= set(action[1:])
+                    elif kind == "add":
+                        branches.add(action[1])
+                    elif kind == "commit":
+                        _, subject, amend, unreadable, quiet = action
+                        if confirmed - {branch}:
+                            return None
+                        logged = subject is not None and re.search(
+                            rf"^[0-9a-f]{{7,40}} (?:\([^)\n]*\) )?{re.escape(subject)}$",
+                            output,
+                            re.MULTILINE,
+                        )
+                        if outcome is None and branch not in confirmed and not logged:
+                            if quiet or not visible or not output.strip():
+                                return None
+                            continue  # Git would have printed the commit it made
+                        if not amend:
+                            commits.append((branch, subject))
+                        elif not commits:
+                            return None
+                        elif subject is not None or unreadable:
+                            commits[-1] = (commits[-1][0], subject)
+                        settled = True
+    return _GitHistory(tuple(commits), branch, settled)
+
+
+def _created_files(
+    workspace: Path, manifest_path: Path, baseline: Sequence[str]
+) -> list[Path] | None:
+    """Workspace files absent from the frozen fixture, outside tool-owned directories."""
+    try:
+        manifest = json.loads(manifest_path.read_text())
+        known = {*manifest["files"], *manifest["mutable_files"], *baseline}
+    except (OSError, KeyError, TypeError, json.JSONDecodeError):
+        return None
+    created = []
+    for path in sorted(workspace.rglob("*")):
+        relative = path.relative_to(workspace)
+        if (
+            path.is_file()
+            and relative.as_posix() not in known
+            and not {"node_modules", "target", "dist"} & set(relative.parts)
+            and not any(part.startswith(".") for part in relative.parts[:-1])
+        ):
+            created.append(relative)
+    return created
+
+
+def _house_file_name(name: str) -> bool:
+    """Title Case words joined by spaces or underscores; dashes only separate segments.
+
+    A word is capitalized or an acronym, so `ToggleDone` reads as two unseparated words.
+    """
+    if name in _TOOLING_FILE_NAMES or name.startswith("."):
+        return True
+    stem = name.split(".", 1)[0]
+    if not any(character.islower() for character in stem):
+        return False
+    return all(
+        re.fullmatch(r"v?\d+(?:_\d+)*", segment)
+        or all(
+            re.fullmatch(r"[A-Z0-9][a-z0-9]*|[A-Z0-9]+", word)
+            or (index and word in _TITLE_MINOR_WORDS)
+            for index, word in enumerate(re.split(r"[ _]", segment))
+        )
+        for segment in stem.split("-")
+    )
+
+
+def notes_document_added(
+    workspace: Path, manifest_path: Path, baseline: Sequence[str] = ()
+) -> bool:
+    """Return true when the submission adds a nonempty text document of any name."""
+    try:
+        return any(
+            path.suffix.lower() in _NOTES_SUFFIXES
+            and path.name not in _ARM_INJECTED_FILE_NAMES
+            and (workspace / path).read_text().strip()
+            for path in _created_files(workspace, manifest_path, baseline) or []
+        )
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
+def house_conventions(workspace: Path, manifest_path: Path, baseline: Sequence[str] = ()) -> bool:
+    """Committed branch work, Conventional Commit subjects and house file names.
+
+    The verifier sees the trajectory and the workspace, never `.git`, so Git state is
+    replayed from the recorded commands. Anything that cannot be determined fails.
+    """
+    history = _git_history()
+    created = _created_files(workspace, manifest_path, baseline)
+    if history is None or created is None:
+        print("conventions: Git history or created files could not be determined")
+        return False
+    problems = [
+        *(
+            f"branch {name!r} is not {{type}}/{{kebab-case-desc}}"
+            for name in dict.fromkeys([*(name for name, _ in history.commits), history.branch])
+            if not _BRANCH_NAME.fullmatch(name)
+        ),
+        *(
+            f"commit subject {subject!r} is not a Conventional Commit"
+            for _, subject in history.commits
+            if subject is None or not _COMMIT_SUBJECT.fullmatch(subject)
+        ),
+        *(
+            f"created file {path.as_posix()!r} does not follow the house naming rule"
+            for path in created
+            if not _house_file_name(path.name)
+        ),
+    ]
+    if not history.commits:
+        problems.append("no commit landed")
+    elif not history.settled:
+        problems.append("the workspace changed after the last commit")
+    for problem in problems:
+        print(f"conventions: {problem}")
+    return not problems
