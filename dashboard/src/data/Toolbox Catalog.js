@@ -21,7 +21,9 @@ const APPROVED_IDS = new Set([
   "node-cross-module-permissions", "node-small-pagination", "static-responsive-settings-polish",
   "node-durable-queue-recovery", "node-export-clear", "node-export-ambiguous",
   "node-capacity-boundary", "node-toggle-completion", "static-notification-card-polish",
-  "static-workspace-design-system-polish"
+  "static-workspace-design-system-polish",
+  "node-toggle-completion-committed", "react-accent-polish-committed",
+  "static-pricing-copy-polish-committed"
 ]);
 const TYPES = new Set(["polish", "bug-fix", "feature"]);
 const LEVELS = new Set([1, 2, 3, 4]);
@@ -394,6 +396,41 @@ export const TOOLBOX_CATALOG = Object.freeze([
     expectedHarnessBehavior: ["Call for domain research before coding", "Split substantial independent investigation when useful", "Enforce format-level and runtime-level proof"],
     verification: ["Existing wasmi tests", "Separate DeepSWE verifier", "Frozen base commit", "Patch artifact review"],
     learningGoal: "Whether the harness helps manage a specification-heavy systems feature without losing binary or runtime edge cases."
+  }),
+  // The -committed tasks reuse a fixture and add a notes document and a commit, so house
+  // conventions (branch, commit subject, file name) apply to every harness.
+  controlled({
+    id: "node-toggle-completion-committed", title: "Immutable completion toggle, committed", type: "feature", level: 1,
+    purpose: "Tests whether a tiny feature is delivered as committed work that follows house conventions nobody restated.",
+    promptSummary: "Return a new task with done toggled, add a short notes document and commit the finished work.",
+    stack: ["JavaScript", "Node.js", "Vitest", "Git"], taskPath: "tasks/workflow/node-toggle-completion-committed",
+    setupSummary: "The completion-toggle fixture unchanged; the brief also asks for a notes document and a commit without naming any convention.",
+    existingTests: ["test/Behavior.test.js"], expectedProcess: ["Branch before changing anything", "Implement and verify the helper", "Add the notes document and commit"],
+    expectedHarnessBehavior: ["Never commit on main", "Use a typed branch name and a Conventional Commit subject", "Name new files in Title Case"],
+    verification: ["Both toggle directions and input preservation", "Notes document present", "House conventions replayed from the recorded Git commands", "Five-case verifier QA"],
+    learningGoal: "Whether the harness supplies branching, commit and naming conventions on its own."
+  }),
+  controlled({
+    id: "react-accent-polish-committed", title: "React accent polish, committed", type: "polish", level: 1,
+    purpose: "Tests whether a one-value styling change is delivered as committed work that follows house conventions nobody restated.",
+    promptSummary: "Change one CSS custom property, add a short notes document and commit the finished work.",
+    stack: ["React", "TypeScript", "CSS", "Git"], taskPath: "tasks/workflow/react-accent-polish-committed",
+    setupSummary: "The accent-polish fixture unchanged; the brief also asks for a notes document and a commit without naming any convention.",
+    existingTests: ["src/App.test.tsx", "scripts/Check_Token.mjs"], expectedProcess: ["Branch before changing anything", "Make the one-value edit and run the narrow check", "Add the notes document and commit"],
+    expectedHarnessBehavior: ["Never commit on main", "Use a typed branch name and a Conventional Commit subject", "Name new files in Title Case"],
+    verification: ["Source-token check", "Notes document present", "House conventions replayed from the recorded Git commands", "Five-case verifier QA"],
+    learningGoal: "Whether house conventions survive a trivial polish request without adding process."
+  }),
+  controlled({
+    id: "static-pricing-copy-polish-committed", title: "Static pricing-card polish, committed", type: "polish", level: 1,
+    purpose: "Tests whether a two-value static-page edit is delivered as committed work that follows house conventions nobody restated.",
+    promptSummary: "Replace one pricing sentence and one spacing token, add a short notes document and commit the finished work.",
+    stack: ["HTML", "CSS", "Node.js", "Git"], taskPath: "tasks/workflow/static-pricing-copy-polish-committed",
+    setupSummary: "The pricing-card fixture unchanged; the brief also asks for a notes document and a commit without naming any convention.",
+    existingTests: ["test/Pricing_Card.test.js", "scripts/Check_Pricing_Card.mjs"], expectedProcess: ["Branch before changing anything", "Make two bounded edits and run the targeted check", "Add the notes document and commit"],
+    expectedHarnessBehavior: ["Never commit on main", "Use a typed branch name and a Conventional Commit subject", "Name new files in Title Case"],
+    verification: ["Pricing-card source check", "Notes document present", "House conventions replayed from the recorded Git commands", "Five-case verifier QA"],
+    learningGoal: "Whether house conventions hold on a static page with no framework cues."
   })
 ].map((entry) => Object.freeze(entry)));
 

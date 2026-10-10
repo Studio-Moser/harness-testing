@@ -610,8 +610,12 @@ test("the read turns the numbers into pros, cons and one recommendation", () => 
     assert.match(root.textContent, /The readUse Nothing v1/);
     assert.match(root.textContent, /Results by task/);
     assert.match(root.textContent, /\$0\.10 · 30s · 100% quality/);
-    assert.doesNotMatch(root.textContent, /Failed|% correct/);
+    assert.doesNotMatch(root.textContent, /Failed|% correct|Conventions broken/);
     assert.match(root.textContent, /Difficulty 1 · Polish/);
+    source.experiment.trials[0].conventions = false;
+    const broken = renderResults({tests: TOOLBOX_CATALOG, harnesses: HARNESS_CATALOG, reports: [source]});
+    assert.match(broken.textContent, /Conventions broken/);
+    assert.doesNotMatch(broken.textContent, /Failed|% correct/);
     assert.doesNotMatch(root.textContent, /Decision-grade ranking|Quality trade-offs|Evidence cohort/);
   } finally {globalThis.document = previousDocument;}
 });

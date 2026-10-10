@@ -122,6 +122,21 @@
       "comparison",
       4,
       "polish"
+    ],
+    "node-toggle-completion-committed": [
+      "comparison",
+      1,
+      "feature"
+    ],
+    "react-accent-polish-committed": [
+      "comparison",
+      1,
+      "polish"
+    ],
+    "static-pricing-copy-polish-committed": [
+      "comparison",
+      1,
+      "polish"
     ]
   },
   "matched_blocks": {

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1",
+  "files": {
+    ".dockerignore": "sha256:16d30e4462189fb14dd611bdb708c510630c576a1f35b9383e89a4352da36c97",
+    "Dockerfile": "sha256:889b1bc5c21b7eb0adb1f3698a42f1067a3a7c2955086c7bee6617d8f6665a51",
+    "README.md": "sha256:f7c9e6814871961975e42de78d7bfca97dad1fc808c532d0767c4a95bc118942",
+    "package-lock.json": "sha256:8ee72ee9158157a2dcb3b6571d98bacdfaaf7ea2ce628c4fa3f386506f9e5e32",
+    "package.json": "sha256:28e38535afc05a10c6469916b1cab68124ad34b8acd46b8332ef577671e08f39",
+    "test/Behavior.test.js": "sha256:086c8bde0a1009cbb429d05af126f871c2990b857700781029a8346ed1d378dd"
+  },
+  "mutable_files": {}
+}

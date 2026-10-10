@@ -18,7 +18,7 @@ const repositoryRoot = resolve(here, "../..");
 const execFileAsync = promisify(execFile);
 
 const EXPECTED_CELLS = {
-  "polish:1": 2,
+  "polish:1": 4,
   "polish:2": 1,
   "polish:3": 3,
   "polish:4": 1,
@@ -26,15 +26,15 @@ const EXPECTED_CELLS = {
   "bug-fix:2": 3,
   "bug-fix:3": 1,
   "bug-fix:4": 2,
-  "feature:1": 1,
+  "feature:1": 2,
   "feature:2": 3,
   "feature:3": 2,
   "feature:4": 4
 };
 
-test("the catalog exposes the accepted 24-test coverage contract", () => {
+test("the catalog exposes the accepted 27-test coverage contract", () => {
   validateCatalog(TOOLBOX_CATALOG);
-  assert.equal(TOOLBOX_CATALOG.length, 24);
+  assert.equal(TOOLBOX_CATALOG.length, 27);
 
   for (const [cell, count] of Object.entries(EXPECTED_CELLS)) {
     const [type, level] = cell.split(":");
@@ -51,7 +51,7 @@ test("the catalog exposes the accepted 24-test coverage contract", () => {
 test("catalog validation rejects duplicate IDs and unsupported classifications", () => {
   assert.throws(
     () => validateCatalog([...TOOLBOX_CATALOG, TOOLBOX_CATALOG[0]]),
-    /exactly 24 entries/
+    /exactly 27 entries/
   );
 
   const invalidType = TOOLBOX_CATALOG.map((entry, index) =>
@@ -161,5 +161,5 @@ test("the Observable loader resolves the repository from its own location", asyn
   const output = JSON.parse(stdout);
 
   assert.equal(output.schemaVersion, 2);
-  assert.equal(output.tests.length, 24);
+  assert.equal(output.tests.length, 27);
 });

@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 import subprocess
 import sys
 import textwrap
@@ -277,3 +278,55 @@ def test_qa_case_trajectories_are_valid_atif_and_only_oracle_has_one_final_gate(
     ]
     assert commands.count("npm run gate") == 1
     assert all(not step.tool_calls for step in nop.steps)
+
+
+_COMMITTED_TASKS = (
+    "node-toggle-completion-committed",
+    "react-accent-polish-committed",
+    "static-pricing-copy-polish-committed",
+)
+
+
+def test_conventions_are_a_qa_dimension_only_for_tasks_that_score_them(tmp_path):
+    assert QA._dimensions(REPOSITORY_ROOT, TASK_ID) == ("reward", "workflow", "efficiency")
+    assert set(QA._case_spec(REPOSITORY_ROOT, TASK_ID, "oracle")["expected"]) == {
+        "reward",
+        "workflow",
+        "efficiency",
+    }
+    for task_id in _COMMITTED_TASKS:
+        assert QA._dimensions(REPOSITORY_ROOT, task_id)[-1] == "conventions"
+        expected = [QA._case_spec(REPOSITORY_ROOT, task_id, case)["expected"] for case in QA_CASES]
+        assert expected[0] == {"reward": 1, "workflow": 1, "efficiency": 1, "conventions": 1}
+        assert expected[1]["conventions"] == 0
+        # Functionally correct work that breaks a convention must not pass conventions.
+        assert any(row["reward"] == 1 and row["conventions"] == 0 for row in expected)
+
+    reward = tmp_path / "trial" / "verifier" / "reward.json"
+    reward.parent.mkdir(parents=True)
+    reward.write_text('{"reward": 1, "workflow": 1, "efficiency": 1, "conventions": 0}')
+    assert QA._score_document(tmp_path)[0] == {"reward": 1.0, "workflow": 1.0, "efficiency": 1.0}
+    scores, _ = QA._score_document(tmp_path, QA._dimensions(REPOSITORY_ROOT, _COMMITTED_TASKS[0]))
+    assert scores["conventions"] == 0.0
+    reward.write_text('{"reward": 1, "workflow": 1, "efficiency": 1}')
+    with pytest.raises(KeyError):
+        QA._score_document(tmp_path, QA._dimensions(REPOSITORY_ROOT, _COMMITTED_TASKS[0]))
+
+
+@pytest.mark.parametrize("task_id", _COMMITTED_TASKS)
+def test_committed_task_instructions_never_state_a_convention(task_id: str):
+    task_root = REPOSITORY_ROOT / "tasks" / "workflow" / task_id
+    policy = json.loads((task_root / "Scripted User.json").read_text())
+    texts = [
+        (task_root / "instruction.md").read_text(),
+        (task_root / "Comparison Instruction.md").read_text(),
+        *policy["facts"].values(),
+    ]
+    for text in texts[:2]:
+        assert "notes document" in text and "commit the finished work" in text
+    hint = re.compile(
+        r"conventional|title case|kebab|feat[/:(]|fix[/:(]|style[/:(]|chore[/:(]|"
+        r"\b[A-Z][a-z]+_[A-Z][a-z]+\.md|checkout -b|never commit|not .{0,20}\bmain\b",
+        re.IGNORECASE,
+    )
+    assert not [text for text in texts if hint.search(text)]

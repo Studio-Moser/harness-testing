@@ -1,0 +1,14 @@
+:root {
+  --pricing-card-gap: 1rem;
+  color: #172033;
+  font-family: system-ui, sans-serif;
+}
+
+.pricing-card {
+  display: grid;
+  gap: var(--pricing-card-gap);
+  max-width: 28rem;
+  padding: 2rem;
+  border: 1px solid #d8deea;
+  border-radius: 1rem;
+}
