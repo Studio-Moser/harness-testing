@@ -6,7 +6,7 @@ import pytest
 from harness_testing.Contenders import materialize_contender, validate_contender_bundle
 
 
-def source_repository(path):
+def source_repository(path, profile=False):
     for plugin in ("harness", "pm"):
         root = path / "plugins" / plugin
         (root / ".claude-plugin").mkdir(parents=True)
@@ -16,6 +16,17 @@ def source_repository(path):
         (root / "skills/execute").mkdir(parents=True)
         (root / "skills/execute/SKILL.md").write_text(
             f"---\nname: {plugin}-execute\ndescription: fixture\n---\nDo the task.\n"
+        )
+    if profile:
+        harness = path / "plugins/harness"
+        (harness / "profile").mkdir()
+        (harness / "profile/Global Instructions.md").write_text("# Rules\n\nShipped rule.\n")
+        (harness / "profile/House Style.md").write_text("# Style\n\nSay less.\n")
+        (harness / "scripts").mkdir()
+        (harness / "scripts/render-global-instructions.sh").write_text(
+            'set -eu; mkdir -p "$1/claude"; here="$(cd "$(dirname "$0")/.." && pwd)"; '
+            'cat "$here/profile/Global Instructions.md" "$here/profile/House Style.md" '
+            '> "$1/claude/CLAUDE.md"\n'
         )
     (path / ".claude-plugin").mkdir()
     (path / ".claude-plugin/marketplace.json").write_text(
@@ -129,3 +140,17 @@ def test_reviewed_rubric_accepts_numeric_taste_threshold(tmp_path):
     )
     path.write_text(content)
     assert _rubric_bytes({"rubric": {"mode": "enabled", "path": str(path)}}) == content.encode()
+
+
+def test_a_collection_that_ships_the_profile_supplies_global_instructions(tmp_path):
+    plain, shipped = tmp_path / "plain", tmp_path / "shipped"
+    without, _ = materialize_contender(
+        tmp_path, "claude", definition(plain, source_repository(plain)), native_cli=False
+    )
+    assert "Shipped rule." not in (without.path / "project/CLAUDE.md").read_text()
+    bundle, _ = materialize_contender(
+        tmp_path, "codex", definition(shipped, source_repository(shipped, profile=True)),
+        native_cli=False,
+    )
+    text = (bundle.path / "project/AGENTS.md").read_text()
+    assert text.index("Shipped rule.") < text.index("Say less.")
