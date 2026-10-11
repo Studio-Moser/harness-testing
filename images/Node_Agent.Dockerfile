@@ -21,7 +21,7 @@ RUN python3 --version && gh --version && yq --version
 
 RUN npm install --global --no-audit --no-fund \
         @anthropic-ai/claude-code@2.1.281 \
-        @openai/codex@0.153.4 \
+        @openai/codex@0.162.1 \
     && claude --version \
     && codex --version
 

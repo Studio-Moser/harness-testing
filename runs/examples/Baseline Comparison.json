@@ -62,7 +62,7 @@
     "simulated_user": {
       "protocol": "semantic-user-v1",
       "provider": "codex",
-      "runtime_version": "0.153.4",
+      "runtime_version": "0.162.1",
       "model": "gpt-5.6-sol",
       "effort": "medium",
       "timeout_seconds": 90,
@@ -70,7 +70,7 @@
     },
     "kickoff": {
       "provider": "codex",
-      "runtime_version": "0.153.4",
+      "runtime_version": "0.162.1",
       "model": "gpt-6-astra",
       "effort": "medium"
     },
@@ -89,139 +89,139 @@
     "executor_inventory": [
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-6-astra",
         "effort": "low"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-6-astra",
         "effort": "medium"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-6-astra",
         "effort": "high"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-6-astra",
         "effort": "xhigh"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-6-astra",
         "effort": "max"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-6-astra",
         "effort": "ultra"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-sol",
         "effort": "low"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-sol",
         "effort": "medium"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-sol",
         "effort": "high"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-sol",
         "effort": "xhigh"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-sol",
         "effort": "max"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-sol",
         "effort": "ultra"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-terra",
         "effort": "low"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-terra",
         "effort": "medium"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-terra",
         "effort": "high"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-terra",
         "effort": "xhigh"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-terra",
         "effort": "max"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-terra",
         "effort": "ultra"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-luna",
         "effort": "low"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-luna",
         "effort": "medium"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-luna",
         "effort": "high"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-luna",
         "effort": "xhigh"
       },
       {
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-luna",
         "effort": "max"
       }

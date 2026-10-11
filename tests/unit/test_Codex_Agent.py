@@ -259,7 +259,7 @@ def test_codex_adapter_uses_recorded_root_session_instead_of_newest_child(
     agent = HarnessCodex(
         logs_dir=tmp_path,
         model_name="openai/gpt-5.6-sol",
-        version="0.153.4",
+        version="0.162.1",
     )
 
     trajectory = agent._convert_events_to_trajectory(newest_session_dir)
@@ -295,7 +295,7 @@ def test_codex_adapter_fails_closed_when_recorded_root_session_is_missing(
     agent = HarnessCodex(
         logs_dir=tmp_path,
         model_name="openai/gpt-5.6-sol",
-        version="0.153.4",
+        version="0.162.1",
     )
 
     assert agent._convert_events_to_trajectory(session_dir) is None
@@ -398,7 +398,7 @@ def test_native_cleanup_preserves_only_the_read_only_plugin_mount(
     agent = HarnessCodex(
         logs_dir=logs,
         model_name="openai/gpt-6-astra",
-        version="0.153.4",
+        version="0.162.1",
         conversation={
             "policy": {"schema_version": "1", "interaction_limit": 1, "facts": {}, "rules": []},
             "timeout_seconds": 1,
@@ -439,7 +439,7 @@ def test_native_cleanup_still_rejects_credential_removal_failure(tmp_path, monke
     agent = HarnessCodex(
         logs_dir=tmp_path,
         model_name="openai/gpt-6-astra",
-        version="0.153.4",
+        version="0.162.1",
         conversation={
             "policy": {"schema_version": "1", "interaction_limit": 1, "facts": {}, "rules": []},
             "timeout_seconds": 1,
@@ -490,7 +490,7 @@ def test_codex_gate_must_start_after_child_edit(
     root.write_text("".join(json.dumps(event) + "\n" for event in events))
     (sessions / "child.jsonl").write_text("".join(json.dumps(event) + "\n" for event in child))
     (tmp_path / "Trial_Evidence.json").write_text(json.dumps({"root_session_id": "session-1"}))
-    agent = HarnessCodex(logs_dir=tmp_path, model_name="openai/gpt-5.6-sol", version="0.153.4")
+    agent = HarnessCodex(logs_dir=tmp_path, model_name="openai/gpt-5.6-sol", version="0.162.1")
     trajectory = agent._convert_events_to_trajectory(sessions)
     assert trajectory is not None
     path = tmp_path / "trajectory.json"
@@ -519,7 +519,7 @@ def test_codex_rejects_incomplete_command_timing(tmp_path, duration):
         if item.get("type") == "CommandExecution":
             item["duration"] = duration
     path.write_text("".join(json.dumps(event) + "\n" for event in events))
-    agent = HarnessCodex(logs_dir=tmp_path, model_name="openai/gpt-5.6-sol", version="0.153.4")
+    agent = HarnessCodex(logs_dir=tmp_path, model_name="openai/gpt-5.6-sol", version="0.162.1")
     assert agent._convert_events_to_trajectory(sessions) is None
 
 
@@ -541,7 +541,7 @@ def test_codex_requires_every_recorded_descendant_transcript(tmp_path, missing):
     (tmp_path / "Trial_Evidence.json").write_text(
         json.dumps({"root_session_id": "session-1", "sessions": recorded})
     )
-    agent = HarnessCodex(logs_dir=tmp_path, model_name="openai/gpt-5.6-sol", version="0.153.4")
+    agent = HarnessCodex(logs_dir=tmp_path, model_name="openai/gpt-5.6-sol", version="0.162.1")
     trajectory = agent._convert_events_to_trajectory(sessions)
     if missing:
         assert trajectory is None

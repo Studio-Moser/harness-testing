@@ -462,7 +462,7 @@ def test_a_later_simulated_user_revision_is_disclosed_and_other_settings_still_m
     original["experiment"]["conditions"]["simulated_user"] = user
     later = _split(original, ["node-export-clear"], continuation_id="later")
     later["experiment"]["conditions"]["simulated_user"] = dict(
-        user, protocol_digest=digest("user-2")
+        user, protocol_digest=digest("user-2"), runtime_version="9.9.9"
     )
     lane = assemble_lane(plan, "comparison", [original, later])
     assert [m["simulated_user_revised"] for m in lane["members"]] == [False, True]

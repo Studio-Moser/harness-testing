@@ -68,7 +68,7 @@ def default_config():
     return {
         "protocol": "semantic-user-v1",
         "provider": "codex",
-        "runtime_version": "0.153.4",
+        "runtime_version": "0.162.1",
         "model": "gpt-5.6-sol",
         "effort": "medium",
         "timeout_seconds": 90,

@@ -36,7 +36,7 @@ def test_native_transport_forwards_validated_images_without_enabling_tools(
     from harness_testing import External_Codex, Native_Conversation, Simulated_User
     from harness_testing.Visual_Evidence import grading_inputs
 
-    settings = {"model": "gpt-6-astra", "effort": "high", "runtime_version": "0.153.4"}
+    settings = {"model": "gpt-6-astra", "effort": "high", "runtime_version": "0.162.1"}
     packet = grading_packet()
     (tmp_path / "auth.json").write_text(json.dumps({"auth_mode": "chatgpt"}))
     monkeypatch.setenv("CODEX_HOME", str(tmp_path))
@@ -48,7 +48,7 @@ def test_native_transport_forwards_validated_images_without_enabling_tools(
     def local(command, **kwargs):
         args = command[1:]
         output = {
-            ("--version",): "codex-cli 0.153.4",
+            ("--version",): "codex-cli 0.162.1",
             ("debug", "models", "--bundled"): json.dumps(catalog),
             ("features", "list"): "shell_tool stable true",
         }
@@ -354,7 +354,7 @@ def test_config_and_protocol_are_explicit_frozen_comparison_conditions():
     with pytest.raises(ValueError, match="protocol_changed"):
         validate_config(settings | {"protocol_digest": "sha256:" + "0" * 64})
     request = request_document()
-    request["conditions"]["kickoff"]["runtime_version"] = "0.153.4"
+    request["conditions"]["kickoff"]["runtime_version"] = "0.162.1"
     assert validate_experiment_request(request) == []  # Legacy remains supported.
     original = copy.deepcopy(request["conditions"])
     request["conditions"]["simulated_user"] = settings
