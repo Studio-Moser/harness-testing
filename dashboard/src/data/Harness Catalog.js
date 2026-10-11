@@ -222,6 +222,7 @@ export const HARNESS_CATALOG = Object.freeze([
     superpowers: false,
     startup: "The shipped Harness profile (global instructions and House Style) followed by the Harness baseline",
     identity: "sha256:02abeb67dab4afaea84fe521165923580f76f6379889d9c7ea6c8fbdeb9c728e",
+    extraIdentities: ["sha256:c14f7cd919b2e9ac55bb5a03e3f5b93878dfb9b403607ffaedfe3e84bd3cd70d"],
     changeSummary: "The global instructions and House Style ship with Harness as a profile, so the collection alone carries what v7 needed personal files for.",
     changeDetails: ["Builds the developer's global instructions from the shipped profile with the collection's own renderer", "Brings the file-naming rule into the shipped instructions", "Names branches by Conventional Commit type; the design plugin ships its subagents"],
     latest: true

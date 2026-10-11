@@ -1,0 +1,2749 @@
+{
+  "admission_estimate_usd": 147.168,
+  "completed_jobs": 9,
+  "completed_trials": 9,
+  "evidence": {
+    "limitations": [],
+    "review_state": "unreviewed"
+  },
+  "expected_jobs": 9,
+  "expected_trials": 9,
+  "experiment": {
+    "baseline_result_ids": [],
+    "change": {
+      "diff_digest": "sha256:9c7a7f5607876ecb3c213ca3633b626aea7a39d7045cb1315b9352f82138c25d",
+      "hypothesis": "Every harness completes the work; none of the three follows every convention, because none carries the file-naming rule.",
+      "rerun_reason": "New tasks: every harness in the GPT-6 Astra lane runs them once.",
+      "summary": "Add the three committed tasks that score house conventions to the GPT-6 Astra lane."
+    },
+    "code_review": {
+      "evaluation_cost_usd": 6.497218,
+      "plan_id": "sha256:9fa34412bfdc90a416d919f0b1d1aee6278e5a77276cce7e5028617cb10830e2",
+      "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+      "results_digest": "sha256:e6788f438eb5048b74d8140cb675a19945e0dd353817ea7a1419f7eedfaa367a",
+      "source_report_id": "sha256:33a5e3f3dc5cdc4a45d71ddd27d4d89eb4eb2258c2dcd6755d69822a9a9679df"
+    },
+    "comparison": {
+      "contenders": [
+        {
+          "attempted": 3,
+          "code_review": {
+            "completed": 3,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 2.092118,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 3,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 3,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 3,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 3,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "nothing",
+          "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "label": "Nothing",
+          "mean_cost_usd": 0.17986266666666664,
+          "mean_duration_seconds": 34.603768043661454,
+          "original_estimates": [
+            {
+              "cost_usd": 0.150306,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:f779b7ee154a1e01cab9b3104f268b71b8348bc7892a86e192967df9e18efca0"
+            },
+            {
+              "cost_usd": 0.18492999999999998,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:e99cb7b477ed259a0c4a6a9104f3cb393d944b17e6767c347ea831f7934e144d"
+            },
+            {
+              "cost_usd": 0.20435199999999998,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:060a5bf81731392261c4bf1f64b4dfb65ac91af5df1b5de106915db942a3aab1"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 3,
+          "success_fraction": {
+            "denominator": 3,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "node-toggle-completion-committed": 0,
+            "react-accent-polish-committed": 0,
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.539588,
+          "total_tokens": 265242,
+          "usage_complete": true
+        },
+        {
+          "attempted": 3,
+          "code_review": {
+            "completed": 3,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 2.20416,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 3,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 3,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 3,
+          "cost_per_success_usd": 0.94729,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 3,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": true,
+          "family": "studio-moser",
+          "id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+          "label": "Studio Moser v5 \u2014 full collection",
+          "mean_cost_usd": 0.31576333333333334,
+          "mean_duration_seconds": 37.052663322669105,
+          "original_estimates": [
+            {
+              "cost_usd": 0.244142,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:e484358fd25eed0977e81b97eb1c45f53779c7dc21f506d89e52f6f43912d10d"
+            },
+            {
+              "cost_usd": 0.219022,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:8ec1975a307d72971c17ae81184ceb3714c5856728526c25442d36c9fa1abfea"
+            },
+            {
+              "cost_usd": 0.484126,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:386c1b31899e47d536646eff44c1b243a02660bb7cf052ecc799919141144878"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 3,
+          "success_fraction": {
+            "denominator": 3,
+            "numerator": 1
+          },
+          "successes": 1,
+          "task_successes": {
+            "node-toggle-completion-committed": 0,
+            "react-accent-polish-committed": 0,
+            "static-pricing-copy-polish-committed": 1
+          },
+          "total_cost_usd": 0.94729,
+          "total_tokens": 381829,
+          "usage_complete": true
+        },
+        {
+          "attempted": 3,
+          "code_review": {
+            "completed": 3,
+            "confirmed": {
+              "P0": 0,
+              "P1": 0,
+              "P2": 0,
+              "P3": 0
+            },
+            "evaluation_cost_usd": 2.20094,
+            "internal_review": {
+              "fixed": null,
+              "found": null,
+              "recorded": 0,
+              "scheduled": 3,
+              "unresolved": null
+            },
+            "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+            "scheduled": 3,
+            "status": "completed",
+            "unconfirmed": 0
+          },
+          "completed": 3,
+          "cost_per_success_usd": null,
+          "counts": {
+            "agent_failed": 0,
+            "cancelled": 0,
+            "completed": 3,
+            "infrastructure_failure": 0,
+            "missing": 0,
+            "missing_grading": 0,
+            "pending": 0,
+            "task_definition_gap": 0,
+            "timeout": 0
+          },
+          "coverage_complete": true,
+          "eligible": false,
+          "family": "superpowers",
+          "id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "label": "Superpowers",
+          "mean_cost_usd": 0.3192253333333333,
+          "mean_duration_seconds": 39.40584154633689,
+          "original_estimates": [
+            {
+              "cost_usd": 0.416258,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:85269f47769460e0275da1e87c0cec19de8ff1f60a6d30fa900da5962c54a35a"
+            },
+            {
+              "cost_usd": 0.242786,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:78ed14a3c8b940c625233892958aca861266f50536587173794de156285ffd70"
+            },
+            {
+              "cost_usd": 0.298632,
+              "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+              "trial_id": "sha256:11881d9d96f7eb044065e065a69aec47a6b6413221006b9ba33216de8999f360"
+            }
+          ],
+          "passed_all": false,
+          "pricing_digest": "sha256:fb73c798ca5493e633a68b0094704284b70d4aecaee2ea40dc9a1b6e6fd51ebe",
+          "repetitions": 1,
+          "review_clean": true,
+          "reviewed": true,
+          "scheduled": 3,
+          "success_fraction": {
+            "denominator": 3,
+            "numerator": 0
+          },
+          "successes": 0,
+          "task_successes": {
+            "node-toggle-completion-committed": 0,
+            "react-accent-polish-committed": 0,
+            "static-pricing-copy-polish-committed": 0
+          },
+          "total_cost_usd": 0.957676,
+          "total_tokens": 392710,
+          "usage_complete": true
+        }
+      ],
+      "leaders": {
+        "observed_cost_ids": [
+          "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074"
+        ],
+        "observed_time_ids": [
+          "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074"
+        ]
+      },
+      "limitations": [
+        "This is an observed fixed-suite correctness judgment, not a universal reliability claim.",
+        "One attempt per task is the default minimum; one flaky trial can change the verdict.",
+        "Cost and time ratios are point estimates over per-task means; the advantage and noninferiority thresholds are product defaults, not research findings.",
+        "Review is advisory: a missing or incomplete review leaves the verdict provisional and flagged, unconfirmed reviewer claims are listed, and confirmed remaining defects disqualify.",
+        "Some tasks were solved by no contender; they cannot separate the contenders and are listed under unsolved_tasks."
+      ],
+      "pairs": [
+        {
+          "cost_difference_usd": -0.1359006666666667,
+          "cost_ratio": 0.5696122623483832,
+          "left_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "left_report_id": null,
+          "right_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+          "right_report_id": null,
+          "time_difference_seconds": -2.448895279007651,
+          "time_ratio": 0.9339077124448056
+        },
+        {
+          "cost_difference_usd": -0.13936266666666666,
+          "cost_ratio": 0.563434815114924,
+          "left_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+          "left_report_id": null,
+          "right_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "right_report_id": null,
+          "time_difference_seconds": -4.802073502675434,
+          "time_ratio": 0.878138029433308
+        },
+        {
+          "cost_difference_usd": -0.003461999999999965,
+          "cost_ratio": 0.989154996052945,
+          "left_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+          "left_report_id": null,
+          "right_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+          "right_report_id": null,
+          "time_difference_seconds": -2.3531782236677827,
+          "time_ratio": 0.940283518094628
+        }
+      ],
+      "policy_digest": "sha256:c045a5632bcf5a9b7d30c42a2c266b4101e8b5d286d77bd92e5c608007f9b2b8",
+      "policy_id": "benchmark-readiness-v2",
+      "provisional": false,
+      "reasons": [
+        "quality_ineligible",
+        "sole_quality_eligible"
+      ],
+      "status": "recommended",
+      "summary": "One contender reached the best observed correctness with no confirmed remaining defects.",
+      "unsolved_tasks": [
+        "node-toggle-completion-committed",
+        "react-accent-polish-committed"
+      ],
+      "winner_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074"
+    },
+    "conditions": {
+      "accounting_policy": "agent-tree-v1",
+      "adapter_digest": "sha256:859d11c45fc7059644331f26ca4354dc39e046aab24d53c4ab55b637d87e770f",
+      "attempts": 1,
+      "authority_digest": "sha256:b9605accecb65598d57ed81ad28bd56e7fda5690a1ecb50fd9729530f7b8ad50",
+      "concurrency": 1,
+      "decision_policy": "benchmark-readiness-v2",
+      "evaluator_digest": "sha256:72c2f62b5259c61dda2160de26265d64ce7ec1519c4beae8c316ee5dff87407b",
+      "executor_inventory": [
+        {
+          "effort": "low",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "xhigh",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "ultra",
+          "model": "gpt-6-astra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "xhigh",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "ultra",
+          "model": "gpt-5.6-sol",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "xhigh",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "ultra",
+          "model": "gpt-5.6-terra",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "low",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "medium",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "high",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "xhigh",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        },
+        {
+          "effort": "max",
+          "model": "gpt-5.6-luna",
+          "provider": "codex",
+          "runtime_version": "0.153.4"
+        }
+      ],
+      "image_digests": {
+        "node": "sha256:d2f444b5b028b4ce66f43e8ef90d1dd0ca5f59e99ab337073e3882cb0567500b",
+        "verifier": "sha256:a981c3f34d1daab6ad1eb7f7c15b5c053bf8f54cd79075fc30ffa0c3e8cb7b92"
+      },
+      "kickoff": {
+        "effort": "medium",
+        "model": "gpt-6-astra",
+        "provider": "codex",
+        "runtime_version": "0.153.4"
+      },
+      "provider_recovery_seconds": 600,
+      "resources": {
+        "cpus": 2,
+        "memory_mb": 4096
+      },
+      "retry_policy": "none",
+      "scripted_user_digest": "sha256:150df31f77e75288a1fe8361c2a56bf0d0db00a76b1321c0345b500154f7ae4a",
+      "simulated_user": {
+        "effort": "medium",
+        "max_context_chars": 64000,
+        "model": "gpt-5.6-sol",
+        "protocol": "semantic-user-v1",
+        "protocol_digest": "sha256:8d56d6a26e2668b83d388c78e988062eeadf3959c9ff3612a34966feec800f92",
+        "provider": "codex",
+        "runtime_version": "0.153.4",
+        "timeout_seconds": 90
+      },
+      "task_digests": {
+        "node-toggle-completion-committed": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+        "react-accent-polish-committed": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+        "static-pricing-copy-polish-committed": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df"
+      },
+      "task_ids": [
+        "node-toggle-completion-committed",
+        "react-accent-polish-committed",
+        "static-pricing-copy-polish-committed"
+      ],
+      "task_variant": "comparison",
+      "timeout_seconds": 1800
+    },
+    "contenders": [
+      {
+        "family": "nothing",
+        "id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "inventory_digest": "sha256:0b513961955003886d251c9091e61f5dc648adbb93b431b1a951b08e0f6201ac",
+        "label": "Nothing",
+        "rubric_digest": null,
+        "source_commits": []
+      },
+      {
+        "family": "superpowers",
+        "id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "inventory_digest": "sha256:a20271abbad23875b570a7b86b351cb7fac7460e3f1475a92a3e842e49572ae9",
+        "label": "Superpowers",
+        "rubric_digest": null,
+        "source_commits": [
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      },
+      {
+        "family": "studio-moser",
+        "id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+        "inventory_digest": "sha256:e8bb617fbf429333e799ac4dcb6bd17d21ccbd94d71c7424a3cdb4622c3c1c25",
+        "label": "Studio Moser v5 \u2014 full collection",
+        "rubric_digest": "sha256:e99803bcee0c8823be04ddcf01a3506e39076bd1ce11dfdc8c1c7c0543ea557b",
+        "source_commits": [
+          "3fb970f32d2901b82e3d17c35dbe192604fc7762",
+          "b36e0829c6d0140e93cfef2ca599b1b07d4a7797"
+        ]
+      }
+    ],
+    "first_version": true,
+    "label": "GPT-6 Astra Medium \u2014 convention tasks",
+    "predecessor_result_ids": [],
+    "purpose": "diagnostic",
+    "request_id": "sha256:4b9425e14c3a8fe96f539f0a511a9b3c3c79ae0ba2366e529b66f20452f72398",
+    "supersedes_report_id": "sha256:33a5e3f3dc5cdc4a45d71ddd27d4d89eb4eb2258c2dcd6755d69822a9a9679df",
+    "trials": [
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.481078,
+          "duration_seconds": 7.832,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 11648,
+              "cache_write_tokens": 0,
+              "input_tokens": 46583,
+              "model": "gpt-6-astra",
+              "output_tokens": 72,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:dd5352be9e3e7d6565250009b6724eb0ff99a75cfdb079b26fefe994dba6f2a5",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "atomic_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:45b2777b7763182d191c02aef0996c60ea63402d81d0b863324638e4cc3e27e5",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 2,
+            "assistant_tokens": 99,
+            "assistant_words": 72,
+            "average_progress_words": 23.0,
+            "average_update_gap_seconds": 25.197,
+            "bullet_count": 0,
+            "communication_to_model_output_ratio": 0.134328,
+            "final_answer_tokens": 68,
+            "final_answer_words": 49,
+            "formatting_density": 0.0694,
+            "heading_count": 0,
+            "maximum_progress_words": 23,
+            "maximum_update_gap_seconds": 25.197,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 1,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 248,
+            "total_visible_words": 186,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 1.0,
+            "violations": []
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app`. Implement toggleDone(task) in src/Completion.js. Return a new object with done toggled and every other property preserved. Never mutate the input. The input is a task object whose done property is boolean. No persistence, UI, dependencies, or additional validation is needed.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing tests, package metadata and build configuration. You may add a separate regression test. Complete the local task; do not publish or deploy.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll check the repository, implement `toggleDone`, add a short notes document, and verify and commit the change without modifying existing tests or configuration.",
+              "elapsed_seconds": 5.129,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "Implemented `toggleDone` to return a new object with `done` toggled and other properties preserved, without mutating the input.\n\nAdded `NOTES.md` and separate regression tests. All 3 tests pass. Existing tests, package metadata, and build configuration remain unchanged.\n\nCommitted as `3aa8a65`. Working tree is clean. Nothing published or deployed.",
+              "elapsed_seconds": 30.326,
+              "kind": "final",
+              "ordinal": 3,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.150306,
+        "duration_seconds": 33.16860272399208,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 70016,
+            "cache_write_tokens": 0,
+            "input_tokens": 4344,
+            "model": "gpt-6-astra",
+            "output_tokens": 737,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 70016,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 4344,
+            "model": "gpt-6-astra",
+            "output_tokens": 737,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 1,
+          "cost_usd": 0.00848,
+          "duration_seconds": 2.674332876005792,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 1920,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 40,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "node-toggle-completion-committed",
+        "trial_id": "sha256:f779b7ee154a1e01cab9b3104f268b71b8348bc7892a86e192967df9e18efca0",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.58519,
+          "duration_seconds": 8.037,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 58269,
+              "model": "gpt-6-astra",
+              "output_tokens": 50,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:558604839dca44b4e96b991ce2668eec944f8df137c047c93340d195fd951730",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "atomic_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:45b2777b7763182d191c02aef0996c60ea63402d81d0b863324638e4cc3e27e5",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 4,
+            "assistant_tokens": 188,
+            "assistant_words": 132,
+            "average_progress_words": 32.0,
+            "average_update_gap_seconds": 13.163,
+            "bullet_count": 5,
+            "communication_to_model_output_ratio": 0.163194,
+            "final_answer_tokens": 60,
+            "final_answer_words": 36,
+            "formatting_density": 0.0682,
+            "heading_count": 0,
+            "maximum_progress_words": 43,
+            "maximum_update_gap_seconds": 21.422,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 3,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 1,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 337,
+            "total_visible_words": 246,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 3,
+            "useful_progress_update_rate": 1.0,
+            "violations": [
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 4
+              },
+              {
+                "detail": "Sentence repeats earlier text",
+                "kind": "repeated_sentence",
+                "ordinal": 5
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app`. Implement toggleDone(task) in src/Completion.js. Return a new object with done toggled and every other property preserved. Never mutate the input. The input is a task object whose done property is boolean. No persistence, UI, dependencies, or additional validation is needed.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing tests, package metadata and build configuration. You may add a separate regression test. Complete the local task; do not publish or deploy.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll inspect the repository, implement the immutable toggle, add a short notes document, verify the change, and commit it. Existing test files will remain unchanged.",
+              "elapsed_seconds": 4.845,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "I\u2019m using the brainstorming and verification skills for this bounded change. Your request defines the behavior fully: copy the task\u2019s properties into a new object and invert `done`. I\u2019ll add a separate regression test for both toggle directions, property preservation, and input immutability.",
+              "elapsed_seconds": 18.149,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "All 3 tests pass, including the new regression cases. The existing test file, package metadata, and build configuration are unchanged. I\u2019m committing the implementation, notes, and regression test.",
+              "elapsed_seconds": 39.571,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "Committed as `3352721`.\n\n- Implemented immutable `toggleDone(task)`, preserving other properties.\n- Added `NOTES.md` and separate regression tests.\n- All 3 tests pass.\n- Existing tests, package metadata, and build configuration unchanged.\n- Working tree clean; nothing published or deployed.",
+              "elapsed_seconds": 44.334,
+              "kind": "final",
+              "ordinal": 5,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.416258,
+        "duration_seconds": 47.28618543900666,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 146048,
+            "cache_write_tokens": 0,
+            "input_tokens": 21261,
+            "model": "gpt-6-astra",
+            "output_tokens": 1152,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 146048,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 21261,
+            "model": "gpt-6-astra",
+            "output_tokens": 1152,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 1,
+          "cost_usd": 0.008508,
+          "duration_seconds": 2.765774710002006,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 2032,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 19,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "node-toggle-completion-committed",
+        "trial_id": "sha256:85269f47769460e0275da1e87c0cec19de8ff1f60a6d30fa900da5962c54a35a",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.58746,
+          "duration_seconds": 8.22,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 58461,
+              "model": "gpt-6-astra",
+              "output_tokens": 57,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:15b1a03a30a6fa2d0882a59d6c096ccd286a2b05ca0ce0767b76f8522b2fa04b",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "atomic_feature",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:45b2777b7763182d191c02aef0996c60ea63402d81d0b863324638e4cc3e27e5",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 169,
+            "assistant_words": 112,
+            "average_progress_words": 34.0,
+            "average_update_gap_seconds": 14.484,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.167161,
+            "final_answer_tokens": 75,
+            "final_answer_words": 44,
+            "formatting_density": 0.0982,
+            "heading_count": 0,
+            "maximum_progress_words": 44,
+            "maximum_update_gap_seconds": 23.267,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 318,
+            "total_visible_words": 226,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 2,
+            "useful_progress_update_rate": 1.0,
+            "violations": [
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app`. Implement toggleDone(task) in src/Completion.js. Return a new object with done toggled and every other property preserved. Never mutate the input. The input is a task object whose done property is boolean. No persistence, UI, dependencies, or additional validation is needed.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing tests, package metadata and build configuration. You may add a separate regression test. Complete the local task; do not publish or deploy.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "This is a Small change. I\u2019ll inspect the function and test setup, implement the immutable toggle, add short notes, verify it, and commit locally.",
+              "elapsed_seconds": 5.172,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The toggle now returns a new object, and the separate regression test covers both boolean states with frozen inputs. Existing tests and package files are unchanged.\n\n```text\nTest Files  2 passed (2)\n     Tests  3 passed (3)\n```\n\nI\u2019m committing the implementation, test, and notes locally.",
+              "elapsed_seconds": 28.439,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Committed as `050cf3f` on `fix/immutable-completion-toggle`.\n\n- Implemented immutable `toggleDone`, preserving other properties.\n- Added `NOTES.md` and separate regression tests.\n- Existing tests, package metadata, and build configuration unchanged.\n\n`npm run gate`: 2 test files passed, 3 tests passed. Working tree clean. Nothing published or deployed.",
+              "elapsed_seconds": 34.14,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.244142,
+        "duration_seconds": 37.21825668400561,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 90752,
+            "cache_write_tokens": 0,
+            "input_tokens": 10284,
+            "model": "gpt-6-astra",
+            "output_tokens": 1011,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 90752,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 10284,
+            "model": "gpt-6-astra",
+            "output_tokens": 1011,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 1,
+          "cost_usd": 0.00882,
+          "duration_seconds": 2.98345350199088,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 2020,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 37,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "node-toggle-completion-committed",
+        "trial_id": "sha256:e484358fd25eed0977e81b97eb1c45f53779c7dc21f506d89e52f6f43912d10d",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 1.01151,
+          "duration_seconds": 8.906,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 100806,
+              "model": "gpt-6-astra",
+              "output_tokens": 69,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:07a3422443286b13dc7b33a10025bdf74bc6e19419a4c081faad02da52f3ccdb",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 177,
+            "assistant_words": 108,
+            "average_progress_words": 29.5,
+            "average_update_gap_seconds": 13.797,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.216381,
+            "final_answer_tokens": 99,
+            "final_answer_words": 49,
+            "formatting_density": 0.0648,
+            "heading_count": 0,
+            "maximum_progress_words": 33,
+            "maximum_update_gap_seconds": 20.156,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 303,
+            "total_visible_words": 197,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 0.5,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll locate the source value, change it, add a short notes document, then verify and commit the work. I\u2019m using the applicable workflow skills for verification.",
+              "elapsed_seconds": 5.135,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The source value and notes document are ready. The CTA check, lint, typecheck, both existing tests, and production build passed. Only the CSS source and new notes document changed; I\u2019ll commit them now.",
+              "elapsed_seconds": 25.291,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Committed as `203a812` \u2014 `Update CTA background to purple`.\n\n- Changed `--cta-background` to `#6d28d9` in [src/index.css](/app/src/index.css:10).\n- Added [NOTES.md](/app/NOTES.md).\n- Preserved component behavior, existing tests, metadata, configuration, and scripts.\n\nCTA check, lint, typecheck, both tests, and build passed. Working tree is clean.",
+              "elapsed_seconds": 32.73,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.242786,
+        "duration_seconds": 35.50051405800332,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 102656,
+            "cache_write_tokens": 0,
+            "input_tokens": 9923,
+            "model": "gpt-6-astra",
+            "output_tokens": 818,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 102656,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 9923,
+            "model": "gpt-6-astra",
+            "output_tokens": 818,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 1,
+          "cost_usd": 0.008312,
+          "duration_seconds": 2.6918757090024883,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 1983,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 19,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:78ed14a3c8b940c625233892958aca861266f50536587173794de156285ffd70",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 1.0137,
+          "duration_seconds": 9.583,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 101040,
+              "model": "gpt-6-astra",
+              "output_tokens": 66,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:5c4638ee349c8954d688b5d9589c0e81e4b3bda3b6580fe0d136e0a727d5e980",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 166,
+            "assistant_words": 100,
+            "average_progress_words": 31.5,
+            "average_update_gap_seconds": 11.38,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.25228,
+            "final_answer_tokens": 77,
+            "final_answer_words": 37,
+            "formatting_density": 0.1,
+            "heading_count": 0,
+            "maximum_progress_words": 39,
+            "maximum_update_gap_seconds": 16.605,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 292,
+            "total_visible_words": 189,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 0.5,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "This is a Polish change. I\u2019ll find the source value, update it, add a short notes document, and run the relevant checks before committing.",
+              "elapsed_seconds": 4.792,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The source value and notes are updated. The token check, lint, typecheck, tests, and production build all passed.\n\n```text\nTest Files  1 passed (1)\n     Tests  2 passed (2)\n```\n\nI\u2019ll check the final diff and commit the two changed files.",
+              "elapsed_seconds": 21.397,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Committed as `de41336` on `polish/cta-background`.\n\n- Updated `--cta-background` to `#6d28d9`.\n- Added [CHANGE_NOTES.md](/app/CHANGE_NOTES.md).\n- Preserved component behavior, existing tests, metadata, and configuration.\n\nToken check, lint, typecheck, both tests, and build passed. Working tree is clean.",
+              "elapsed_seconds": 27.551,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.219022,
+        "duration_seconds": 30.55474859700189,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 88192,
+            "cache_write_tokens": 0,
+            "input_tokens": 9793,
+            "model": "gpt-6-astra",
+            "output_tokens": 658,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 88192,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 9793,
+            "model": "gpt-6-astra",
+            "output_tokens": 658,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 1,
+          "cost_usd": 0.008695999999999999,
+          "duration_seconds": 2.906567334997817,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 1969,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 41,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:8ec1975a307d72971c17ae81184ceb3714c5856728526c25442d36c9fa1abfea",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 1.01109,
+          "duration_seconds": 7.477,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 100799,
+              "model": "gpt-6-astra",
+              "output_tokens": 62,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:9ed6ebfc5b342e79e34d207fd3a4876c35bc5a19fea5d6404f0f78263b89c097",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 165,
+            "assistant_words": 101,
+            "average_progress_words": 28.5,
+            "average_update_gap_seconds": 13.091,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.217391,
+            "final_answer_tokens": 90,
+            "final_answer_words": 44,
+            "formatting_density": 0.0594,
+            "heading_count": 0,
+            "maximum_progress_words": 36,
+            "maximum_update_gap_seconds": 19.455,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 291,
+            "total_visible_words": 190,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 0.5,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and change the `--cta-background` custom property from `#2563eb` to `#6d28d9`. Keep this to the source value; preserve component behavior.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll locate the source value, make the color change, add a short notes document, and run the project\u2019s checks before committing.",
+              "elapsed_seconds": 4.719,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The source value is updated and the notes document is added. The CTA check, lint, typecheck, both existing tests, and production build all passed. Only the CSS value and notes document changed; I\u2019ll commit them now.",
+              "elapsed_seconds": 24.174,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Committed as `c3bb95d`.\n\n- Changed `--cta-background` to `#6d28d9` in [src/index.css](/app/src/index.css).\n- Added [NOTES.md](/app/NOTES.md).\n- Preserved component behavior, existing tests, metadata, configuration, and check scripts.\n\nCTA check, lint, typecheck, both tests, and build passed. Working tree is clean.",
+              "elapsed_seconds": 30.901,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.18492999999999998,
+        "duration_seconds": 34.00360905699199,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 88960,
+            "cache_write_tokens": 0,
+            "input_tokens": 5802,
+            "model": "gpt-6-astra",
+            "output_tokens": 759,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 88960,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 5802,
+            "model": "gpt-6-astra",
+            "output_tokens": 759,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 1,
+          "cost_usd": 0.008196,
+          "duration_seconds": 2.9942269599996507,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 1954,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 19,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "react-accent-polish-committed",
+        "trial_id": "sha256:e99cb7b477ed259a0c4a6a9104f3cb393d944b17e6767c347ea831f7934e144d",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.603,
+          "duration_seconds": 8.575,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 59970,
+              "model": "gpt-6-astra",
+              "output_tokens": 66,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:5d60e33884ea17cc816af7b6cef2f431915f19aa20893eef89aa98701e4cd3eb",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 4,
+            "assistant_tokens": 235,
+            "assistant_words": 147,
+            "average_progress_words": 31.333,
+            "average_update_gap_seconds": 12.066,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.204704,
+            "final_answer_tokens": 105,
+            "final_answer_words": 53,
+            "formatting_density": 0.0952,
+            "heading_count": 0,
+            "maximum_progress_words": 38,
+            "maximum_update_gap_seconds": 18.691,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 3,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 369,
+            "total_visible_words": 241,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 2,
+            "useful_progress_update_rate": 0.666667,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 4
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and update the pricing card without changing behavior elsewhere:\n\n- Set its sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "This is a Polish change. I\u2019ll locate the pricing card, update the sentence and spacing, add a short notes document, then verify and commit the changes.",
+              "elapsed_seconds": 4.559,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The existing test already checks the requested sentence and computed `1.5rem` gap. I\u2019m following the repository\u2019s house rules for this Polish change; the implementation needs only two one-line edits.",
+              "elapsed_seconds": 15.466,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "The updated card passes both the existing test and the pricing-card check:\n\n```text\nTest Files  1 passed (1)\n     Tests  1 passed (1)\n```\n\nThe diff contains only the two requested edits and the notes document. I\u2019ll commit it now.",
+              "elapsed_seconds": 34.157,
+              "kind": "progress",
+              "ordinal": 4,
+              "role": "assistant"
+            },
+            {
+              "content": "Committed as `310baa7` on `chore/pricing-card-polish`.\n\n- Set the sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n- Added [Pricing Card Notes.md](</app/Pricing Card Notes.md>).\n\nVerification: `npm test` \u2014 1 test passed; `npm run check:pricing-card` passed. Existing tests and project configuration remain unchanged. Working tree is clean.",
+              "elapsed_seconds": 40.758,
+              "kind": "final",
+              "ordinal": 5,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:7567e595abce3b09d87d72150e887c6ea9431bd784f60cc5ba174fb14ba08074",
+        "conventions": true,
+        "correctness": true,
+        "cost_usd": 0.484126,
+        "duration_seconds": 43.384984686999815,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 152576,
+            "cache_write_tokens": 0,
+            "input_tokens": 27415,
+            "model": "gpt-6-astra",
+            "output_tokens": 1148,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 152576,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 27415,
+            "model": "gpt-6-astra",
+            "output_tokens": 1148,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 1,
+          "cost_usd": 0.008736,
+          "duration_seconds": 2.461000918003265,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 2089,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 19,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:386c1b31899e47d536646eff44c1b243a02660bb7cf052ecc799919141144878",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.59995,
+          "duration_seconds": 6.166,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 59725,
+              "model": "gpt-6-astra",
+              "output_tokens": 54,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:41424c0c661694ce212d2272271e6f876810f98d8f83e74017a6646630256e8e",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 163,
+            "assistant_words": 102,
+            "average_progress_words": 26.5,
+            "average_update_gap_seconds": 12.627,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.226389,
+            "final_answer_tokens": 92,
+            "final_answer_words": 49,
+            "formatting_density": 0.098,
+            "heading_count": 0,
+            "maximum_progress_words": 33,
+            "maximum_update_gap_seconds": 20.377,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 297,
+            "total_visible_words": 196,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 0.5,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and update the pricing card without changing behavior elsewhere:\n\n- Set its sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll check the repository guidance, update the pricing card, add a short note, and run the project checks before committing.",
+              "elapsed_seconds": 7.904,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The sentence and gap are updated, and `NOTES.md` describes the change. The test gate and pricing-card check passed. Existing tests and project configuration are unchanged. I\u2019ll commit the three changed files now.",
+              "elapsed_seconds": 28.281,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Committed as `9779517` \u2014 `Update pricing card copy and spacing`.\n\n- Set the sentence to \u201cEverything your team needs to ship.\u201d\n- Set `--pricing-card-gap` to `1.5rem`.\n- Added [NOTES.md](/app/NOTES.md).\n\n`npm run gate` and `npm run check:pricing-card` passed. Existing tests and configuration remain unchanged. Working tree is clean.",
+              "elapsed_seconds": 33.158,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:6b0b5c24b83e9a5f055fdbe207ad472605f9552c20c23e46e5e03d3f011af521",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.20435199999999998,
+        "duration_seconds": 36.63909235000028,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 85632,
+            "cache_write_tokens": 0,
+            "input_tokens": 8272,
+            "model": "gpt-6-astra",
+            "output_tokens": 720,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 85632,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 8272,
+            "model": "gpt-6-astra",
+            "output_tokens": 720,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 1,
+          "cost_usd": 0.008304,
+          "duration_seconds": 3.39847691799514,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 1981,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 19,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:060a5bf81731392261c4bf1f64b4dfb65ac91af5df1b5de106915db942a3aab1",
+        "usage_complete": true
+      },
+      {
+        "attempt": 1,
+        "child_count": 0,
+        "code_review": {
+          "cost_usd": 0.60424,
+          "duration_seconds": 10.407,
+          "findings": [],
+          "internal_review": {
+            "evidence_digest": null,
+            "fixed": null,
+            "found": null,
+            "status": "unknown",
+            "unresolved": null
+          },
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 59964,
+              "model": "gpt-6-astra",
+              "output_tokens": 92,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol_id": "sha256:3d55352a3afef1490bbd6177bca5842ed9e6d3986192f2e5c38568d7f67a2c02",
+          "status": "completed",
+          "target_digest": "sha256:8fd9857d4025b3cd0302e4d63431ae6cb62110880b242ff5d44d1d6e7bd5e4d6",
+          "usage_complete": true
+        },
+        "collaboration": {
+          "contract": {
+            "expectations": {
+              "approval_requests": {
+                "maximum": 0,
+                "minimum": 0
+              },
+              "final_answer_words": {
+                "maximum": 100,
+                "minimum": 1
+              },
+              "initial_update": "optional",
+              "progress_updates": {
+                "maximum": 1,
+                "minimum": 0,
+                "require_new_information": true
+              },
+              "prompt_restatement": false,
+              "questions": {
+                "maximum": 0,
+                "minimum": 0
+              }
+            },
+            "rubric": [
+              "directness",
+              "proportionality",
+              "progress_usefulness",
+              "autonomy",
+              "candor",
+              "warmth",
+              "restraint",
+              "completion_clarity"
+            ],
+            "scenario": "development_polish",
+            "schema_version": "1"
+          },
+          "contract_digest": "sha256:4a3227de9519d6bd71c71c991a36d669175d90a2195fb52fb9ebdbea66984a48",
+          "metrics": {
+            "approval_request_count": 0,
+            "assistant_message_count": 3,
+            "assistant_tokens": 177,
+            "assistant_words": 114,
+            "average_progress_words": 33.0,
+            "average_update_gap_seconds": 13.423,
+            "bullet_count": 3,
+            "communication_to_model_output_ratio": 0.19843,
+            "final_answer_tokens": 92,
+            "final_answer_words": 48,
+            "formatting_density": 0.0877,
+            "heading_count": 0,
+            "maximum_progress_words": 37,
+            "maximum_update_gap_seconds": 21.916,
+            "policy_version": "communication-metrics-v1",
+            "progress_update_count": 2,
+            "prompt_restatement": false,
+            "question_count": 0,
+            "repeated_sentence_count": 0,
+            "slop_matches": [],
+            "slop_phrase_count": 0,
+            "tokenizer_version": "visible-lexical-v1",
+            "total_visible_tokens": 311,
+            "total_visible_words": 208,
+            "unnecessary_approval_request_count": 0,
+            "unnecessary_question_count": 0,
+            "useful_progress_update_count": 1,
+            "useful_progress_update_rate": 0.5,
+            "violations": [
+              {
+                "detail": "Progress update contains no recognized new information",
+                "kind": "uninformative_progress_update",
+                "ordinal": 2
+              },
+              {
+                "detail": "Progress update exceeds scenario budget",
+                "kind": "excess_progress_update",
+                "ordinal": 3
+              }
+            ]
+          },
+          "reasons": [],
+          "status": "complete",
+          "transcript": [
+            {
+              "content": "Work in `/app` and update the pricing card without changing behavior elsewhere:\n\n- Set its sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n\nAdd a short Markdown notes document to the repository that describes the change, and commit the finished work.\n\nPreserve existing project tests, package metadata, build configuration, and check scripts. Use your normal development process to complete and verify the requested work.\n\nExisting test files are read-only: leave them byte-for-byte unchanged, including when adding or strengthening assertions. If you write tests, put them in new, separate test files.",
+              "elapsed_seconds": 0.0,
+              "kind": "user",
+              "ordinal": 1,
+              "role": "user"
+            },
+            {
+              "content": "I\u2019ll inspect the pricing card, make the two updates, add a short notes document, and verify the changes before committing. I\u2019m using the applicable development skills for this work.",
+              "elapsed_seconds": 5.33,
+              "kind": "progress",
+              "ordinal": 2,
+              "role": "assistant"
+            },
+            {
+              "content": "The sentence and gap are updated, and the notes document is added. The existing test and pricing check both pass. Tests, package metadata, build configuration, and check scripts are unchanged. I\u2019ll commit the three changed files now.",
+              "elapsed_seconds": 27.246,
+              "kind": "progress",
+              "ordinal": 3,
+              "role": "assistant"
+            },
+            {
+              "content": "Committed as `93a179a` \u2014 `Update pricing card copy and spacing`.\n\n- Set the sentence to `Everything your team needs to ship.`\n- Set `--pricing-card-gap` to `1.5rem`.\n- Added [PRICING_NOTES.md](/app/PRICING_NOTES.md).\n\nVerification passed: `npm run gate` and `npm run check:pricing-card`. Protected files remain unchanged; working tree is clean.",
+              "elapsed_seconds": 32.176,
+              "kind": "final",
+              "ordinal": 4,
+              "role": "assistant"
+            }
+          ]
+        },
+        "contender_id": "sha256:ffcf688e90c42843df70916681dda34d2d9bf838afa3200173cbc86dc5b782d7",
+        "conventions": false,
+        "correctness": true,
+        "cost_usd": 0.298632,
+        "duration_seconds": 35.430825142000685,
+        "incomplete_reasons": [],
+        "interaction_count": 0,
+        "model_usage": [
+          {
+            "cache_read_tokens": 93952,
+            "cache_write_tokens": 0,
+            "input_tokens": 16008,
+            "model": "gpt-6-astra",
+            "output_tokens": 892,
+            "provider": "openai"
+          }
+        ],
+        "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+        "protected_state": true,
+        "provider_recovery": {
+          "allowance_seconds": 600,
+          "extension_applied": false,
+          "transport_error_count": 0
+        },
+        "session_usage": [
+          {
+            "cache_read_tokens": 93952,
+            "cache_write_tokens": 0,
+            "effort": "medium",
+            "input_tokens": 16008,
+            "model": "gpt-6-astra",
+            "output_tokens": 892,
+            "provider": "openai",
+            "session": "root"
+          }
+        ],
+        "simulated_user": {
+          "call_count": 1,
+          "cost_usd": 0.008388,
+          "duration_seconds": 3.1564256679994287,
+          "effort": "medium",
+          "max_calls": 13,
+          "model": "gpt-5.6-sol",
+          "model_usage": [
+            {
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "input_tokens": 2002,
+              "model": "gpt-5.6-sol",
+              "output_tokens": 19,
+              "provider": "openai"
+            }
+          ],
+          "pricing_digest": "sha256:f0e8789a931bc63b44c61820637fb8ded64fe5613fef61a5c059adbc06a8437e",
+          "protocol": "semantic-user-v1",
+          "usage_complete": true
+        },
+        "status": "completed",
+        "task_id": "static-pricing-copy-polish-committed",
+        "trial_id": "sha256:11881d9d96f7eb044065e065a69aec47a6b6413221006b9ba33216de8999f360",
+        "usage_complete": true
+      }
+    ]
+  },
+  "failed_jobs": 0,
+  "failed_trials": 0,
+  "finished_at": "2026-10-11T04:55:25.010100Z",
+  "jobs": [
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V6b0b5c24b83e9a5f",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-11T04:46:35.681846Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-18359386406eac8c8957-r1-codex-V6b0b5c24b83e9a5f-baseline-node-toggle-completion-committed",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 61.264599,
+      "series_key": "sha256:b19c9ab83131ea6a889e177db7eb3f81a3516de2b10b3b09d6095b2ed184ad3e",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-11T04:45:34.417247Z",
+      "status": "completed",
+      "task": "node-toggle-completion-committed",
+      "task_digest": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "Vffcf688e90c42843",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-11T04:47:51.630965Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-18359386406eac8c8957-r1-codex-Vffcf688e90c42843-baseline-node-toggle-completion-committed",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 74.579962,
+      "series_key": "sha256:4f6b368b23d55d84d99f3e50377f31a6f71ea3741f43a0fc693aeec94085e8fb",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-11T04:46:37.051003Z",
+      "status": "completed",
+      "task": "node-toggle-completion-committed",
+      "task_digest": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V7567e595abce3b09",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-11T04:48:57.347375Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-18359386406eac8c8957-r1-codex-V7567e595abce3b09-candidate-node-toggle-completion-committed",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 64.381986,
+      "series_key": "sha256:c61abf0cd1c6eca165d3e5d6d99aead85664a0cd36711edd5a09a3f6e77d16ca",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-11T04:47:52.965389Z",
+      "status": "completed",
+      "task": "node-toggle-completion-committed",
+      "task_digest": "sha256:7a02ca5f3e93f7cccd963e7da48866000107610f74d3ac7a8849ad33a26d2ead",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "Vffcf688e90c42843",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-11T04:50:01.897818Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-18359386406eac8c8957-r1-codex-Vffcf688e90c42843-baseline-react-accent-polish-committed",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 62.894422,
+      "series_key": "sha256:21ec9e65314ef33eb9a3ac14cd94bc3b393bbf86df58bd0ea56de0bc055255b3",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-11T04:48:59.003396Z",
+      "status": "completed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V7567e595abce3b09",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-11T04:51:01.358209Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-18359386406eac8c8957-r1-codex-V7567e595abce3b09-candidate-react-accent-polish-committed",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 58.054971,
+      "series_key": "sha256:b7f8028cff24d7d015b05c0b9c1c82df53409aef3ff8c9219c980b20178cfc8f",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-11T04:50:03.303238Z",
+      "status": "completed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V6b0b5c24b83e9a5f",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 1.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-11T04:52:04.073681Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-18359386406eac8c8957-r1-codex-V6b0b5c24b83e9a5f-baseline-react-accent-polish-committed",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 61.136618,
+      "series_key": "sha256:1947ffd066f59f5c776872e8f62a168715bd7c33bc6b526a31f7e50cfa49f012",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-11T04:51:02.937063Z",
+      "status": "completed",
+      "task": "react-accent-polish-committed",
+      "task_digest": "sha256:8fb599e9df1c47e6cc433306f0ec4b8f5ac46d87abbaa84f244a7a136b054f41",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V7567e595abce3b09",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 1.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-11T04:53:15.979870Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-18359386406eac8c8957-r1-codex-V7567e595abce3b09-candidate-static-pricing-copy-polish-committed",
+      "provider": "codex",
+      "role": "candidate",
+      "runtime_seconds": 70.526129,
+      "series_key": "sha256:e0d2496a8a7e6e754cd9b1d1461018809abf7928c1e4995fd1192559aae7ff16",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-11T04:52:05.453741Z",
+      "status": "completed",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "V6b0b5c24b83e9a5f",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 0.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-11T04:54:21.046074Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-18359386406eac8c8957-r1-codex-V6b0b5c24b83e9a5f-baseline-static-pricing-copy-polish-committed",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 63.597844,
+      "series_key": "sha256:f504782b03a76cfccc99108a86d47ede2f5d73bd95711d5204c5cdbc006f880e",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-11T04:53:17.448230Z",
+      "status": "completed",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    },
+    {
+      "agent": "harness_testing.Codex_Agent:HarnessCodex",
+      "agent_version": "0.153.4",
+      "arm": "Vffcf688e90c42843",
+      "cancelled_trials": 0,
+      "comparability": "comparable",
+      "completed_trials": 1,
+      "dimensions": {
+        "conventions": 0.0,
+        "correctness": 1.0,
+        "efficiency_policy": 0.0,
+        "workflow": 1.0
+      },
+      "efficiency": {
+        "api_equivalent_cost_usd": null,
+        "cached_tokens": null,
+        "completion_tokens": null,
+        "prompt_tokens": null
+      },
+      "effort": "medium",
+      "errored_trials": 0,
+      "expected_trials": 1,
+      "finished_at": "2026-10-11T04:55:25.010100Z",
+      "harness_commit": null,
+      "model": "gpt-6-astra",
+      "name": "run-18359386406eac8c8957-r1-codex-Vffcf688e90c42843-baseline-static-pricing-copy-polish-committed",
+      "provider": "codex",
+      "role": "baseline",
+      "runtime_seconds": 62.565217,
+      "series_key": "sha256:e38dcf9cfffc70619e548d78a32ac8f88148f25ef43feebe47de823407880d80",
+      "series_key_unavailable_reason": null,
+      "started_at": "2026-10-11T04:54:22.444883Z",
+      "status": "completed",
+      "task": "static-pricing-copy-polish-committed",
+      "task_digest": "sha256:ca12ce5cae5c0232304a611baf0df7f5d463e2a1141fae5ffa88a7df5a1532df",
+      "task_pack": "workflow"
+    }
+  ],
+  "manifest_digest": "sha256:bb5e06d60b0338b11974c97b7417f3bd1cb0a984e1d80ae71aeba7176b80be2b",
+  "manifest_schema_version": "0.3.0",
+  "observed_api_equivalent_cost_usd": 2.444554,
+  "pending_jobs": 0,
+  "profile": "calibration",
+  "report_id": "sha256:ccdf613c2775be398924ad1d39d667746612878eccaa1271cb51a1624956e997",
+  "run_id": "run-18359386406eac8c8957",
+  "schema_version": "3",
+  "source": {
+    "kind": "current",
+    "label": null
+  },
+  "started_at": "2026-10-11T04:45:32.856994Z",
+  "status": "completed",
+  "updated_at": "2026-10-11T05:23:55.974247Z"
+}

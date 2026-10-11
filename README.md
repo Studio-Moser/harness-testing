@@ -27,13 +27,16 @@ Studio Moser v8 is the pick: it is the first that follows every convention using
 
 ### GPT-6 Astra, medium effort
 
-24 tasks, one attempt per task per harness, 72 trials. Every harness solved every task, so cost and time decide.
+19 workflow tasks, one attempt per task per harness, 76 trials. The same three convention tasks apply.
 
-| Harness | Correct | Avg cost | Avg time | Work-quality grade |
+| Harness | Correct | Conventions followed | Avg cost | Avg time |
 | --- | ---: | ---: | ---: | ---: |
-| **Nothing** | 100% | **$0.91** | **3m 11s** | 96% |
-| Studio Moser v5 | 100% | $1.21 | 3m 29s | 94% |
-| Superpowers | 100% | $1.83 | 4m 06s | **97%** |
+| **Studio Moser v8** | **19 of 19** | **3 of 3** | $0.45 | **57s** |
+| Studio Moser v5 | 17 of 19 | 1 of 3 | $0.56 | 1m 22s |
+| Nothing | 16 of 19 | 0 of 3 | **$0.30** | 1m 08s |
+| Superpowers | 16 of 19 | 0 of 3 | $0.49 | 1m 14s |
+
+Studio Moser v8 is the pick and the only harness that got everything right. Every harness did the work on every task; the others lost trials only on conventions. Nothing and Superpowers committed on `main` with plain subjects and all-caps file names; v5 branched and wrote Conventional Commits but missed the file-naming rule twice. Nothing remains the cheapest. The three older harnesses also ran five research tasks from real repositories and solved all of them; v8 has not run that lane.
 
 Costs are API-equivalent estimates from list prices, not bills. Work-quality grades are blinded automated grades and never decide the ranking. One attempt per task is a real result, not a reliability guarantee: these cover the frozen tasks and kickoff conditions above, not every codebase.
 
