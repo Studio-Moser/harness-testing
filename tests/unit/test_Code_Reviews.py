@@ -179,7 +179,7 @@ def test_record_rejects_stale_packet_before_retaining_private_evidence(monkeypat
             "model": "gpt-6-astra",
             "effort": "high",
             "executor": "native",
-            "runtime_version": "0.153.4",
+            "runtime_version": "0.162.1",
         },
         "packets": [
             {

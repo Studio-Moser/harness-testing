@@ -208,15 +208,17 @@ def assemble_lane(
         or anchor["conditions"] != frozen["conditions"]
     ):
         raise ValueError(f"{lane}: report does not belong to frozen campaign")
-    # A continuation may carry a corrected runtime adapter or a later revision of the
-    # simulated-user script under the same protocol; both are disclosed, not hidden.
+    # A continuation may carry a corrected runtime adapter, or a later revision of the
+    # simulated-user script or its pinned runtime under the same protocol and model;
+    # both are disclosed, not hidden.
     continuation_fields = _LANE_FIELDS | {"adapter_digest"}
 
     def comparable(conditions: dict) -> dict:
         kept = {k: v for k, v in conditions.items() if k not in continuation_fields}
         if isinstance(kept.get("simulated_user"), dict):
             kept["simulated_user"] = {
-                k: v for k, v in kept["simulated_user"].items() if k != "protocol_digest"
+                k: v for k, v in kept["simulated_user"].items()
+                if k not in {"protocol_digest", "runtime_version"}
             }
         return kept
 
@@ -313,10 +315,11 @@ def assemble_lane(
                 "adapter_digest": report["experiment"]["conditions"].get("adapter_digest"),
                 "adapter_corrected": report["experiment"]["conditions"].get("adapter_digest")
                 != frozen["conditions"].get("adapter_digest"),
-                "simulated_user_revised": (
-                    report["experiment"]["conditions"].get("simulated_user") or {}
-                ).get("protocol_digest")
-                != (frozen["conditions"].get("simulated_user") or {}).get("protocol_digest"),
+                "simulated_user_revised": any(
+                    (report["experiment"]["conditions"].get("simulated_user") or {}).get(field)
+                    != (frozen["conditions"].get("simulated_user") or {}).get(field)
+                    for field in ("protocol_digest", "runtime_version")
+                ),
             }
             for report in reports
         ],
@@ -385,8 +388,8 @@ def summarize_campaign(
             )
         if any(row["simulated_user_revised"] for row in assembled["members"]):
             limitations.append(
-                "Some reports ran under a later revision of the simulated-user script than "
-                "the original run, under the same protocol and settings; see members."
+                "Some reports ran under a later revision of the simulated-user script or its "
+                "runtime than the original run, under the same protocol and model; see members."
             )
         if assembled["superseded_trials"]:
             limitations.append(

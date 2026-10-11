@@ -101,7 +101,7 @@ bundled_skills = [
 [[packages]]
 name = "@openai/codex"
 ecosystem = "npm"
-version = "0.153.4"
+version = "0.162.1"
 
 [[packages]]
 name = "@observablehq/framework"
