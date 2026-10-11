@@ -25,6 +25,17 @@ Harness Testing answers one question: **does a coding-agent harness make the age
 
 Studio Moser v8 is the pick: it is the first that follows every convention using only what the collection ships, because the global instructions and House Style now come with Harness as a profile. The formal verdict still names v7 with the developer's personal instructions, which is equally correct and as fast but measured $0.02 cheaper per task; that version depends on files only one developer has. Every Studio Moser version named its branch and wrote its commit to the house format; the versions before v8 that lacked the personal instructions failed on file naming, a rule the shared baseline did not state. Nothing also committed on `main`. Three convention tasks at one attempt each is thin evidence for ordering the versions between them. Superpowers was skipped on this model: earlier testing showed it wasn't needed on newer models.
 
+### GPT-6.1 Sol, medium effort
+
+19 workflow tasks, one attempt per task per harness, 38 trials, on Codex 0.162.1.
+
+| Harness | Correct | Conventions followed | Avg cost | Avg time |
+| --- | ---: | ---: | ---: | ---: |
+| **Studio Moser v8** | **18 of 19** | **2 of 3** | $0.09 | 1m 00s |
+| Nothing | 15 of 19 | 0 of 3 | **$0.06** | 1m 01s |
+
+Studio Moser v8 is the pick. Its one miss is a checker error, not a harness mistake: on the static convention task it branched, committed and named its notes file correctly, but first ran a read-only `git symbolic-ref` query the convention replay did not recognise, so the replay failed closed. The replay is fixed for later runs; this trial's recorded score is left as scored. Nothing got the work right on 18 tasks, edited a protected file on one, and followed no conventions: it committed on `main` with plain subjects and all-caps file names.
+
 ### GPT-6 Astra, medium effort
 
 19 workflow tasks, one attempt per task per harness, 76 trials. The same three convention tasks apply.
