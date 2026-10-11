@@ -208,14 +208,24 @@ def assemble_lane(
         or anchor["conditions"] != frozen["conditions"]
     ):
         raise ValueError(f"{lane}: report does not belong to frozen campaign")
-    # A continuation may carry a corrected runtime adapter; that is disclosed, not hidden.
+    # A continuation may carry a corrected runtime adapter or a later revision of the
+    # simulated-user script under the same protocol; both are disclosed, not hidden.
     continuation_fields = _LANE_FIELDS | {"adapter_digest"}
-    shared = {k: v for k, v in plan["conditions"].items() if k not in continuation_fields}
+
+    def comparable(conditions: dict) -> dict:
+        kept = {k: v for k, v in conditions.items() if k not in continuation_fields}
+        if isinstance(kept.get("simulated_user"), dict):
+            kept["simulated_user"] = {
+                k: v for k, v in kept["simulated_user"].items() if k != "protocol_digest"
+            }
+        return kept
+
+    shared = comparable(plan["conditions"])
     for report in reports:
         experiment = report["experiment"]
         conditions = experiment["conditions"]
         if (
-            {k: v for k, v in conditions.items() if k not in continuation_fields} != shared
+            comparable(conditions) != shared
             or conditions["task_variant"] != lane
             or not {row["id"] for row in experiment["contenders"]} <= ids
         ):
@@ -303,6 +313,10 @@ def assemble_lane(
                 "adapter_digest": report["experiment"]["conditions"].get("adapter_digest"),
                 "adapter_corrected": report["experiment"]["conditions"].get("adapter_digest")
                 != frozen["conditions"].get("adapter_digest"),
+                "simulated_user_revised": (
+                    report["experiment"]["conditions"].get("simulated_user") or {}
+                ).get("protocol_digest")
+                != (frozen["conditions"].get("simulated_user") or {}).get("protocol_digest"),
             }
             for report in reports
         ],
@@ -368,6 +382,11 @@ def summarize_campaign(
             limitations.append(
                 "Some slots were rerun under a corrected runtime adapter after the original "
                 "attempt did not complete or its task was corrected; see members."
+            )
+        if any(row["simulated_user_revised"] for row in assembled["members"]):
+            limitations.append(
+                "Some reports ran under a later revision of the simulated-user script than "
+                "the original run, under the same protocol and settings; see members."
             )
         if assembled["superseded_trials"]:
             limitations.append(

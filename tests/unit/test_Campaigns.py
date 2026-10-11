@@ -452,3 +452,21 @@ def test_a_version_added_after_a_task_was_retired_need_not_run_it():
     assert all(t["task_id"] != retired for t in lane["experiment"]["trials"])
     assert any(t["task_id"] == retired for t in reports[0]["experiment"]["trials"])
 
+
+def test_a_later_simulated_user_revision_is_disclosed_and_other_settings_still_must_match():
+    _, _, plan, reports = fixture(attempts=1, purpose="diagnostic")
+    original = reports[0]
+    user = {"protocol": "semantic-user-v1", "model": "m", "protocol_digest": digest("user-1")}
+    plan["conditions"]["simulated_user"] = user
+    plan["lanes"]["comparison"]["conditions"]["simulated_user"] = user
+    original["experiment"]["conditions"]["simulated_user"] = user
+    later = _split(original, ["node-export-clear"], continuation_id="later")
+    later["experiment"]["conditions"]["simulated_user"] = dict(
+        user, protocol_digest=digest("user-2")
+    )
+    lane = assemble_lane(plan, "comparison", [original, later])
+    assert [m["simulated_user_revised"] for m in lane["members"]] == [False, True]
+    later["experiment"]["conditions"]["simulated_user"]["model"] = "another"
+    with pytest.raises(ValueError, match="incompatible conditions"):
+        assemble_lane(plan, "comparison", [original, later])
+
