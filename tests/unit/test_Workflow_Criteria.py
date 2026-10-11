@@ -612,6 +612,11 @@ _CONVENTIONAL = [
         # Scratch files and read-only commands after the commit leave the work committed.
         [*_CONVENTIONAL, ("edit", "/tmp/Scratch.md"), ("shell", "git log --oneline > /tmp/log")],
         [*_CONVENTIONAL, ("shell", "git checkout HEAD -- src/Completion.js && git stash list")],
+        # Asking which branch a ref points at reads history; it does not move it.
+        [
+            ("shell", "git remote -v && git symbolic-ref --quiet refs/remotes/origin/HEAD", 1),
+            *_CONVENTIONAL,
+        ],
     ],
 )
 def test_house_conventions_accept_real_branch_and_commit_forms(
@@ -679,6 +684,7 @@ def test_house_conventions_reject_broken_conventions(
         [("shell", "git worktree add ../toggle -b feat/toggle"), *_CONVENTIONAL[1:]],
         [("shell", "bash -c 'git checkout -b feat/toggle'"), *_CONVENTIONAL[1:]],
         [("shell", "git checkout -b feat/toggle"), ("shell", "git switch -")],
+        [("shell", "git symbolic-ref HEAD refs/heads/feat/other"), *_CONVENTIONAL[1:]],
         [("shell", "git commit --amend -m 'feat: rewrite the fixture commit'")],
         [("shell", "git checkout -b feat/toggle && git commit -m 'feat: unbalanced")],
     ],
