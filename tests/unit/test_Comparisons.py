@@ -155,6 +155,20 @@ def test_cost_and_time_leaders_that_differ_are_a_tradeoff():
     assert result["leaders"] == {"observed_cost_ids": ["a"], "observed_time_ids": ["b"]}
 
 
+def test_a_protected_file_violation_is_a_graded_failure_not_missing_evidence():
+    request, reports = fixture()
+    trials(reports, "a")[0].update(correctness=None, protected_state=False)
+    result = run(request, reports)
+    violator, other = result["contenders"]
+    assert violator["counts"]["missing_grading"] == 0 and violator["coverage_complete"] is True
+    assert violator["successes"] == 26 and violator["eligible"] is False
+    assert violator["mean_cost_usd"] is not None
+    assert result["winner_id"] == other["id"] == "b"
+    # Correctness missing with the protected state intact is still ungraded.
+    trials(reports, "b")[0].update(correctness=None)
+    assert run(request, reports)["contenders"][1]["counts"]["missing_grading"] == 1
+
+
 def test_cheap_failure_cannot_beat_correctness():
     request, reports = fixture()
     for trial in trials(reports, "a"):

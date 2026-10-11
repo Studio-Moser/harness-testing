@@ -189,6 +189,8 @@ def _dataset(report, contender, conditions, pricing):
     counts["missing"] = scheduled - len(selected)
     counts["missing_grading"] = sum(
         t["status"] in _ATTEMPTED
+        # A protection failure is a verdict of its own; the verifier never scores past it.
+        and t.get("protected_state") is not False
         and (t.get("correctness") is None or t.get("protected_state") is None)
         for t in selected
     )
