@@ -238,6 +238,21 @@ output_usd_per_million_tokens = "20"
 cache_read_usd_per_million_tokens = "0.4"
 cache_write_usd_per_million_tokens = "5"
 
+# Standard token rates checked 2026-10-11 against BenchLM's OpenAI price table and the
+# search summary of OpenAI's launch post; the cache-write rate follows the 1.25x-input
+# pattern of the other OpenAI rows and matches third-party listings. OpenAI's own page
+# could not be fetched for this check.
+[[models]]
+provider = "codex"
+agent = "codex"
+model = "gpt-6.1-sol"
+comparison_only = true
+effort = "medium"
+input_usd_per_million_tokens = "2"
+output_usd_per_million_tokens = "10"
+cache_read_usd_per_million_tokens = "0.10"
+cache_write_usd_per_million_tokens = "2.50"
+
 [[models]]
 provider = "codex"
 agent = "codex"
