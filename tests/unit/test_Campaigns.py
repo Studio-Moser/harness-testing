@@ -427,3 +427,28 @@ def test_a_later_report_adds_a_task_only_when_every_harness_runs_it():
     experiment["trials"] = experiment["trials"][:1]
     with pytest.raises(ValueError, match="incomplete"):
         assemble_lane(implicit_plan(policy, reports), "comparison", stitched)
+
+
+def test_a_version_added_after_a_task_was_retired_need_not_run_it():
+    policy, _, _, reports = fixture(attempts=1, purpose="diagnostic")
+    tasks = reports[0]["experiment"]["conditions"]["task_ids"]
+    retired, kept = tasks[0], tasks[1:]
+    extra = copy.deepcopy(reports[0])
+    extra["report_id"] = extra["manifest_digest"] = digest("added-later")
+    experiment = extra["experiment"]
+    experiment["contenders"] = [dict(experiment["contenders"][0], id="d")]
+    experiment["conditions"] = dict(experiment["conditions"], task_ids=kept)
+    experiment["trials"] = [
+        dict(t, contender_id="d", trial_id=f"d-{t['trial_id']}")
+        for t in experiment["trials"] if t["contender_id"] == "a" and t["task_id"] != retired
+    ]
+    stitched = [reports[0], extra]
+    plan = implicit_plan(policy, stitched)
+    with pytest.raises(ValueError, match="incomplete"):
+        assemble_lane(plan, "comparison", stitched)
+    lane = assemble_lane(plan, "comparison", stitched, set(kept))
+    assert lane["experiment"]["conditions"]["task_ids"] == kept
+    assert {t["contender_id"] for t in lane["experiment"]["trials"]} == {"a", "b", "c", "d"}
+    assert all(t["task_id"] != retired for t in lane["experiment"]["trials"])
+    assert any(t["task_id"] == retired for t in reports[0]["experiment"]["trials"])
+
