@@ -735,6 +735,10 @@ def _git_action(arguments: list[str]) -> tuple:
         return ("unknown",) if rest[:1] == ["branch"] else ("none",)
     if subcommand == "worktree":
         return ("none",) if rest[:1] in (["list"], ["prune"]) else ("unknown",)
+    if subcommand == "symbolic-ref":
+        # Reading a ref is neutral; writing or deleting one can move HEAD.
+        writes = len(positional) > 1 or bool({"-d", "--delete"} & set(before_paths))
+        return ("unknown",) if writes else ("none",)
     if subcommand in _GIT_WORKTREE_CHANGING:
         return ("change",)
     return ("none",) if subcommand in _GIT_HISTORY_NEUTRAL else ("unknown",)
