@@ -185,7 +185,9 @@ def campaign_summary(root: Path, plan_path: Path | None, report_paths: list[Path
     )
 
 
-def assemble_lane(plan: dict, lane: str, reports: list[dict]) -> dict:
+def assemble_lane(
+    plan: dict, lane: str, reports: list[dict], active_tasks: set[str] | None = None
+) -> dict:
     """Fill every scheduled slot of one lane from ordered original and continuation reports.
 
     Reports are applied in the given order. A later report replaces an earlier trial in the
@@ -222,6 +224,9 @@ def assemble_lane(plan: dict, lane: str, reports: list[dict]) -> dict:
     tasks = list(frozen["conditions"]["task_ids"])
     for report in reports[1:]:
         tasks += [t for t in report["experiment"]["conditions"]["task_ids"] if t not in tasks]
+    # A retired task needs no coverage, so a version added after it was retired need not run it.
+    retired = set() if active_tasks is None else set(tasks) - active_tasks
+    tasks = [task for task in tasks if task not in retired]
     expected = {(c, task, a) for c in ids for task in tasks for a in range(1, attempts + 1)}
     chosen: dict[tuple, tuple[dict, dict]] = {}
     superseded = []
@@ -231,6 +236,8 @@ def assemble_lane(plan: dict, lane: str, reports: list[dict]) -> dict:
         seen = set()
         for trial in experiment["trials"]:
             slot = (trial["contender_id"], trial["task_id"], trial["attempt"])
+            if trial["task_id"] in retired:
+                continue
             if slot not in expected or slot in seen:
                 raise ValueError(f"{lane}: report contains an unscheduled or duplicated trial")
             seen.add(slot)
@@ -335,7 +342,7 @@ def summarize_campaign(
     ids = {row["id"] for row in plan["contenders"]}
     selected, trials, reasons, lane_results, lane_winners = {}, [], [], {}, []
     for lane in sorted(lanes):
-        assembled = assemble_lane(plan, lane, by_lane[lane])
+        assembled = assemble_lane(plan, lane, by_lane[lane], active_tasks)
         experiment = assembled["experiment"]
         if active_tasks is not None:
             _retire_tasks(experiment, active_tasks)
