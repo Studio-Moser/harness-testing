@@ -14,8 +14,8 @@ Harness Testing answers one question: **does a coding-agent harness make the age
 
 | Harness | Correct | Conventions followed | Avg cost | Avg time |
 | --- | ---: | ---: | ---: | ---: |
-| **Studio Moser v7 + personal instructions** | **19 of 19** | **3 of 3** | $0.13 | **22s** |
-| Studio Moser v8 | 19 of 19 | 3 of 3 | $0.15 | 22s |
+| **Studio Moser v8** | **19 of 19** | **3 of 3** | $0.15 | **22s** |
+| Studio Moser v7 + personal instructions | 19 of 19 | 3 of 3 | $0.13 | 22s |
 | Studio Moser v7 + personal instructions and skills | 19 of 19 | 3 of 3 | $0.16 | 24s |
 | Studio Moser v6 | 18 of 19 | 2 of 3 | $0.13 | 27s |
 | Studio Moser v6 + time matters | 17 of 19 | 1 of 3 | $0.12 | 26s |
@@ -23,7 +23,7 @@ Harness Testing answers one question: **does a coding-agent harness make the age
 | Studio Moser v5 | 16 of 19 | 0 of 3 | $0.18 | 35s |
 | Nothing | 15 of 19 | 0 of 3 | $0.12 | 29s |
 
-Studio Moser v8 is the version to use: it is the first that follows every convention using only what the collection ships, because the global instructions and House Style now come with Harness as a profile. The formal verdict still names v7 with the developer's personal instructions, which is equally correct and as fast but measured $0.02 cheaper per task; that version depends on files only one developer has. Every Studio Moser version named its branch and wrote its commit to the house format; the versions before v8 that lacked the personal instructions failed on file naming, a rule the shared baseline did not state. Nothing also committed on `main`. Three convention tasks at one attempt each is thin evidence for ordering the versions between them. Superpowers was skipped on this model: earlier testing showed it wasn't needed on newer models.
+Studio Moser v8 is the pick: it is the first that follows every convention using only what the collection ships, because the global instructions and House Style now come with Harness as a profile. The formal verdict still names v7 with the developer's personal instructions, which is equally correct and as fast but measured $0.02 cheaper per task; that version depends on files only one developer has. Every Studio Moser version named its branch and wrote its commit to the house format; the versions before v8 that lacked the personal instructions failed on file naming, a rule the shared baseline did not state. Nothing also committed on `main`. Three convention tasks at one attempt each is thin evidence for ordering the versions between them. Superpowers was skipped on this model: earlier testing showed it wasn't needed on newer models.
 
 ### GPT-6 Astra, medium effort
 
