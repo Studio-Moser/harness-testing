@@ -185,7 +185,6 @@ export const HARNESS_CATALOG = Object.freeze([
     identity: "sha256:c4e0684f092ed16c425fc66d2c38a2894d8b57b4f8bc9ed91d3cca516b65ca56",
     changeSummary: "The time-matters line moves into the baseline, and skills are rewritten to Anthropic's current skill and prompting guidance.",
     changeDetails: ["Builds the 'time matters' line into the Harness baseline instead of an added startup file", "Routes work by capability and total cost", "Adds the design plugin and the pm tidy-up skill; removes remaining Superpowers references", "Uses the live routing rubric reviewed 2026-09-29, which adds GPT-6.1 Sol for default, explore and review work"],
-    latest: true
   }),
   studioVersion({
     id: "studio-moser-v7-personal-instructions",
@@ -212,6 +211,20 @@ export const HARNESS_CATALOG = Object.freeze([
     identity: "sha256:4a2b8443021e06825eded7234a073b43ef0d413b97fecfb40487aa4c937444b9",
     changeSummary: "The personal instructions plus 16 personal skills and six subagents, to measure what installed skills cost or add.",
     changeDetails: ["Identical to v7 + personal instructions except one added plugin of personal skills and subagents", "Isolates the effect of skills that are installed but not needed by the task"]
+  }),
+  studioVersion({
+    id: "studio-moser-v8",
+    versionOrder: 11,
+    versionLabel: "v8",
+    predecessorId: "studio-moser-v7-personal-layer",
+    commit: "27f7992af5bb769cffe7afe4cbfbe24c806a89fa",
+    collectionVersion: "2.3.0",
+    superpowers: false,
+    startup: "The shipped Harness profile (global instructions and House Style) followed by the Harness baseline",
+    identity: "sha256:02abeb67dab4afaea84fe521165923580f76f6379889d9c7ea6c8fbdeb9c728e",
+    changeSummary: "The global instructions and House Style ship with Harness as a profile, so the collection alone carries what v7 needed personal files for.",
+    changeDetails: ["Builds the developer's global instructions from the shipped profile with the collection's own renderer", "Brings the file-naming rule into the shipped instructions", "Names branches by Conventional Commit type; the design plugin ships its subagents"],
+    latest: true
   }),
   Object.freeze({
     id: "studio-personality-v1",
