@@ -37,7 +37,7 @@ def test_all_existing_comparison_tasks_have_frozen_valid_user_policy():
 
     root = Path(__file__).parents[2]
     tasks = list((root / "tasks/workflow").glob("*/task.toml"))
-    assert len(tasks) == 23
+    assert len(tasks) == 24
     for task in tasks:
         assert (task.parent / "Comparison Instruction.md").read_text().strip()
         validate_policy(json.loads((task.parent / "Scripted User.json").read_text()))
@@ -80,6 +80,23 @@ def test_ambiguous_feature_has_useful_frozen_reply_not_extra_authority():
     contract = json.loads((task / "Communication Contract.json").read_text())
     assert contract["expectations"]["questions"]["minimum"] == 1
     assert contract["expectations"]["approval_requests"]["maximum"] == 0
+
+
+def test_release_wait_answers_how_long_to_wait_without_a_publish_time():
+    from harness_testing.Scripted_User import select_reply
+
+    task = Path(__file__).parents[2] / "tasks/workflow/node-release-wait"
+    policy = json.loads((task / "Scripted User.json").read_text())
+    for question in (
+        "How long should I wait for the release?",
+        "Should I keep polling until it is published?",
+        "When will 2.0.0 be published?",
+    ):
+        response = select_reply({"kind": "clarification", "text": question}, policy, 0)
+        assert response["rule_id"] == "publish-time"
+        assert response["reply"] == "The publish time is not known."
+    prompt = (task / "Comparison Instruction.md").read_text()
+    assert not any(word in prompt for word in ("poll", "minute", "times", "retry"))
 
 
 def test_research_policy_supports_every_pinned_l4_task():

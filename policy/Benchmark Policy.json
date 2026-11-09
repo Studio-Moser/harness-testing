@@ -161,6 +161,9 @@
       "node-toggle-completion-committed",
       "react-accent-polish-committed",
       "static-pricing-copy-polish-committed"
+    ],
+    [
+      "node-release-wait"
     ]
   ]
 }
