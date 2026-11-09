@@ -1,0 +1,56 @@
+schema_version = "1.4"
+
+artifacts = [
+  { source = "/app", destination = "workspace", exclude = [".git", "node_modules", "target"] },
+  { source = "/logs/agent/trajectory.json", destination = "trajectory.json" },
+]
+
+[task]
+name = "studio-moser/node-release-wait"
+version = "1.0.0"
+description = "Release step that waits on an external publish"
+authors = [{ name = "Studio Moser" }]
+keywords = ["javascript", "waiting", "external-event"]
+
+[metadata]
+difficulty = "easy"
+category = "workflow"
+tags = ["javascript", "waiting", "external-event"]
+change_class = "small"
+verification_envelope = "small"
+fixture_digest = "sha256:f7271de47c11d4234183777a8e319304f1b1fc57ff2e68e252776d33ffd54619"
+
+[agent]
+timeout_sec = 900.0
+network_mode = "allowlist"
+allowed_hosts = []
+
+[environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+workdir = "/app"
+
+[verifier]
+timeout_sec = 180.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[verifier.environment]
+network_mode = "no-network"
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+mcp_servers = []
+
+[verifier.env]
+
+[environment.env]
+
+[solution.env]

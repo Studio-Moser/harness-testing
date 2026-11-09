@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "files": {
+    ".dockerignore": "sha256:16d30e4462189fb14dd611bdb708c510630c576a1f35b9383e89a4352da36c97",
+    "Dockerfile": "sha256:ab3ccd9372b0d0c9e3f13483c3cd6ae876bd733aa939b696212ecd676bc21e4f",
+    "README.md": "sha256:262a9662acd45ea08bab3b77c00de0ededcf318c8f472f96a53e9d20ff8af547",
+    "package-lock.json": "sha256:b9caf6af0e551a72f9d1e93aed96ce693d5516e269dbff095ead4f7d8b4be2a6",
+    "package.json": "sha256:84d1731ae0c5302b6c8a3733a601b99608b39f3c891b8b8f351e9e522764f83f",
+    "release.json": "sha256:2e3aa0922011689d2c2d1b157a7b4bf76d509eec959b8d2a5f4506ce57c2464f",
+    "release/Registry.json": "sha256:bff71a9eb79b8a152792f9306f087fc434092f0eeaac1c1040e7d3fd0d6eadc0",
+    "scripts/Release_Status.js": "sha256:4320eafb9b3941cded5538692e3a06cb5ae5ec446c89584d0ee00161b0d8bce0",
+    "test/Behavior.test.js": "sha256:45e606edd61ef1ff9e1987b831b6e0df6bb59b64e169835d9cab160dff22f678"
+  },
+  "mutable_files": {}
+}
