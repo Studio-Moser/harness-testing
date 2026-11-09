@@ -37,7 +37,7 @@ def test_all_existing_comparison_tasks_have_frozen_valid_user_policy():
 
     root = Path(__file__).parents[2]
     tasks = list((root / "tasks/workflow").glob("*/task.toml"))
-    assert len(tasks) == 24
+    assert len(tasks) == 25
     for task in tasks:
         assert (task.parent / "Comparison Instruction.md").read_text().strip()
         validate_policy(json.loads((task.parent / "Scripted User.json").read_text()))
@@ -236,3 +236,27 @@ def test_active_badge_prompt_delivers_explicit_test_file_boundary(tmp_path):
     existing.write_text(existing.read_text() + "\n// even additive edits are protected\n")
     assert not protected_files_intact(workspace, manifest)
 
+
+
+def test_zsh_docs_task_efficiency_fails_on_an_aborted_glob(tmp_path, monkeypatch):
+    import importlib.util
+
+    path = Path(__file__).parents[2] / "tasks/workflow/node-docs-flag-zsh/tests/criteria.py"
+    spec = importlib.util.spec_from_file_location("zsh_docs_criteria", path)
+    criteria = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(criteria)
+    trajectory = tmp_path / "trajectory.json"
+    monkeypatch.setenv("HARNESS_TEST_TRAJECTORY", str(trajectory))
+
+    def write(output):
+        step = {"observation": {"results": [{"source_call_id": "1", "content": output}]}}
+        trajectory.write_text(json.dumps({"steps": [step]}))
+
+    write("docs/guides/Offline_Mode.md:5: run `tasklog sync --legacy-sync`")
+    assert criteria.no_aborted_globs()
+    write("zsh:1: no matches found: --include=*.md")
+    assert not criteria.no_aborted_globs()
+    write([{"type": "text", "text": "zsh: no matches found: docs/*.txt"}])
+    assert not criteria.no_aborted_globs()
+    trajectory.unlink()
+    assert not criteria.no_aborted_globs()

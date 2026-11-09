@@ -164,6 +164,13 @@
     ],
     [
       "node-release-wait"
+    ],
+    [
+      "node-docs-flag-zsh"
+    ],
+    [
+      "node-release-wait",
+      "node-docs-flag-zsh"
     ]
   ]
 }
