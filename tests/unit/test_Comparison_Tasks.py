@@ -258,5 +258,10 @@ def test_zsh_docs_task_efficiency_fails_on_an_aborted_glob(tmp_path, monkeypatch
     assert not criteria.no_aborted_globs()
     write([{"type": "text", "text": "zsh: no matches found: docs/*.txt"}])
     assert not criteria.no_aborted_globs()
+    write(
+        "PreToolUse hook denied: zsh would abort this command with 'no matches found' "
+        "for the unquoted glob --include=*.md. Quote each glob argument."
+    )
+    assert criteria.no_aborted_globs()
     trajectory.unlink()
     assert not criteria.no_aborted_globs()

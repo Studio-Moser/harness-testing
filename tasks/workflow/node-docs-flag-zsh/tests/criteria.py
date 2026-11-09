@@ -8,7 +8,8 @@ from harness_testing.Trajectory_Events import _content_text
 from harness_testing.Workflow_Criteria import node_test_correctness, no_testing_churn, verification_after_last_mutation
 MANIFEST = Path(__file__).with_name("Protected_Files.json")
 # zsh aborts a command whose unquoted glob matches nothing, such as grep --include=*.md.
-ABORTED_GLOB = re.compile(r"\bno matches found\b")
+# Match zsh's own error ("zsh:1: no matches found: --include=*.md"), not a hook that warns about it.
+ABORTED_GLOB = re.compile(r"\bzsh(?::\d+)?: no matches found: ")
 def no_aborted_globs() -> bool:
     try:
         trajectory = json.loads(Path(os.environ.get("HARNESS_TEST_TRAJECTORY", "/logs/agent/trajectory.json")).read_text())
