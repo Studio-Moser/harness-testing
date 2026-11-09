@@ -1,0 +1,56 @@
+{
+  "schema_version": "1",
+  "files": {
+    ".dockerignore": "sha256:16d30e4462189fb14dd611bdb708c510630c576a1f35b9383e89a4352da36c97",
+    "Dockerfile": "sha256:a59b89e84e935c6ea8bb998324e70bd85046d9e50a0dbdbb4a5fa9fc0fdd5874",
+    "README.md": "sha256:7134e39c454f7503f9431dbb944855a60e4c84c3871b54f50dba705a91e64c6a",
+    "docs/History.txt": "sha256:2fe28507e02b8c90c69e21bf29bdd2d89920da89db1f5308c9cc91a2490263e1",
+    "docs/guides/Teams.md": "sha256:19ded565c3a32174f79d8a35ed12bd5b8b98abcc7b62441103ccbb402a000074",
+    "docs/reference/cli/Export.md": "sha256:392d3ab5d22665e50f32396cc8a7c49dcbf687e315a7fd0b8ff0af8f6ef824cb",
+    "package-lock.json": "sha256:217d42041acea09d88a54833d907a8a1ab4f14b0928d33d62eecfde3dbd6aa6d",
+    "package.json": "sha256:bccf3f86c1532e2fa45dd54ba580c2e00a764ba0d6a5aa056d41fb4a3ec627dc",
+    "test/Behavior.test.js": "sha256:c2f40a03c86504e18dc260e434f667143a4861b9fae1b00e9aa022438f085311"
+  },
+  "mutable_files": {
+    "docs/Getting_Started.md": {
+      "baseline_sha256": "sha256:64fcc07ee0cbaef1820f4eedb0045e039374f1c569119addc3e97682f3d3f0c5",
+      "replacements": [
+        {
+          "before": "--legacy-sync",
+          "after": "--sync=full",
+          "count": 1
+        }
+      ]
+    },
+    "docs/guides/Offline_Mode.md": {
+      "baseline_sha256": "sha256:10f0040ea32d076636e3b4ba9a66109c5f5e4f0b628c73e70a9a21f5c48fd9d2",
+      "replacements": [
+        {
+          "before": "--legacy-sync",
+          "after": "--sync=full",
+          "count": 2
+        }
+      ]
+    },
+    "docs/reference/Configuration.md": {
+      "baseline_sha256": "sha256:51fc37457f2de18bb64243707ad681fc448f5aa3a81e73ea174dd0ae735eecad",
+      "replacements": [
+        {
+          "before": "--legacy-sync",
+          "after": "--sync=full",
+          "count": 1
+        }
+      ]
+    },
+    "docs/reference/cli/Sync.md": {
+      "baseline_sha256": "sha256:1a53af4810d147cb9a45f2039a9d7c157a55983512730e872beb34a953364524",
+      "replacements": [
+        {
+          "before": "--legacy-sync",
+          "after": "--sync=full",
+          "count": 2
+        }
+      ]
+    }
+  }
+}

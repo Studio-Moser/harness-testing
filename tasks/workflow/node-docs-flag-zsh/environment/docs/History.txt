@@ -1,0 +1,5 @@
+Tasklog release history
+
+3.0.0  Removed --legacy-sync. Use --sync=full instead.
+2.4.0  Added --dry-run to tasklog sync.
+2.0.0  Added --legacy-sync to fetch everything again.

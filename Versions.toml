@@ -99,6 +99,12 @@ bundled_skills = [
 ]
 
 [[packages]]
+name = "zsh"
+ecosystem = "debian"
+version = "5.9-4+b15"
+# Installed by the node-docs-flag-zsh task image on top of the pinned node image.
+
+[[packages]]
 name = "@openai/codex"
 ecosystem = "npm"
 version = "0.162.1"
